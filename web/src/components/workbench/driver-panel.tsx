@@ -11,6 +11,7 @@ import { useOnlineStatus } from '@/hooks/use-online-status';
 import { DRIVER_PARAMETERS } from '@/lib/parameters';
 import { DriversFields } from './drivers-fields';
 import { Panel } from './panel';
+import { SignalFields } from './signal-fields';
 import { useParameterField } from './use-parameter-field';
 
 // Status de consistência do motor (research.md §4) e valor calculado de cada campo (FR-015–017).
@@ -103,6 +104,7 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
                 ))}
             </div>
             <DriversFields />
+            <SignalFields />
         </Panel>
     );
 }

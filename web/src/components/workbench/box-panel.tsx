@@ -7,7 +7,6 @@ import { useWorkspace } from '@/stores/workspace';
 import type { BoxType } from '@/lib/project/types';
 import { Panel } from './panel';
 import { PortFields } from './port-fields';
-import { SignalFields } from './signal-fields';
 import { SuggestBox } from './suggest-box';
 import { useParameterField } from './use-parameter-field';
 
@@ -61,7 +60,6 @@ export function BoxPanel() {
                 <SuggestBox key={activeId} />
             </div>
             {boxType === 'vented' && <PortFields />}
-            <SignalFields />
         </Panel>
     );
 }

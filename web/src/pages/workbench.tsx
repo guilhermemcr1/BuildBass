@@ -131,9 +131,12 @@ export default function Workbench() {
                 </Banner>
             )}
             <main className="grid flex-1 grid-cols-1 gap-3 p-3 md:grid-cols-2 xl:grid-cols-[minmax(300px,360px)_minmax(260px,320px)_minmax(0,1fr)] xl:grid-rows-[auto_1fr]">
-                <DriverPanel
-                    onSubmitDriver={() => setPending(t('catalog.submit'))}
-                />
+                {/* Em ≥ 1280 px o driver ocupa as duas linhas: a altura dele não empurra os resultados. */}
+                <div className="xl:row-span-2">
+                    <DriverPanel
+                        onSubmitDriver={() => setPending(t('catalog.submit'))}
+                    />
+                </div>
                 <BoxPanel />
                 <div className="md:col-span-2 xl:col-span-1 xl:col-start-3 xl:row-span-2 xl:row-start-1 xl:flex xl:flex-col [&>section]:flex-1">
                     <ChartPanel selected={chart} onSelectedChange={setChart} />
