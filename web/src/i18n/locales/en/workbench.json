@@ -1,0 +1,58 @@
+{
+    "regions": {
+        "driver": "Driver",
+        "box": "Box",
+        "charts": "Charts",
+        "results": "Results"
+    },
+    "actions": {
+        "new": "New",
+        "open": "Open",
+        "export": "Export",
+        "undo": "Undo",
+        "redo": "Redo",
+        "help": "Keyboard shortcuts"
+    },
+    "boxType": {
+        "label": "Box type",
+        "closed": "Sealed",
+        "vented": "Vented",
+        "bandpass": "Bandpass",
+        "bandpassUnavailable": "Bandpass boxes arrive in an upcoming version."
+    },
+    "charts": {
+        "label": "Chart type",
+        "response": "Response",
+        "excursion": "Excursion",
+        "impedance": "Impedance",
+        "groupDelay": "Group delay",
+        "portVelocity": "Port velocity",
+        "emptyTitle": "Parameters missing to draw the chart",
+        "emptyBody": "Fill in {{missing}} in the driver section.",
+        "emptyReady": "Parameters ready. Curves arrive with the calculation engine.",
+        "frequency": "Frequency (Hz)",
+        "level": "Level (dB)"
+    },
+    "results": {
+        "f3": "F3",
+        "fb": "Fb",
+        "portLength": "Port length",
+        "xmaxPower": "Power at Xmax",
+        "efficiency": "Efficiency"
+    },
+    "catalog": {
+        "label": "Driver catalog",
+        "placeholder": "Search brand or model",
+        "submit": "Submit driver",
+        "offlineReason": "Unavailable without a connection to the server."
+    },
+    "offline": {
+        "title": "Offline.",
+        "body": "The driver catalog and parameter submission are unavailable. Everything else keeps working."
+    },
+    "shortcuts": {
+        "title": "Keyboard shortcuts",
+        "chartTabs": "Switch chart tab",
+        "help": "Show this help"
+    }
+}

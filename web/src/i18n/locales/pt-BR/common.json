@@ -1,0 +1,49 @@
+{
+    "appName": "BuildBass",
+    "status": {
+        "none": "Sem status",
+        "ok": "Consistente",
+        "warn": "Atenção",
+        "error": "Erro",
+        "unchecked": "Sem verificação"
+    },
+    "validation": {
+        "invalidNumber": "Digite um número válido.",
+        "outOfRange": "Fora da faixa aceita ({{min}} a {{max}} {{unit}})."
+    },
+    "units": {
+        "system": "Sistema de unidades",
+        "metric": "Métrico",
+        "imperial": "Imperial",
+        "change": "Trocar unidade de {{parameter}}"
+    },
+    "theme": {
+        "label": "Tema",
+        "light": "Claro",
+        "dark": "Escuro",
+        "system": "Sistema"
+    },
+    "language": {
+        "label": "Idioma",
+        "pt-BR": "Português (Brasil)",
+        "en": "English"
+    },
+    "preferences": "Preferências",
+    "comingSoon": {
+        "title": "Em breve",
+        "body": "“{{action}}” ainda não está disponível. Ela chega numa próxima versão do BuildBass.",
+        "close": "Fechar"
+    },
+    "reference": {
+        "title": "Referência de componentes",
+        "subtitle": "Tokens, tipografia e componentes base em todos os estados. Página visível só em desenvolvimento.",
+        "tokens": "Tokens de cor",
+        "typography": "Tipografia",
+        "components": "Componentes",
+        "sampleTitle": "Archivo 22 / 700 — títulos",
+        "sampleHeading": "Archivo 15 / 600 — nomes e cabeçalhos",
+        "sampleBody": "Archivo 14 / 400 — texto da interface",
+        "sampleSection": "Archivo condensada 12 / 600 — rótulo de seção",
+        "sampleNumbers": "IBM Plex Mono em todo valor numérico, com algarismos tabulares."
+    }
+}
