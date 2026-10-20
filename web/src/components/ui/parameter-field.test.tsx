@@ -12,7 +12,7 @@ type HarnessProps = {
     parameter: ParameterKey;
     initialSi?: number;
     initialUnit: UnitId;
-    onChangeSi?: (si: number) => void;
+    onChangeSi?: (si: number | undefined) => void;
 };
 
 function Harness({
@@ -66,6 +66,24 @@ describe('ParameterField', () => {
             expect(onChangeSi).toHaveBeenLastCalledWith(28.5);
         },
     );
+
+    test('passar pelo campo sem editar não troca o valor exato pelo arredondado', async () => {
+        const onChangeSi = vi.fn();
+        renderWithProviders(
+            <Harness
+                parameter="qts"
+                initialSi={0.380973}
+                initialUnit="none"
+                onChangeSi={onChangeSi}
+            />,
+        );
+
+        await userEvent.click(screen.getByRole('textbox'));
+        await userEvent.tab();
+
+        expect(screen.getByRole('textbox')).toHaveValue('0,38');
+        expect(onChangeSi).not.toHaveBeenCalled();
+    });
 
     test('valor fora da faixa mostra erro com texto e mantém o anterior', async () => {
         const onChangeSi = vi.fn();

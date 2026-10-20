@@ -1,0 +1,42 @@
+{
+    "defaultName": "Untitled project",
+    "tabs": {
+        "label": "Open projects",
+        "plot": "Show {{name}} on the chart",
+        "close": "Close {{name}}",
+        "rename": "Rename {{name}}",
+        "unsaved": "unexported changes"
+    },
+    "dialogs": {
+        "close": {
+            "title": "Close project?",
+            "body": "“{{name}}” has changes that were not exported and will be lost.",
+            "export": "Export and close",
+            "discard": "Close without exporting",
+            "cancel": "Cancel"
+        },
+        "limit": {
+            "title": "Open project limit",
+            "body": "Up to 3 projects can be open. Close one to continue.",
+            "cancel": "Cancel"
+        },
+        "openError": {
+            "title": "The file could not be opened",
+            "close": "Close"
+        }
+    },
+    "errors": {
+        "fileTooLarge": "The file is over 256 KB and does not look like a BuildBass project.",
+        "invalidJson": "The file is not valid JSON.",
+        "notBuildbass": "The file is not a BuildBass project.",
+        "newerVersion": "The project was saved by a newer BuildBass version. Update the app to open it.",
+        "invalidContent": "The project has an invalid value at “{{path}}”.",
+        "readFailed": "The file could not be read."
+    },
+    "file": {
+        "dropHere": "Drop to open the project"
+    },
+    "storage": {
+        "unavailable": "The browser does not allow saving data: open projects will not be remembered after reloading. Export to keep your work."
+    }
+}

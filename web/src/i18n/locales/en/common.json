@@ -69,6 +69,9 @@
         "stateOk": "consistent",
         "stateWarn": "differs 3–7%",
         "stateError": "differs more than 7%",
-        "stateUnchecked": "not checkable"
+        "stateUnchecked": "not checkable",
+        "toggle": "Show on chart",
+        "inlineName": "Name (double-click to edit)",
+        "inlineValue": "Sample project"
     }
 }

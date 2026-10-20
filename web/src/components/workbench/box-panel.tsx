@@ -1,9 +1,13 @@
 import { useTranslation } from 'react-i18next';
+import { ParameterField } from '@/components/ui/parameter-field';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { SliderField } from '@/components/ui/slider-field';
-import { useDraft } from '@/stores/draft';
-import type { BoxType } from '@/stores/draft';
+import { useActiveProject } from '@/hooks/use-active-project';
+import { useWorkspace } from '@/stores/workspace';
+import type { BoxType } from '@/lib/project/types';
 import { Panel } from './panel';
+import { PortFields } from './port-fields';
+import { SuggestBox } from './suggest-box';
 import { useParameterField } from './use-parameter-field';
 
 // Faixas dos sliders (SI): de caixas pequenas de carro a subwoofers grandes; o campo numérico
@@ -13,10 +17,13 @@ const FB_SLIDER = { minSi: 10, maxSi: 200, scale: 'log' } as const;
 
 export function BoxPanel() {
     const { t } = useTranslation('workbench');
-    const boxType = useDraft((state) => state.boxType);
-    const setBoxType = useDraft((state) => state.setBoxType);
+    const boxType = useActiveProject((state) => state.data.box.type);
+    // A mensagem da sugestão é do projeto em que foi pedida.
+    const activeId = useWorkspace((state) => state.activeId);
+    const setBoxType = useActiveProject((state) => state.setBoxType);
     const volume = useParameterField('vb_m3');
     const tuning = useParameterField('fb_hz');
+    const losses = useParameterField('ql');
 
     return (
         <Panel region="box" title={t('regions.box')}>
@@ -49,7 +56,10 @@ export function BoxPanel() {
                 {boxType === 'vented' && (
                     <SliderField {...tuning} {...FB_SLIDER} />
                 )}
+                <ParameterField {...losses} />
+                <SuggestBox key={activeId} />
             </div>
+            {boxType === 'vented' && <PortFields />}
         </Panel>
     );
 }

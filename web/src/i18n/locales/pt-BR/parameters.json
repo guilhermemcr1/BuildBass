@@ -49,10 +49,50 @@
     },
     "vb_m3": {
         "label": "Volume da caixa",
-        "help": "Volume interno líquido de ar da caixa."
+        "help": "Volume interno bruto da caixa; o volume dos drivers e dos dutos é descontado no cálculo."
     },
     "fb_hz": {
         "label": "Sintonia do duto",
         "help": "Frequência em que o duto e o volume da caixa ressoam juntos."
+    },
+    "vd_m3": {
+        "label": "Volume ocupado pelo driver",
+        "help": "Volume que o próprio driver ocupa dentro da caixa (ficha técnica). Deixe 0 se não souber."
+    },
+    "ql": {
+        "label": "Perdas da caixa (Ql)",
+        "help": "Perdas por vazamento e absorção. 7 é o valor típico de uma caixa bem vedada; menor significa mais perdas."
+    },
+    "diameter_m": {
+        "label": "Diâmetro do duto",
+        "help": "Diâmetro interno de cada duto redondo."
+    },
+    "width_m": {
+        "label": "Largura do duto",
+        "help": "Largura interna de cada duto retangular."
+    },
+    "height_m": {
+        "label": "Altura do duto",
+        "help": "Altura interna de cada duto retangular ou triangular."
+    },
+    "base_m": {
+        "label": "Base do duto",
+        "help": "Base interna de cada duto triangular."
+    },
+    "port_count": {
+        "label": "Quantidade de dutos",
+        "help": "Número de dutos iguais na caixa."
+    },
+    "driver_count": {
+        "label": "Quantidade de drivers",
+        "help": "Número de drivers iguais na mesma caixa."
+    },
+    "power_w": {
+        "label": "Potência de entrada",
+        "help": "Potência elétrica aplicada ao conjunto, referida à resistência Re."
+    },
+    "voltage_v": {
+        "label": "Tensão de entrada",
+        "help": "Tensão eficaz aplicada aos terminais do conjunto."
     }
 }

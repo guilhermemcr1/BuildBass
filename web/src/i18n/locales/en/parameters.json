@@ -49,10 +49,50 @@
     },
     "vb_m3": {
         "label": "Box volume",
-        "help": "Net internal air volume of the box."
+        "help": "Gross internal box volume; driver and port volumes are subtracted in the calculation."
     },
     "fb_hz": {
         "label": "Port tuning",
         "help": "Frequency at which the port and the box volume resonate together."
+    },
+    "vd_m3": {
+        "label": "Driver displacement",
+        "help": "Volume the driver itself occupies inside the box (datasheet). Leave 0 if unknown."
+    },
+    "ql": {
+        "label": "Box losses (Ql)",
+        "help": "Leakage and absorption losses. 7 is typical for a well-sealed box; lower means more loss."
+    },
+    "diameter_m": {
+        "label": "Port diameter",
+        "help": "Inner diameter of each round port."
+    },
+    "width_m": {
+        "label": "Port width",
+        "help": "Inner width of each rectangular port."
+    },
+    "height_m": {
+        "label": "Port height",
+        "help": "Inner height of each rectangular or triangular port."
+    },
+    "base_m": {
+        "label": "Port base",
+        "help": "Inner base of each triangular port."
+    },
+    "port_count": {
+        "label": "Number of ports",
+        "help": "Number of identical ports in the box."
+    },
+    "driver_count": {
+        "label": "Number of drivers",
+        "help": "Number of identical drivers in the same box."
+    },
+    "power_w": {
+        "label": "Input power",
+        "help": "Electrical power applied to the set, referred to the resistance Re."
+    },
+    "voltage_v": {
+        "label": "Input voltage",
+        "help": "RMS voltage applied to the set's terminals."
     }
 }

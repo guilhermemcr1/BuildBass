@@ -24,11 +24,15 @@ import { Tooltip } from './tooltip';
 type ParameterFieldProps = {
     parameter: ParameterKey;
     valueSi: number | undefined;
-    onChangeSi: (si: number) => void;
+    // `undefined` quando o campo é esvaziado (o valor deixa de ser digitado).
+    onChangeSi: (si: number | undefined) => void;
     unit: UnitId;
     onUnitChange?: (unit: UnitId) => void;
     status?: FieldStatus;
     statusMessage?: string;
+    // Valor calculado dos outros parâmetros, mostrado apagado enquanto nada for digitado.
+    derivedSi?: number;
+    derivedLabel?: string;
     className?: string;
 };
 
@@ -48,6 +52,8 @@ export function ParameterField({
     onUnitChange,
     status = 'none',
     statusMessage,
+    derivedSi,
+    derivedLabel,
     className,
 }: ParameterFieldProps) {
     const { t } = useTranslation(['parameters', 'common']);
@@ -56,13 +62,29 @@ export function ParameterField({
     const definition = PARAMETERS[parameter];
     const units = QUANTITIES[definition.quantity].units;
     const symbol = findUnit(unit).symbol;
-    const displayed = valueSi === undefined ? Number.NaN : fromSi(valueSi, unit);
+    const derived = valueSi === undefined && derivedSi !== undefined;
+    const shownSi = valueSi ?? derivedSi;
+    const displayed = shownSi === undefined ? Number.NaN : fromSi(shownSi, unit);
 
     return (
         <NumberField
             value={displayed}
             onChange={(value) => {
                 if (!Number.isFinite(value)) {
+                    setOutOfRange(false);
+                    onChangeSi(undefined);
+                    return;
+                }
+
+                // Sair do campo sem editar devolve o texto arredondado da tela: não é uma edição,
+                // e aceitá-la trocaria o valor exato (ou o calculado) pelo arredondado.
+                const step = 10 ** -findUnit(unit).decimals;
+
+                if (
+                    Number.isFinite(displayed) &&
+                    Math.abs(value - displayed) <= step / 2
+                ) {
+                    setOutOfRange(false);
                     return;
                 }
 
@@ -101,10 +123,21 @@ export function ParameterField({
                         — {t(`${parameter}.label`)}
                     </span>
                 </Label>
-                <StatusIndicator status={status} />
+                {derived ? (
+                    <span className="rounded-sm border border-border px-1 text-[10px] leading-4 text-muted">
+                        {derivedLabel}
+                    </span>
+                ) : (
+                    <StatusIndicator status={status} />
+                )}
             </div>
             <div className="flex items-baseline gap-1.5">
-                <Input className="num w-full min-w-0 bg-transparent text-[15px] text-foreground outline-none" />
+                <Input
+                    className={cn(
+                        'num w-full min-w-0 bg-transparent text-[15px] outline-none',
+                        derived ? 'text-muted' : 'text-foreground',
+                    )}
+                />
                 {units.length > 1 && onUnitChange !== undefined ? (
                     <Menu<UnitId>
                         label={t('common:units.change', {

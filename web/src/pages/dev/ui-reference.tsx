@@ -1,9 +1,11 @@
+import { Eye, EyeOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Banner } from '@/components/ui/banner';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
+import { InlineTextField } from '@/components/ui/inline-text-field';
 import { Menu } from '@/components/ui/menu';
 import { ParameterField } from '@/components/ui/parameter-field';
 import { SearchSelect } from '@/components/ui/search-select';
@@ -12,6 +14,7 @@ import { SliderField } from '@/components/ui/slider-field';
 import { StatusIndicator } from '@/components/ui/status-indicator';
 import type { FieldStatus } from '@/components/ui/status-indicator';
 import { Tabs } from '@/components/ui/tabs';
+import { ToggleButton } from '@/components/ui/toggle-button';
 import { Tooltip } from '@/components/ui/tooltip';
 import { ValueTile } from '@/components/ui/value-tile';
 import { LanguageSwitch } from '@/components/workbench/language-switch';
@@ -92,6 +95,9 @@ export default function UiReference() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [segment, setSegment] = useState<'a' | 'b' | 'c'>('a');
     const [tab, setTab] = useState<'one' | 'two' | 'three'>('one');
+    const [shown, setShown] = useState(true);
+    const [editingName, setEditingName] = useState(false);
+    const [sampleName, setSampleName] = useState('');
     const [fsHz, setFsHz] = useState<number | undefined>(28);
     const [vbM3, setVbM3] = useState<number | undefined>(0.05);
     const [unit, setUnit] = useState<UnitId>('L');
@@ -234,6 +240,37 @@ export default function UiReference() {
                     <Button onPress={() => setDialogOpen(true)}>
                         {t('reference.openDialog')}
                     </Button>
+                    <ToggleButton
+                        pressed={shown}
+                        onPressedChange={setShown}
+                        aria-label={t('reference.toggle')}
+                    >
+                        {shown ? (
+                            <Eye aria-hidden="true" className="size-4" />
+                        ) : (
+                            <EyeOff aria-hidden="true" className="size-4" />
+                        )}
+                    </ToggleButton>
+                    {editingName ? (
+                        <InlineTextField
+                            label={t('reference.inlineName')}
+                            value={sampleName}
+                            onCommit={(next) => {
+                                setSampleName(next);
+                                setEditingName(false);
+                            }}
+                            onCancel={() => setEditingName(false)}
+                        />
+                    ) : (
+                        <Button
+                            variant="quiet"
+                            onPress={() => setEditingName(true)}
+                        >
+                            {sampleName === ''
+                                ? t('reference.inlineValue')
+                                : sampleName}
+                        </Button>
+                    )}
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">
                     <SearchSelect

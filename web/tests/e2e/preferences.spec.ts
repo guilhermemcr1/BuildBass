@@ -41,7 +41,9 @@ test('trocar para inglês mantém o valor em edição e muda textos e lang', asy
     await page.getByRole('menuitemradio', { name: 'English' }).click();
 
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-    await expect(page.getByRole('button', { name: 'Export' })).toBeVisible();
+    await expect(
+        page.getByRole('button', { name: 'Export', exact: true }),
+    ).toBeVisible();
     await expect(page.getByRole('textbox', { name: /Fs/ })).toHaveValue('28.5');
     await context.close();
 });

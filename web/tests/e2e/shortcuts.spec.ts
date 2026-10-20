@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('atalhos trocam o gráfico, abrem a ajuda e avisam ações futuras (FR-021)', async ({
+test('atalhos trocam o gráfico, abrem a ajuda e exportam (FR-028)', async ({
     page,
 }) => {
     await page.goto('/');
@@ -18,9 +18,10 @@ test('atalhos trocam o gráfico, abrem a ajuda e avisam ações futuras (FR-021)
     await page.keyboard.press('Escape');
     await expect(help).toBeHidden();
 
+    const downloading = page.waitForEvent('download');
     await page.keyboard.press('ControlOrMeta+s');
-    await expect(page.getByRole('dialog', { name: 'Em breve' })).toContainText(
-        'Exportar',
+    expect((await downloading).suggestedFilename()).toBe(
+        'projeto.buildbass.json',
     );
 });
 

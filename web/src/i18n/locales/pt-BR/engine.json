@@ -1,0 +1,38 @@
+{
+    "charts": {
+        "noPort": "Caixa selada não tem duto.",
+        "noData": "sem dados suficientes"
+    },
+    "warnings": {
+        "netVolumeInvalid": "O volume ocupado pelos drivers é maior que a caixa. Aumente o volume ou reduza o volume ocupado.",
+        "portVolumeTooLarge": "O duto não cabe na caixa nessa sintonia. Use um duto mais estreito, menos dutos ou uma caixa maior.",
+        "portTooShort": "O duto ficaria com comprimento zero ou negativo. Use um duto mais estreito ou menos dutos.",
+        "portTooLong": "O duto fica longo ({{length}}) para essa caixa. Considere um duto mais estreito ou outra sintonia.",
+        "noInductance": "Sem Le, a resposta acima de algumas centenas de Hz pode sair otimista.",
+        "aboveThermalPower": "A potência passa da potência térmica (Pe) do driver."
+    },
+    "limits": {
+        "portWarn": "Atenção: {{value}}",
+        "portError": "Limite: {{value}}",
+        "xmax": "Xmax: {{value}}"
+    },
+    "status": {
+        "portTooShort": "Curto demais",
+        "portTooLong": "Longo",
+        "velocityOk": "Abaixo de {{value}}",
+        "velocityWarn": "Ruído audível",
+        "velocityError": "Acima de {{value}}",
+        "qts": "Diferença de {{deviation}} em Qts = Qes·Qms / (Qes + Qms).",
+        "fs": "Diferença de {{deviation}} entre Fs, Mms, Vas e Sd (Fs = 1 / 2π√(Mms·Cms)).",
+        "qes": "Diferença de {{deviation}} em Qes = 2π·Fs·Mms·Re / Bl².",
+        "derived": "calculado"
+    },
+    "alignments": {
+        "butterworth2": "Selada Butterworth (Qtc 0,707): Vb {{vb}}.",
+        "keele": "Dutada Thiele/Keele (QB3–SBB4): Vb {{vb}} e Fb {{fb}}.",
+        "grossNote": "O volume já inclui o ocupado pelos drivers e pelos dutos.",
+        "closedQtsTooHigh": "Com Qts {{qts}} a selada Butterworth passaria de 3,3·Vas. Use um Qtc mais alto ou baffle infinito.",
+        "ventedQtsTooHigh": "Qts {{qts}} é alto para dutada (acima de 0,5). Prefira a caixa selada.",
+        "qtsTooLow": "Qts {{qts}} é baixo para os alinhamentos dutados (abaixo de 0,2): a caixa ficaria pequena e a resposta alta demais para subwoofer."
+    }
+}

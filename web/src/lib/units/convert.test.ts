@@ -15,6 +15,11 @@ describe('conversão de unidades', () => {
         expect(fromSi(toSi(1, 'oz'), 'g')).toBeCloseTo(28.349523125, 9);
     });
 
+    test('1 ft/s = 0,3048 m/s e 1 ms = 0,001 s', () => {
+        expect(toSi(1, 'ft/s')).toBeCloseTo(0.3048, 12);
+        expect(toSi(1, 'ms')).toBeCloseTo(0.001, 12);
+    });
+
     test('ida e volta em todas as unidades devolve o valor original', () => {
         for (const quantity of Object.values(QUANTITIES)) {
             for (const unit of quantity.units) {

@@ -1,0 +1,42 @@
+{
+    "defaultName": "Projeto sem nome",
+    "tabs": {
+        "label": "Projetos abertos",
+        "plot": "Mostrar {{name}} no gráfico",
+        "close": "Fechar {{name}}",
+        "rename": "Renomear {{name}}",
+        "unsaved": "alterações não exportadas"
+    },
+    "dialogs": {
+        "close": {
+            "title": "Fechar projeto?",
+            "body": "“{{name}}” tem alterações que não foram exportadas e serão perdidas.",
+            "export": "Exportar e fechar",
+            "discard": "Fechar sem exportar",
+            "cancel": "Cancelar"
+        },
+        "limit": {
+            "title": "Limite de projetos abertos",
+            "body": "Dá para manter até 3 projetos abertos. Feche um para continuar.",
+            "cancel": "Cancelar"
+        },
+        "openError": {
+            "title": "Não foi possível abrir o arquivo",
+            "close": "Fechar"
+        }
+    },
+    "errors": {
+        "fileTooLarge": "O arquivo passa de 256 KB e não parece ser um projeto do BuildBass.",
+        "invalidJson": "O arquivo não é um JSON válido.",
+        "notBuildbass": "O arquivo não é um projeto do BuildBass.",
+        "newerVersion": "O projeto foi salvo numa versão mais nova do BuildBass. Atualize o app para abri-lo.",
+        "invalidContent": "O projeto tem um valor inválido em “{{path}}”.",
+        "readFailed": "Não foi possível ler o arquivo."
+    },
+    "file": {
+        "dropHere": "Solte para abrir o projeto"
+    },
+    "storage": {
+        "unavailable": "O navegador não permite salvar dados: os projetos abertos não serão lembrados ao recarregar. Exporte para não perder o trabalho."
+    }
+}
