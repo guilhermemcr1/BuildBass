@@ -1,23 +1,22 @@
 import { useTranslation } from 'react-i18next';
-import { ParameterField } from '@/components/ui/parameter-field';
 import { SegmentedControl } from '@/components/ui/segmented-control';
-import type { ParameterKey } from '@/lib/parameters';
+import { SliderField } from '@/components/ui/slider-field';
 import { useDraft } from '@/stores/draft';
 import type { BoxType } from '@/stores/draft';
 import { Panel } from './panel';
 import { useParameterField } from './use-parameter-field';
 
-function BoxField({ parameter }: { parameter: ParameterKey }) {
-    const { onUnitChange: _onUnitChange, ...field } =
-        useParameterField(parameter);
-
-    return <ParameterField {...field} />;
-}
+// Faixas dos sliders (SI): de caixas pequenas de carro a subwoofers grandes; o campo numérico
+// continua aceitando toda a faixa física de PARAMETERS.
+const VB_SLIDER = { minSi: 0.001, maxSi: 0.3, scale: 'linear' } as const;
+const FB_SLIDER = { minSi: 10, maxSi: 200, scale: 'log' } as const;
 
 export function BoxPanel() {
     const { t } = useTranslation('workbench');
     const boxType = useDraft((state) => state.boxType);
     const setBoxType = useDraft((state) => state.setBoxType);
+    const volume = useParameterField('vb_m3');
+    const tuning = useParameterField('fb_hz');
 
     return (
         <Panel region="box" title={t('regions.box')}>
@@ -45,9 +44,11 @@ export function BoxPanel() {
                     {t('boxType.bandpassUnavailable')}
                 </p>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-                <BoxField parameter="vb_m3" />
-                {boxType === 'vented' && <BoxField parameter="fb_hz" />}
+            <div className="flex flex-col gap-3">
+                <SliderField {...volume} {...VB_SLIDER} />
+                {boxType === 'vented' && (
+                    <SliderField {...tuning} {...FB_SLIDER} />
+                )}
             </div>
         </Panel>
     );

@@ -6,10 +6,7 @@ import { Panel } from './panel';
 import { useParameterField } from './use-parameter-field';
 
 function DriverField({ parameter }: { parameter: ParameterKey }) {
-    const { onUnitChange: _onUnitChange, ...field } =
-        useParameterField(parameter);
-
-    return <ParameterField {...field} />;
+    return <ParameterField {...useParameterField(parameter)} />;
 }
 
 export function DriverPanel() {
@@ -17,7 +14,7 @@ export function DriverPanel() {
 
     return (
         <Panel region="driver" title={t('regions.driver')}>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 items-start gap-2">
                 {DRIVER_PARAMETERS.map((key) => (
                     <DriverField key={key} parameter={key} />
                 ))}

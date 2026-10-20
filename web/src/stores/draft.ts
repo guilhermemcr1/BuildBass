@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { ParameterKey } from '@/lib/parameters';
 import type { UnitId } from '@/lib/units/quantities';
+import { usePreferences } from './preferences';
 
 export type BoxType = 'closed' | 'vented';
 
@@ -33,3 +34,11 @@ export const useDraft = create<DraftState>()((set) => ({
     setBoxType: (boxType) => set({ boxType }),
     reset: () => set(INITIAL),
 }));
+
+// Trocar o sistema global (métrico/imperial) devolve todos os campos à unidade padrão do novo
+// sistema; os valores SI não mudam (data-model.md, transições do Draft).
+usePreferences.subscribe((state, previous) => {
+    if (state.unitSystem !== previous.unitSystem) {
+        useDraft.getState().clearFieldUnits();
+    }
+});
