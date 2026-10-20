@@ -83,3 +83,60 @@ export type DerivedDriver = {
     cms_mn?: number;
     consistency: Record<DriverKey, Consistency>;
 };
+
+// Campos que podem faltar para um gráfico (nomes iguais aos campos da bancada).
+export type FieldKey =
+    | DriverKey
+    | 'vb_m3'
+    | 'fb_hz'
+    | 'diameter_m'
+    | 'width_m'
+    | 'height_m'
+    | 'base_m'
+    | 'power_w'
+    | 'voltage_v';
+
+export type CurveId =
+    | 'spl_db'
+    | 'excursion_m'
+    | 'impedance_ohm'
+    | 'group_delay_s'
+    | 'port_velocity_ms';
+
+export type WarningId =
+    | 'netVolumeInvalid'
+    | 'portTooShort'
+    | 'portTooLong'
+    | 'portVolumeTooLarge'
+    | 'aboveThermalPower'
+    | 'noInductance';
+
+export type EngineWarning = { id: WarningId; values?: Record<string, number> };
+
+export type SimulationResults = {
+    f3_hz?: number;
+    // F3 abaixo da grade (10 Hz).
+    f3_below_range?: boolean;
+    qtc?: number;
+    fc_hz?: number;
+    fb_hz?: number;
+    net_volume_m3?: number;
+    port_length_m?: number;
+    port_velocity_max_ms?: number;
+    xmax_power_w?: number;
+    efficiency?: number;
+    spl0_db?: number;
+    voltage_v?: number;
+    power_w?: number;
+    impedance_total_ohm?: number;
+};
+
+export type Simulation = {
+    frequencies_hz: readonly number[];
+    curves: Partial<Record<CurveId, number[]>>;
+    // true quando faltam dados para o nível absoluto: a resposta sai relativa à banda de passagem.
+    spl_normalized: boolean;
+    missing: Record<CurveId, FieldKey[]>;
+    results: SimulationResults;
+    warnings: EngineWarning[];
+};

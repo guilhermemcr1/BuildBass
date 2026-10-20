@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { ParameterField } from '@/components/ui/parameter-field';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { SliderField } from '@/components/ui/slider-field';
 import { useActiveProject } from '@/hooks/use-active-project';
@@ -17,6 +18,7 @@ export function BoxPanel() {
     const setBoxType = useActiveProject((state) => state.setBoxType);
     const volume = useParameterField('vb_m3');
     const tuning = useParameterField('fb_hz');
+    const losses = useParameterField('ql');
 
     return (
         <Panel region="box" title={t('regions.box')}>
@@ -49,6 +51,7 @@ export function BoxPanel() {
                 {boxType === 'vented' && (
                     <SliderField {...tuning} {...FB_SLIDER} />
                 )}
+                <ParameterField {...losses} />
             </div>
         </Panel>
     );

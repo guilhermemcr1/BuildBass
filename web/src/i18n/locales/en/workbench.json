@@ -28,17 +28,28 @@
         "groupDelay": "Group delay",
         "portVelocity": "Port velocity",
         "emptyTitle": "Parameters missing to draw the chart",
-        "emptyBody": "Fill in {{missing}} in the driver section.",
-        "emptyReady": "Parameters ready. Curves arrive with the calculation engine.",
+        "emptyBody": "Fill in {{missing}}.",
         "frequency": "Frequency (Hz)",
-        "level": "Level (dB)"
+        "level": "Level (dB)",
+        "levelRelative": "Relative level (dB)",
+        "excursionAxis": "Excursion ({{unit}})",
+        "impedanceAxis": "Impedance (Ω)",
+        "groupDelayAxis": "Group delay (ms)",
+        "portVelocityAxis": "Air velocity ({{unit}})",
+        "legend": "Projects on the chart",
+        "nonePlotted": "No project is shown on the chart. Use the eye on the project tab."
     },
     "results": {
         "f3": "F3",
         "fb": "Fb",
         "portLength": "Port length",
         "xmaxPower": "Power at Xmax",
-        "efficiency": "Efficiency"
+        "efficiency": "Efficiency",
+        "qtc": "Qtc",
+        "fc": "fc",
+        "spl0": "Sensitivity (1 W/1 m)",
+        "portVelocity": "Max. port velocity",
+        "belowRange": "< 10"
     },
     "catalog": {
         "label": "Driver catalog",

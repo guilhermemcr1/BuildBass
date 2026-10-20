@@ -2,13 +2,41 @@ import { useEffect, useRef } from 'react';
 import uPlot from 'uplot';
 import 'uplot/dist/uPlot.min.css';
 
+export type ChartSeries = {
+    id: string;
+    label: string;
+    slot: 1 | 2 | 3;
+    // Projeto ativo: linha mais grossa.
+    emphasis: boolean;
+    // Já na unidade exibida; null = sem valor nesse ponto.
+    values: (number | null)[];
+};
+
+export type ChartLimit = {
+    value: number;
+    tone: 'warn' | 'error';
+    label: string;
+};
+
 type ChartFrameProps = {
     xLabel: string;
     yLabel: string;
+    frequencies: readonly number[];
+    series: ChartSeries[];
+    limits?: ChartLimit[];
+    // Faixa fixa do eixo y; sem ela, o uPlot ajusta aos dados.
+    yRange?: [number, number];
+    yIncrs?: number[];
+};
+
+type Layout = {
+    series: [string, string, number, boolean][];
+    limits: ChartLimit[];
+    yRange?: [number, number];
+    yIncrs?: number[];
 };
 
 const FREQUENCY_RANGE: [number, number] = [10, 1000];
-const LEVEL_RANGE: [number, number] = [-36, 6];
 
 function token(name: string): string {
     return getComputedStyle(document.documentElement)
@@ -31,11 +59,51 @@ function frequencyTick(value: number | null): string {
     return value >= 1000 ? `${value / 1000}k` : String(value);
 }
 
-// Quadro do gráfico com eixo de frequência logarítmico. As cores vêm dos tokens do tema
-// (lidas em tempo de execução) e o gráfico é refeito quando o tema muda. Nesta feature não há
-// curvas: o motor de cálculo chega na feature 002.
-export default function ChartFrame({ xLabel, yLabel }: ChartFrameProps) {
+function chartData(
+    frequencies: readonly number[],
+    series: ChartSeries[],
+    limits: ChartLimit[],
+): uPlot.AlignedData {
+    return [
+        [...frequencies],
+        ...series.map((item) => item.values),
+        ...limits.map((limit) => frequencies.map(() => limit.value)),
+    ];
+}
+
+// Gráfico com eixo de frequência logarítmico. As cores vêm dos tokens do tema (lidas em tempo
+// de execução) e o gráfico é refeito quando o tema ou a composição das séries muda; mudanças só
+// de valores usam setData.
+export default function ChartFrame({
+    xLabel,
+    yLabel,
+    frequencies,
+    series,
+    limits = [],
+    yRange,
+    yIncrs,
+}: ChartFrameProps) {
     const container = useRef<HTMLDivElement>(null);
+    const plotRef = useRef<uPlot | undefined>(undefined);
+    const data = chartData(frequencies, series, limits);
+    const dataRef = useRef(data);
+
+    const layout = JSON.stringify({
+        series: series.map(({ id, label, slot, emphasis }) => [
+            id,
+            label,
+            slot,
+            emphasis,
+        ]),
+        limits,
+        yRange,
+        yIncrs,
+    } satisfies Layout);
+
+    useEffect(() => {
+        dataRef.current = data;
+        plotRef.current?.setData(data);
+    });
 
     useEffect(() => {
         const element = container.current;
@@ -44,10 +112,10 @@ export default function ChartFrame({ xLabel, yLabel }: ChartFrameProps) {
             return;
         }
 
-        let plot: uPlot | undefined;
+        const config = JSON.parse(layout) as Layout;
 
         const build = () => {
-            plot?.destroy();
+            plotRef.current?.destroy();
 
             const grid = { stroke: token('--border'), width: 1 };
             const axis = {
@@ -58,7 +126,7 @@ export default function ChartFrame({ xLabel, yLabel }: ChartFrameProps) {
                 labelFont: '12px "Archivo Variable", sans-serif',
             };
 
-            plot = new uPlot(
+            plotRef.current = new uPlot(
                 {
                     width: element.clientWidth,
                     height: element.clientHeight,
@@ -66,7 +134,10 @@ export default function ChartFrame({ xLabel, yLabel }: ChartFrameProps) {
                     cursor: { show: false },
                     scales: {
                         x: { time: false, distr: 3, range: FREQUENCY_RANGE },
-                        y: { range: LEVEL_RANGE },
+                        y:
+                            config.yRange === undefined
+                                ? {}
+                                : { range: config.yRange },
                     },
                     axes: [
                         {
@@ -74,11 +145,35 @@ export default function ChartFrame({ xLabel, yLabel }: ChartFrameProps) {
                             label: xLabel,
                             values: (_plot, ticks) => ticks.map(frequencyTick),
                         },
-                        { ...axis, label: yLabel, incrs: [3, 6, 12] },
+                        {
+                            ...axis,
+                            label: yLabel,
+                            size: 56,
+                            ...(config.yIncrs === undefined
+                                ? {}
+                                : { incrs: config.yIncrs }),
+                        },
                     ],
-                    series: [{}],
+                    series: [
+                        {},
+                        ...config.series.map(([, label, slot, emphasis]) => ({
+                            label,
+                            stroke: token(`--series-${slot}`),
+                            width: emphasis ? 2.5 : 1.5,
+                        })),
+                        ...config.limits.map((limit) => ({
+                            label: limit.label,
+                            stroke: token(
+                                limit.tone === 'warn'
+                                    ? '--status-warn'
+                                    : '--status-error',
+                            ),
+                            width: 1,
+                            dash: [6, 4],
+                        })),
+                    ],
                 },
-                [[...FREQUENCY_RANGE]],
+                dataRef.current,
                 element,
             );
         };
@@ -91,7 +186,7 @@ export default function ChartFrame({ xLabel, yLabel }: ChartFrameProps) {
         const resize = new ResizeObserver(() => {
             cancelAnimationFrame(frame);
             frame = requestAnimationFrame(() => {
-                plot?.setSize({
+                plotRef.current?.setSize({
                     width: element.clientWidth,
                     height: element.clientHeight,
                 });
@@ -109,9 +204,10 @@ export default function ChartFrame({ xLabel, yLabel }: ChartFrameProps) {
             cancelAnimationFrame(frame);
             resize.disconnect();
             themeWatcher.disconnect();
-            plot?.destroy();
+            plotRef.current?.destroy();
+            plotRef.current = undefined;
         };
-    }, [xLabel, yLabel]);
+    }, [xLabel, yLabel, layout]);
 
     return <div ref={container} className="h-full w-full" />;
 }

@@ -8,10 +8,18 @@ type ValueTileProps = {
     label: string;
     valueSi?: number;
     unit: UnitId;
+    // Texto no lugar do número (ex.: "< 10" quando o valor sai da faixa calculada).
+    display?: string;
     className?: string;
 };
 
-export function ValueTile({ label, valueSi, unit, className }: ValueTileProps) {
+export function ValueTile({
+    label,
+    valueSi,
+    unit,
+    display,
+    className,
+}: ValueTileProps) {
     const { locale } = useLocale();
 
     return (
@@ -24,7 +32,7 @@ export function ValueTile({ label, valueSi, unit, className }: ValueTileProps) {
             <span className="text-xs text-muted">{label}</span>
             <span className="flex items-baseline gap-1">
                 <span className="num text-lg font-semibold">
-                    {formatQuantity(valueSi, unit, locale)}
+                    {display ?? formatQuantity(valueSi, unit, locale)}
                 </span>
                 <span className="text-xs text-muted">
                     {findUnit(unit).symbol}
