@@ -6,3 +6,10 @@
 
 # Protótipos descartáveis de UI
 /prototypes/
+
+# Sistema e editores
+.DS_Store
+/.idea
+/.vscode
+/.zed
+/.fleet
