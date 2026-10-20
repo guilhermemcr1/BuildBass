@@ -76,10 +76,18 @@ const fieldUnits = z.record(z.string(), z.unknown()).transform((entries) => {
     return valid;
 });
 
+// Origem do driver copiado do catálogo (opcional: arquivos anteriores à feature 003 não têm).
+const driverSource = z.object({
+    brand: z.string().trim().min(1).max(80),
+    model: z.string().trim().min(1).max(80),
+    variant: z.string().trim().min(1).max(40).optional(),
+});
+
 export const projectSchema = z.object({
     // Vazio = nome padrão traduzido (lib/project/names.ts).
     name: z.string().trim().max(PROJECT_NAME_MAX),
     driver,
+    driverSource: driverSource.optional(),
     drivers: z.object({
         count,
         wiring: z.enum(['series', 'parallel']),

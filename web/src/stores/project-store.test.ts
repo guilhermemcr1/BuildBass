@@ -108,3 +108,64 @@ describe('createProjectStore', () => {
         expect(project.temporal.getState().pastStates).toHaveLength(1);
     });
 });
+
+describe('applyCatalogDriver', () => {
+    const SOURCE = { brand: 'Triton', model: 'TR 620 12"', variant: '4 Ω' };
+    const CATALOG = { fs_hz: 76.94, qts: 0.717, vas_m3: 0.026348 };
+
+    test('troca o driver por inteiro e define a origem', () => {
+        const project = store();
+        project.getState().setDriverValue('xmax_m', 0.01);
+        project.getState().setDriverValue('fs_hz', 30);
+
+        project.getState().applyCatalogDriver(CATALOG, SOURCE);
+
+        const { data } = project.getState();
+        expect(data.driver).toEqual(CATALOG);
+        expect(data.driver).not.toHaveProperty('xmax_m');
+        expect(data.driverSource).toEqual(SOURCE);
+    });
+
+    test('não mexe no resto do projeto', () => {
+        const project = store();
+        project.getState().setName('Sub');
+        project.getState().setDrivers({ count: 2, wiring: 'series' });
+        project.getState().setBoxValue('vb_m3', 0.05);
+        project.getState().setSignal({ power_w: 100 });
+        project.getState().setFieldUnit('vas_m3', 'ft3');
+        const before = project.getState().data;
+
+        project.getState().applyCatalogDriver(CATALOG, SOURCE);
+
+        const { driver, driverSource, ...rest } = project.getState().data;
+        const { driver: _driver, ...expected } = before;
+        expect(rest).toEqual(expected);
+        expect(driver).toEqual(CATALOG);
+        expect(driverSource).toEqual(SOURCE);
+    });
+
+    test('é uma etapa só: um undo restaura driver e origem', () => {
+        const project = store();
+        project.getState().setDriverValue('fs_hz', 30);
+        const steps = project.temporal.getState().pastStates.length;
+
+        project.getState().applyCatalogDriver(CATALOG, SOURCE);
+
+        expect(project.temporal.getState().pastStates).toHaveLength(steps + 1);
+        project.temporal.getState().undo();
+        expect(project.getState().data.driver).toEqual({ fs_hz: 30 });
+        expect(project.getState().data.driverSource).toBeUndefined();
+        project.temporal.getState().redo();
+        expect(project.getState().data.driver).toEqual(CATALOG);
+    });
+
+    test('só o projeto do store muda', () => {
+        const first = store();
+        const second = store();
+
+        first.getState().applyCatalogDriver(CATALOG, SOURCE);
+
+        expect(second.getState().data.driver).toEqual({});
+        expect(second.getState().data.driverSource).toBeUndefined();
+    });
+});

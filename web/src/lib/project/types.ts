@@ -15,8 +15,17 @@ export type {
     Wiring,
 } from '@/engine';
 
+// De onde veio o driver copiado do catálogo. Só informação: não aponta de volta ao catálogo
+// (specs/003, FR-008).
+export type DriverSource = {
+    brand: string;
+    model: string;
+    variant?: string;
+};
+
 // O projeto completo (data-model.md): a entrada do motor mais a unidade escolhida em cada campo.
 export type ProjectData = ProjectInput & {
+    driverSource?: DriverSource;
     fieldUnits: Partial<Record<ParameterKey, UnitId>>;
 };
 
