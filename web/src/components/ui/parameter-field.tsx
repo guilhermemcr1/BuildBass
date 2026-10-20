@@ -30,6 +30,9 @@ type ParameterFieldProps = {
     onUnitChange?: (unit: UnitId) => void;
     status?: FieldStatus;
     statusMessage?: string;
+    // Valor calculado dos outros parâmetros, mostrado apagado enquanto nada for digitado.
+    derivedSi?: number;
+    derivedLabel?: string;
     className?: string;
 };
 
@@ -49,6 +52,8 @@ export function ParameterField({
     onUnitChange,
     status = 'none',
     statusMessage,
+    derivedSi,
+    derivedLabel,
     className,
 }: ParameterFieldProps) {
     const { t } = useTranslation(['parameters', 'common']);
@@ -57,7 +62,9 @@ export function ParameterField({
     const definition = PARAMETERS[parameter];
     const units = QUANTITIES[definition.quantity].units;
     const symbol = findUnit(unit).symbol;
-    const displayed = valueSi === undefined ? Number.NaN : fromSi(valueSi, unit);
+    const derived = valueSi === undefined && derivedSi !== undefined;
+    const shownSi = valueSi ?? derivedSi;
+    const displayed = shownSi === undefined ? Number.NaN : fromSi(shownSi, unit);
 
     return (
         <NumberField
@@ -104,10 +111,21 @@ export function ParameterField({
                         — {t(`${parameter}.label`)}
                     </span>
                 </Label>
-                <StatusIndicator status={status} />
+                {derived ? (
+                    <span className="rounded-sm border border-border px-1 text-[10px] leading-4 text-muted">
+                        {derivedLabel}
+                    </span>
+                ) : (
+                    <StatusIndicator status={status} />
+                )}
             </div>
             <div className="flex items-baseline gap-1.5">
-                <Input className="num w-full min-w-0 bg-transparent text-[15px] text-foreground outline-none" />
+                <Input
+                    className={cn(
+                        'num w-full min-w-0 bg-transparent text-[15px] outline-none',
+                        derived ? 'text-muted' : 'text-foreground',
+                    )}
+                />
                 {units.length > 1 && onUnitChange !== undefined ? (
                     <Menu<UnitId>
                         label={t('common:units.change', {

@@ -20,6 +20,10 @@
         "portTooLong": "Long",
         "velocityOk": "Below {{value}}",
         "velocityWarn": "Audible noise",
-        "velocityError": "Above {{value}}"
+        "velocityError": "Above {{value}}",
+        "qts": "{{deviation}} off in Qts = Qes·Qms / (Qes + Qms).",
+        "fs": "{{deviation}} off between Fs, Mms, Vas and Sd (Fs = 1 / 2π√(Mms·Cms)).",
+        "qes": "{{deviation}} off in Qes = 2π·Fs·Mms·Re / Bl².",
+        "derived": "calculated"
     }
 }

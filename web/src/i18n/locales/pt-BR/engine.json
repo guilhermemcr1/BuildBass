@@ -20,6 +20,10 @@
         "portTooLong": "Longo",
         "velocityOk": "Abaixo de {{value}}",
         "velocityWarn": "Ruído audível",
-        "velocityError": "Acima de {{value}}"
+        "velocityError": "Acima de {{value}}",
+        "qts": "Diferença de {{deviation}} em Qts = Qes·Qms / (Qes + Qms).",
+        "fs": "Diferença de {{deviation}} entre Fs, Mms, Vas e Sd (Fs = 1 / 2π√(Mms·Cms)).",
+        "qes": "Diferença de {{deviation}} em Qes = 2π·Fs·Mms·Re / Bl².",
+        "derived": "calculado"
     }
 }

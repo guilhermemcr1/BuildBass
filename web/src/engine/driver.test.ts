@@ -93,3 +93,59 @@ describe('deriveDriver — derivação (R10)', () => {
         ).toBeLessThan(1e-9);
     });
 });
+
+describe('deriveDriver — consistência (R9)', () => {
+    const FULL = {
+        fs_hz: FS,
+        qts: QTS,
+        qes: QES,
+        qms: QMS,
+        vas_m3: VAS,
+        re_ohm: RE,
+        sd_m2: SD,
+        bl_tm: BL,
+        mms_kg: MMS,
+    };
+
+    test('driver gerado pelas relações: todos ok', () => {
+        const { consistency } = deriveDriver(FULL);
+
+        for (const key of Object.keys(FULL) as (keyof typeof FULL)[]) {
+            expect(consistency[key].status).toBe('ok');
+        }
+        expect(consistency.le_h.status).toBe('none');
+    });
+
+    test('Qts +5 % → atenção na relação qts; +10 % → erro', () => {
+        const warn = deriveDriver({ ...FULL, qts: QTS * 1.05 }).consistency;
+
+        for (const key of ['qts', 'qes', 'qms'] as const) {
+            expect(warn[key].status).toBe('warn');
+            expect(warn[key].relation).toBe('qts');
+            expect(warn[key].deviation).toBeCloseTo(0.05, 9);
+        }
+        expect(warn.fs_hz.status).toBe('ok');
+
+        const error = deriveDriver({ ...FULL, qts: QTS * 1.1 }).consistency;
+        expect(error.qts.status).toBe('error');
+    });
+
+    test('termos faltando: digitado fica sem conferência, calculado é "derived"', () => {
+        const { consistency } = deriveDriver({ fs_hz: FS, qes: QES, qms: QMS });
+
+        expect(consistency.fs_hz.status).toBe('unchecked');
+        expect(consistency.qes.status).toBe('unchecked');
+        expect(consistency.qts.status).toBe('derived');
+        expect(consistency.vas_m3.status).toBe('none');
+    });
+
+    test('campo em duas relações recebe o pior status', () => {
+        // Mms entra em fs (com Vas e Sd) e em qes (com Fs, Re e Bl); só a segunda diverge.
+        const { consistency } = deriveDriver({ ...FULL, bl_tm: BL * 0.95 });
+
+        expect(consistency.bl_tm.relation).toBe('qes');
+        expect(consistency.mms_kg.status).toBe('error');
+        expect(consistency.mms_kg.relation).toBe('qes');
+        expect(consistency.vas_m3.status).toBe('ok');
+    });
+});
