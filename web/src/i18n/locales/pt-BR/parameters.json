@@ -1,0 +1,58 @@
+{
+    "fs_hz": {
+        "label": "Frequência de ressonância",
+        "help": "Frequência em que o cone ressoa livre no ar, sem caixa."
+    },
+    "qts": {
+        "label": "Q total",
+        "help": "Amortecimento total do alto-falante na ressonância; combina as perdas elétricas e mecânicas."
+    },
+    "qes": {
+        "label": "Q elétrico",
+        "help": "Parte do amortecimento que vem do motor (bobina e ímã)."
+    },
+    "qms": {
+        "label": "Q mecânico",
+        "help": "Parte do amortecimento que vem da suspensão (aranha e borda)."
+    },
+    "vas_m3": {
+        "label": "Volume equivalente",
+        "help": "Volume de ar com a mesma rigidez da suspensão do cone."
+    },
+    "re_ohm": {
+        "label": "Resistência da bobina",
+        "help": "Resistência elétrica da bobina medida em corrente contínua."
+    },
+    "le_h": {
+        "label": "Indutância da bobina",
+        "help": "Indutância da bobina, que reduz a resposta nas frequências altas."
+    },
+    "xmax_m": {
+        "label": "Excursão máxima",
+        "help": "Deslocamento máximo do cone, em uma direção, ainda com comportamento linear."
+    },
+    "sd_m2": {
+        "label": "Área do cone",
+        "help": "Área efetiva que move o ar, normalmente incluindo metade da borda."
+    },
+    "pe_w": {
+        "label": "Potência térmica",
+        "help": "Potência que o alto-falante suporta continuamente sem superaquecer."
+    },
+    "bl_tm": {
+        "label": "Fator de força",
+        "help": "Força do motor: campo magnético multiplicado pelo comprimento do fio na bobina."
+    },
+    "mms_kg": {
+        "label": "Massa móvel",
+        "help": "Massa do conjunto móvel, incluindo o ar que ele carrega."
+    },
+    "vb_m3": {
+        "label": "Volume da caixa",
+        "help": "Volume interno líquido de ar da caixa."
+    },
+    "fb_hz": {
+        "label": "Sintonia do duto",
+        "help": "Frequência em que o duto e o volume da caixa ressoam juntos."
+    }
+}

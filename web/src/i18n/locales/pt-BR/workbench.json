@@ -1,0 +1,59 @@
+{
+    "regions": {
+        "driver": "Driver",
+        "box": "Caixa",
+        "charts": "Gráficos",
+        "results": "Resultados"
+    },
+    "actions": {
+        "new": "Novo",
+        "open": "Abrir",
+        "export": "Exportar",
+        "undo": "Desfazer",
+        "redo": "Refazer",
+        "help": "Atalhos de teclado"
+    },
+    "boxType": {
+        "label": "Tipo de caixa",
+        "closed": "Selada",
+        "vented": "Dutada",
+        "bandpass": "Bandpass",
+        "bandpassUnavailable": "Caixa bandpass chega numa próxima versão."
+    },
+    "charts": {
+        "label": "Tipo de gráfico",
+        "response": "Resposta",
+        "excursion": "Excursão",
+        "impedance": "Impedância",
+        "groupDelay": "Atraso de grupo",
+        "portVelocity": "Velocidade no duto",
+        "emptyTitle": "Faltam parâmetros para desenhar o gráfico",
+        "emptyBody": "Preencha {{missing}} na região do driver.",
+        "emptyReady": "Parâmetros prontos. As curvas chegam com o motor de cálculo.",
+        "frequency": "Frequência (Hz)",
+        "level": "Nível (dB)"
+    },
+    "results": {
+        "f3": "F3",
+        "fb": "Fb",
+        "portLength": "Comprimento do duto",
+        "xmaxPower": "Potência no Xmax",
+        "efficiency": "Eficiência"
+    },
+    "catalog": {
+        "label": "Catálogo de drivers",
+        "placeholder": "Buscar fabricante ou modelo",
+        "submit": "Enviar driver",
+        "offlineReason": "Indisponível sem conexão com o servidor."
+    },
+    "offline": {
+        "title": "Sem conexão.",
+        "body": "O catálogo de drivers e o envio de parâmetros estão indisponíveis. O resto continua funcionando."
+    },
+    "shortcuts": {
+        "title": "Atalhos de teclado",
+        "chartTabs": "Trocar aba de gráfico",
+        "help": "Mostrar esta ajuda",
+        "hint": "As teclas 1–5, ?, desfazer e refazer valem fora dos campos de texto."
+    }
+}

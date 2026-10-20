@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <title>BuildBass</title>
+        <script>
+            // Aplica tema e idioma antes da primeira pintura, para não piscar o tema errado.
+            (function () {
+                var saved = {};
+                try {
+                    var raw = localStorage.getItem('buildbass.preferences');
+                    saved = (raw && JSON.parse(raw).state) || {};
+                } catch (error) {
+                    saved = {};
+                }
+                var theme = saved.theme;
+                if (theme !== 'light' && theme !== 'dark') {
+                    theme = matchMedia('(prefers-color-scheme: dark)').matches
+                        ? 'dark'
+                        : 'light';
+                }
+                var locale = saved.locale;
+                if (locale !== 'pt-BR' && locale !== 'en') {
+                    locale = /^en\b/i.test(navigator.language) ? 'en' : 'pt-BR';
+                }
+                document.documentElement.dataset.theme = theme;
+                document.documentElement.lang = locale;
+            })();
+        </script>
+        <style>
+            html {
+                background-color: #f4f4f2;
+            }
+            html[data-theme='dark'] {
+                background-color: #121212;
+            }
+        </style>
+    </head>
+    <body class="bg-background font-sans text-foreground antialiased">
+        <div id="root"></div>
+        <script type="module" src="/src/main.tsx"></script>
+    </body>
+</html>

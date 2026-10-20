@@ -1,0 +1,74 @@
+{
+    "appName": "BuildBass",
+    "status": {
+        "none": "No status",
+        "ok": "Consistent",
+        "warn": "Warning",
+        "error": "Error",
+        "unchecked": "Not checked"
+    },
+    "validation": {
+        "invalidNumber": "Enter a valid number.",
+        "outOfRange": "Out of the accepted range ({{min}} to {{max}} {{unit}})."
+    },
+    "units": {
+        "system": "Unit system",
+        "metric": "Metric",
+        "imperial": "Imperial",
+        "change": "Change unit of {{parameter}}",
+        "changeFrom": "{{unit}} — change unit of {{parameter}}"
+    },
+    "theme": {
+        "label": "Theme",
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System"
+    },
+    "language": {
+        "label": "Language",
+        "current": "{{code}} — Language",
+        "pt-BR": "Português (Brasil)",
+        "en": "English"
+    },
+    "preferences": "Preferences",
+    "comingSoon": {
+        "title": "Coming soon",
+        "body": "“{{action}}” is not available yet. It arrives in an upcoming version of BuildBass.",
+        "close": "Close"
+    },
+    "reference": {
+        "title": "Component reference",
+        "subtitle": "Tokens, typography and base components in every state. Visible only in development.",
+        "tokens": "Color tokens",
+        "typography": "Typography",
+        "components": "Components",
+        "sampleTitle": "Archivo 22 / 700 — titles",
+        "sampleHeading": "Archivo 15 / 600 — names and headings",
+        "sampleBody": "Archivo 14 / 400 — interface text",
+        "sampleSection": "Archivo condensed 12 / 600 — section label",
+        "sampleNumbers": "IBM Plex Mono for every numeric value, with tabular figures.",
+        "buttons": "Buttons",
+        "fields": "Parameter fields",
+        "controls": "Selection, tabs and menus",
+        "feedback": "Notices, values and status",
+        "primary": "Primary",
+        "secondary": "Secondary",
+        "quiet": "Quiet",
+        "disabled": "Disabled",
+        "openDialog": "Open dialog",
+        "dialogBody": "Dialogs trap focus and close with Esc.",
+        "hoverMe": "Hover or focus me",
+        "tooltipBody": "Tooltips open on hover and on focus.",
+        "menu": "Sample menu",
+        "option": "Option {{n}}",
+        "search": "Search",
+        "bannerInfo": "Informational banner notice.",
+        "bannerWarn": "Warning banner notice.",
+        "withValue": "With value",
+        "empty": "Empty",
+        "stateOk": "consistent",
+        "stateWarn": "differs 3–7%",
+        "stateError": "differs more than 7%",
+        "stateUnchecked": "not checkable"
+    }
+}

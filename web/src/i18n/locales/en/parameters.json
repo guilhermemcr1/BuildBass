@@ -1,0 +1,58 @@
+{
+    "fs_hz": {
+        "label": "Resonant frequency",
+        "help": "Frequency at which the cone resonates in free air, without a box."
+    },
+    "qts": {
+        "label": "Total Q",
+        "help": "Total damping of the driver at resonance; combines electrical and mechanical losses."
+    },
+    "qes": {
+        "label": "Electrical Q",
+        "help": "Share of the damping that comes from the motor (voice coil and magnet)."
+    },
+    "qms": {
+        "label": "Mechanical Q",
+        "help": "Share of the damping that comes from the suspension (spider and surround)."
+    },
+    "vas_m3": {
+        "label": "Equivalent volume",
+        "help": "Volume of air with the same stiffness as the cone suspension."
+    },
+    "re_ohm": {
+        "label": "Coil resistance",
+        "help": "Electrical resistance of the voice coil measured at DC."
+    },
+    "le_h": {
+        "label": "Coil inductance",
+        "help": "Inductance of the voice coil, which reduces the response at high frequencies."
+    },
+    "xmax_m": {
+        "label": "Maximum excursion",
+        "help": "Largest one-way cone displacement that still behaves linearly."
+    },
+    "sd_m2": {
+        "label": "Cone area",
+        "help": "Effective area that moves air, usually including half of the surround."
+    },
+    "pe_w": {
+        "label": "Thermal power",
+        "help": "Power the driver handles continuously without overheating."
+    },
+    "bl_tm": {
+        "label": "Force factor",
+        "help": "Motor strength: magnetic field times the length of wire in the coil."
+    },
+    "mms_kg": {
+        "label": "Moving mass",
+        "help": "Mass of the moving assembly, including the air it carries."
+    },
+    "vb_m3": {
+        "label": "Box volume",
+        "help": "Net internal air volume of the box."
+    },
+    "fb_hz": {
+        "label": "Port tuning",
+        "help": "Frequency at which the port and the box volume resonate together."
+    }
+}

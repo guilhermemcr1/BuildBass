@@ -1,0 +1,115 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/archivo/wdth.css';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
+@import '@fontsource/ibm-plex-mono/600.css';
+
+/* Tokens semânticos (specs/001-design-system-bancada/contracts/design-tokens.md).
+   Componentes usam só as classes geradas a partir deles, nunca hex/rgb diretos. */
+
+:root {
+    color-scheme: light;
+
+    --background: #f4f4f2;
+    --surface: #ffffff;
+    --raised: #eeeeeb;
+    --border: #d6d6d1;
+    --foreground: #161616;
+    --muted: #5c5c57;
+    --disabled: #a3a39f;
+    --accent: #4d7c0f;
+    --accent-foreground: #ffffff;
+    --accent-soft: #3f6212;
+    --status-ok: #0f766e;
+    --status-warn: #875a00;
+    --status-error: #cf222e;
+    --warn-bg: #fff2cc;
+    --warn-foreground: #5c3d00;
+    --series-1: var(--accent);
+    --series-2: #b85a00;
+    --series-3: #8250df;
+    --series-4: #1f6feb;
+}
+
+[data-theme='dark'] {
+    color-scheme: dark;
+
+    --background: #121212;
+    --surface: #1a1a1a;
+    --raised: #232323;
+    --border: #2f2f2f;
+    --foreground: #ececec;
+    --muted: #a3a3a3;
+    --disabled: #5f5f5f;
+    --accent: #b8f53d;
+    --accent-foreground: #0e1400;
+    --accent-soft: #cbf77a;
+    --status-ok: #2dd4bf;
+    --status-warn: #d7a12b;
+    --status-error: #ff6b61;
+    --warn-bg: #33290f;
+    --warn-foreground: #f3dfa2;
+    --series-2: #f59e42;
+    --series-3: #c792ea;
+    --series-4: #5ab0ff;
+}
+
+@theme inline {
+    --color-background: var(--background);
+    --color-surface: var(--surface);
+    --color-raised: var(--raised);
+    --color-border: var(--border);
+    --color-foreground: var(--foreground);
+    --color-muted: var(--muted);
+    --color-disabled: var(--disabled);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent-soft: var(--accent-soft);
+    --color-status-ok: var(--status-ok);
+    --color-status-warn: var(--status-warn);
+    --color-status-error: var(--status-error);
+    --color-warn-bg: var(--warn-bg);
+    --color-warn-foreground: var(--warn-foreground);
+    --color-series-1: var(--series-1);
+    --color-series-2: var(--series-2);
+    --color-series-3: var(--series-3);
+    --color-series-4: var(--series-4);
+
+    --font-sans: 'Archivo Variable', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+    /* sm = itens internos, md = controles, lg = painéis */
+    --radius-sm: 3px;
+    --radius-md: 4px;
+    --radius-lg: 6px;
+}
+
+@utility text-section {
+    font-size: 12px;
+    font-weight: 600;
+    font-stretch: 75%;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+@utility num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+}
+
+@layer base {
+    html {
+        background-color: var(--background);
+        color: var(--foreground);
+    }
+
+    body {
+        min-height: 100dvh;
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
+}
