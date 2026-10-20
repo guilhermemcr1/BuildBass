@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Tabs } from '@/components/ui/tabs';
 import { PORT_VELOCITY_ERROR_MS, PORT_VELOCITY_WARN_MS } from '@/engine';
 import type { CurveId, FieldKey } from '@/engine';
+import { useActiveProject } from '@/hooks/use-active-project';
 import { useSimulations } from '@/hooks/use-simulation';
 import type { ProjectSimulation } from '@/hooks/use-simulation';
 import { PARAMETERS } from '@/lib/parameters';
@@ -68,6 +69,7 @@ export function ChartPanel({
     const { locale } = useLocale();
     const unitSystem = usePreferences((state) => state.unitSystem);
     const plotted = useSimulations();
+    const xmax = useActiveProject((state) => state.data.driver.xmax_m);
     const [localSelected, setLocalSelected] = useState<ChartKind>('response');
     const anyVented = plotted.some(
         ({ project }) => project.data.box.type === 'vented',
@@ -84,8 +86,28 @@ export function ChartPanel({
     const unitFor = (quantity: QuantityId): UnitId =>
         defaultUnitFor(quantity, unitSystem);
 
-    // Limites fixos da velocidade do ar, somados aos que vêm de fora (Xmax).
+    // Limites fixos: Xmax do projeto ativo e velocidade do ar, somados aos que vêm de fora.
     const limitsFor = (kind: ChartKind): ChartLimit[] => {
+        if (kind === 'excursion') {
+            const unit = unitFor('length');
+
+            return [
+                ...(limits[kind] ?? []),
+                ...(xmax === undefined || xmax <= 0
+                    ? []
+                    : [
+                          {
+                              value: fromSi(xmax, unit),
+                              tone: 'warn' as const,
+                              label: t('engine:limits.xmax', {
+                                  value: formatWithUnit(xmax, unit, locale),
+                              }),
+                              highlight: true,
+                          },
+                      ]),
+            ];
+        }
+
         if (kind !== 'portVelocity') {
             return limits[kind] ?? [];
         }

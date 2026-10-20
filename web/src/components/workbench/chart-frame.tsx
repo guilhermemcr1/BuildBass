@@ -16,6 +16,8 @@ export type ChartLimit = {
     value: number;
     tone: 'warn' | 'error';
     label: string;
+    // Redesenha em destaque o trecho de cada série acima do limite (ex.: excursão > Xmax).
+    highlight?: boolean;
 };
 
 type ChartFrameProps = {
@@ -68,6 +70,15 @@ function chartData(
         [...frequencies],
         ...series.map((item) => item.values),
         ...limits.map((limit) => frequencies.map(() => limit.value)),
+        ...limits
+            .filter((limit) => limit.highlight === true)
+            .flatMap((limit) =>
+                series.map((item) =>
+                    item.values.map((value) =>
+                        value !== null && value > limit.value ? value : null,
+                    ),
+                ),
+            ),
     ];
 }
 
@@ -171,6 +182,19 @@ export default function ChartFrame({
                             width: 1,
                             dash: [6, 4],
                         })),
+                        ...config.limits
+                            .filter((limit) => limit.highlight === true)
+                            .flatMap((limit) =>
+                                config.series.map(([, label]) => ({
+                                    label: `${label} > ${limit.label}`,
+                                    stroke: token(
+                                        limit.tone === 'warn'
+                                            ? '--status-warn'
+                                            : '--status-error',
+                                    ),
+                                    width: 3,
+                                })),
+                            ),
                     ],
                 },
                 dataRef.current,

@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vite-plus/test';
 import { AIR_DENSITY, SPEED_OF_SOUND } from './constants';
 import { FREQUENCIES_HZ } from './frequencies';
 import { portLength } from './port';
+import { signalLevels } from './simulate';
 import { simulate } from './simulate';
 import type { BoxInput, DriverInput, ProjectInput } from './types';
 
@@ -299,6 +300,113 @@ describe('simulate — duto (US2)', () => {
 
         expect(result.curves).toEqual({});
         expect(result.warnings).toContainEqual({ id: 'portVolumeTooLarge' });
+    });
+});
+
+describe('simulate — N drivers e sinal (R8, US5)', () => {
+    const voltage = (
+        count: number,
+        wiring: 'series' | 'parallel',
+        vb = 0.05,
+    ): ProjectInput =>
+        project(
+            { ...REFERENCE, le_h: 0, xmax_m: 0.014, pe_w: 500 },
+            { vb_m3: vb },
+            {
+                drivers: { count, wiring },
+                signal: { mode: 'voltage', voltage_v: 2.83, radiation: 'half' },
+            },
+        );
+    const one = simulate(voltage(1, 'parallel'));
+
+    test('impedância: paralelo Z1/2, série 2·Z1 (caixa proporcional)', () => {
+        const z1 = one.curves.impedance_ohm ?? [];
+        const parallel = simulate(voltage(2, 'parallel', 0.1)).curves
+            .impedance_ohm;
+        const series = simulate(voltage(2, 'series', 0.1)).curves.impedance_ohm;
+
+        z1.forEach((value, index) => {
+            expect(parallel?.[index]).toBeCloseTo(value / 2, 9);
+            expect(series?.[index]).toBeCloseTo(value * 2, 9);
+        });
+        expect(
+            simulate(voltage(2, 'parallel', 0.1)).results.impedance_total_ohm,
+        ).toBeCloseTo(1.8, 9);
+    });
+
+    test('2 em paralelo na mesma tensão: +6,02 dB em toda a curva', () => {
+        const a = one.curves.spl_db ?? [];
+        const b = simulate(voltage(2, 'parallel', 0.1)).curves.spl_db ?? [];
+
+        a.forEach((value, index) => {
+            expect(
+                Math.abs(b[index] - value - 20 * Math.log10(2)),
+            ).toBeLessThan(0.05);
+        });
+    });
+
+    test('tensão do sinal = √(P·Re_tot) e potência equivalente', () => {
+        const input = project(
+            REFERENCE,
+            { vb_m3: 0.1 },
+            {
+                drivers: { count: 2, wiring: 'series' },
+                signal: { mode: 'power', power_w: 100, radiation: 'half' },
+            },
+        );
+
+        expect(simulate(input).results.voltage_v).toBeCloseTo(
+            Math.sqrt(100 * 7.2),
+            9,
+        );
+        expect(signalLevels(input)).toEqual({
+            re_total_ohm: 7.2,
+            voltage_v: Math.sqrt(720),
+            power_w: 100,
+        });
+        expect(
+            signalLevels({
+                ...input,
+                signal: { mode: 'voltage', voltage_v: 12, radiation: 'half' },
+            }).power_w,
+        ).toBeCloseTo(144 / 7.2, 9);
+    });
+
+    test('potência no Xmax: menor P·(Xmax/x)² entre F3 e 1000 Hz', () => {
+        const excursion = one.curves.excursion_m ?? [];
+        const f3 = one.results.f3_hz ?? 0;
+        const power = one.results.power_w ?? 0;
+        const expected = Math.min(
+            ...FREQUENCIES_HZ.flatMap((frequency, index) =>
+                frequency >= f3
+                    ? [power * (0.014 / excursion[index]) ** 2]
+                    : [],
+            ),
+        );
+
+        expect(one.results.xmax_power_w).toBeCloseTo(expected, 9);
+    });
+
+    test('acima de N·Pe avisa', () => {
+        const input = project(
+            { ...REFERENCE, pe_w: 500 },
+            { vb_m3: 0.1 },
+            {
+                drivers: { count: 2, wiring: 'parallel' },
+                signal: { mode: 'power', power_w: 1200, radiation: 'half' },
+            },
+        );
+
+        expect(simulate(input).warnings).toContainEqual({
+            id: 'aboveThermalPower',
+            values: { power_w: 1200, limit_w: 1000 },
+        });
+        expect(
+            simulate({
+                ...input,
+                signal: { ...input.signal, power_w: 900 },
+            }).warnings.map(({ id }) => id),
+        ).not.toContain('aboveThermalPower');
     });
 });
 

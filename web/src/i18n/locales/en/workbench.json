@@ -27,6 +27,23 @@
         "rect": "Rectangular",
         "triangle": "Triangular"
     },
+    "drivers": {
+        "title": "Drivers",
+        "wiring": "Driver wiring",
+        "series": "Series",
+        "parallel": "Parallel"
+    },
+    "signal": {
+        "title": "Signal",
+        "mode": "Signal in",
+        "power": "Power (W)",
+        "voltage": "Voltage (V)",
+        "equivalent": "≈ {{value}} into the total Re ({{re}})",
+        "radiation": "Radiation",
+        "half": "Half space",
+        "full": "Free space",
+        "abovePe": "Above N·Pe ({{limit}})."
+    },
     "charts": {
         "label": "Chart type",
         "response": "Response",

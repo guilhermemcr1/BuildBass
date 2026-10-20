@@ -13,7 +13,8 @@
     },
     "limits": {
         "portWarn": "Caution: {{value}}",
-        "portError": "Limit: {{value}}"
+        "portError": "Limit: {{value}}",
+        "xmax": "Xmax: {{value}}"
     },
     "status": {
         "portTooShort": "Too short",

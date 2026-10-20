@@ -76,6 +76,18 @@ export function ParameterField({
                     return;
                 }
 
+                // Sair do campo sem editar devolve o texto arredondado da tela: não é uma edição,
+                // e aceitá-la trocaria o valor exato (ou o calculado) pelo arredondado.
+                const step = 10 ** -findUnit(unit).decimals;
+
+                if (
+                    Number.isFinite(displayed) &&
+                    Math.abs(value - displayed) <= step / 2
+                ) {
+                    setOutOfRange(false);
+                    return;
+                }
+
                 const si = toSi(value, unit);
 
                 // Valor impossível não entra no rascunho: o campo volta ao último valor válido e

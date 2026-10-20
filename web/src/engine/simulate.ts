@@ -167,6 +167,54 @@ function findF3(model: Model): { f3?: number; below: boolean } {
     return { below: true };
 }
 
+export type SignalLevels = {
+    // Resistência DC do conjunto: série N·Re, paralelo Re/N.
+    re_total_ohm?: number;
+    voltage_v?: number;
+    power_w?: number;
+};
+
+// Sinal (research.md §6): watts e volts se convertem pela resistência DC do conjunto,
+// V = √(P·Re_tot). O modo diz qual dos dois foi digitado.
+export function signalLevels({
+    driver,
+    drivers,
+    signal,
+}: ProjectInput): SignalLevels {
+    const count = Math.max(1, Math.round(drivers.count));
+    const re = driver.re_ohm;
+    const reTotal =
+        re === undefined
+            ? undefined
+            : drivers.wiring === 'series'
+              ? count * re
+              : re / count;
+
+    if (signal.mode === 'voltage') {
+        const voltage = signal.voltage_v;
+
+        return {
+            re_total_ohm: reTotal,
+            voltage_v: voltage,
+            power_w:
+                reTotal === undefined || voltage === undefined
+                    ? undefined
+                    : voltage ** 2 / reTotal,
+        };
+    }
+
+    const power = signal.power_w;
+
+    return {
+        re_total_ohm: reTotal,
+        voltage_v:
+            reTotal === undefined || power === undefined
+                ? undefined
+                : Math.sqrt(power * reTotal),
+        power_w: power,
+    };
+}
+
 export function simulate(project: ProjectInput): Simulation {
     const derived = deriveDriver(project.driver);
     const values: Partial<Record<DriverKey, number>> = {};
@@ -201,20 +249,9 @@ export function simulate(project: ProjectInput): Simulation {
     const count = Math.max(1, Math.round(drivers.count));
     const series = drivers.wiring === 'series';
 
-    // Sinal (research.md §6): referência na resistência DC do conjunto.
-    const reTotal =
-        values.re_ohm === undefined
-            ? undefined
-            : series
-              ? count * values.re_ohm
-              : values.re_ohm / count;
-    let voltage: number | undefined;
-
-    if (signal.mode === 'voltage') {
-        voltage = signal.voltage_v;
-    } else if (reTotal !== undefined && signal.power_w !== undefined) {
-        voltage = Math.sqrt(signal.power_w * reTotal);
-    }
+    const levels = signalLevels(project);
+    const reTotal = levels.re_total_ohm;
+    const voltage = levels.voltage_v;
 
     // Falta o sinal só quando o próprio campo está vazio ou zerado (sem Re, quem falta é o Re).
     const signalValue =
@@ -226,8 +263,20 @@ export function simulate(project: ProjectInput): Simulation {
 
     if (reTotal !== undefined && voltage !== undefined) {
         results.voltage_v = voltage;
-        results.power_w = voltage ** 2 / reTotal;
+        results.power_w = levels.power_w;
         results.impedance_total_ohm = reTotal;
+    }
+
+    // Potência térmica do conjunto: N·Pe ([D06]; Pe é por driver).
+    if (
+        values.pe_w !== undefined &&
+        levels.power_w !== undefined &&
+        levels.power_w > count * values.pe_w
+    ) {
+        warnings.push({
+            id: 'aboveThermalPower',
+            values: { power_w: levels.power_w, limit_w: count * values.pe_w },
+        });
     }
 
     missing.spl_db = responseMissing;
@@ -451,6 +500,26 @@ export function simulate(project: ProjectInput): Simulation {
     const f3 = findF3(model);
     results.f3_hz = f3.f3;
     results.f3_below_range = f3.below || undefined;
+
+    // Potência que leva o cone ao Xmax: x ∝ V, então P·(Xmax/x)², a menor entre F3 e 1000 Hz
+    // (research.md §7); abaixo de F3 a caixa já não é usada.
+    if (
+        curves.excursion_m !== undefined &&
+        values.xmax_m !== undefined &&
+        values.xmax_m > 0 &&
+        results.power_w !== undefined
+    ) {
+        const from = f3.f3 ?? FREQUENCIES_HZ[0];
+        const xmax = values.xmax_m;
+        const power = results.power_w;
+        results.xmax_power_w = Math.min(
+            ...FREQUENCIES_HZ.flatMap((frequency, index) =>
+                frequency >= from
+                    ? [power * (xmax / excursion[index]) ** 2]
+                    : [],
+            ),
+        );
+    }
 
     return {
         frequencies_hz: FREQUENCIES_HZ,

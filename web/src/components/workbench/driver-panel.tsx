@@ -9,6 +9,7 @@ import type { DerivedDriver, DriverKey } from '@/engine';
 import { useActiveProject } from '@/hooks/use-active-project';
 import { useOnlineStatus } from '@/hooks/use-online-status';
 import { DRIVER_PARAMETERS } from '@/lib/parameters';
+import { DriversFields } from './drivers-fields';
 import { Panel } from './panel';
 import { useParameterField } from './use-parameter-field';
 
@@ -101,6 +102,7 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
                     />
                 ))}
             </div>
+            <DriversFields />
         </Panel>
     );
 }
