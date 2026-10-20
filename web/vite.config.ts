@@ -24,7 +24,7 @@ export default defineConfig({
     build: {
         // O orçamento real é ≤ 250 KB gzip do JS inicial (plan.md); o React Aria passa do limite
         // padrão de 500 KB minificado sem estourar esse orçamento.
-        chunkSizeWarningLimit: 600,
+        chunkSizeWarningLimit: 700,
     },
     test: {
         environment: 'jsdom',

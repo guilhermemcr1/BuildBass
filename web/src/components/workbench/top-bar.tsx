@@ -1,4 +1,4 @@
-import { Download, FilePlus, FolderOpen } from 'lucide-react';
+import { Download, FilePlus, FolderOpen, Keyboard } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -7,10 +7,11 @@ export type ProjectAction = 'new' | 'open' | 'export';
 
 type TopBarProps = {
     onAction: (action: ProjectAction) => void;
+    onHelp: () => void;
     preferences?: ReactNode;
 };
 
-export function TopBar({ onAction, preferences }: TopBarProps) {
+export function TopBar({ onAction, onHelp, preferences }: TopBarProps) {
     const { t } = useTranslation(['common', 'workbench']);
 
     return (
@@ -37,6 +38,14 @@ export function TopBar({ onAction, preferences }: TopBarProps) {
             </nav>
             <div className="ml-auto flex flex-wrap items-center gap-2">
                 {preferences}
+                <Button
+                    variant="quiet"
+                    onPress={onHelp}
+                    aria-label={t('workbench:actions.help')}
+                    className="px-2.5"
+                >
+                    <Keyboard aria-hidden="true" className="size-4" />
+                </Button>
             </div>
         </header>
     );

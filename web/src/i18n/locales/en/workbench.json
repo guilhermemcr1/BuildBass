@@ -53,6 +53,7 @@
     "shortcuts": {
         "title": "Keyboard shortcuts",
         "chartTabs": "Switch chart tab",
-        "help": "Show this help"
+        "help": "Show this help",
+        "hint": "Keys 1–5, ?, undo and redo work outside text fields."
     }
 }

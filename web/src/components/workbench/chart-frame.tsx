@@ -85,10 +85,16 @@ export default function ChartFrame({ xLabel, yLabel }: ChartFrameProps) {
 
         build();
 
+        // Redimensionar no próximo quadro: fazê-lo dentro do callback dispara o erro
+        // "ResizeObserver loop completed with undelivered notifications".
+        let frame = 0;
         const resize = new ResizeObserver(() => {
-            plot?.setSize({
-                width: element.clientWidth,
-                height: element.clientHeight,
+            cancelAnimationFrame(frame);
+            frame = requestAnimationFrame(() => {
+                plot?.setSize({
+                    width: element.clientWidth,
+                    height: element.clientHeight,
+                });
             });
         });
         resize.observe(element);
@@ -100,6 +106,7 @@ export default function ChartFrame({ xLabel, yLabel }: ChartFrameProps) {
         });
 
         return () => {
+            cancelAnimationFrame(frame);
             resize.disconnect();
             themeWatcher.disconnect();
             plot?.destroy();
