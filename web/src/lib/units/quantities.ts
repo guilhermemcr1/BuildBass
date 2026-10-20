@@ -17,7 +17,11 @@ export type QuantityId =
     | 'mechResistance'
     | 'ratio'
     | 'efficiency'
-    | 'level';
+    | 'level'
+    | 'voltage'
+    | 'time'
+    | 'velocity'
+    | 'count';
 
 export type UnitId =
     | 'Hz'
@@ -48,7 +52,13 @@ export type UnitId =
     | 'none'
     | 'fraction'
     | 'percent'
-    | 'dB';
+    | 'dB'
+    | 'V'
+    | 's'
+    | 'ms'
+    | 'm/s'
+    | 'ft/s'
+    | 'count';
 
 export type Unit = {
     id: UnitId;
@@ -169,6 +179,23 @@ export const QUANTITIES: Record<QuantityId, Quantity> = {
         defaultUnit: { metric: 'percent', imperial: 'percent' },
     },
     level: single('level', unit('dB', 'dB', 'both', 1, 1)),
+    voltage: single('voltage', unit('V', 'V', 'both', 1, 2)),
+    time: {
+        id: 'time',
+        siUnit: 's',
+        units: [unit('ms', 'ms', 'both', 1e-3, 1)],
+        defaultUnit: { metric: 'ms', imperial: 'ms' },
+    },
+    velocity: {
+        id: 'velocity',
+        siUnit: 'm/s',
+        units: [
+            unit('m/s', 'm/s', 'metric', 1, 1),
+            unit('ft/s', 'ft/s', 'imperial', FOOT_M, 1),
+        ],
+        defaultUnit: { metric: 'm/s', imperial: 'ft/s' },
+    },
+    count: single('count', unit('count', '', 'both', 1, 0)),
 };
 
 const UNITS_BY_ID = new Map<UnitId, Unit>(

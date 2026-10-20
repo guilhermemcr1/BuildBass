@@ -1,10 +1,14 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import enCommon from './locales/en/common.json';
+import enEngine from './locales/en/engine.json';
 import enParameters from './locales/en/parameters.json';
+import enProject from './locales/en/project.json';
 import enWorkbench from './locales/en/workbench.json';
 import ptCommon from './locales/pt-BR/common.json';
+import ptEngine from './locales/pt-BR/engine.json';
 import ptParameters from './locales/pt-BR/parameters.json';
+import ptProject from './locales/pt-BR/project.json';
 import ptWorkbench from './locales/pt-BR/workbench.json';
 
 export type Locale = 'pt-BR' | 'en';
@@ -16,8 +20,16 @@ export const resources = {
         common: ptCommon,
         workbench: ptWorkbench,
         parameters: ptParameters,
+        project: ptProject,
+        engine: ptEngine,
     },
-    en: { common: enCommon, workbench: enWorkbench, parameters: enParameters },
+    en: {
+        common: enCommon,
+        workbench: enWorkbench,
+        parameters: enParameters,
+        project: enProject,
+        engine: enEngine,
+    },
 } as const;
 
 export function detectLocale(language: string | undefined): Locale {
@@ -29,7 +41,7 @@ export function initI18n(locale: Locale): typeof i18n {
         resources,
         lng: locale,
         fallbackLng: 'pt-BR',
-        ns: ['common', 'workbench', 'parameters'],
+        ns: ['common', 'workbench', 'parameters', 'project', 'engine'],
         defaultNS: 'common',
         interpolation: { escapeValue: false },
         returnNull: false,
