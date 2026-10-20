@@ -1,15 +1,23 @@
 import { Info, WifiOff } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
 type BannerProps = {
     tone?: 'info' | 'warn';
+    // Ícone no lugar do padrão do tom.
+    icon?: LucideIcon;
     className?: string;
     children: ReactNode;
 };
 
-export function Banner({ tone = 'info', className, children }: BannerProps) {
-    const Icon = tone === 'warn' ? WifiOff : Info;
+export function Banner({
+    tone = 'info',
+    icon,
+    className,
+    children,
+}: BannerProps) {
+    const Icon = icon ?? (tone === 'warn' ? WifiOff : Info);
 
     return (
         <div

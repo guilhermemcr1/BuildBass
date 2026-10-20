@@ -2,5 +2,24 @@
     "charts": {
         "noPort": "A sealed box has no port.",
         "noData": "not enough data"
+    },
+    "warnings": {
+        "netVolumeInvalid": "The drivers take up more volume than the box. Increase the volume or reduce the driver displacement.",
+        "portVolumeTooLarge": "The port doesn't fit in the box at this tuning. Use a narrower port, fewer ports or a larger box.",
+        "portTooShort": "The port would have zero or negative length. Use a narrower port or fewer ports.",
+        "portTooLong": "The port is long ({{length}}) for this box. Consider a narrower port or another tuning.",
+        "noInductance": "Without Le, the response above a few hundred Hz may look optimistic.",
+        "aboveThermalPower": "The power exceeds the driver's thermal rating (Pe)."
+    },
+    "limits": {
+        "portWarn": "Caution: {{value}}",
+        "portError": "Limit: {{value}}"
+    },
+    "status": {
+        "portTooShort": "Too short",
+        "portTooLong": "Long",
+        "velocityOk": "Below {{value}}",
+        "velocityWarn": "Audible noise",
+        "velocityError": "Above {{value}}"
     }
 }

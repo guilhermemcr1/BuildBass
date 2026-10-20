@@ -20,6 +20,13 @@
         "bandpass": "Bandpass",
         "bandpassUnavailable": "Bandpass boxes arrive in an upcoming version."
     },
+    "port": {
+        "title": "Port",
+        "shape": "Port shape",
+        "round": "Round",
+        "rect": "Rectangular",
+        "triangle": "Triangular"
+    },
     "charts": {
         "label": "Chart type",
         "response": "Response",

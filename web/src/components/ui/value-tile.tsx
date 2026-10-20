@@ -3,6 +3,8 @@ import { formatQuantity } from '@/lib/units/format';
 import { findUnit } from '@/lib/units/quantities';
 import type { UnitId } from '@/lib/units/quantities';
 import { cn } from '@/lib/utils';
+import { StatusIndicator } from './status-indicator';
+import type { FieldStatus } from './status-indicator';
 
 type ValueTileProps = {
     label: string;
@@ -10,6 +12,8 @@ type ValueTileProps = {
     unit: UnitId;
     // Texto no lugar do número (ex.: "< 10" quando o valor sai da faixa calculada).
     display?: string;
+    status?: FieldStatus;
+    statusLabel?: string;
     className?: string;
 };
 
@@ -18,6 +22,8 @@ export function ValueTile({
     valueSi,
     unit,
     display,
+    status = 'none',
+    statusLabel,
     className,
 }: ValueTileProps) {
     const { locale } = useLocale();
@@ -38,6 +44,7 @@ export function ValueTile({
                     {findUnit(unit).symbol}
                 </span>
             </span>
+            <StatusIndicator status={status} label={statusLabel} />
         </div>
     );
 }

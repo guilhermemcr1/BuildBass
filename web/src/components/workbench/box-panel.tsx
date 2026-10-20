@@ -5,6 +5,7 @@ import { SliderField } from '@/components/ui/slider-field';
 import { useActiveProject } from '@/hooks/use-active-project';
 import type { BoxType } from '@/lib/project/types';
 import { Panel } from './panel';
+import { PortFields } from './port-fields';
 import { useParameterField } from './use-parameter-field';
 
 // Faixas dos sliders (SI): de caixas pequenas de carro a subwoofers grandes; o campo numérico
@@ -53,6 +54,7 @@ export function BoxPanel() {
                 )}
                 <ParameterField {...losses} />
             </div>
+            {boxType === 'vented' && <PortFields />}
         </Panel>
     );
 }

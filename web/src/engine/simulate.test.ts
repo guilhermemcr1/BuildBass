@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vite-plus/test';
 import { AIR_DENSITY, SPEED_OF_SOUND } from './constants';
 import { FREQUENCIES_HZ } from './frequencies';
+import { portLength } from './port';
 import { simulate } from './simulate';
 import type { BoxInput, DriverInput, ProjectInput } from './types';
 
@@ -18,7 +19,8 @@ function project(
         box: {
             type: 'closed',
             ql: LOSSLESS,
-            port: { shape: 'round', diameter_m: 0.1, count: 1 },
+            // Sem medida: o duto não ocupa volume e só a sintonia (Fb) conta.
+            port: { shape: 'round', count: 1 },
             ...box,
         },
         signal: { mode: 'power', power_w: 1, radiation: 'half' },
@@ -225,6 +227,78 @@ describe('simulate — dados faltando (R15)', () => {
 
         expect(result.curves).toEqual({});
         expect(result.warnings).toContainEqual({ id: 'netVolumeInvalid' });
+    });
+});
+
+describe('simulate — duto (US2)', () => {
+    const vented = (port: BoxInput['port'], vb = 0.1, fb = 35) =>
+        simulate(
+            project(REFERENCE, { type: 'vented', vb_m3: vb, fb_hz: fb, port }),
+        );
+
+    test('comprimento consistente com o volume líquido e velocidade do ar', () => {
+        const result = vented({ shape: 'round', diameter_m: 0.1, count: 1 });
+        const area = (Math.PI * 0.1 ** 2) / 4;
+        const net = result.results.net_volume_m3 ?? 0;
+        const length = result.results.port_length_m ?? 0;
+
+        expect(length).toBeGreaterThan(0);
+        expect(
+            portLength({ fb_hz: 35, volume_m3: net, area_m2: area, count: 1 }),
+        ).toBeCloseTo(length, 9);
+        expect(Math.abs(net + area * length - 0.1) / 0.1).toBeLessThan(1e-6);
+        expect(result.curves.port_velocity_ms).toHaveLength(
+            FREQUENCIES_HZ.length,
+        );
+        expect(result.results.port_velocity_max_ms).toBeGreaterThan(0);
+        expect(result.warnings).toEqual([{ id: 'noInductance' }]);
+    });
+
+    test('a velocidade do ar é máxima perto de Fb', () => {
+        const result = vented({ shape: 'round', diameter_m: 0.1, count: 1 });
+        const velocity = result.curves.port_velocity_ms ?? [];
+        const peak = velocity.indexOf(Math.max(...velocity));
+
+        expect(Math.abs(FREQUENCIES_HZ[peak] - 35) / 35).toBeLessThan(0.1);
+    });
+
+    test('sem medida do duto: resposta sai, velocidade pede a medida', () => {
+        const result = vented({ shape: 'rect', width_m: 0.05, count: 1 });
+
+        expect(result.curves.spl_db).toBeDefined();
+        expect(result.curves.port_velocity_ms).toBeUndefined();
+        expect(result.missing.port_velocity_ms).toEqual(['height_m']);
+    });
+
+    test('duto curto demais avisa', () => {
+        const result = vented(
+            { shape: 'round', diameter_m: 0.02, count: 1 },
+            0.1,
+            35,
+        );
+
+        expect(result.warnings).toContainEqual({ id: 'portTooShort' });
+    });
+
+    test('duto longo demais avisa', () => {
+        const result = vented(
+            { shape: 'round', diameter_m: 0.1, count: 1 },
+            0.1,
+            20,
+        );
+
+        expect(result.warnings.map(({ id }) => id)).toContain('portTooLong');
+    });
+
+    test('duto que não cabe na caixa: sem curvas', () => {
+        const result = vented(
+            { shape: 'rect', width_m: 0.3, height_m: 0.3, count: 4 },
+            0.05,
+            40,
+        );
+
+        expect(result.curves).toEqual({});
+        expect(result.warnings).toContainEqual({ id: 'portVolumeTooLarge' });
     });
 });
 

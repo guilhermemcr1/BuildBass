@@ -27,3 +27,12 @@ export function formatQuantity(
         fromSi(si, unitId),
     );
 }
+
+// Valor com o símbolo da unidade, para textos corridos ("17 m/s").
+export function formatWithUnit(
+    si: number,
+    unitId: UnitId,
+    locale: string,
+): string {
+    return `${formatQuantity(si, unitId, locale)} ${findUnit(unitId).symbol}`;
+}

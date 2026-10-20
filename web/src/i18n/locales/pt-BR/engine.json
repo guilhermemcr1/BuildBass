@@ -2,5 +2,24 @@
     "charts": {
         "noPort": "Caixa selada não tem duto.",
         "noData": "sem dados suficientes"
+    },
+    "warnings": {
+        "netVolumeInvalid": "O volume ocupado pelos drivers é maior que a caixa. Aumente o volume ou reduza o volume ocupado.",
+        "portVolumeTooLarge": "O duto não cabe na caixa nessa sintonia. Use um duto mais estreito, menos dutos ou uma caixa maior.",
+        "portTooShort": "O duto ficaria com comprimento zero ou negativo. Use um duto mais estreito ou menos dutos.",
+        "portTooLong": "O duto fica longo ({{length}}) para essa caixa. Considere um duto mais estreito ou outra sintonia.",
+        "noInductance": "Sem Le, a resposta acima de algumas centenas de Hz pode sair otimista.",
+        "aboveThermalPower": "A potência passa da potência térmica (Pe) do driver."
+    },
+    "limits": {
+        "portWarn": "Atenção: {{value}}",
+        "portError": "Limite: {{value}}"
+    },
+    "status": {
+        "portTooShort": "Curto demais",
+        "portTooLong": "Longo",
+        "velocityOk": "Abaixo de {{value}}",
+        "velocityWarn": "Ruído audível",
+        "velocityError": "Acima de {{value}}"
     }
 }

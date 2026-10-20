@@ -1,17 +1,83 @@
+import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
+import type { FieldStatus } from '@/components/ui/status-indicator';
 import { ValueTile } from '@/components/ui/value-tile';
+import { PORT_VELOCITY_ERROR_MS, PORT_VELOCITY_WARN_MS } from '@/engine';
+import type { SimulationResults, WarningId } from '@/engine';
 import { useActiveProject } from '@/hooks/use-active-project';
 import { useActiveSimulation } from '@/hooks/use-simulation';
+import { formatWithUnit } from '@/lib/units/format';
 import { defaultUnitFor } from '@/lib/units/quantities';
+import type { UnitId } from '@/lib/units/quantities';
 import { usePreferences } from '@/stores/preferences';
+import { EngineWarnings } from './engine-warnings';
 import { Panel } from './panel';
+
+type Status = { status: FieldStatus; statusLabel?: string };
+
+function lengthStatus(
+    warnings: WarningId[],
+    t: (key: string) => string,
+): Status {
+    if (warnings.includes('portTooShort')) {
+        return {
+            status: 'error',
+            statusLabel: t('engine:status.portTooShort'),
+        };
+    }
+
+    if (warnings.includes('portTooLong')) {
+        return { status: 'warn', statusLabel: t('engine:status.portTooLong') };
+    }
+
+    return { status: 'none' };
+}
+
+// Velocidade máxima no duto contra os limites de 17 e 25 m/s (FR-011).
+function velocityStatus(
+    results: SimulationResults,
+    format: (si: number) => string,
+    t: (key: string, options?: Record<string, string>) => string,
+): Status {
+    const velocity = results.port_velocity_max_ms;
+
+    if (velocity === undefined) {
+        return { status: 'none' };
+    }
+
+    if (velocity >= PORT_VELOCITY_ERROR_MS) {
+        return {
+            status: 'error',
+            statusLabel: t('engine:status.velocityError', {
+                value: format(PORT_VELOCITY_ERROR_MS),
+            }),
+        };
+    }
+
+    if (velocity >= PORT_VELOCITY_WARN_MS) {
+        return {
+            status: 'warn',
+            statusLabel: t('engine:status.velocityWarn'),
+        };
+    }
+
+    return {
+        status: 'ok',
+        statusLabel: t('engine:status.velocityOk', {
+            value: format(PORT_VELOCITY_WARN_MS),
+        }),
+    };
+}
 
 // Resultados do projeto ativo, calculados pelo motor (FR-004).
 export function ResultsPanel() {
-    const { t } = useTranslation('workbench');
+    const { t } = useTranslation(['workbench', 'engine']);
+    const { locale } = useLocale();
     const unitSystem = usePreferences((state) => state.unitSystem);
     const boxType = useActiveProject((state) => state.data.box.type);
-    const { results } = useActiveSimulation();
+    const { results, warnings } = useActiveSimulation();
+    const velocityUnit: UnitId = defaultUnitFor('velocity', unitSystem);
+    const warningIds = warnings.map(({ id }) => id);
 
     return (
         <Panel region="results" title={t('regions.results')}>
@@ -50,6 +116,18 @@ export function ResultsPanel() {
                             label={t('results.portLength')}
                             valueSi={results.port_length_m}
                             unit={defaultUnitFor('length', unitSystem)}
+                            {...lengthStatus(warningIds, t)}
+                        />
+                        <ValueTile
+                            label={t('results.portVelocity')}
+                            valueSi={results.port_velocity_max_ms}
+                            unit={velocityUnit}
+                            {...velocityStatus(
+                                results,
+                                (si) =>
+                                    formatWithUnit(si, velocityUnit, locale),
+                                t,
+                            )}
                         />
                     </>
                 )}
@@ -69,6 +147,7 @@ export function ResultsPanel() {
                     unit="percent"
                 />
             </div>
+            <EngineWarnings />
         </Panel>
     );
 }

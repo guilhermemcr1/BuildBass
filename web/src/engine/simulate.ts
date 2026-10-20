@@ -4,11 +4,13 @@ import { abs, arg, complex, mul } from './complex';
 import { AIR_DENSITY, SPEED_OF_SOUND } from './constants';
 import { deriveDriver } from './driver';
 import { FREQUENCIES_HZ } from './frequencies';
+import { netVolume as solveNetVolume, portArea } from './port';
 import type {
     CurveId,
     DriverKey,
     EngineWarning,
     FieldKey,
+    PortInput,
     ProjectInput,
     Simulation,
     SimulationResults,
@@ -37,6 +39,24 @@ type Model = {
     // Pressão da banda de passagem (assíntota sem Le), para normalizar e achar o F3.
     passbandPressure: number;
 };
+
+// Medidas que faltam para a área do duto, pela forma.
+function portMissing(port: PortInput): FieldKey[] {
+    switch (port.shape) {
+        case 'round':
+            return port.diameter_m === undefined ? ['diameter_m'] : [];
+        case 'rect':
+            return [
+                ...(port.width_m === undefined ? (['width_m'] as const) : []),
+                ...(port.height_m === undefined ? (['height_m'] as const) : []),
+            ];
+        case 'triangle':
+            return [
+                ...(port.base_m === undefined ? (['base_m'] as const) : []),
+                ...(port.height_m === undefined ? (['height_m'] as const) : []),
+            ];
+    }
+}
 
 function missingFrom(
     values: Partial<Record<DriverKey, number>>,
@@ -218,7 +238,9 @@ export function simulate(project: ProjectInput): Simulation {
         ...absoluteMissing,
         ...signalMissing,
     ];
-    missing.port_velocity_ms = vented ? [...missing.excursion_m] : [];
+    missing.port_velocity_ms = vented
+        ? [...missing.excursion_m, ...portMissing(box.port)]
+        : [];
 
     // Eficiência de referência η0 = (4π²/c³)·Fs³·Vas/Qes ([S72] eq. 26), N vezes para N drivers.
     if (
@@ -245,32 +267,64 @@ export function simulate(project: ProjectInput): Simulation {
         results.fb_hz = box.fb_hz;
     }
 
+    const empty = (): Simulation => ({
+        frequencies_hz: FREQUENCIES_HZ,
+        curves: {},
+        spl_normalized: true,
+        missing,
+        results,
+        warnings,
+    });
+
     if (responseMissing.length > 0 || box.vb_m3 === undefined) {
-        return {
-            frequencies_hz: FREQUENCIES_HZ,
-            curves: {},
-            spl_normalized: true,
-            missing,
-            results,
-            warnings,
-        };
+        return empty();
     }
 
-    const netVolume = box.vb_m3 - count * (values.vd_m3 ?? 0);
-    results.net_volume_m3 = netVolume;
+    const driversVolume = count * (values.vd_m3 ?? 0);
+    const portCount = Math.max(1, Math.round(box.port.count));
+    const area = vented ? portArea(box.port) : undefined;
+    let netVolume = box.vb_m3 - driversVolume;
 
     if (netVolume <= 0) {
+        results.net_volume_m3 = netVolume;
         warnings.push({ id: 'netVolumeInvalid' });
 
-        return {
-            frequencies_hz: FREQUENCIES_HZ,
-            curves: {},
-            spl_normalized: true,
-            missing,
-            results,
-            warnings,
-        };
+        return empty();
     }
+
+    // Na dutada, o volume dos dutos também sai da caixa (research.md §7).
+    if (area !== undefined && box.fb_hz !== undefined) {
+        const solved = solveNetVolume({
+            vb_m3: box.vb_m3,
+            drivers_m3: driversVolume,
+            fb_hz: box.fb_hz,
+            area_m2: area,
+            count: portCount,
+        });
+
+        if (Number.isNaN(solved.length_m)) {
+            results.net_volume_m3 = solved.net_m3;
+            warnings.push({ id: 'portVolumeTooLarge' });
+
+            return empty();
+        }
+
+        netVolume = solved.net_m3;
+        results.port_length_m = solved.length_m;
+
+        if (solved.length_m <= 0) {
+            warnings.push({ id: 'portTooShort' });
+        } else if (solved.length_m > Math.cbrt(box.vb_m3)) {
+            // Duto mais longo que a maior medida de uma caixa cúbica: ressonâncias do tubo
+            // caem perto da banda e ele dificilmente cabe.
+            warnings.push({
+                id: 'portTooLong',
+                values: { length_m: solved.length_m },
+            });
+        }
+    }
+
+    results.net_volume_m3 = netVolume;
 
     const fs = values.fs_hz as number;
     const qts = values.qts as number;
@@ -348,6 +402,9 @@ export function simulate(project: ProjectInput): Simulation {
     const phases: number[] = [];
     const excursion: number[] = [];
     const impedance: number[] = [];
+    const portVelocity: number[] = [];
+    // Área total de saída dos dutos; o fluxo de todos os drivers passa por ela.
+    const totalPortArea = area === undefined ? undefined : portCount * area;
 
     for (const frequency of FREQUENCIES_HZ) {
         const omega = 2 * Math.PI * frequency;
@@ -363,6 +420,14 @@ export function simulate(project: ProjectInput): Simulation {
         );
         const single = abs(point.impedance);
         impedance.push(series ? single * count : single / count);
+
+        if (totalPortArea !== undefined) {
+            // Velocidade de pico do ar no duto: √2·N·|Up| / (n·Sp1).
+            portVelocity.push(
+                (Math.SQRT2 * abs(point.port) * perDriverVoltage * count) /
+                    totalPortArea,
+            );
+        }
     }
 
     const curves: Simulation['curves'] = {
@@ -376,6 +441,11 @@ export function simulate(project: ProjectInput): Simulation {
 
     if (missing.excursion_m.length === 0) {
         curves.excursion_m = excursion;
+    }
+
+    if (missing.port_velocity_ms.length === 0 && totalPortArea !== undefined) {
+        curves.port_velocity_ms = portVelocity;
+        results.port_velocity_max_ms = Math.max(...portVelocity);
     }
 
     const f3 = findF3(model);

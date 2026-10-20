@@ -20,6 +20,13 @@
         "bandpass": "Bandpass",
         "bandpassUnavailable": "Caixa bandpass chega numa próxima versão."
     },
+    "port": {
+        "title": "Duto",
+        "shape": "Formato do duto",
+        "round": "Redondo",
+        "rect": "Retangular",
+        "triangle": "Triangular"
+    },
     "charts": {
         "label": "Tipo de gráfico",
         "response": "Resposta",

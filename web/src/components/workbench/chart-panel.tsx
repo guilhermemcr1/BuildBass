@@ -2,12 +2,14 @@ import { Suspense, lazy, useState } from 'react';
 import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { Tabs } from '@/components/ui/tabs';
+import { PORT_VELOCITY_ERROR_MS, PORT_VELOCITY_WARN_MS } from '@/engine';
 import type { CurveId, FieldKey } from '@/engine';
 import { useSimulations } from '@/hooks/use-simulation';
 import type { ProjectSimulation } from '@/hooks/use-simulation';
 import { PARAMETERS } from '@/lib/parameters';
 import { displayName } from '@/lib/project/names';
 import { fromSi } from '@/lib/units/convert';
+import { formatWithUnit } from '@/lib/units/format';
 import { defaultUnitFor, findUnit } from '@/lib/units/quantities';
 import type { QuantityId, UnitId } from '@/lib/units/quantities';
 import { usePreferences } from '@/stores/preferences';
@@ -81,6 +83,32 @@ export function ChartPanel({
 
     const unitFor = (quantity: QuantityId): UnitId =>
         defaultUnitFor(quantity, unitSystem);
+
+    // Limites fixos da velocidade do ar, somados aos que vêm de fora (Xmax).
+    const limitsFor = (kind: ChartKind): ChartLimit[] => {
+        if (kind !== 'portVelocity') {
+            return limits[kind] ?? [];
+        }
+
+        const unit = unitFor('velocity');
+        const limit = (
+            si: number,
+            tone: ChartLimit['tone'],
+            key: 'portWarn' | 'portError',
+        ): ChartLimit => ({
+            value: fromSi(si, unit),
+            tone,
+            label: t(`engine:limits.${key}`, {
+                value: formatWithUnit(si, unit, locale),
+            }),
+        });
+
+        return [
+            ...(limits[kind] ?? []),
+            limit(PORT_VELOCITY_WARN_MS, 'warn', 'portWarn'),
+            limit(PORT_VELOCITY_ERROR_MS, 'error', 'portError'),
+        ];
+    };
 
     const seriesFor = (kind: ChartKind): ChartSeries[] => {
         const { curve, quantity } = CURVES[kind];
@@ -188,7 +216,7 @@ export function ChartPanel({
                                         series={series}
                                         limits={
                                             series.length > 0
-                                                ? limits[kind]
+                                                ? limitsFor(kind)
                                                 : []
                                         }
                                         yRange={
