@@ -24,7 +24,8 @@ import { Tooltip } from './tooltip';
 type ParameterFieldProps = {
     parameter: ParameterKey;
     valueSi: number | undefined;
-    onChangeSi: (si: number) => void;
+    // `undefined` quando o campo é esvaziado (o valor deixa de ser digitado).
+    onChangeSi: (si: number | undefined) => void;
     unit: UnitId;
     onUnitChange?: (unit: UnitId) => void;
     status?: FieldStatus;
@@ -63,6 +64,8 @@ export function ParameterField({
             value={displayed}
             onChange={(value) => {
                 if (!Number.isFinite(value)) {
+                    setOutOfRange(false);
+                    onChangeSi(undefined);
                     return;
                 }
 

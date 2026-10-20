@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { SliderField } from '@/components/ui/slider-field';
-import { useDraft } from '@/stores/draft';
-import type { BoxType } from '@/stores/draft';
+import { useActiveProject } from '@/hooks/use-active-project';
+import type { BoxType } from '@/lib/project/types';
 import { Panel } from './panel';
 import { useParameterField } from './use-parameter-field';
 
@@ -13,8 +13,8 @@ const FB_SLIDER = { minSi: 10, maxSi: 200, scale: 'log' } as const;
 
 export function BoxPanel() {
     const { t } = useTranslation('workbench');
-    const boxType = useDraft((state) => state.boxType);
-    const setBoxType = useDraft((state) => state.setBoxType);
+    const boxType = useActiveProject((state) => state.data.box.type);
+    const setBoxType = useActiveProject((state) => state.setBoxType);
     const volume = useParameterField('vb_m3');
     const tuning = useParameterField('fb_hz');
 

@@ -1,7 +1,8 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
-import { useDraft } from '@/stores/draft';
+import { activeProjectStore } from '@/hooks/use-active-project';
+import { initialWorkspace, useWorkspace } from '@/stores/workspace';
 import { renderWithProviders } from '@/test/render';
 import { ChartPanel } from './chart-panel';
 
@@ -12,7 +13,7 @@ vi.mock('./chart-frame', () => ({
 
 describe('ChartPanel', () => {
     beforeEach(() => {
-        useDraft.getState().reset();
+        useWorkspace.setState(initialWorkspace());
     });
 
     test('sem parâmetros lista Fs, Qts e Vas como faltantes', () => {
@@ -27,9 +28,9 @@ describe('ChartPanel', () => {
     });
 
     test('com Fs, Qts e Vas preenchidos avisa que as curvas chegam com o motor', () => {
-        useDraft.getState().setValue('fs_hz', 28);
-        useDraft.getState().setValue('qts', 0.38);
-        useDraft.getState().setValue('vas_m3', 0.085);
+        activeProjectStore().getState().setDriverValue('fs_hz', 28);
+        activeProjectStore().getState().setDriverValue('qts', 0.38);
+        activeProjectStore().getState().setDriverValue('vas_m3', 0.085);
 
         renderWithProviders(<ChartPanel />);
 

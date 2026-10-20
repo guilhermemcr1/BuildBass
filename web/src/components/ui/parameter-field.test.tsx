@@ -12,7 +12,7 @@ type HarnessProps = {
     parameter: ParameterKey;
     initialSi?: number;
     initialUnit: UnitId;
-    onChangeSi?: (si: number) => void;
+    onChangeSi?: (si: number | undefined) => void;
 };
 
 function Harness({

@@ -3,8 +3,8 @@ import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { Tabs } from '@/components/ui/tabs';
 import { PARAMETERS } from '@/lib/parameters';
-import type { ParameterKey } from '@/lib/parameters';
-import { useDraft } from '@/stores/draft';
+import type { DriverKey } from '@/lib/project/types';
+import { useActiveProject } from '@/hooks/use-active-project';
 import { Panel } from './panel';
 
 const ChartFrame = lazy(() => import('./chart-frame'));
@@ -25,7 +25,7 @@ export const CHART_KINDS: ChartKind[] = [
 ];
 
 // Mínimo para desenhar a resposta de qualquer caixa (Small, 1972/1973).
-const REQUIRED: ParameterKey[] = ['fs_hz', 'qts', 'vas_m3'];
+const REQUIRED: DriverKey[] = ['fs_hz', 'qts', 'vas_m3'];
 
 type ChartPanelProps = {
     selected?: ChartKind;
@@ -35,7 +35,7 @@ type ChartPanelProps = {
 export function ChartPanel({ selected, onSelectedChange }: ChartPanelProps) {
     const { t } = useTranslation('workbench');
     const { locale } = useLocale();
-    const values = useDraft((state) => state.values);
+    const values = useActiveProject((state) => state.data.driver);
     const [localSelected, setLocalSelected] = useState<ChartKind>('response');
     const current = selected ?? localSelected;
     const missing = REQUIRED.filter((key) => values[key] === undefined);
