@@ -1,17 +1,30 @@
-import { Download, FilePlus, FolderOpen, Keyboard } from 'lucide-react';
+import {
+    Download,
+    FilePlus,
+    FolderOpen,
+    Keyboard,
+    Redo2,
+    Undo2,
+} from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 
-export type ProjectAction = 'new' | 'open' | 'export';
+export type ProjectAction = 'new' | 'open' | 'export' | 'undo' | 'redo';
 
 type TopBarProps = {
     onAction: (action: ProjectAction) => void;
+    history: { canUndo: boolean; canRedo: boolean };
     onHelp: () => void;
     preferences?: ReactNode;
 };
 
-export function TopBar({ onAction, onHelp, preferences }: TopBarProps) {
+export function TopBar({
+    onAction,
+    history,
+    onHelp,
+    preferences,
+}: TopBarProps) {
     const { t } = useTranslation(['common', 'workbench']);
 
     return (
@@ -34,6 +47,24 @@ export function TopBar({ onAction, onHelp, preferences }: TopBarProps) {
                 <Button variant="primary" onPress={() => onAction('export')}>
                     <Download aria-hidden="true" className="size-4" />
                     {t('workbench:actions.export')}
+                </Button>
+                <Button
+                    variant="quiet"
+                    onPress={() => onAction('undo')}
+                    disabled={!history.canUndo}
+                    aria-label={t('workbench:actions.undo')}
+                    className="px-2.5"
+                >
+                    <Undo2 aria-hidden="true" className="size-4" />
+                </Button>
+                <Button
+                    variant="quiet"
+                    onPress={() => onAction('redo')}
+                    disabled={!history.canRedo}
+                    aria-label={t('workbench:actions.redo')}
+                    className="px-2.5"
+                >
+                    <Redo2 aria-hidden="true" className="size-4" />
                 </Button>
             </nav>
             <div className="ml-auto flex flex-wrap items-center gap-2">
