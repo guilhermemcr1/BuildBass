@@ -1,0 +1,43 @@
+import { Download, FilePlus, FolderOpen } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/ui/button';
+
+export type ProjectAction = 'new' | 'open' | 'export';
+
+type TopBarProps = {
+    onAction: (action: ProjectAction) => void;
+    preferences?: ReactNode;
+};
+
+export function TopBar({ onAction, preferences }: TopBarProps) {
+    const { t } = useTranslation(['common', 'workbench']);
+
+    return (
+        <header className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border bg-surface px-4 py-2.5">
+            <span className="text-lg font-bold tracking-tight">
+                {t('common:appName')}
+            </span>
+            <nav
+                aria-label={t('common:appName')}
+                className="flex flex-wrap items-center gap-1"
+            >
+                <Button variant="quiet" onPress={() => onAction('new')}>
+                    <FilePlus aria-hidden="true" className="size-4" />
+                    {t('workbench:actions.new')}
+                </Button>
+                <Button variant="quiet" onPress={() => onAction('open')}>
+                    <FolderOpen aria-hidden="true" className="size-4" />
+                    {t('workbench:actions.open')}
+                </Button>
+                <Button variant="primary" onPress={() => onAction('export')}>
+                    <Download aria-hidden="true" className="size-4" />
+                    {t('workbench:actions.export')}
+                </Button>
+            </nav>
+            <div className="ml-auto flex flex-wrap items-center gap-2">
+                {preferences}
+            </div>
+        </header>
+    );
+}

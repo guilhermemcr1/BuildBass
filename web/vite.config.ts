@@ -21,6 +21,11 @@ export default defineConfig({
         port: 5173,
         strictPort: true,
     },
+    build: {
+        // O orçamento real é ≤ 250 KB gzip do JS inicial (plan.md); o React Aria passa do limite
+        // padrão de 500 KB minificado sem estourar esse orçamento.
+        chunkSizeWarningLimit: 600,
+    },
     test: {
         environment: 'jsdom',
         include: ['src/**/*.test.{ts,tsx}'],
