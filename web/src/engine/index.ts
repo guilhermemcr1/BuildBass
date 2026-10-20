@@ -2,6 +2,8 @@
 export { PORT_VELOCITY_ERROR_MS, PORT_VELOCITY_WARN_MS } from './constants';
 export { deriveDriver, DRIVER_KEYS } from './driver';
 export { FREQUENCIES_HZ } from './frequencies';
+export { suggestBox } from './alignments';
+export type { Alignment, Suggestion } from './alignments';
 export { signalLevels, simulate } from './simulate';
 export type { SignalLevels } from './simulate';
 export type * from './types';

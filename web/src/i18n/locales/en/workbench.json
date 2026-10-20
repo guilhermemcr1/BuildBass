@@ -20,6 +20,10 @@
         "bandpass": "Bandpass",
         "bandpassUnavailable": "Bandpass boxes arrive in an upcoming version."
     },
+    "suggest": {
+        "button": "Suggest box",
+        "needs": "Fill in {{missing}} to get a suggestion."
+    },
     "port": {
         "title": "Port",
         "shape": "Port shape",

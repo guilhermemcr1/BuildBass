@@ -26,5 +26,13 @@
         "fs": "{{deviation}} off between Fs, Mms, Vas and Sd (Fs = 1 / 2π√(Mms·Cms)).",
         "qes": "{{deviation}} off in Qes = 2π·Fs·Mms·Re / Bl².",
         "derived": "calculated"
+    },
+    "alignments": {
+        "butterworth2": "Sealed Butterworth (Qtc 0.707): Vb {{vb}}.",
+        "keele": "Vented Thiele/Keele (QB3–SBB4): Vb {{vb}} and Fb {{fb}}.",
+        "grossNote": "The volume already includes what the drivers and ports take up.",
+        "closedQtsTooHigh": "With Qts {{qts}} a sealed Butterworth box would exceed 3.3·Vas. Use a higher Qtc or an infinite baffle.",
+        "ventedQtsTooHigh": "Qts {{qts}} is high for a vented box (above 0.5). Prefer a sealed box.",
+        "qtsTooLow": "Qts {{qts}} is low for the vented alignments (below 0.2): the box would be small and the response too high for a subwoofer."
     }
 }

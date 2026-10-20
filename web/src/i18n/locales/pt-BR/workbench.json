@@ -20,6 +20,10 @@
         "bandpass": "Bandpass",
         "bandpassUnavailable": "Caixa bandpass chega numa próxima versão."
     },
+    "suggest": {
+        "button": "Sugerir caixa",
+        "needs": "Preencha {{missing}} para sugerir."
+    },
     "port": {
         "title": "Duto",
         "shape": "Formato do duto",
