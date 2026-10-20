@@ -76,3 +76,142 @@ test('todo controle da bancada recebe foco visível só com Tab (SC-003)', async
 
     expect(visited.size).toBeGreaterThan(20);
 });
+
+async function axe(page: import('@playwright/test').Page) {
+    const results = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+        .analyze();
+
+    return results.violations.map((violation) => ({
+        id: violation.id,
+        nodes: violation.nodes.map((node) => node.target.join(' ')),
+    }));
+}
+
+async function fill(
+    page: import('@playwright/test').Page,
+    name: RegExp,
+    value: string,
+) {
+    const field = page.getByRole('textbox', { name });
+    await field.fill(value);
+    await field.press('Tab');
+}
+
+// Bancada com dados: dois projetos plotados, avisos, tabela, gráfico e diálogos (feature 002).
+for (const theme of ['light', 'dark'] as const) {
+    test(`bancada com 2 projetos e diálogos sem violações no tema ${theme}`, async ({
+        browser,
+    }) => {
+        const context = await browser.newContext({ colorScheme: theme });
+        const page = await context.newPage();
+        await page.goto('/');
+        await page.locator('main').waitFor();
+
+        for (const vb of ['40', '120']) {
+            if (vb === '120') {
+                await page.getByRole('button', { name: 'Novo' }).click();
+            }
+
+            await fill(page, /^Fs/, '28');
+            await fill(page, /^Qes/, '0,42');
+            await fill(page, /^Qms/, '4,1');
+            await fill(page, /^Vas/, '85');
+            await fill(page, /^Re/, '3,6');
+            await fill(page, /^Sd/, '491');
+            await fill(page, /^Xmax/, '14');
+            await fill(page, /^Vb/, vb);
+            await fill(page, /^Fb/, '32');
+        }
+
+        await page.getByRole('tab', { name: 'Excursão' }).click();
+        await page.getByRole('group', { name: 'Excursão' }).focus();
+        await page.keyboard.press('Home');
+        await page.waitForTimeout(300);
+        expect(await axe(page)).toEqual([]);
+
+        await page.getByRole('button', { name: 'Novo' }).click();
+        await page.getByRole('button', { name: 'Novo' }).click();
+        await expect(
+            page.getByRole('dialog', { name: 'Limite de projetos abertos' }),
+        ).toBeVisible();
+        expect(await axe(page)).toEqual([]);
+        await page.keyboard.press('Escape');
+
+        await page
+            .getByRole('button', { name: /^Fechar Projeto sem nome 2/ })
+            .click();
+        await expect(
+            page.getByRole('dialog', { name: 'Fechar projeto?' }),
+        ).toBeVisible();
+        expect(await axe(page)).toEqual([]);
+        await page.keyboard.press('Escape');
+
+        const choosing = page.waitForEvent('filechooser');
+        await page
+            .getByRole('button', { name: 'Fechar Projeto sem nome 3' })
+            .click();
+        await page.getByRole('button', { name: 'Abrir' }).click();
+        await (
+            await choosing
+        ).setFiles({
+            name: 'x.json',
+            mimeType: 'application/json',
+            buffer: Buffer.from('{}'),
+        });
+        await expect(
+            page.getByRole('dialog', {
+                name: 'Não foi possível abrir o arquivo',
+            }),
+        ).toBeVisible();
+        expect(await axe(page)).toEqual([]);
+        await context.close();
+    });
+}
+
+test('teclado chega às abas de projeto, aos toggles e ao gráfico', async ({
+    page,
+}) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/');
+    await fill(page, /^Fs/, '28');
+    await fill(page, /^Qts/, '0,38');
+    await fill(page, /^Vas/, '85');
+    await fill(page, /^Vb/, '50');
+    await fill(page, /^Fb/, '30');
+    await page.getByRole('button', { name: 'Novo' }).focus();
+
+    const reached = new Set<string>();
+
+    for (let step = 0; step < 120 && reached.size < 3; step++) {
+        await page.keyboard.press('Tab');
+        const label = await page.evaluate(() => {
+            const element = document.activeElement;
+
+            return (
+                element?.getAttribute('aria-label') ??
+                element?.getAttribute('role') ??
+                ''
+            );
+        });
+
+        for (const target of [
+            'Mostrar Projeto sem nome no gráfico',
+            'Fechar Projeto sem nome',
+            // O gráfico é um grupo com o nome da aba.
+            'Resposta',
+        ]) {
+            if (label === target) {
+                reached.add(target);
+            }
+        }
+    }
+
+    expect([...reached].sort()).toEqual(
+        [
+            'Fechar Projeto sem nome',
+            'Mostrar Projeto sem nome no gráfico',
+            'Resposta',
+        ].sort(),
+    );
+});

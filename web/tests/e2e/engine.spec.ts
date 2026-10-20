@@ -85,3 +85,24 @@ test('duto: comprimento por formato e aviso quando não cabe (US2)', async ({
     await fill(page, /Quantidade de dutos/, '4');
     await expect(page.getByText(/O duto não cabe na caixa/)).toBeVisible();
 });
+
+test('o gráfico é lido pelo teclado (FR-007)', async ({ page }) => {
+    await page.goto('/');
+    await fill(page, /^Fs/, '28');
+    await fill(page, /^Qts/, '0,38');
+    await fill(page, /^Vas/, '85');
+    await page.getByRole('radio', { name: 'Selada' }).click();
+    await fill(page, /^Vb/, '50');
+
+    const chart = page.getByRole('group', { name: 'Resposta' });
+    await chart.focus();
+    await page.keyboard.press('Home');
+    const live = chart.locator('[aria-live="polite"]');
+    await expect(live).toHaveText(/^10,0 Hz: -[\d,]+ dB$/);
+
+    await page.keyboard.press('End');
+    await expect(live).toHaveText(/^1\.000,0 Hz: /);
+
+    await page.keyboard.press('Shift+ArrowLeft');
+    await expect(live).not.toHaveText(/^1\.000,0 Hz: /);
+});

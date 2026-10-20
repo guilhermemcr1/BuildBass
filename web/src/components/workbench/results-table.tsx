@@ -81,7 +81,14 @@ export function ResultsTable({ items }: { items: ProjectSimulation[] }) {
     ];
 
     return (
-        <div className="overflow-x-auto">
+        // Com 3 projetos a tabela pode rolar na horizontal: a área precisa receber foco para rolar
+        // pelo teclado.
+        <div
+            role="region"
+            aria-label={t('results.comparison')}
+            tabIndex={0}
+            className="overflow-x-auto rounded-sm outline-none focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-solid"
+        >
             <table className="w-full border-collapse text-sm">
                 <thead>
                     <tr className="border-b border-border">

@@ -157,6 +157,17 @@ export function ChartPanel({
         });
     };
 
+    const valueFormatter = (kind: ChartKind) => {
+        const unit = unitFor(CURVES[kind].quantity);
+        const { symbol, decimals } = findUnit(unit);
+        const number = new Intl.NumberFormat(locale, {
+            maximumFractionDigits: Math.max(decimals, 1),
+            minimumFractionDigits: Math.max(decimals, 1),
+        });
+
+        return (value: number) => `${number.format(value)} ${symbol}`;
+    };
+
     const yLabel = (kind: ChartKind, normalized: boolean): string => {
         const symbol = findUnit(unitFor(CURVES[kind].quantity)).symbol;
 
@@ -231,6 +242,11 @@ export function ChartPanel({
                                     <ChartFrame
                                         xLabel={t('charts.frequency')}
                                         yLabel={yLabel(kind, normalized)}
+                                        label={t(`charts.${kind}`)}
+                                        formatValue={valueFormatter(kind)}
+                                        formatFrequency={(hz) =>
+                                            formatWithUnit(hz, 'Hz', locale)
+                                        }
                                         frequencies={
                                             first?.simulation.frequencies_hz ??
                                             []

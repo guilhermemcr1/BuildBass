@@ -1,4 +1,4 @@
-import { DRIVER_KEYS } from '@/engine/driver';
+import { DRIVER_KEYS } from '@/engine';
 import type { ParameterKey } from '@/lib/parameters';
 import type { DriverKey, ProjectData } from './types';
 

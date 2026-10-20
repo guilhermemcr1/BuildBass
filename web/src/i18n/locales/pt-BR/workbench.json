@@ -77,7 +77,8 @@
         "fc": "fc",
         "spl0": "Sensibilidade (1 W/1 m)",
         "portVelocity": "Velocidade máx. no duto",
-        "belowRange": "< 10"
+        "belowRange": "< 10",
+        "comparison": "Resultados lado a lado"
     },
     "catalog": {
         "label": "Catálogo de drivers",

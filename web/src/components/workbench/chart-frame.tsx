@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { KeyboardEvent } from 'react';
 import uPlot from 'uplot';
 import 'uplot/dist/uPlot.min.css';
 
@@ -23,6 +24,10 @@ export type ChartLimit = {
 type ChartFrameProps = {
     xLabel: string;
     yLabel: string;
+    // Nome da grandeza para o leitor de tela (o gráfico é um grupo focável).
+    label: string;
+    formatValue: (value: number) => string;
+    formatFrequency: (hz: number) => string;
     frequencies: readonly number[];
     series: ChartSeries[];
     limits?: ChartLimit[];
@@ -85,9 +90,35 @@ function chartData(
 // Gráfico com eixo de frequência logarítmico. As cores vêm dos tokens do tema (lidas em tempo
 // de execução) e o gráfico é refeito quando o tema ou a composição das séries muda; mudanças só
 // de valores usam setData.
+// Passos do cursor pelo teclado: um ponto, ou dez com Shift (research.md §13).
+function nextIndex(
+    event: KeyboardEvent,
+    current: number | null,
+    last: number,
+): number | null {
+    const step = event.shiftKey ? 10 : 1;
+    const from = current ?? 0;
+
+    switch (event.key) {
+        case 'ArrowRight':
+            return current === null ? 0 : Math.min(last, from + step);
+        case 'ArrowLeft':
+            return current === null ? last : Math.max(0, from - step);
+        case 'Home':
+            return 0;
+        case 'End':
+            return last;
+        default:
+            return null;
+    }
+}
+
 export default function ChartFrame({
     xLabel,
     yLabel,
+    label,
+    formatValue,
+    formatFrequency,
     frequencies,
     series,
     limits = [],
@@ -98,6 +129,12 @@ export default function ChartFrame({
     const plotRef = useRef<uPlot | undefined>(undefined);
     const data = chartData(frequencies, series, limits);
     const dataRef = useRef(data);
+    // Ponto sob o cursor (mouse ou teclado) e se ele veio do teclado (só então é anunciado).
+    const [cursor, setCursor] = useState<{
+        index: number;
+        left: number;
+    } | null>(null);
+    const [announce, setAnnounce] = useState(false);
 
     const layout = JSON.stringify({
         series: series.map(({ id, label, slot, emphasis }) => [
@@ -142,7 +179,39 @@ export default function ChartFrame({
                     width: element.clientWidth,
                     height: element.clientHeight,
                     legend: { show: false },
-                    cursor: { show: false },
+                    cursor: {
+                        x: true,
+                        y: false,
+                        drag: { x: false, y: false },
+                        points: { size: 7 },
+                    },
+                    hooks: {
+                        setCursor: [
+                            (plot) => {
+                                const index = plot.cursor.idx;
+                                const left =
+                                    index === undefined || index === null
+                                        ? undefined
+                                        : plot.valToPos(
+                                              plot.data[0][index],
+                                              'x',
+                                          ) + plot.over.offsetLeft;
+
+                                // setData a cada render também chama este hook: sem mudança,
+                                // devolver o mesmo estado evita um ciclo de renders.
+                                setCursor((previous) => {
+                                    if (index === undefined || index === null) {
+                                        return null;
+                                    }
+
+                                    return previous?.index === index &&
+                                        previous.left === left
+                                        ? previous
+                                        : { index, left: left ?? 0 };
+                                });
+                            },
+                        ],
+                    },
                     scales: {
                         x: { time: false, distr: 3, range: FREQUENCY_RANGE },
                         y:
@@ -233,5 +302,93 @@ export default function ChartFrame({
         };
     }, [xLabel, yLabel, layout]);
 
-    return <div ref={container} className="h-full w-full" />;
+    const moveTo = (index: number) => {
+        const plot = plotRef.current;
+        const frequency = frequencies[index];
+
+        if (plot === undefined || frequency === undefined) {
+            return;
+        }
+
+        plot.setCursor({
+            left: plot.valToPos(frequency, 'x'),
+            top: plot.over.clientHeight / 2,
+        });
+        setAnnounce(true);
+    };
+
+    const point =
+        cursor === null || series.length === 0
+            ? undefined
+            : {
+                  frequency: frequencies[cursor.index],
+                  values: series.map((item) => ({
+                      id: item.id,
+                      label: item.label,
+                      value: item.values[cursor.index] ?? null,
+                  })),
+              };
+    const reading =
+        point === undefined || point.frequency === undefined
+            ? ''
+            : `${formatFrequency(point.frequency)}: ${point.values
+                  .map(({ label: name, value }) =>
+                      series.length > 1
+                          ? `${name} ${value === null ? '—' : formatValue(value)}`
+                          : value === null
+                            ? '—'
+                            : formatValue(value),
+                  )
+                  .join('; ')}`;
+
+    return (
+        <div
+            role="group"
+            aria-label={label}
+            tabIndex={series.length > 0 ? 0 : -1}
+            onKeyDown={(event) => {
+                const index = nextIndex(
+                    event,
+                    cursor?.index ?? null,
+                    frequencies.length - 1,
+                );
+
+                if (index !== null) {
+                    event.preventDefault();
+                    moveTo(index);
+                }
+            }}
+            onBlur={() => setAnnounce(false)}
+            onPointerMove={() => setAnnounce(false)}
+            className="relative h-full w-full rounded-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent focus-visible:outline-solid"
+        >
+            <div ref={container} className="h-full w-full" />
+            {point !== undefined &&
+                reading !== '' && (
+                    // Posição só se conhece em tempo de execução (exceção do uPlot, T064).
+                    <div
+                        aria-hidden="true"
+                        className="pointer-events-none absolute top-2 z-10 -translate-x-1/2 rounded-md border border-border bg-surface px-2 py-1 text-xs whitespace-nowrap shadow-sm"
+                        style={{ left: cursor?.left }}
+                    >
+                        <div className="num font-semibold">
+                            {formatFrequency(point.frequency)}
+                        </div>
+                        {point.values.map(({ id, label: name, value }) => (
+                            <div key={id}>
+                                {series.length > 1 && (
+                                    <span className="text-muted">{name} </span>
+                                )}
+                                <span className="num">
+                                    {value === null ? '—' : formatValue(value)}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            <p aria-live="polite" className="sr-only">
+                {announce ? reading : ''}
+            </p>
+        </div>
+    );
 }

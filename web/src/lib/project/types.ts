@@ -1,4 +1,4 @@
-import type { ProjectInput } from '@/engine/types';
+import type { ProjectInput } from '@/engine';
 import type { ParameterKey } from '@/lib/parameters';
 import type { UnitId } from '@/lib/units/quantities';
 
@@ -13,7 +13,7 @@ export type {
     Radiation,
     SignalInput,
     Wiring,
-} from '@/engine/types';
+} from '@/engine';
 
 // O projeto completo (data-model.md): a entrada do motor mais a unidade escolhida em cada campo.
 export type ProjectData = ProjectInput & {

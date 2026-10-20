@@ -77,7 +77,8 @@
         "fc": "fc",
         "spl0": "Sensitivity (1 W/1 m)",
         "portVelocity": "Max. port velocity",
-        "belowRange": "< 10"
+        "belowRange": "< 10",
+        "comparison": "Results side by side"
     },
     "catalog": {
         "label": "Driver catalog",
