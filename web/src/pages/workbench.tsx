@@ -4,6 +4,7 @@ import { BoxPanel } from '@/components/workbench/box-panel';
 import { ChartPanel } from '@/components/workbench/chart-panel';
 import { ComingSoonDialog } from '@/components/workbench/coming-soon-dialog';
 import { DriverPanel } from '@/components/workbench/driver-panel';
+import { OfflineBanner } from '@/components/workbench/offline-banner';
 import { PreferencesBar } from '@/components/workbench/preferences-bar';
 import { ResultsPanel } from '@/components/workbench/results-panel';
 import { TopBar } from '@/components/workbench/top-bar';
@@ -24,8 +25,11 @@ export default function Workbench() {
                 }
                 preferences={<PreferencesBar />}
             />
+            <OfflineBanner />
             <main className="grid flex-1 grid-cols-1 gap-3 p-3 md:grid-cols-2 xl:grid-cols-[minmax(300px,360px)_minmax(260px,320px)_minmax(0,1fr)] xl:grid-rows-[auto_1fr]">
-                <DriverPanel />
+                <DriverPanel
+                    onSubmitDriver={() => setPending(t('catalog.submit'))}
+                />
                 <BoxPanel />
                 <div className="md:col-span-2 xl:col-span-1 xl:col-start-3 xl:row-span-2 xl:row-start-1 xl:flex xl:flex-col [&>section]:flex-1">
                     <ChartPanel />
