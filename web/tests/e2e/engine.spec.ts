@@ -9,11 +9,15 @@ async function fill(page: Page, name: RegExp, value: string) {
 
 function tile(page: Page, label: string) {
     return page
-        .locator('[data-region="results"] span', { hasText: new RegExp(`^${label}$`) })
+        .locator('[data-region="results"] span', {
+            hasText: new RegExp(`^${label}$`),
+        })
         .locator('..');
 }
 
-test('com driver e caixa preenchidos a bancada calcula e desenha (US1)', async ({ page }) => {
+test('com driver e caixa preenchidos a bancada calcula e desenha (US1)', async ({
+    page,
+}) => {
     await page.goto('/');
     await fill(page, /^Fs/, '28');
     await fill(page, /^Qts/, '0,38');
@@ -25,7 +29,9 @@ test('com driver e caixa preenchidos a bancada calcula e desenha (US1)', async (
     await expect(tile(page, 'F3')).not.toContainText('—');
     await expect(tile(page, 'Qtc')).not.toContainText('—');
     await expect(page.locator('[data-region="charts"] canvas')).toBeVisible();
-    await expect(page.getByText('Faltam parâmetros para desenhar o gráfico')).toHaveCount(0);
+    await expect(
+        page.getByText('Faltam parâmetros para desenhar o gráfico'),
+    ).toHaveCount(0);
 });
 
 test('na dutada, mudar Fb muda o F3 sem ação extra (US1)', async ({ page }) => {
