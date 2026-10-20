@@ -4,10 +4,10 @@ import { BoxPanel } from '@/components/workbench/box-panel';
 import { ChartPanel } from '@/components/workbench/chart-panel';
 import { ComingSoonDialog } from '@/components/workbench/coming-soon-dialog';
 import { DriverPanel } from '@/components/workbench/driver-panel';
+import { PreferencesBar } from '@/components/workbench/preferences-bar';
 import { ResultsPanel } from '@/components/workbench/results-panel';
 import { TopBar } from '@/components/workbench/top-bar';
 import type { ProjectAction } from '@/components/workbench/top-bar';
-import { UnitSystemSwitch } from '@/components/workbench/unit-system-switch';
 
 // Layout da bancada (FR-007): ≥ 1280 px três colunas (driver | caixa + resultados | gráficos),
 // 768–1279 px duas colunas com gráficos e resultados em largura total, < 768 px uma coluna na
@@ -22,7 +22,7 @@ export default function Workbench() {
                 onAction={(action: ProjectAction) =>
                     setPending(t(`actions.${action}`))
                 }
-                preferences={<UnitSystemSwitch />}
+                preferences={<PreferencesBar />}
             />
             <main className="grid flex-1 grid-cols-1 gap-3 p-3 md:grid-cols-2 xl:grid-cols-[minmax(300px,360px)_minmax(260px,320px)_minmax(0,1fr)] xl:grid-rows-[auto_1fr]">
                 <DriverPanel />
