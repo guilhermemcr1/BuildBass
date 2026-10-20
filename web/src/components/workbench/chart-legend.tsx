@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
+import { SWATCH } from './swatch';
 
 export type LegendItem = {
     id: string;
@@ -8,12 +9,6 @@ export type LegendItem = {
     emphasis: boolean;
     // Projeto plotado que ainda não tem dados para esta curva.
     empty: boolean;
-};
-
-const SWATCH: Record<LegendItem['slot'], string> = {
-    1: 'bg-series-1',
-    2: 'bg-series-2',
-    3: 'bg-series-3',
 };
 
 export function ChartLegend({ items }: { items: LegendItem[] }) {

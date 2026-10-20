@@ -5,13 +5,14 @@ import { ValueTile } from '@/components/ui/value-tile';
 import { PORT_VELOCITY_ERROR_MS, PORT_VELOCITY_WARN_MS } from '@/engine';
 import type { SimulationResults, WarningId } from '@/engine';
 import { useActiveProject } from '@/hooks/use-active-project';
-import { useActiveSimulation } from '@/hooks/use-simulation';
+import { useActiveSimulation, useSimulations } from '@/hooks/use-simulation';
 import { formatWithUnit } from '@/lib/units/format';
 import { defaultUnitFor } from '@/lib/units/quantities';
 import type { UnitId } from '@/lib/units/quantities';
 import { usePreferences } from '@/stores/preferences';
 import { EngineWarnings } from './engine-warnings';
 import { Panel } from './panel';
+import { ResultsTable } from './results-table';
 
 type Status = { status: FieldStatus; statusLabel?: string };
 
@@ -78,75 +79,84 @@ export function ResultsPanel() {
     const { results, warnings } = useActiveSimulation();
     const velocityUnit: UnitId = defaultUnitFor('velocity', unitSystem);
     const warningIds = warnings.map(({ id }) => id);
+    const plotted = useSimulations();
 
     return (
         <Panel region="results" title={t('regions.results')}>
-            <div className="grid grid-cols-2 gap-2">
-                <ValueTile
-                    label={t('results.f3')}
-                    valueSi={results.f3_hz}
-                    unit="Hz"
-                    display={
-                        results.f3_below_range
-                            ? t('results.belowRange')
-                            : undefined
-                    }
-                />
-                {boxType === 'closed' ? (
-                    <>
-                        <ValueTile
-                            label={t('results.qtc')}
-                            valueSi={results.qtc}
-                            unit="none"
-                        />
-                        <ValueTile
-                            label={t('results.fc')}
-                            valueSi={results.fc_hz}
-                            unit="Hz"
-                        />
-                    </>
-                ) : (
-                    <>
-                        <ValueTile
-                            label={t('results.fb')}
-                            valueSi={results.fb_hz}
-                            unit="Hz"
-                        />
-                        <ValueTile
-                            label={t('results.portLength')}
-                            valueSi={results.port_length_m}
-                            unit={defaultUnitFor('length', unitSystem)}
-                            {...lengthStatus(warningIds, t)}
-                        />
-                        <ValueTile
-                            label={t('results.portVelocity')}
-                            valueSi={results.port_velocity_max_ms}
-                            unit={velocityUnit}
-                            {...velocityStatus(
-                                results,
-                                (si) =>
-                                    formatWithUnit(si, velocityUnit, locale),
-                                t,
-                            )}
-                        />
-                    </>
-                )}
-                <ValueTile
-                    label={t('results.xmaxPower')}
-                    valueSi={results.xmax_power_w}
-                    unit="W"
-                />
-                <ValueTile
-                    label={t('results.spl0')}
-                    valueSi={results.spl0_db}
-                    unit="dB"
-                />
-                <ValueTile
-                    label={t('results.efficiency')}
-                    valueSi={results.efficiency}
-                    unit="percent"
-                />
-            </div>
+            {plotted.length > 1 ? (
+                <ResultsTable items={plotted} />
+            ) : (
+                <div className="grid grid-cols-2 gap-2">
+                    <ValueTile
+                        label={t('results.f3')}
+                        valueSi={results.f3_hz}
+                        unit="Hz"
+                        display={
+                            results.f3_below_range
+                                ? t('results.belowRange')
+                                : undefined
+                        }
+                    />
+                    {boxType === 'closed' ? (
+                        <>
+                            <ValueTile
+                                label={t('results.qtc')}
+                                valueSi={results.qtc}
+                                unit="none"
+                            />
+                            <ValueTile
+                                label={t('results.fc')}
+                                valueSi={results.fc_hz}
+                                unit="Hz"
+                            />
+                        </>
+                    ) : (
+                        <>
+                            <ValueTile
+                                label={t('results.fb')}
+                                valueSi={results.fb_hz}
+                                unit="Hz"
+                            />
+                            <ValueTile
+                                label={t('results.portLength')}
+                                valueSi={results.port_length_m}
+                                unit={defaultUnitFor('length', unitSystem)}
+                                {...lengthStatus(warningIds, t)}
+                            />
+                            <ValueTile
+                                label={t('results.portVelocity')}
+                                valueSi={results.port_velocity_max_ms}
+                                unit={velocityUnit}
+                                {...velocityStatus(
+                                    results,
+                                    (si) =>
+                                        formatWithUnit(
+                                            si,
+                                            velocityUnit,
+                                            locale,
+                                        ),
+                                    t,
+                                )}
+                            />
+                        </>
+                    )}
+                    <ValueTile
+                        label={t('results.xmaxPower')}
+                        valueSi={results.xmax_power_w}
+                        unit="W"
+                    />
+                    <ValueTile
+                        label={t('results.spl0')}
+                        valueSi={results.spl0_db}
+                        unit="dB"
+                    />
+                    <ValueTile
+                        label={t('results.efficiency')}
+                        valueSi={results.efficiency}
+                        unit="percent"
+                    />
+                </div>
+            )}
             <EngineWarnings />
         </Panel>
     );

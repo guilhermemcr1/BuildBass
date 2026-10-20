@@ -4,3 +4,5 @@ export type { ButtonVariant } from './button';
 export { StatusIndicator } from './status-indicator';
 export type { FieldStatus } from './status-indicator';
 export { Tooltip } from './tooltip';
+export { InlineTextField } from './inline-text-field';
+export { ToggleButton } from './toggle-button';

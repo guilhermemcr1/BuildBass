@@ -4,12 +4,15 @@ import { BoxPanel } from '@/components/workbench/box-panel';
 import { CHART_KINDS, ChartPanel } from '@/components/workbench/chart-panel';
 import type { ChartKind } from '@/components/workbench/chart-panel';
 import { ComingSoonDialog } from '@/components/workbench/coming-soon-dialog';
+import { Banner } from '@/components/ui/banner';
+import { CloseProjectDialog } from '@/components/workbench/close-project-dialog';
 import { DriverPanel } from '@/components/workbench/driver-panel';
 import { FileDrop } from '@/components/workbench/file-drop';
 import { OpenErrorDialog } from '@/components/workbench/open-error-dialog';
 import type { OpenError } from '@/components/workbench/open-error-dialog';
 import { OfflineBanner } from '@/components/workbench/offline-banner';
 import { PreferencesBar } from '@/components/workbench/preferences-bar';
+import { ProjectTabs } from '@/components/workbench/project-tabs';
 import { ResultsPanel } from '@/components/workbench/results-panel';
 import { ShortcutsDialog } from '@/components/workbench/shortcuts-dialog';
 import { TabLimitDialog } from '@/components/workbench/tab-limit-dialog';
@@ -21,17 +24,28 @@ import {
 } from '@/hooks/use-active-project';
 import { useShortcuts } from '@/hooks/use-shortcuts';
 import { downloadProject, parseProjectFile } from '@/lib/project/file';
-import { MAX_OPEN_PROJECTS, useWorkspace } from '@/stores/workspace';
+import { displayName } from '@/lib/project/names';
+import {
+    MAX_OPEN_PROJECTS,
+    projectStore,
+    useWorkspace,
+} from '@/stores/workspace';
 
 // Layout da bancada (FR-007): ≥ 1280 px três colunas (driver | caixa + resultados | gráficos),
 // 768–1279 px duas colunas com gráficos e resultados em largura total, < 768 px uma coluna na
 // ordem do DOM: driver → caixa → gráficos → resultados.
 export default function Workbench() {
-    const { t } = useTranslation('workbench');
+    const { t } = useTranslation(['workbench', 'project']);
     const [pending, setPending] = useState<string | null>(null);
     const [helpOpen, setHelpOpen] = useState(false);
     const [limitOpen, setLimitOpen] = useState(false);
     const [openError, setOpenError] = useState<OpenError | null>(null);
+    const [closing, setClosing] = useState<string | null>(null);
+    const projectCount = useWorkspace((state) => state.projects.length);
+    const storageAvailable = useWorkspace((state) => state.storageAvailable);
+    const closingProject = useWorkspace((state) =>
+        state.projects.find((p) => p.id === closing),
+    );
     const [chart, setChart] = useState<ChartKind>('response');
     const fileInput = useRef<HTMLInputElement>(null);
     const history = useActiveHistory();
@@ -45,6 +59,19 @@ export default function Workbench() {
             useWorkspace.getState().openProject(result.data) === 'limit'
         ) {
             setLimitOpen(true);
+        }
+    };
+
+    // Projeto com alterações não exportadas pede confirmação antes de fechar (FR-021c).
+    const requestClose = (id: string) => {
+        const project = useWorkspace
+            .getState()
+            .projects.find((p) => p.id === id);
+
+        if (project?.unsaved === true) {
+            setClosing(id);
+        } else {
+            useWorkspace.getState().closeProject(id);
         }
     };
 
@@ -93,10 +120,16 @@ export default function Workbench() {
             <TopBar
                 onAction={runAction}
                 history={history}
+                tabs={<ProjectTabs onClose={requestClose} />}
                 onHelp={() => setHelpOpen(true)}
                 preferences={<PreferencesBar />}
             />
             <OfflineBanner />
+            {!storageAvailable && (
+                <Banner tone="warn" className="mx-3 mt-3">
+                    {t('project:storage.unavailable')}
+                </Banner>
+            )}
             <main className="grid flex-1 grid-cols-1 gap-3 p-3 md:grid-cols-2 xl:grid-cols-[minmax(300px,360px)_minmax(260px,320px)_minmax(0,1fr)] xl:grid-rows-[auto_1fr]">
                 <DriverPanel
                     onSubmitDriver={() => setPending(t('catalog.submit'))}
@@ -128,8 +161,36 @@ export default function Workbench() {
             <FileDrop onFile={(file) => void openFile(file)} />
             <ShortcutsDialog open={helpOpen} onOpenChange={setHelpOpen} />
             <TabLimitDialog
-                open={limitOpen}
-                onClose={() => setLimitOpen(false)}
+                // Fechar um projeto pelo aviso libera o lugar e encerra o aviso.
+                open={limitOpen && projectCount >= MAX_OPEN_PROJECTS}
+                onCloseProject={(id) => {
+                    setLimitOpen(false);
+                    requestClose(id);
+                }}
+                onCancel={() => setLimitOpen(false)}
+            />
+            <CloseProjectDialog
+                name={
+                    closingProject === undefined
+                        ? null
+                        : displayName(closingProject, t)
+                }
+                onExportAndClose={() => {
+                    if (closingProject !== undefined) {
+                        downloadProject(
+                            projectStore(closingProject.id).getState().data,
+                        );
+                        useWorkspace.getState().closeProject(closingProject.id);
+                    }
+                    setClosing(null);
+                }}
+                onDiscard={() => {
+                    if (closingProject !== undefined) {
+                        useWorkspace.getState().closeProject(closingProject.id);
+                    }
+                    setClosing(null);
+                }}
+                onCancel={() => setClosing(null)}
             />
             <OpenErrorDialog
                 error={openError}

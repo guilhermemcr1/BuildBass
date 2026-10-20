@@ -124,7 +124,7 @@ export function ChartPanel({
             return [
                 {
                     id: project.id,
-                    label: displayName(project.data.name, t),
+                    label: displayName(project, t),
                     slot: project.slot,
                     emphasis: active && plotted.length > 1,
                     values: values.map((si) =>
@@ -190,7 +190,7 @@ export function ChartPanel({
                     const legend = plotted.map(
                         ({ project, active, simulation }) => ({
                             id: project.id,
-                            label: displayName(project.data.name, t),
+                            label: displayName(project, t),
                             slot: project.slot,
                             emphasis: active && plotted.length > 1,
                             empty:
