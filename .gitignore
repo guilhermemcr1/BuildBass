@@ -1,0 +1,8 @@
+# Instalador original do BassBox (software comercial + seriais) — nunca versionar
+/BassBox 6 Pro/
+
+# Configuração local do Claude Code (skills do Spec Kit, permissões) — fica só na máquina
+/.claude/
+
+# Protótipos descartáveis de UI
+/prototypes/
