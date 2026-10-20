@@ -16,6 +16,8 @@ export type MenuOption<T extends string> = {
 
 type MenuProps<T extends string> = {
     label: string;
+    // Nome acessível do botão; precisa conter o texto visível do gatilho (WCAG 2.5.3).
+    triggerLabel?: string;
     trigger: ReactNode;
     items: MenuOption<T>[];
     selected?: T;
@@ -25,6 +27,7 @@ type MenuProps<T extends string> = {
 
 export function Menu<T extends string>({
     label,
+    triggerLabel,
     trigger,
     items,
     selected,
@@ -37,9 +40,9 @@ export function Menu<T extends string>({
                 // Fora de qualquer slot: dentro de um NumberField o botão herdaria os slots
                 // de incremento/decremento.
                 slot={null}
-                aria-label={label}
+                aria-label={triggerLabel ?? label}
                 className={cn(
-                    'cursor-default rounded-sm outline-none data-[focus-visible]:outline-2 data-[focus-visible]:outline-offset-1 data-[focus-visible]:outline-accent',
+                    'cursor-default rounded-sm outline-none data-[focus-visible]:outline-2 data-[focus-visible]:outline-solid data-[focus-visible]:outline-offset-1 data-[focus-visible]:outline-accent',
                     triggerClassName,
                 )}
             >

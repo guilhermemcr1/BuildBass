@@ -40,7 +40,7 @@ export function Tabs<T extends string>({
                     <Tab
                         key={item.id}
                         id={item.id}
-                        className="h-[34px] shrink-0 cursor-default px-3 text-[13px] leading-[34px] font-medium whitespace-nowrap text-muted outline-none data-[focus-visible]:outline-2 data-[focus-visible]:-outline-offset-2 data-[focus-visible]:outline-accent data-[hovered]:text-foreground data-[selected]:text-foreground data-[selected]:shadow-[inset_0_-2px_0_var(--accent)]"
+                        className="h-[34px] shrink-0 cursor-default px-3 text-[13px] leading-[34px] font-medium whitespace-nowrap text-muted outline-none data-[focus-visible]:outline-2 data-[focus-visible]:outline-solid data-[focus-visible]:-outline-offset-2 data-[focus-visible]:outline-accent data-[hovered]:text-foreground data-[selected]:text-foreground data-[selected]:shadow-[inset_0_-2px_0_var(--accent)]"
                     >
                         {item.label}
                     </Tab>
@@ -50,7 +50,7 @@ export function Tabs<T extends string>({
                 <TabPanel
                     key={item.id}
                     id={item.id}
-                    className="min-h-0 flex-1 outline-none"
+                    className="min-h-0 flex-1 rounded-sm outline-none data-[focus-visible]:outline-2 data-[focus-visible]:outline-solid data-[focus-visible]:outline-accent"
                 >
                     {children(item.id)}
                 </TabPanel>

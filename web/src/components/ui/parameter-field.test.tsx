@@ -117,14 +117,14 @@ describe('ParameterField', () => {
         );
 
         await userEvent.click(
-            screen.getByRole('button', { name: 'Trocar unidade de Vas' }),
+            screen.getByRole('button', { name: /trocar unidade de Vas/ }),
         );
         await userEvent.click(screen.getByRole('menuitemradio', { name: 'ft³' }));
 
         expect(screen.getByRole('textbox')).toHaveValue('3,00');
 
         await userEvent.click(
-            screen.getByRole('button', { name: 'Trocar unidade de Vas' }),
+            screen.getByRole('button', { name: /trocar unidade de Vas/ }),
         );
         await userEvent.click(screen.getByRole('menuitemradio', { name: 'L' }));
 

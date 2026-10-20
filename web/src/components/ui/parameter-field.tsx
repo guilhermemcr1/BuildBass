@@ -110,6 +110,10 @@ export function ParameterField({
                         label={t('common:units.change', {
                             parameter: definition.symbol,
                         })}
+                        triggerLabel={t('common:units.changeFrom', {
+                            unit: symbol,
+                            parameter: definition.symbol,
+                        })}
                         trigger={symbol}
                         items={units.map((item) => ({
                             id: item.id,

@@ -15,7 +15,8 @@
         "system": "Unit system",
         "metric": "Metric",
         "imperial": "Imperial",
-        "change": "Change unit of {{parameter}}"
+        "change": "Change unit of {{parameter}}",
+        "changeFrom": "{{unit}} — change unit of {{parameter}}"
     },
     "theme": {
         "label": "Theme",
@@ -25,6 +26,7 @@
     },
     "language": {
         "label": "Language",
+        "current": "{{code}} — Language",
         "pt-BR": "Português (Brasil)",
         "en": "English"
     },
@@ -44,6 +46,29 @@
         "sampleHeading": "Archivo 15 / 600 — names and headings",
         "sampleBody": "Archivo 14 / 400 — interface text",
         "sampleSection": "Archivo condensed 12 / 600 — section label",
-        "sampleNumbers": "IBM Plex Mono for every numeric value, with tabular figures."
+        "sampleNumbers": "IBM Plex Mono for every numeric value, with tabular figures.",
+        "buttons": "Buttons",
+        "fields": "Parameter fields",
+        "controls": "Selection, tabs and menus",
+        "feedback": "Notices, values and status",
+        "primary": "Primary",
+        "secondary": "Secondary",
+        "quiet": "Quiet",
+        "disabled": "Disabled",
+        "openDialog": "Open dialog",
+        "dialogBody": "Dialogs trap focus and close with Esc.",
+        "hoverMe": "Hover or focus me",
+        "tooltipBody": "Tooltips open on hover and on focus.",
+        "menu": "Sample menu",
+        "option": "Option {{n}}",
+        "search": "Search",
+        "bannerInfo": "Informational banner notice.",
+        "bannerWarn": "Warning banner notice.",
+        "withValue": "With value",
+        "empty": "Empty",
+        "stateOk": "consistent",
+        "stateWarn": "differs 3–7%",
+        "stateError": "differs more than 7%",
+        "stateUnchecked": "not checkable"
     }
 }

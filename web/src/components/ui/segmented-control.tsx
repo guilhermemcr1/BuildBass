@@ -46,7 +46,7 @@ export function SegmentedControl<T extends string>({
                     key={option.id}
                     id={option.id}
                     isDisabled={option.disabled}
-                    className="h-7 flex-1 cursor-default rounded-sm px-2.5 text-[13px] whitespace-nowrap text-muted outline-none data-[disabled]:text-disabled data-[focus-visible]:outline-2 data-[focus-visible]:outline-accent data-[hovered]:text-foreground data-[selected]:bg-surface data-[selected]:text-foreground data-[selected]:shadow-sm"
+                    className="h-7 flex-1 cursor-default rounded-sm px-2.5 text-[13px] whitespace-nowrap text-muted outline-none data-[disabled]:text-disabled data-[focus-visible]:outline-2 data-[focus-visible]:outline-solid data-[focus-visible]:outline-accent data-[hovered]:text-foreground data-[selected]:bg-surface data-[selected]:text-foreground data-[selected]:shadow-sm"
                 >
                     {option.label}
                 </ToggleButton>

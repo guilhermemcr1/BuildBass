@@ -37,7 +37,7 @@ test('trocar para inglês mantém o valor em edição e muda textos e lang', asy
     await fs.fill('28,5');
     await fs.press('Tab');
 
-    await page.getByRole('button', { name: 'Idioma' }).click();
+    await page.getByRole('button', { name: /Idioma/ }).click();
     await page.getByRole('menuitemradio', { name: 'English' }).click();
 
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');

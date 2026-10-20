@@ -1,32 +1,56 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const API_URL = 'http://127.0.0.1:8010';
+const PREVIEW_URL = 'http://127.0.0.1:4173';
+const DEV_URL = 'http://127.0.0.1:5173';
+
 export default defineConfig({
     testDir: 'tests/e2e',
     fullyParallel: true,
     reporter: 'list',
     use: {
-        baseURL: 'http://127.0.0.1:4173',
+        baseURL: PREVIEW_URL,
         locale: 'pt-BR',
         trace: 'retain-on-failure',
     },
     projects: [
-        { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-        { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+        {
+            name: 'chromium',
+            use: { ...devices['Desktop Chrome'] },
+            testIgnore: 'a11y.spec.ts',
+        },
+        {
+            name: 'webkit',
+            use: { ...devices['Desktop Safari'] },
+            testIgnore: 'a11y.spec.ts',
+        },
+        // A página de referência (/dev/ui) só existe no servidor de desenvolvimento.
+        {
+            name: 'dev',
+            use: { ...devices['Desktop Chrome'], baseURL: DEV_URL },
+            testMatch: 'a11y.spec.ts',
+        },
     ],
     webServer: [
         {
             command: 'php artisan serve --host=127.0.0.1 --port=8010',
             cwd: '../api',
-            url: 'http://127.0.0.1:8010/up',
+            url: `${API_URL}/up`,
             reuseExistingServer: true,
-            env: { FRONTEND_URL: 'http://127.0.0.1:4173' },
+            env: { FRONTEND_URL: `${PREVIEW_URL},${DEV_URL}` },
         },
         {
             command: 'npm run build && npm run preview -- --host 127.0.0.1',
-            url: 'http://127.0.0.1:4173',
+            url: PREVIEW_URL,
             reuseExistingServer: true,
             timeout: 180_000,
-            env: { VITE_API_URL: 'http://127.0.0.1:8010' },
+            env: { VITE_API_URL: API_URL },
+        },
+        {
+            command: 'npm run dev -- --host 127.0.0.1',
+            url: DEV_URL,
+            reuseExistingServer: true,
+            env: { VITE_API_URL: API_URL },
         },
     ],
 });
