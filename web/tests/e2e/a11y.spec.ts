@@ -396,3 +396,93 @@ for (const theme of ['light', 'dark'] as const) {
         });
     }
 }
+
+// Formulário de envio de driver (specs/006, SC-007): sem violações AA nos dois temas e uso em
+// 360 px sem rolagem horizontal.
+for (const theme of ['light', 'dark'] as const) {
+    for (const width of [1440, 360]) {
+        test(`diálogo de envio de driver sem violações WCAG AA em ${width} px no tema ${theme} (SC-007)`, async ({
+            browser,
+        }) => {
+            const context = await browser.newContext({
+                colorScheme: theme,
+                viewport: { width, height: 900 },
+            });
+            const page = await context.newPage();
+            await mockCatalog(page);
+            await page.goto('/');
+            await page.getByRole('button', { name: 'Enviar driver' }).click();
+            const dialog = page.getByRole('dialog', {
+                name: 'Enviar driver ao catálogo',
+            });
+            await dialog.waitFor();
+            await page.waitForTimeout(300);
+
+            // Mostra os erros também: é onde o contraste do vermelho costuma falhar.
+            await dialog.getByRole('button', { name: 'Enviar' }).click();
+            await dialog.getByRole('alert').waitFor();
+
+            const results = await new AxeBuilder({ page })
+                .include('[role="dialog"]')
+                .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+                .analyze();
+
+            expect(
+                results.violations.map((violation) => ({
+                    id: violation.id,
+                    nodes: violation.nodes.map((node) => node.target.join(' ')),
+                })),
+            ).toEqual([]);
+
+            const overflow = await dialog.evaluate((element) => ({
+                dialog: element.scrollWidth - element.clientWidth,
+                page:
+                    document.documentElement.scrollWidth -
+                    document.documentElement.clientWidth,
+            }));
+            expect(overflow).toEqual({ dialog: 0, page: 0 });
+            await context.close();
+        });
+    }
+}
+
+test('o formulário de envio é operável só pelo teclado e devolve o foco ao botão (SC-007)', async ({
+    page,
+}) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await mockCatalog(page);
+    await page.goto('/');
+    const trigger = page.getByRole('button', { name: 'Enviar driver' });
+    await trigger.focus();
+    await page.keyboard.press('Enter');
+
+    const dialog = page.getByRole('dialog', {
+        name: 'Enviar driver ao catálogo',
+    });
+    await dialog.waitFor();
+
+    // Todo controle do diálogo é alcançado com Tab, e o campo-armadilha nunca recebe foco.
+    const reached = new Set<string>();
+    for (let step = 0; step < 40; step++) {
+        await page.keyboard.press('Tab');
+        const info = await page.evaluate(() => {
+            const element = document.activeElement;
+
+            return {
+                inDialog: element?.closest('[role="dialog"]') !== null,
+                trap:
+                    element instanceof HTMLInputElement &&
+                    element.name === 'website',
+                key: `${element?.tagName}#${element?.id}`,
+            };
+        });
+        expect(info.trap).toBe(false);
+        expect(info.inDialog).toBe(true);
+        reached.add(info.key);
+    }
+    expect(reached.size).toBeGreaterThan(15);
+
+    await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+    await expect(trigger).toBeFocused();
+});

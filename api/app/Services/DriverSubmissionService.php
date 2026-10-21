@@ -15,6 +15,7 @@ use App\Support\IpHash;
 use App\Support\SearchText;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 use Throwable;
@@ -143,7 +144,12 @@ class DriverSubmissionService
         try {
             Mail::to($email)->send(new SubmissionDecided($submission));
         } catch (Throwable $exception) {
-            report($exception);
+            // A mensagem do mailer pode citar o endereço; o e-mail só vive em contact_email.
+            Log::warning('Falha ao enviar o aviso de decisão do envio.', [
+                'submission' => $submission->getKey(),
+                'exception' => $exception::class,
+                'message' => str_replace($email, '[e-mail omitido]', $exception->getMessage()),
+            ]);
 
             return false;
         }

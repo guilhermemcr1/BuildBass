@@ -7,6 +7,7 @@ use App\Models\DriverSubmission;
 use App\Models\Moderator;
 use App\Services\DriverSubmissionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 uses(RefreshDatabase::class);
@@ -113,6 +114,16 @@ it('falha no envio da rejeição também mantém a decisão', function () {
 
     expect($submission->fresh()->status)->toBe(SubmissionStatus::Rejected)
         ->and($submission->fresh()->contact_email)->toBe('pessoa@exemplo.com');
+});
+
+it('o log da falha no aviso não carrega o e-mail do remetente', function () {
+    $submission = DriverSubmission::factory()->create(['contact_email' => 'pessoa@exemplo.com']);
+    Mail::shouldReceive('to')->andThrow(new RuntimeException('Recusado: pessoa@exemplo.com'));
+    Log::shouldReceive('warning')->once()->withArgs(function (string $message, array $context) {
+        return ! str_contains(json_encode($context, JSON_THROW_ON_ERROR), 'pessoa@exemplo.com');
+    });
+
+    decide()->reject($submission, Moderator::factory()->create(), 'Motivo.');
 });
 
 it('o e-mail do remetente não aparece em nenhuma resposta pública', function () {
