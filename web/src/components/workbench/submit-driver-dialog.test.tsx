@@ -10,6 +10,16 @@ import SubmitDriverDialog from './submit-driver-dialog';
 
 vi.mock('@/lib/submission/client', () => ({ submitDriver: vi.fn() }));
 
+// O estado real de conexão sonda a API em segundo plano e, sem servidor na jsdom, passa a offline
+// no meio da suíte. Os testes controlam o estado.
+const connection = vi.hoisted(() => ({
+    status: 'online' as 'online' | 'offline',
+}));
+
+vi.mock('@/hooks/use-online-status', () => ({
+    useOnlineStatus: () => connection.status,
+}));
+
 const submit = vi.mocked(submitDriver);
 const PROTOCOL = '0198a3c2-6d11-7c4e-9a52-3f1b8e0d7a10';
 
@@ -21,9 +31,16 @@ beforeEach(() => {
     localStorage.clear();
     useWorkspace.setState(initialWorkspace());
     usePreferences.setState({ unitSystem: 'metric', locale: 'pt-BR' });
+    connection.status = 'online';
     submit.mockReset();
     submit.mockResolvedValue({ ok: true, protocol: PROTOCOL });
 });
+
+// Colar é um evento só; digitar caractere a caractere renderiza o formulário inteiro a cada tecla.
+async function paste(label: RegExp, text: string) {
+    await userEvent.click(fill(label));
+    await userEvent.paste(text);
+}
 
 function seedDriver() {
     const store = activeProjectStore().getState();
@@ -66,7 +83,7 @@ describe('SubmitDriverDialog — enviar o driver do projeto (US1)', () => {
         seedDriver();
         renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
 
-        await userEvent.type(fill(/Fabricante/), 'Exemplo');
+        await paste(/Fabricante/, 'Exemplo');
         await userEvent.click(screen.getByRole('button', { name: 'Enviar' }));
 
         expect(submit).not.toHaveBeenCalled();
@@ -81,9 +98,9 @@ describe('SubmitDriverDialog — enviar o driver do projeto (US1)', () => {
         renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
         const before = structuredClone(activeProjectStore().getState().data);
 
-        await userEvent.type(fill(/Fabricante/), 'Exemplo');
-        await userEvent.type(fill(/Modelo/), 'EX-1');
-        await userEvent.type(fill(/Fonte dos dados/), 'Ficha técnica');
+        await paste(/Fabricante/, 'Exemplo');
+        await paste(/Modelo/, 'EX-1');
+        await paste(/Fonte dos dados/, 'Ficha técnica');
         await userEvent.click(screen.getByRole('button', { name: 'Enviar' }));
 
         expect(await screen.findByText(PROTOCOL)).toBeInTheDocument();
@@ -121,7 +138,7 @@ describe('SubmitDriverDialog — enviar o driver do projeto (US1)', () => {
         const onClose = vi.fn();
         renderWithProviders(<SubmitDriverDialog onClose={onClose} />);
 
-        await userEvent.type(fill(/Fabricante/), 'Exemplo');
+        await paste(/Fabricante/, 'Exemplo');
         await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
 
         expect(onClose).not.toHaveBeenCalled();
@@ -143,5 +160,109 @@ describe('SubmitDriverDialog — enviar o driver do projeto (US1)', () => {
 
         expect(trap).toHaveAttribute('tabindex', '-1');
         expect(trap?.closest('[aria-hidden="true"]')).not.toBeNull();
+    });
+});
+
+async function sendValidForm() {
+    await paste(/Fabricante/, 'Exemplo');
+    await paste(/Modelo/, 'EX-1');
+    await paste(/Fonte dos dados/, 'Ficha técnica');
+    await userEvent.click(screen.getByRole('button', { name: 'Enviar' }));
+}
+
+describe('SubmitDriverDialog — recusas do servidor (US3)', () => {
+    test.each([
+        ['alreadyInCatalog', /já está no catálogo/],
+        ['alreadyPending', /já está em análise/],
+        ['verification', /não é um robô/],
+    ] as const)(
+        '%s mostra a mensagem e preserva o formulário',
+        async (error, message) => {
+            seedDriver();
+            submit.mockResolvedValue({ ok: false, error });
+            renderWithProviders(
+                <SubmitDriverDialog onClose={() => undefined} />,
+            );
+
+            await sendValidForm();
+
+            expect(await screen.findByRole('alert')).toHaveTextContent(message);
+            expect(fill(/Fabricante/)).toHaveValue('Exemplo');
+            expect(fill(/^Fs/)).toHaveValue('34,5');
+        },
+    );
+
+    test('limite de envios mostra os minutos do Retry-After', async () => {
+        seedDriver();
+        submit.mockResolvedValue({
+            ok: false,
+            error: 'rateLimited',
+            retryAfterS: 1800,
+        });
+        renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
+
+        await sendValidForm();
+
+        expect(await screen.findByRole('alert')).toHaveTextContent(
+            'Tente de novo em 30 min',
+        );
+    });
+
+    test('limite sem Retry-After pede para tentar mais tarde', async () => {
+        seedDriver();
+        submit.mockResolvedValue({ ok: false, error: 'rateLimited' });
+        renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
+
+        await sendValidForm();
+
+        expect(await screen.findByRole('alert')).toHaveTextContent(
+            'Tente mais tarde',
+        );
+    });
+
+    test('verificação reprovada oferece tentar de novo e o reenvio funciona', async () => {
+        seedDriver();
+        submit.mockResolvedValueOnce({ ok: false, error: 'verification' });
+        renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
+
+        await sendValidForm();
+        await userEvent.click(
+            await screen.findByRole('button', { name: 'Tentar de novo' }),
+        );
+
+        expect(await screen.findByText(PROTOCOL)).toBeInTheDocument();
+        expect(submit).toHaveBeenCalledTimes(2);
+    });
+
+    test('duplicata não oferece tentar de novo (reenviar não resolve)', async () => {
+        seedDriver();
+        submit.mockResolvedValue({ ok: false, error: 'alreadyInCatalog' });
+        renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
+
+        await sendValidForm();
+        await screen.findByRole('alert');
+
+        expect(
+            screen.queryByRole('button', { name: 'Tentar de novo' }),
+        ).not.toBeInTheDocument();
+    });
+
+    test('o campo-armadilha preenchido segue no corpo para o servidor decidir', async () => {
+        seedDriver();
+        renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
+        const trap = document.querySelector<HTMLInputElement>(
+            'input[name="website"]',
+        );
+
+        await paste(/Fabricante/, 'Exemplo');
+        await paste(/Modelo/, 'EX-1');
+        await paste(/Fonte dos dados/, 'Ficha');
+        if (trap !== null) {
+            await userEvent.type(trap, 'robo', { pointerEventsCheck: 0 });
+        }
+        await userEvent.click(screen.getByRole('button', { name: 'Enviar' }));
+
+        await screen.findByText(PROTOCOL);
+        expect(submit.mock.calls[0][0].website).toBe('robo');
     });
 });

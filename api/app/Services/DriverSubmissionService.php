@@ -5,11 +5,13 @@ namespace App\Services;
 use App\Enums\SubmissionStatus;
 use App\Exceptions\AlreadyDecidedException;
 use App\Exceptions\DuplicateDriverException;
+use App\Exceptions\DuplicateSubmissionException;
 use App\Http\Requests\StoreDriverSubmissionRequest;
 use App\Models\Driver;
 use App\Models\DriverSubmission;
 use App\Models\Moderator;
 use App\Support\IpHash;
+use App\Support\SearchText;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -17,13 +19,34 @@ use Illuminate\Validation\ValidationException;
 class DriverSubmissionService
 {
     /**
-     * Grava um envio pendente. Do remetente só ficam o hash do IP e o e-mail opcional.
+     * Grava um envio pendente. Do remetente só ficam o hash do IP e o e-mail opcional. Recusa
+     * driver que já está no catálogo ou em análise; um envio rejeitado não bloqueia novo envio.
      *
      * @param  array<string, mixed>  $data
+     *
+     * @throws DuplicateSubmissionException
      */
     public function create(array $data, string $ip): DriverSubmission
     {
         $submission = new DriverSubmission($data);
+        $submission->variant ??= '';
+        $submission->dedupe_key = SearchText::normalize(
+            "{$submission->brand} {$submission->model} {$submission->variant}",
+        );
+
+        if ($this->existsInCatalog($submission)) {
+            throw new DuplicateSubmissionException(DuplicateSubmissionException::IN_CATALOG);
+        }
+
+        $alreadyPending = DriverSubmission::query()
+            ->where('status', SubmissionStatus::Pending)
+            ->where('dedupe_key', $submission->dedupe_key)
+            ->exists();
+
+        if ($alreadyPending) {
+            throw new DuplicateSubmissionException(DuplicateSubmissionException::PENDING);
+        }
+
         $submission->status = SubmissionStatus::Pending;
         $submission->ip_hash = IpHash::make($ip);
         $submission->save();

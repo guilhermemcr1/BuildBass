@@ -5,6 +5,7 @@ import type { SubmitError } from '@/lib/submission/client';
 import { hasChanges } from '@/lib/submission/from-project';
 import { toPayload, validateSubmission } from '@/lib/submission/schema';
 import type { SubmissionErrors, SubmissionForm } from '@/lib/submission/schema';
+import { getTurnstileToken } from '@/lib/submission/turnstile';
 import { usePreferences } from '@/stores/preferences';
 
 export type SubmitStatus = 'editing' | 'sending' | 'done';
@@ -44,8 +45,23 @@ export function useSubmitDriver(initial: SubmissionForm) {
         setStatus('sending');
         controller.current = new AbortController();
 
+        // Verificação anti-robô invisível (FR-011): um token novo a cada tentativa.
+        const captcha = await getTurnstileToken();
+
+        if (!captcha.ok) {
+            setStatus('editing');
+            setFailure({ error: 'verification' });
+            return;
+        }
+
         const result = await submitDriver(
-            { ...toPayload(form, { locale }), website: trap },
+            {
+                ...toPayload(form, {
+                    locale,
+                    turnstileToken: captcha.token,
+                }),
+                website: trap,
+            },
             controller.current.signal,
         );
 
