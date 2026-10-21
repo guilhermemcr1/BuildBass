@@ -99,6 +99,23 @@ class EditDriverSubmission extends EditRecord
                     Notification::make()->success()->title('Envio rejeitado.')->send();
                     $this->redirect(DriverSubmissionResource::getUrl('index'));
                 }),
+            Action::make('resendNotice')
+                ->label('Reenviar aviso')
+                ->color('gray')
+                ->visible(fn (): bool => ! $this->pending() && $this->submission()->contact_email !== null)
+                ->requiresConfirmation()
+                ->modalDescription('Envia de novo o aviso da decisão ao e-mail informado no envio.')
+                ->action(function (): void {
+                    $sent = app(DriverSubmissionService::class)->sendNotice($this->submission());
+
+                    $notification = Notification::make();
+                    $sent
+                        ? $notification->success()->title('Aviso enviado.')
+                        : $notification->danger()->title('Não foi possível enviar o aviso. Tente de novo mais tarde.');
+                    $notification->send();
+
+                    $this->refreshFormData(['contact_email']);
+                }),
         ];
     }
 

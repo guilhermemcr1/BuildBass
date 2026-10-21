@@ -7,6 +7,7 @@ use App\Exceptions\AlreadyDecidedException;
 use App\Exceptions\DuplicateDriverException;
 use App\Exceptions\DuplicateSubmissionException;
 use App\Http\Requests\StoreDriverSubmissionRequest;
+use App\Mail\SubmissionDecided;
 use App\Models\Driver;
 use App\Models\DriverSubmission;
 use App\Models\Moderator;
@@ -14,7 +15,9 @@ use App\Support\IpHash;
 use App\Support\SearchText;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class DriverSubmissionService
 {
@@ -65,7 +68,7 @@ class DriverSubmissionService
     public function approve(DriverSubmission $submission, Moderator $moderator): Driver
     {
         try {
-            return DB::transaction(function () use ($submission, $moderator): Driver {
+            $driver = DB::transaction(function () use ($submission, $moderator): Driver {
                 $locked = $this->lockPending($submission);
 
                 if ($this->existsInCatalog($locked)) {
@@ -86,6 +89,10 @@ class DriverSubmissionService
         } catch (UniqueConstraintViolationException) {
             throw new DuplicateDriverException;
         }
+
+        $this->sendNotice($submission->refresh());
+
+        return $driver;
     }
 
     /**
@@ -114,6 +121,36 @@ class DriverSubmissionService
                 'rejection_reason' => $reason,
             ])->save();
         });
+
+        $this->sendNotice($submission->refresh());
+    }
+
+    /**
+     * Avisa o remetente da decisão, se ele deixou e-mail, e apaga o e-mail em seguida (FR-019).
+     * Roda depois do commit: uma falha no envio é registrada e a decisão continua valendo; o
+     * e-mail fica guardado para nova tentativa (sendNotice de novo, pelo painel).
+     *
+     * @return bool verdadeiro quando o aviso saiu (ou não havia e-mail a avisar)
+     */
+    public function sendNotice(DriverSubmission $submission): bool
+    {
+        $email = $submission->contact_email;
+
+        if ($email === null || $submission->status === SubmissionStatus::Pending) {
+            return true;
+        }
+
+        try {
+            Mail::to($email)->send(new SubmissionDecided($submission));
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return false;
+        }
+
+        $submission->forceFill(['contact_email' => null])->save();
+
+        return true;
     }
 
     /**
