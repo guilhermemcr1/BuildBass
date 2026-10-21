@@ -274,4 +274,86 @@ describe('BoxPanel — bandpass de 6ª ordem', () => {
         expect(fieldUnits.rear_diameter_m).toBe('in');
         expect(fieldUnits.diameter_m).toBeUndefined();
     });
+
+    test('em inglês a 6ª ordem aparece traduzida, sem texto fixo', () => {
+        boxType('bandpass6');
+        renderWithProviders(<BoxPanel />, 'en');
+
+        expect(
+            screen.getByRole('group', { name: 'Rear chamber (ported)' }),
+        ).toBeVisible();
+        expect(
+            screen.getByRole('group', { name: 'Front chamber (ported)' }),
+        ).toBeVisible();
+        expect(
+            screen.getByRole('group', { name: 'Port (rear chamber)' }),
+        ).toBeVisible();
+        expect(
+            screen.getByRole('group', { name: 'Port (front chamber)' }),
+        ).toBeVisible();
+        expect(
+            screen.getByRole('textbox', { name: /^Fbr/ }),
+        ).toHaveAccessibleName(/Rear chamber tuning|rear/i);
+    });
+
+    test('no sistema imperial os volumes e os dois dutos usam ft³ e pol, e a troca por campo funciona', async () => {
+        usePreferences.setState({ unitSystem: 'imperial' });
+        act(() => {
+            activeProjectStore()
+                .getState()
+                .apply((data) => ({
+                    ...data,
+                    box: {
+                        ...data.box,
+                        type: 'bandpass6',
+                        vr_m3: 0.08,
+                        vf_m3: 0.04,
+                        fb_hz: 45,
+                        fb_rear_hz: 30,
+                        port: { shape: 'round', diameter_m: 0.1, count: 1 },
+                        port_rear: {
+                            shape: 'round',
+                            diameter_m: 0.08,
+                            count: 1,
+                        },
+                    },
+                }));
+        });
+        renderWithProviders(<BoxPanel />);
+
+        // 0,08 m³ = 2,83 ft³; 0,04 m³ = 1,41 ft³; 0,08 m = 3,15 pol; 0,1 m = 3,94 pol.
+        expect(screen.getByRole('textbox', { name: /^Vr/ })).toHaveValue(
+            '2,83',
+        );
+        expect(screen.getByRole('textbox', { name: /^Vf/ })).toHaveValue(
+            '1,41',
+        );
+        const rear = screen.getByRole('group', {
+            name: 'Duto (câmara traseira)',
+        });
+        const front = screen.getByRole('group', {
+            name: 'Duto (câmara frontal)',
+        });
+        expect(
+            within(rear).getByRole('textbox', { name: /Diâmetro do duto/ }),
+        ).toHaveValue('3,150');
+        expect(
+            within(front).getByRole('textbox', { name: /Diâmetro do duto/ }),
+        ).toHaveValue('3,937');
+
+        // Trocar a unidade do duto traseiro não mexe no frontal.
+        await userEvent.click(
+            within(rear).getAllByRole('button', { name: /trocar unidade/ })[0],
+        );
+        await userEvent.click(
+            screen.getByRole('menuitemradio', { name: 'mm' }),
+        );
+
+        expect(
+            within(rear).getByRole('textbox', { name: /Diâmetro do duto/ }),
+        ).toHaveValue('80,0');
+        expect(
+            within(front).getByRole('textbox', { name: /Diâmetro do duto/ }),
+        ).toHaveValue('3,937');
+    });
 });

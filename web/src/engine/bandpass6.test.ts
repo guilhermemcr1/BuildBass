@@ -714,3 +714,41 @@ describe('bandpass 6ª ordem — avisos por câmara (T34)', () => {
         );
     });
 });
+
+describe('bandpass 6ª ordem — desempenho (SC-004)', () => {
+    // Completa, com os dois dutos medidos e Ql finito (todas as curvas e velocidades calculadas).
+    const complete = sixth({
+        ql: 7,
+        fb_hz: 45,
+        port: { shape: 'round', diameter_m: 0.1, count: 1 },
+        port_rear: { shape: 'round', diameter_m: 0.08, count: 1 },
+    });
+
+    test('< 5 ms por projeto completo', () => {
+        simulate(complete); // aquece
+
+        const start = performance.now();
+
+        for (let run = 0; run < 50; run += 1) {
+            simulate(complete);
+        }
+
+        expect((performance.now() - start) / 50).toBeLessThan(5);
+    });
+
+    test('três projetos plotados atualizam em ≤ 100 ms', () => {
+        const projects = [
+            complete,
+            sixth({ ...complete.box, fb_hz: 50 }),
+            sixth({ ...complete.box, fb_rear_hz: 25 }),
+        ];
+
+        const start = performance.now();
+
+        for (const project of projects) {
+            simulate(project);
+        }
+
+        expect(performance.now() - start).toBeLessThan(100);
+    });
+});

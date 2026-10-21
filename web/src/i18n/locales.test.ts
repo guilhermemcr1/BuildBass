@@ -45,4 +45,39 @@ describe('traduções', () => {
             expect(portuguese.has(`parameters.${key}.help`), key).toBe(true);
         }
     });
+
+    test('as chaves da bandpass de 6ª ordem existem nos dois idiomas (feature 007)', () => {
+        const keys = [
+            'workbench.boxType.bandpass6',
+            'workbench.chambers.rear',
+            'workbench.chambers.front',
+            'workbench.port.titleRear',
+            'workbench.results.fbRear',
+            'workbench.results.portLengthFront',
+            'workbench.results.portLengthRear',
+            'workbench.results.portVelocityFront',
+            'workbench.results.portVelocityRear',
+            'workbench.charts.seriesFront',
+            'workbench.charts.seriesRear',
+            'engine.warnings.portVolumeTooLarge_rear',
+            'engine.warnings.portVolumeTooLarge_front',
+            'engine.warnings.portTooShort_rear',
+            'engine.warnings.portTooShort_front',
+            'engine.warnings.portTooLong_rear',
+            'engine.warnings.portTooLong_front',
+            'cutplan.types.bandpass6',
+            'cutplan.warnings.portLongerThanDepth_rear',
+            'cutplan.warnings.portLongerThanDepth_front',
+            'cutplan.warnings.portUnknown_rear',
+            'cutplan.warnings.portUnknown_front',
+            'parameters.fb_rear_hz.label',
+            'parameters.rear_diameter_m.label',
+            'parameters.rear_port_count.help',
+        ];
+
+        for (const key of keys) {
+            expect(portuguese.has(key), `pt-BR ${key}`).toBe(true);
+            expect(english.has(key), `en ${key}`).toBe(true);
+        }
+    });
 });
