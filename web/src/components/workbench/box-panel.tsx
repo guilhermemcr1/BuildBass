@@ -22,44 +22,42 @@ export function BoxPanel() {
     const activeId = useWorkspace((state) => state.activeId);
     const setBoxType = useActiveProject((state) => state.setBoxType);
     const volume = useParameterField('vb_m3');
+    const rear = useParameterField('vr_m3');
+    const front = useParameterField('vf_m3');
     const tuning = useParameterField('fb_hz');
     const losses = useParameterField('ql');
 
     return (
         <Panel region="box" title={t('regions.box')}>
             <div className="flex flex-col gap-1.5">
-                <SegmentedControl<BoxType | 'bandpass'>
+                <SegmentedControl<BoxType>
                     label={t('boxType.label')}
                     selected={boxType}
-                    onChange={(next) => {
-                        if (next !== 'bandpass') {
-                            setBoxType(next);
-                        }
-                    }}
+                    onChange={setBoxType}
                     options={[
                         { id: 'closed', label: t('boxType.closed') },
                         { id: 'vented', label: t('boxType.vented') },
-                        {
-                            id: 'bandpass',
-                            label: t('boxType.bandpass'),
-                            disabled: true,
-                        },
+                        { id: 'bandpass', label: t('boxType.bandpass') },
                     ]}
                     className="w-full"
                 />
-                <p className="text-[11px] text-muted">
-                    {t('boxType.bandpassUnavailable')}
-                </p>
             </div>
             <div className="flex flex-col gap-3">
-                <SliderField {...volume} {...VB_SLIDER} />
-                {boxType === 'vented' && (
+                {boxType === 'bandpass' ? (
+                    <>
+                        <SliderField {...rear} {...VB_SLIDER} />
+                        <SliderField {...front} {...VB_SLIDER} />
+                    </>
+                ) : (
+                    <SliderField {...volume} {...VB_SLIDER} />
+                )}
+                {boxType !== 'closed' && (
                     <SliderField {...tuning} {...FB_SLIDER} />
                 )}
                 <ParameterField {...losses} />
                 <SuggestBox key={activeId} />
             </div>
-            {boxType === 'vented' && <PortFields />}
+            {boxType !== 'closed' && <PortFields />}
         </Panel>
     );
 }

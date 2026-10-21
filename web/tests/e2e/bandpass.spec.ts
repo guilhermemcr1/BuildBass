@@ -1,0 +1,96 @@
+import { expect, test } from '@playwright/test';
+import type { Page } from '@playwright/test';
+
+test.use({ viewport: { width: 1440, height: 900 } });
+
+async function fill(page: Page, name: RegExp, value: string) {
+    const field = page.getByRole('textbox', { name });
+    await field.fill(value);
+    await field.press('Tab');
+}
+
+function tile(page: Page, label: string) {
+    return page
+        .locator('[data-region="results"] span', {
+            hasText: new RegExp(`^${label}$`),
+        })
+        .locator('..');
+}
+
+// Driver de referência do quickstart (specs/004, §2).
+async function referenceDriver(page: Page) {
+    await fill(page, /^Fs/, '28');
+    await fill(page, /^Qts/, '0,38');
+    await fill(page, /^Qes/, '0,42');
+    await fill(page, /^Qms/, '4,1');
+    await fill(page, /^Vas/, '85');
+    await fill(page, /^Re/, '3,6');
+    await fill(page, /^Le/, '2,1');
+    await fill(page, /^Xmax/, '14');
+    await fill(page, /^Sd/, '491');
+}
+
+async function bandpassBox(page: Page) {
+    await page.getByRole('radio', { name: 'Bandpass' }).click();
+    await fill(page, /^Vr/, '40');
+    await fill(page, /^Vf/, '60');
+    await fill(page, /^Fb/, '45');
+    await fill(page, /Diâmetro do duto/, '100');
+}
+
+test('bandpass: escolher o tipo, preencher as câmaras e ver curvas e cortes (US1)', async ({
+    page,
+}) => {
+    await page.goto('/');
+    await referenceDriver(page);
+    await bandpassBox(page);
+
+    await expect(tile(page, 'Corte inferior')).not.toContainText('—');
+    await expect(tile(page, 'Corte superior')).not.toContainText('—');
+    await expect(tile(page, 'Largura da banda')).not.toContainText('—');
+    await expect(tile(page, 'Comprimento do duto')).not.toContainText('—');
+    await expect(page.locator('[data-region="charts"] canvas')).toBeVisible();
+    await expect(
+        page.getByText('Faltam parâmetros para desenhar o gráfico'),
+    ).toHaveCount(0);
+    await expect(page.getByText('F3', { exact: true })).toHaveCount(0);
+
+    for (const tab of [
+        'Excursão',
+        'Impedância',
+        'Atraso de grupo',
+        'Velocidade no duto',
+    ]) {
+        await page.getByRole('tab', { name: tab }).click();
+        await expect(
+            page.locator('[data-region="charts"] canvas'),
+        ).toBeVisible();
+    }
+});
+
+test('bandpass: mudar a sintonia atualiza os cortes sem ação extra (US1)', async ({
+    page,
+}) => {
+    await page.goto('/');
+    await referenceDriver(page);
+    await bandpassBox(page);
+
+    const high = tile(page, 'Corte superior');
+    await expect(high).not.toContainText('—');
+    const before = await high.textContent();
+
+    await fill(page, /^Fb/, '60');
+    await expect(high).not.toHaveText(before ?? '');
+});
+
+test('bandpass: o seletor tem as três opções e nenhum aviso de indisponível (US1)', async ({
+    page,
+}) => {
+    await page.goto('/');
+
+    for (const name of ['Selada', 'Dutada', 'Bandpass']) {
+        await expect(page.getByRole('radio', { name })).toBeEnabled();
+    }
+
+    await expect(page.getByText(/chega numa próxima versão/)).toHaveCount(0);
+});

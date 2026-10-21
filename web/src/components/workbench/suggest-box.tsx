@@ -1,5 +1,5 @@
 import { Sparkles } from 'lucide-react';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { Banner } from '@/components/ui/banner';
@@ -22,13 +22,14 @@ export function SuggestBox() {
     const data = useActiveProject((state) => state.data);
     const apply = useActiveProject((state) => state.apply);
     const [message, setMessage] = useState<string | null>(null);
+    const reasonId = useId();
     const { values } = deriveDriver(data.driver);
     const missing = NEEDS.filter((key) => values[key].value === undefined);
     const listFormat = new Intl.ListFormat(locale, {
         style: 'long',
         type: 'conjunction',
     });
-    const reason =
+    const missingReason =
         missing.length === 0
             ? undefined
             : t('suggest.needs', {
@@ -36,6 +37,11 @@ export function SuggestBox() {
                       missing.map((key) => PARAMETERS[key].symbol),
                   ),
               });
+    // Não há alinhamento clássico de bandpass nesta versão (specs/004, Assumptions).
+    const reason =
+        data.box.type === 'bandpass'
+            ? t('suggest.bandpassUnavailable')
+            : missingReason;
 
     const suggest = () => {
         const suggestion = suggestBox(data);
@@ -88,14 +94,16 @@ export function SuggestBox() {
             <Button
                 onPress={suggest}
                 disabled={reason !== undefined}
-                aria-description={reason}
+                aria-describedby={reason === undefined ? undefined : reasonId}
                 className="self-start"
             >
                 <Sparkles aria-hidden="true" className="size-4" />
                 {t('suggest.button')}
             </Button>
             {reason !== undefined && (
-                <p className="text-[11px] text-muted">{reason}</p>
+                <p id={reasonId} className="text-[11px] text-muted">
+                    {reason}
+                </p>
             )}
             {message !== null && <Banner>{message}</Banner>}
         </div>

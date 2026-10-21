@@ -25,6 +25,36 @@ export function ResultsTable({ items }: { items: ProjectSimulation[] }) {
 
     const rows: Row[] = [
         {
+            key: 'fLow',
+            label: t('results.fLow'),
+            unit: 'Hz',
+            value: (r) => r.f_low_hz,
+        },
+        {
+            key: 'fHigh',
+            label: t('results.fHigh'),
+            unit: 'Hz',
+            value: (r) => r.f_high_hz,
+        },
+        {
+            key: 'fCenter',
+            label: t('results.fCenter'),
+            unit: 'Hz',
+            value: (r) => r.f_center_hz,
+        },
+        {
+            key: 'bandwidth',
+            label: t('results.bandwidth'),
+            unit: 'oct',
+            value: (r) => r.bandwidth_oct,
+        },
+        {
+            key: 'peak',
+            label: t('results.peak'),
+            unit: 'dB',
+            value: (r) => r.peak_db,
+        },
+        {
             key: 'f3',
             label: t('results.f3'),
             unit: 'Hz',
@@ -80,6 +110,32 @@ export function ResultsTable({ items }: { items: ProjectSimulation[] }) {
         },
     ];
 
+    // Linhas da bandpass só aparecem se algum projeto plotado a tem (as do F3 e da selada/dutada
+    // continuam sempre, como antes).
+    const BANDPASS_ROWS = ['fLow', 'fHigh', 'fCenter', 'bandwidth', 'peak'];
+    const bandpassPlotted = items.some(
+        ({ project }) => project.data.box.type === 'bandpass',
+    );
+    const shown = (row: Row) =>
+        bandpassPlotted || !BANDPASS_ROWS.includes(row.key);
+
+    // Corte fora da grade de cálculo: texto no lugar do número.
+    const outOfRange = (key: string, results: SimulationResults) => {
+        if (key === 'f3' && results.f3_below_range) {
+            return t('results.belowRange');
+        }
+
+        if (key === 'fLow' && results.f_low_below_range) {
+            return t('results.belowRange');
+        }
+
+        if (key === 'fHigh' && results.f_high_above_range) {
+            return t('results.aboveRange');
+        }
+
+        return undefined;
+    };
+
     return (
         // Com 3 projetos a tabela pode rolar na horizontal: a área precisa receber foco para rolar
         // pelo teclado.
@@ -121,7 +177,7 @@ export function ResultsTable({ items }: { items: ProjectSimulation[] }) {
                     </tr>
                 </thead>
                 <tbody>
-                    {rows.map((row) => (
+                    {rows.filter(shown).map((row) => (
                         <tr key={row.key} className="border-b border-border/60">
                             <th
                                 scope="row"
@@ -139,14 +195,15 @@ export function ResultsTable({ items }: { items: ProjectSimulation[] }) {
                                         key={project.id}
                                         className="px-2 py-1.5 text-right num"
                                     >
-                                        {row.key === 'f3' &&
-                                        simulation.results.f3_below_range
-                                            ? t('results.belowRange')
-                                            : formatQuantity(
-                                                  value,
-                                                  row.unit,
-                                                  locale,
-                                              )}
+                                        {outOfRange(
+                                            row.key,
+                                            simulation.results,
+                                        ) ??
+                                            formatQuantity(
+                                                value,
+                                                row.unit,
+                                                locale,
+                                            )}
                                     </td>
                                 );
                             })}

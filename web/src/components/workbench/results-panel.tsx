@@ -87,16 +87,56 @@ export function ResultsPanel() {
                 <ResultsTable items={plotted} />
             ) : (
                 <div className="grid grid-cols-2 gap-2">
-                    <ValueTile
-                        label={t('results.f3')}
-                        valueSi={results.f3_hz}
-                        unit="Hz"
-                        display={
-                            results.f3_below_range
-                                ? t('results.belowRange')
-                                : undefined
-                        }
-                    />
+                    {boxType === 'bandpass' ? (
+                        <>
+                            <ValueTile
+                                label={t('results.fLow')}
+                                valueSi={results.f_low_hz}
+                                unit="Hz"
+                                display={
+                                    results.f_low_below_range
+                                        ? t('results.belowRange')
+                                        : undefined
+                                }
+                            />
+                            <ValueTile
+                                label={t('results.fHigh')}
+                                valueSi={results.f_high_hz}
+                                unit="Hz"
+                                display={
+                                    results.f_high_above_range
+                                        ? t('results.aboveRange')
+                                        : undefined
+                                }
+                            />
+                            <ValueTile
+                                label={t('results.fCenter')}
+                                valueSi={results.f_center_hz}
+                                unit="Hz"
+                            />
+                            <ValueTile
+                                label={t('results.bandwidth')}
+                                valueSi={results.bandwidth_oct}
+                                unit="oct"
+                            />
+                            <ValueTile
+                                label={t('results.peak')}
+                                valueSi={results.peak_db}
+                                unit="dB"
+                            />
+                        </>
+                    ) : (
+                        <ValueTile
+                            label={t('results.f3')}
+                            valueSi={results.f3_hz}
+                            unit="Hz"
+                            display={
+                                results.f3_below_range
+                                    ? t('results.belowRange')
+                                    : undefined
+                            }
+                        />
+                    )}
                     {boxType === 'closed' ? (
                         <>
                             <ValueTile

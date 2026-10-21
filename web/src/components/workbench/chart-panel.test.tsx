@@ -67,4 +67,14 @@ describe('ChartPanel', () => {
             'true',
         );
     });
+
+    test('bandpass ativa a aba de velocidade no duto', () => {
+        activeProjectStore().getState().setBoxType('bandpass');
+
+        renderWithProviders(<ChartPanel />);
+
+        expect(
+            screen.getByRole('tab', { name: 'Velocidade no duto' }),
+        ).not.toHaveAttribute('aria-disabled', 'true');
+    });
 });
