@@ -4,13 +4,14 @@ namespace App\Models;
 
 use App\Support\SearchText;
 use Database\Factories\DriverFactory;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
  * Driver do catálogo (somente leitura para o público). Valores em SI.
  *
- * @property int $id
+ * @property string $id
  * @property string $brand
  * @property string $model
  * @property string $variant
@@ -21,6 +22,8 @@ class Driver extends Model
 {
     /** @use HasFactory<DriverFactory> */
     use HasFactory;
+
+    use HasUuids;
 
     /** Parâmetros Thiele-Small opcionais, na ordem em que a API os devolve. */
     public const OPTIONAL_PARAMETERS = [

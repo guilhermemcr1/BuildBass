@@ -1,8 +1,10 @@
 import { describe, expect, test } from 'vite-plus/test';
 import { driverResponseSchema, searchResponseSchema } from './schema';
 
+const DRIVER_ID = '0198a3c2-6d11-7c4e-9a52-3f1b8e0d7a10';
+
 const SUMMARY = {
-    id: 2,
+    id: DRIVER_ID,
     brand: 'Triton',
     model: 'TR 620 12"',
     variant: '4 Ω',
@@ -81,6 +83,15 @@ describe('searchResponseSchema', () => {
                 searchResponseSchema.safeParse(
                     search([{ ...SUMMARY, ...patch }]),
                 ).success,
+            ).toBe(false);
+        }
+    });
+
+    test('id que não é UUID reprova', () => {
+        for (const id of [2, '2', 'abc', '']) {
+            expect(
+                searchResponseSchema.safeParse(search([{ ...SUMMARY, id }]))
+                    .success,
             ).toBe(false);
         }
     });

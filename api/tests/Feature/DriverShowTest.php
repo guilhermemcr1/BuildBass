@@ -3,6 +3,7 @@
 use App\Models\Driver;
 use Database\Seeders\DriverSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 
 uses(RefreshDatabase::class);
 
@@ -14,6 +15,7 @@ it('devolve todos os parâmetros em SI, idênticos ao cadastro', function () {
     $data = $response->json('data');
 
     expect($data['id'])->toBe($driver->id)
+        ->and($data['id'])->toBeUuid()
         ->and($data['brand'])->toBe('Triton')
         ->and($data['variant'])->toBe('4 Ω')
         ->and($data['fs_hz'])->toBe(76.94)
@@ -48,13 +50,13 @@ it('omite os campos sem valor e os internos', function () {
 });
 
 it('responde 404 para id que não existe, sem vazar detalhes internos', function () {
-    $response = $this->getJson('/api/drivers/999')->assertNotFound();
+    $response = $this->getJson('/api/drivers/'.Str::uuid())->assertNotFound();
 
     expect($response->getContent())->not->toContain('App\\Models');
 });
 
-it('recusa id que não é inteiro positivo', function () {
-    $this->getJson('/api/drivers/abc')->assertUnprocessable()->assertJsonValidationErrors('id');
-    $this->getJson('/api/drivers/0')->assertUnprocessable()->assertJsonValidationErrors('id');
-    $this->getJson('/api/drivers/1.5')->assertUnprocessable()->assertJsonValidationErrors('id');
+it('recusa id que não é UUID', function () {
+    foreach (['abc', '0', '1', '1.5', '2c1b2a-nao-e-uuid'] as $id) {
+        $this->getJson("/api/drivers/{$id}")->assertUnprocessable()->assertJsonValidationErrors('id');
+    }
 });

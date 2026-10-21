@@ -44,7 +44,7 @@ class DriverCatalogService
         ];
     }
 
-    public function find(int $id): ?Driver
+    public function find(string $id): ?Driver
     {
         return Driver::query()->find($id);
     }

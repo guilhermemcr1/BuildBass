@@ -1,8 +1,10 @@
 import { afterEach, describe, expect, test, vi } from 'vite-plus/test';
 import { fetchDriver, searchDrivers } from './client';
 
+const DRIVER_ID = '0198a3c2-6d11-7c4e-9a52-3f1b8e0d7a10';
+
 const SUMMARY = {
-    id: 2,
+    id: DRIVER_ID,
     brand: 'Triton',
     model: 'TR 620 12"',
     variant: '4 Ω',
@@ -128,10 +130,10 @@ describe('fetchDriver', () => {
         const body = { data: { ...SUMMARY, source: 'ficha' } };
         const fetchMock = mockFetch(() => respond(200, body));
 
-        const result = await fetchDriver(2);
+        const result = await fetchDriver(DRIVER_ID);
 
         expect(String(fetchMock.mock.calls[0][0])).toMatch(
-            /\/api\/drivers\/2$/,
+            new RegExp(`/api/drivers/${DRIVER_ID}$`),
         );
         expect(result).toEqual({ ok: true, data: body });
     });
@@ -139,7 +141,9 @@ describe('fetchDriver', () => {
     test('404 vira notFound', async () => {
         mockFetch(() => respond(404, { message: 'x' }));
 
-        expect(await fetchDriver(9)).toEqual({ ok: false, error: 'notFound' });
+        expect(
+            await fetchDriver('0198a3c2-6d11-7c4e-9a52-3f1b8e0d7a99'),
+        ).toEqual({ ok: false, error: 'notFound' });
     });
 
     test('parâmetro fora da faixa vira invalid', async () => {
@@ -149,6 +153,9 @@ describe('fetchDriver', () => {
             }),
         );
 
-        expect(await fetchDriver(2)).toEqual({ ok: false, error: 'invalid' });
+        expect(await fetchDriver(DRIVER_ID)).toEqual({
+            ok: false,
+            error: 'invalid',
+        });
     });
 });

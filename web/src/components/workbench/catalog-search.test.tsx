@@ -9,6 +9,8 @@ import { usePreferences } from '@/stores/preferences';
 import { renderWithProviders } from '@/test/render';
 import { CatalogSearch } from './catalog-search';
 
+const DRIVER_ID = '0198a3c2-6d11-7c4e-9a52-3f1b8e0d7a10';
+
 vi.mock('@/lib/catalog/client', () => ({
     searchDrivers: vi.fn(),
     fetchDriver: vi.fn(),
@@ -18,7 +20,7 @@ const search = vi.mocked(searchDrivers);
 const detail = vi.mocked(fetchDriver);
 
 const SUMMARY: DriverSummary = {
-    id: 2,
+    id: DRIVER_ID,
     brand: 'Triton',
     model: 'TR 620 12"',
     variant: '4 Ω',
@@ -103,7 +105,7 @@ describe('CatalogSearch — buscar e copiar (US1)', () => {
             ),
         );
         const { data } = activeProjectStore().getState();
-        expect(detail).toHaveBeenCalledWith(2);
+        expect(detail).toHaveBeenCalledWith(DRIVER_ID);
         expect(data.driver).toEqual({
             fs_hz: 76.94,
             qts: 0.717,

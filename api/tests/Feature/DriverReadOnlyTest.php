@@ -34,5 +34,5 @@ it('limita a 60 pedidos por minuto por IP e responde 429 com Retry-After', funct
     $this->getJson('/api/drivers?q=triton')
         ->assertStatus(429)
         ->assertHeader('Retry-After');
-    $this->getJson('/api/drivers/1')->assertStatus(429);
+    $this->getJson('/api/drivers/'.Driver::first()->id)->assertStatus(429);
 });

@@ -13,7 +13,7 @@ function range(key: ParameterKey) {
 }
 
 const summary = z.object({
-    id: z.number().int().min(1),
+    id: z.uuid(),
     brand: z.string().trim().min(1).max(80),
     model: z.string().trim().min(1).max(80),
     variant: z.string().trim().min(1).max(40).nullable(),

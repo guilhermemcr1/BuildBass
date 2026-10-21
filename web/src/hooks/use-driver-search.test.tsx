@@ -15,9 +15,13 @@ vi.mock('@/lib/catalog/client', () => ({ searchDrivers: vi.fn() }));
 
 const search = vi.mocked(searchDrivers);
 
+function uid(n: number): string {
+    return `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
+}
+
 function summary(id: number): DriverSummary {
     return {
-        id,
+        id: uid(id),
         brand: 'Triton',
         model: `TR ${id}`,
         variant: null,
@@ -99,7 +103,10 @@ describe('useDriverSearch', () => {
         await act(() => vi.advanceTimersByTimeAsync(300));
 
         expect(result.current.status).toBe('ready');
-        expect(result.current.items.map((item) => item.id)).toEqual([1, 2]);
+        expect(result.current.items.map((item) => item.id)).toEqual([
+            uid(1),
+            uid(2),
+        ]);
         expect(result.current.hasMore).toBe(true);
     });
 
@@ -131,7 +138,7 @@ describe('useDriverSearch', () => {
             await Promise.resolve();
         });
 
-        expect(result.current.items.map((item) => item.id)).toEqual([2]);
+        expect(result.current.items.map((item) => item.id)).toEqual([uid(2)]);
     });
 
     test('sem conexão não busca e fica idle', async () => {
@@ -159,7 +166,7 @@ describe('useDriverSearch', () => {
         await act(() => vi.advanceTimersByTimeAsync(300));
 
         expect(result.current.status).toBe('ready');
-        expect(result.current.items.map((item) => item.id)).toEqual([3]);
+        expect(result.current.items.map((item) => item.id)).toEqual([uid(3)]);
         expect(result.current.error).toBeUndefined();
     });
 

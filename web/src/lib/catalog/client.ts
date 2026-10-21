@@ -102,8 +102,12 @@ export function searchDrivers(
 }
 
 export function fetchDriver(
-    id: number,
+    id: string,
     signal?: AbortSignal,
 ): Promise<CatalogResult<DriverResponse>> {
-    return request(`/api/drivers/${id}`, parseDriver, signal);
+    return request(
+        `/api/drivers/${encodeURIComponent(id)}`,
+        parseDriver,
+        signal,
+    );
 }

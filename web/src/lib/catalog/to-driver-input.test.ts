@@ -2,8 +2,10 @@ import { describe, expect, test } from 'vite-plus/test';
 import { toDriverInput } from './to-driver-input';
 import type { CatalogDriver } from './types';
 
+const DRIVER_ID = '0198a3c2-6d11-7c4e-9a52-3f1b8e0d7a10';
+
 const DRIVER: CatalogDriver = {
-    id: 2,
+    id: DRIVER_ID,
     brand: 'Triton',
     model: 'TR 620 12"',
     variant: '4 Ω',

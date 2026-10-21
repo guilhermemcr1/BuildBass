@@ -100,7 +100,8 @@ it('devolve só os campos do resultado, com variação vazia como null', functio
     $row = search('solo')->assertOk()->json('data.0');
 
     expect(array_keys($row))->toBe(['id', 'brand', 'model', 'variant', 'fs_hz', 'qts', 'vas_m3'])
-        ->and($row['variant'])->toBeNull();
+        ->and($row['variant'])->toBeNull()
+        ->and($row['id'])->toBeUuid();
 });
 
 it('recusa termo ausente, curto, longo ou que não é texto', function () {

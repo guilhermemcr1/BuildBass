@@ -6,7 +6,7 @@ export type { DriverSource };
 // com os mesmos nomes de campo do projeto.
 
 export type DriverSummary = {
-    id: number;
+    id: string;
     brand: string;
     model: string;
     variant: string | null;

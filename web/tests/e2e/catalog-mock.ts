@@ -7,8 +7,10 @@ export const API = 'http://127.0.0.1:8010';
 
 const CORS = { 'Access-Control-Allow-Origin': '*' };
 
+export const DRIVER_ID = '0198a3c2-6d11-7c4e-9a52-3f1b8e0d7a10';
+
 export const SUMMARY = {
-    id: 2,
+    id: DRIVER_ID,
     brand: 'Triton',
     model: 'TR 620 12"',
     variant: '4 Ω',
@@ -45,7 +47,7 @@ export type Handler = (route: Route, url: URL) => Promise<void>;
 
 // Resposta padrão: a busca devolve o TR 620 e o detalhe devolve o cadastro completo.
 export const ok: Handler = (route, url) => {
-    if (url.pathname === '/api/drivers/2') {
+    if (url.pathname === `/api/drivers/${DRIVER_ID}`) {
         return json(route, { data: DRIVER });
     }
 

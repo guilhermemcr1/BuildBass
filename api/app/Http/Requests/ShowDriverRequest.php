@@ -22,7 +22,7 @@ class ShowDriverRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'id' => ['required', 'integer', 'min:1'],
+            'id' => ['required', 'uuid'],
         ];
     }
 }

@@ -27,7 +27,7 @@ class DriverController extends Controller
 
     public function show(ShowDriverRequest $request): DriverResource
     {
-        $driver = $this->catalog->find((int) $request->validated('id'));
+        $driver = $this->catalog->find((string) $request->validated('id'));
 
         abort_if($driver === null, 404, 'Driver não encontrado.');
 

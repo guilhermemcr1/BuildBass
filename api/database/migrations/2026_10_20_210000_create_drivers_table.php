@@ -11,7 +11,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('drivers', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('brand', 80);
             $table->string('model', 80);
             $table->string('variant', 40)->default('');

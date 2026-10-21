@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { json, mockCatalog, SUMMARY } from './catalog-mock';
+import { DRIVER_ID, json, mockCatalog, SUMMARY } from './catalog-mock';
 import type { Handler } from './catalog-mock';
 
 test.use({ viewport: { width: 1440, height: 900 } });
@@ -68,7 +68,7 @@ test('servidor com erro: mensagem, tentar de novo e a bancada segue editável (U
             return json(route, { message: 'erro' }, 500);
         }
 
-        return url.pathname === '/api/drivers/2'
+        return url.pathname === `/api/drivers/${DRIVER_ID}`
             ? json(route, { data: { ...SUMMARY, source: 'ficha' } })
             : json(route, {
                   data: [SUMMARY],
@@ -110,7 +110,7 @@ test('busca sem resultado mostra o termo (US2)', async ({ page }) => {
 test('respostas fora de ordem: só a última digitação aparece (US2)', async ({
     page,
 }) => {
-    const answer = (model: string, id: number) => ({
+    const answer = (model: string, id: string) => ({
         data: [{ ...SUMMARY, id, model }],
         meta: { limit: 20, has_more: false },
     });
@@ -121,10 +121,16 @@ test('respostas fora de ordem: só a última digitação aparece (US2)', async (
         if (term === 'tr') {
             await new Promise((resolve) => setTimeout(resolve, 1200));
 
-            return json(route, answer('ANTIGO', 7));
+            return json(
+                route,
+                answer('ANTIGO', '0198a3c2-6d11-7c4e-9a52-3f1b8e0d7a11'),
+            );
         }
 
-        return json(route, answer('NOVO', 8));
+        return json(
+            route,
+            answer('NOVO', '0198a3c2-6d11-7c4e-9a52-3f1b8e0d7a12'),
+        );
     });
     await page.goto('/');
 
@@ -142,7 +148,7 @@ test('driver que saiu do catálogo avisa e não muda o projeto (US2)', async ({
     page,
 }) => {
     await mockCatalog(page, (route, url) =>
-        url.pathname === '/api/drivers/2'
+        url.pathname === `/api/drivers/${DRIVER_ID}`
             ? json(route, { message: 'não encontrado' }, 404)
             : json(route, {
                   data: [SUMMARY],

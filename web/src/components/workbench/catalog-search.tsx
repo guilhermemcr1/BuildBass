@@ -64,7 +64,7 @@ export function CatalogSearch({
 
     const items: SearchOption[] = (dismissed ? [] : search.items).map(
         (driver) => ({
-            id: String(driver.id),
+            id: driver.id,
             label: displayName(driver),
             description: support(driver),
         }),
@@ -83,7 +83,7 @@ export function CatalogSearch({
         setApplying(true);
         setDismissed(true);
         setApplyError(undefined);
-        const result = await fetchDriver(Number(id));
+        const result = await fetchDriver(id);
         setApplying(false);
 
         if (!result.ok) {
