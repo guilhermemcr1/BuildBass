@@ -11,3 +11,5 @@ export {
 export type * from './types';
 export { layoutRow } from './layout';
 export { buildCutPlan } from './plan';
+export { DEFAULT_VIEW, projectBox } from './projection';
+export type { Polygon, View } from './projection';

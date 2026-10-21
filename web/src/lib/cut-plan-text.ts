@@ -53,7 +53,8 @@ function sizeOf(cutout: Cutout, { t, length }: PlanText): string | undefined {
     }
 }
 
-function describe(cutout: Cutout, text: PlanText): string {
+// "Driver Ø 285,0 mm" ou, sem medida, "Driver: diâmetro a informar".
+export function describeCutout(cutout: Cutout, text: PlanText): string {
     const { t } = text;
     const name = t(`cutplan:cutouts.${cutout.kind}`);
     const size = sizeOf(cutout, text);
@@ -86,7 +87,7 @@ export function cutoutSummary(cutouts: Cutout[], text: PlanText): string[] {
     }
 
     return [...groups.values()].map(({ cutout, count }) => {
-        const line = describe(cutout, text);
+        const line = describeCutout(cutout, text);
 
         return count === 1
             ? line

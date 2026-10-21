@@ -101,5 +101,36 @@
         "portUnknown": "O duto está sem medidas: informe-as para ter o recorte e o volume dele.",
         "simulationUnavailable": "Sem a simulação não há conferência de volume nem comprimento do duto: complete o driver e a caixa.",
         "volumeMismatch": "O volume líquido do plano difere do da simulação. Isso não deveria acontecer: confira os valores e relate o caso."
+    },
+    "drawings": {
+        "title": "Desenhos 2D",
+        "caption": "Desenho da peça {{name}}: {{width}} por {{height}}",
+        "quantity": "×{{count}}",
+        "desc": "{{name}}: {{width}} por {{height}}, espessura {{thickness}}. Recortes: {{cutouts}}.",
+        "noCutouts": "nenhum",
+        "pendingLabel": "diâmetro a informar",
+        "note": "Todas as peças estão na mesma escala. As medidas do desenho estão na tabela de peças."
+    },
+    "view3d": {
+        "title": "Vista 3D",
+        "summary": "Caixa {{type}} montada, {{width}} de largura, {{height}} de altura e {{depth}} de profundidade (medidas externas).",
+        "hint": "Setas giram a caixa, + e − aproximam e afastam, Home reinicia. Também dá para arrastar.",
+        "inside": "Ver por dentro",
+        "rotateLeft": "Girar para a esquerda",
+        "rotateRight": "Girar para a direita",
+        "rotateUp": "Girar para cima",
+        "rotateDown": "Girar para baixo",
+        "zoomIn": "Aproximar",
+        "zoomOut": "Afastar",
+        "reset": "Reiniciar",
+        "controls": "Controles da vista 3D"
+    },
+    "types": {
+        "closed": "selada",
+        "vented": "dutada",
+        "bandpass": "bandpass"
+    },
+    "views": {
+        "label": "Visões do plano"
     }
 }

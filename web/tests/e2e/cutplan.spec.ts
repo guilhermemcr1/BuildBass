@@ -212,3 +212,56 @@ test('plano da bandpass: sete peças, divisória, câmaras e conferência por c�
         /25/,
     );
 });
+
+test('desenhos 2D e vista 3D: um desenho por peça, girar por teclado e por botões (US4)', async ({
+    page,
+}) => {
+    await page.goto('/');
+    await referenceDriver(page);
+    await page.getByRole('radio', { name: 'Bandpass' }).click();
+    await fill(page, /^Vr/, '40');
+    await fill(page, /^Vf/, '60');
+    await fill(page, /^Fb/, '45');
+    await fill(page, /Diâmetro do duto/, '100');
+    await openPlan(page);
+    await fill(page, /^Ød/, '200');
+
+    // Desenhos 2D: um por linha da tabela, e a lista em texto continua inteira.
+    await expect(
+        page.getByRole('tab', { name: 'Desenhos 2D' }),
+    ).toHaveAttribute('aria-selected', 'true');
+    const drawings = page.locator(
+        '[data-region="plan"] figure svg[role="img"]',
+    );
+    await expect(drawings).toHaveCount(6);
+    await expect(page.getByRole('img', { name: 'Divisória' })).toBeVisible();
+    await expect(
+        page.getByRole('table', { name: /Lista de corte/ }).locator('tbody tr'),
+    ).toHaveCount(6);
+
+    // Vista 3D: carrega ao abrir a aba e gira.
+    await page.getByRole('tab', { name: 'Vista 3D' }).click();
+    const box = page.locator('[data-region="plan"] svg[data-yaw]');
+    await expect(box).toBeVisible();
+    await expect(box).toHaveAccessibleName(/bandpass.*de largura/);
+
+    const yaw = async () => Number(await box.getAttribute('data-yaw'));
+    const start = await yaw();
+
+    await box.focus();
+    await page.keyboard.press('ArrowRight');
+    expect(await yaw()).toBeGreaterThan(start);
+
+    await page.getByRole('button', { name: 'Girar para a esquerda' }).click();
+    await page.getByRole('button', { name: 'Girar para a esquerda' }).click();
+    expect(await yaw()).toBeLessThan(start);
+
+    await box.focus();
+    await page.keyboard.press('Home');
+    expect(await yaw()).toBeCloseTo(start, 3);
+
+    // Por dentro: a divisória aparece.
+    await expect(box.locator('[data-id="divider"]')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Ver por dentro' }).click();
+    await expect(box.locator('[data-id="divider"]')).toHaveCount(1);
+});

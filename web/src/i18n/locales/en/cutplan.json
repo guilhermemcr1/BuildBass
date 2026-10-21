@@ -101,5 +101,36 @@
         "portUnknown": "The port has no dimensions: provide them to get its cutout and volume.",
         "simulationUnavailable": "Without the simulation there is no volume check or port length: complete the driver and the enclosure.",
         "volumeMismatch": "The plan's net volume differs from the simulation's. This should not happen: check the values and report the case."
+    },
+    "drawings": {
+        "title": "2D drawings",
+        "caption": "Drawing of the {{name}} part: {{width}} by {{height}}",
+        "quantity": "×{{count}}",
+        "desc": "{{name}}: {{width}} by {{height}}, thickness {{thickness}}. Cutouts: {{cutouts}}.",
+        "noCutouts": "none",
+        "pendingLabel": "diameter to be provided",
+        "note": "All parts share the same scale. The drawing's measures are in the parts table."
+    },
+    "view3d": {
+        "title": "3D view",
+        "summary": "Assembled {{type}} enclosure, {{width}} wide, {{height}} high and {{depth}} deep (external measures).",
+        "hint": "Arrow keys rotate the box, + and − zoom, Home resets. You can also drag.",
+        "inside": "See inside",
+        "rotateLeft": "Rotate left",
+        "rotateRight": "Rotate right",
+        "rotateUp": "Rotate up",
+        "rotateDown": "Rotate down",
+        "zoomIn": "Zoom in",
+        "zoomOut": "Zoom out",
+        "reset": "Reset",
+        "controls": "3D view controls"
+    },
+    "types": {
+        "closed": "sealed",
+        "vented": "vented",
+        "bandpass": "bandpass"
+    },
+    "views": {
+        "label": "Plan views"
     }
 }

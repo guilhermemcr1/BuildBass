@@ -1,6 +1,8 @@
+import { Suspense, lazy, useState } from 'react';
 import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { Banner } from '@/components/ui/banner';
+import { Tabs } from '@/components/ui/tabs';
 import { ValueTile } from '@/components/ui/value-tile';
 import { useActiveProject } from '@/hooks/use-active-project';
 import { useCutPlan } from '@/hooks/use-cut-plan';
@@ -9,16 +11,22 @@ import { displayName } from '@/lib/project/names';
 import { defaultUnitFor } from '@/lib/units/quantities';
 import { usePreferences } from '@/stores/preferences';
 import { useWorkspace } from '@/stores/workspace';
+import { CutDrawings } from './cut-drawings';
 import { Panel } from './panel';
 import { PartsTable } from './parts-table';
 import { PlanConfig } from './plan-config';
 import { PlanWarnings } from './plan-warnings';
 import { VolumeCheck } from './volume-check';
 
+const Box3dView = lazy(() => import('./box-3d-view'));
+
+type PlanView = 'drawings' | 'view3d';
+
 // Plano de corte do projeto ativo (specs/005): configuração, dimensões e lista de peças.
 export function PlanPanel() {
     const { t } = useTranslation(['cutplan', 'project']);
     const { locale } = useLocale();
+    const [planView, setPlanView] = useState<PlanView>('drawings');
     const unitSystem = usePreferences((state) => state.unitSystem);
     const unit = defaultUnitFor('length', unitSystem);
     const cutPlan = useCutPlan();
@@ -136,6 +144,27 @@ export function PlanPanel() {
                         </section>
                     )}
                     <PlanWarnings plan={cutPlan.plan} />
+                    <Tabs<PlanView>
+                        label={t('views.label')}
+                        items={[
+                            { id: 'drawings', label: t('drawings.title') },
+                            { id: 'view3d', label: t('view3d.title') },
+                        ]}
+                        selected={planView}
+                        onChange={setPlanView}
+                    >
+                        {(id) => (
+                            <div className="pt-3">
+                                {id === 'drawings' ? (
+                                    <CutDrawings plan={cutPlan.plan} />
+                                ) : (
+                                    <Suspense fallback={null}>
+                                        <Box3dView plan={cutPlan.plan} />
+                                    </Suspense>
+                                )}
+                            </div>
+                        )}
+                    </Tabs>
                 </>
             )}
         </Panel>
