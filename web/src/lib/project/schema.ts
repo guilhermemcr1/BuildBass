@@ -83,6 +83,21 @@ const driverSource = z.object({
     variant: z.string().trim().min(1).max(40).optional(),
 });
 
+// Configuração do plano de corte (opcional: só existe depois que o usuário edita um campo do plano).
+// Campos desconhecidos são ignorados; `custom` com outra proporção é aceito e não é usado.
+const ratioRange = range('ratio_h');
+const cutPlan = z.object({
+    thickness_m: range('thickness_m').optional(),
+    proportion: z
+        .enum(['golden', 'louden', 'equalSteps', 'cube', 'custom'])
+        .optional(),
+    custom: z
+        .object({ h: ratioRange, w: ratioRange, d: ratioRange })
+        .optional(),
+    braces_m3: range('braces_m3').optional(),
+    cutout_m: range('cutout_m').optional(),
+});
+
 export const projectSchema = z.object({
     // Vazio = nome padrão traduzido (lib/project/names.ts).
     name: z.string().trim().max(PROJECT_NAME_MAX),
@@ -107,5 +122,6 @@ export const projectSchema = z.object({
         voltage_v: range('voltage_v').optional(),
         radiation: z.enum(['half', 'full']),
     }),
+    cutPlan: cutPlan.optional(),
     fieldUnits: fieldUnits.default({}),
 }) satisfies z.ZodType<ProjectData, unknown>;

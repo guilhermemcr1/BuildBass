@@ -1,3 +1,4 @@
+import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { ParameterField } from '@/components/ui/parameter-field';
 import { SelectField } from '@/components/ui/select-field';
@@ -18,6 +19,11 @@ const PROPORTION_IDS: CutPlanProportion[] = [
 // Espessura, proporção, reforços e diâmetro do recorte: o que o plano precisa além do projeto.
 export function PlanConfig() {
     const { t } = useTranslation('cutplan');
+    const { locale } = useLocale();
+    const ratio = new Intl.NumberFormat(locale, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
     const config = useActiveProject((state) => state.data.cutPlan);
     const apply = useActiveProject((state) => state.apply);
     const resolved = resolveCutPlan(config);
@@ -54,9 +60,9 @@ export function PlanConfig() {
             ) : (
                 <p className="num text-xs text-muted">
                     {t('config.ratioLine', {
-                        h: resolved.ratio.h.toFixed(2),
-                        w: resolved.ratio.w.toFixed(2),
-                        d: resolved.ratio.d.toFixed(2),
+                        h: ratio.format(resolved.ratio.h),
+                        w: ratio.format(resolved.ratio.w),
+                        d: ratio.format(resolved.ratio.d),
                     })}
                 </p>
             )}

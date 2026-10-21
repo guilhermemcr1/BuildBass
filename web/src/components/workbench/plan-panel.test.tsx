@@ -121,6 +121,30 @@ describe('PlanPanel', () => {
         expect(screen.queryByRole('row', { name: /Divisória/ })).toBeNull();
     });
 
+    test('só ver o plano não cria cutPlan; voltar ao valor padrão mantém o campo', () => {
+        setField('vb_m3', 0.06);
+        const before = activeProjectStore().getState().data;
+        renderWithProviders(<PlanPanel />);
+
+        expect(activeProjectStore().getState().data).toBe(before);
+        expect(activeProjectStore().getState().data).not.toHaveProperty(
+            'cutPlan',
+        );
+
+        setField('thickness_m', 0.025);
+        setField('thickness_m', 0.018);
+
+        expect(activeProjectStore().getState().data.cutPlan).toEqual({
+            thickness_m: 0.018,
+        });
+
+        setField('thickness_m', undefined);
+
+        expect(activeProjectStore().getState().data).not.toHaveProperty(
+            'cutPlan',
+        );
+    });
+
     describe('exportar e imprimir', () => {
         afterEach(() => {
             vi.restoreAllMocks();

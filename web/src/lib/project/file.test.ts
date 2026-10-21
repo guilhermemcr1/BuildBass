@@ -92,7 +92,7 @@ describe('arquivo de projeto', () => {
 
     test('versão mais nova', async () => {
         expect(
-            await parseProjectFile(file(envelope({}, { version: 3 }))),
+            await parseProjectFile(file(envelope({}, { version: 4 }))),
         ).toEqual({ ok: false, code: 'newerVersion' });
     });
 
@@ -330,5 +330,122 @@ describe('bandpass e versão 2 (feature 004)', () => {
             code: 'invalidContent',
             path: 'project.box.type',
         });
+    });
+});
+
+describe('plano de corte no arquivo (versão 3)', () => {
+    const PLAN: ProjectData = {
+        ...FULL,
+        cutPlan: {
+            thickness_m: 0.025,
+            proportion: 'custom',
+            custom: { h: 2.2, w: 1.5, d: 1 },
+            braces_m3: 0.002,
+            cutout_m: 0.285,
+        },
+    };
+
+    const versionOf = (text: string): number => JSON.parse(text).version;
+
+    const withPlan = (cutPlan: unknown) =>
+        file(envelope({ ...FULL, cutPlan }, { version: 3 }));
+
+    test('grava a versão 3 só com cutPlan; bandpass sem plano é 2 e o resto é 1', () => {
+        expect(versionOf(serializeProject(PLAN))).toBe(3);
+        expect(
+            versionOf(
+                serializeProject({
+                    ...PLAN,
+                    box: { ...PLAN.box, type: 'bandpass' },
+                }),
+            ),
+        ).toBe(3);
+        expect(
+            versionOf(
+                serializeProject({
+                    ...FULL,
+                    box: { ...FULL.box, type: 'bandpass' },
+                }),
+            ),
+        ).toBe(2);
+        expect(versionOf(serializeProject(FULL))).toBe(1);
+    });
+
+    test('ida e volta de um plano completo reproduz tudo', async () => {
+        const result = await parseProjectFile(file(serializeProject(PLAN)));
+
+        expect(result).toEqual({ ok: true, data: PLAN });
+    });
+
+    test('sem cutPlan o arquivo não ganha a chave', () => {
+        expect(JSON.parse(serializeProject(FULL)).project).not.toHaveProperty(
+            'cutPlan',
+        );
+    });
+
+    test('abre as versões 1, 2 e 3', async () => {
+        for (const version of [1, 2, 3]) {
+            expect(
+                await parseProjectFile(file(envelope(FULL, { version }))),
+            ).toEqual({ ok: true, data: FULL });
+        }
+    });
+
+    test('um arquivo v1 ou v2 com cutPlan também é validado e aceito', async () => {
+        for (const version of [1, 2]) {
+            const result = await parseProjectFile(
+                file(envelope(PLAN, { version })),
+            );
+
+            expect(result).toEqual({ ok: true, data: PLAN });
+        }
+    });
+
+    test('valores fora da faixa são recusados com o caminho', async () => {
+        const cases: [unknown, string][] = [
+            [{ thickness_m: 0 }, 'project.cutPlan.thickness_m'],
+            [{ braces_m3: 21 }, 'project.cutPlan.braces_m3'],
+            [
+                { proportion: 'custom', custom: { h: 0.05, w: 1, d: 1 } },
+                'project.cutPlan.custom.h',
+            ],
+            [{ cutout_m: 0.01 }, 'project.cutPlan.cutout_m'],
+            [{ proportion: 'horn' }, 'project.cutPlan.proportion'],
+        ];
+
+        for (const [cutPlan, path] of cases) {
+            expect(await parseProjectFile(withPlan(cutPlan))).toEqual({
+                ok: false,
+                code: 'invalidContent',
+                path,
+            });
+        }
+    });
+
+    test('custom com outra proporção é aceito e campos desconhecidos são ignorados', async () => {
+        const result = await parseProjectFile(
+            withPlan({
+                proportion: 'golden',
+                custom: { h: 2, w: 1.5, d: 1 },
+                extra: 'ignorado',
+            }),
+        );
+
+        expect(result).toEqual({
+            ok: true,
+            data: {
+                ...FULL,
+                cutPlan: {
+                    proportion: 'golden',
+                    custom: { h: 2, w: 1.5, d: 1 },
+                },
+            },
+        });
+    });
+
+    test('versão 4 continua pedindo para atualizar o app', async () => {
+        expect(
+            await parseProjectFile(file(envelope(PLAN, { version: 4 }))),
+        ).toEqual({ ok: false, code: 'newerVersion' });
     });
 });
