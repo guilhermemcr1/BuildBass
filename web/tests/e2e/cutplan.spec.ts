@@ -347,3 +347,65 @@ test('imprimir: só a folha do plano fica visível (US5)', async ({ page }) => {
     await expect(sheet).toBeHidden();
     await expect(page.locator('[data-region="plan"]')).toBeVisible();
 });
+
+test('só pelo teclado: seletor de visão, campos, proporção, botões, abas e vista 3D (US7)', async ({
+    page,
+}) => {
+    await page.goto('/');
+    await page.getByRole('radio', { name: 'Selada' }).click();
+    await fill(page, /^Vb/, '60');
+
+    // O seletor de visão é alcançável e se opera por teclado.
+    await page.getByRole('radio', { name: 'Gráficos' }).focus();
+    await page.keyboard.press('Space');
+    await page.getByRole('radio', { name: 'Plano de corte' }).focus();
+    await page.keyboard.press('Space');
+    await expect(page.locator('[data-region="plan"]')).toBeVisible();
+
+    // Cada campo da configuração tem nome acessível.
+    for (const name of [/Espessura/, /Volume dos reforços/, /^Ød/]) {
+        await expect(page.getByRole('textbox', { name })).toBeVisible();
+    }
+
+    // Proporção: Enter abre, setas escolhem, Enter confirma.
+    const proportion = page.getByRole('button', { name: /Proporção/ });
+    await proportion.focus();
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('listbox')).toBeVisible();
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('listbox')).toHaveCount(0);
+    await expect(proportion).not.toContainText('Áurea');
+
+    // Os botões de exportar e imprimir recebem foco.
+    for (const name of ['Exportar CSV', 'Imprimir']) {
+        const button = page.getByRole('button', { name });
+        await button.focus();
+        await expect(button).toBeFocused();
+    }
+
+    // Abas por setas e a vista 3D gira com as setas.
+    const drawings = page.getByRole('tab', { name: 'Desenhos 2D' });
+    await drawings.focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(page.getByRole('tab', { name: 'Vista 3D' })).toHaveAttribute(
+        'aria-selected',
+        'true',
+    );
+    const box = page.locator('[data-region="plan"] svg[data-yaw]');
+    await box.focus();
+    const before = Number(await box.getAttribute('data-yaw'));
+    await page.keyboard.press('ArrowRight');
+    expect(Number(await box.getAttribute('data-yaw'))).toBeGreaterThan(before);
+
+    // Nenhuma armadilha de foco: Tab sai da vista 3D e segue para o resto da página.
+    for (let index = 0; index < 20; index += 1) {
+        await page.keyboard.press('Tab');
+    }
+
+    expect(
+        await page.evaluate(
+            () => document.activeElement?.closest('svg[data-yaw]') === null,
+        ),
+    ).toBe(true);
+});

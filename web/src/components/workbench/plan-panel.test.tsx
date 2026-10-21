@@ -145,6 +145,105 @@ describe('PlanPanel', () => {
         );
     });
 
+    describe('idioma e unidades (US7)', () => {
+        test('em inglês os rótulos, cabeçalhos, peças e avisos aparecem traduzidos', () => {
+            setField('vb_m3', 0.06);
+            renderWithProviders(<PlanPanel />, 'en');
+
+            expect(
+                screen.getByRole('region', { name: 'Cut plan' }),
+            ).toBeVisible();
+            expect(
+                screen.getByRole('table', { name: /Cut list for/ }),
+            ).toBeVisible();
+
+            for (const name of [
+                'Piece',
+                'Position',
+                'Qty',
+                'Length',
+                'Width',
+                'Thickness',
+                'Cutouts',
+            ]) {
+                expect(
+                    screen.getByRole('columnheader', { name }),
+                ).toBeVisible();
+            }
+
+            expect(screen.getByRole('row', { name: /Front/ })).toBeVisible();
+            expect(screen.getByRole('row', { name: /Side/ })).toBeVisible();
+            expect(screen.getByText('Internal · Width')).toBeVisible();
+            expect(
+                screen.getByText(/The driver cutout diameter/),
+            ).toBeVisible();
+            expect(
+                screen.getByRole('button', { name: 'Export CSV' }),
+            ).toBeVisible();
+            expect(screen.getByRole('button', { name: 'Print' })).toBeVisible();
+        });
+
+        test('em inglês as proporções têm nome e a razão sai com ponto decimal', () => {
+            setField('vb_m3', 0.06);
+            renderWithProviders(<PlanPanel />, 'en');
+
+            expect(
+                screen.getByText('Height : width : depth = 2.62 : 1.62 : 1.00'),
+            ).toBeVisible();
+        });
+
+        test('no sistema imperial a espessura sai em polegadas e os reforços em ft³', () => {
+            usePreferences.setState({ unitSystem: 'imperial' });
+            setField('vb_m3', 0.06);
+            renderWithProviders(<PlanPanel />);
+
+            const thickness = screen.getByRole('textbox', {
+                name: /Espessura/,
+            });
+            const braces = screen.getByRole('textbox', {
+                name: /Volume dos reforços/,
+            });
+
+            expect(thickness).toHaveValue('0,709');
+            expect(
+                screen.getByRole('button', {
+                    name: /in — trocar unidade de t/,
+                }),
+            ).toBeVisible();
+            expect(
+                screen.getByRole('button', {
+                    name: /ft³ — trocar unidade de Vrf/,
+                }),
+            ).toBeVisible();
+            expect(braces).toHaveValue('0,00');
+        });
+
+        test('trocar a unidade de um campo grava em fieldUnits e não muda o valor SI', async () => {
+            setField('vb_m3', 0.06);
+            setField('thickness_m', 0.025);
+            renderWithProviders(<PlanPanel />);
+
+            await userEvent.click(
+                screen.getByRole('button', {
+                    name: /mm — trocar unidade de t/,
+                }),
+            );
+            await userEvent.click(
+                screen.getByRole('menuitemradio', { name: 'in' }),
+            );
+
+            const { data } = activeProjectStore().getState();
+
+            expect(data.fieldUnits.thickness_m).toBe('in');
+            expect(data.fieldUnits.braces_m3).toBeUndefined();
+            expect(data.fieldUnits.cutout_m).toBeUndefined();
+            expect(data.cutPlan?.thickness_m).toBe(0.025);
+            expect(
+                screen.getByRole('textbox', { name: /Espessura/ }),
+            ).toHaveValue('0,984');
+        });
+    });
+
     describe('exportar e imprimir', () => {
         afterEach(() => {
             vi.restoreAllMocks();
