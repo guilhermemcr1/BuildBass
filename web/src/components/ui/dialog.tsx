@@ -5,15 +5,24 @@ import {
     Modal,
     ModalOverlay,
 } from 'react-aria-components';
+import { cn } from '@/lib/utils';
 
 type DialogProps = {
     title: string;
     open: boolean;
     onOpenChange: (open: boolean) => void;
     children: ReactNode;
+    // `lg` para formulários longos: o conteúdo rola dentro do diálogo.
+    size?: 'md' | 'lg';
 };
 
-export function Dialog({ title, open, onOpenChange, children }: DialogProps) {
+export function Dialog({
+    title,
+    open,
+    onOpenChange,
+    children,
+    size = 'md',
+}: DialogProps) {
     return (
         <ModalOverlay
             isOpen={open}
@@ -21,7 +30,14 @@ export function Dialog({ title, open, onOpenChange, children }: DialogProps) {
             isDismissable
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
         >
-            <Modal className="w-full max-w-md rounded-lg border border-border bg-surface text-foreground shadow-xl">
+            <Modal
+                className={cn(
+                    'w-full rounded-lg border border-border bg-surface text-foreground shadow-xl',
+                    size === 'lg'
+                        ? 'max-h-[calc(100dvh-2rem)] max-w-2xl overflow-y-auto'
+                        : 'max-w-md',
+                )}
+            >
                 <AriaDialog className="flex flex-col gap-3 p-5 outline-none">
                     <Heading slot="title" className="text-base font-semibold">
                         {title}

@@ -31,11 +31,13 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * Catálogo de drivers: 60 pedidos por minuto por IP (a chave é guardada com hash).
+     * Catálogo de drivers: 60 pedidos por minuto por IP; envio de driver: 5 por hora por IP
+     * (a chave é guardada com hash).
      */
     protected function configureRateLimiting(): void
     {
         RateLimiter::for('catalog', fn (Request $request) => Limit::perMinute(60)->by((string) $request->ip()));
+        RateLimiter::for('submission', fn (Request $request) => Limit::perHour(5)->by((string) $request->ip()));
     }
 
     /**
