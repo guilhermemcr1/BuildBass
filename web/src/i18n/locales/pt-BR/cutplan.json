@@ -132,5 +132,13 @@
     },
     "views": {
         "label": "Visões do plano"
+    },
+    "actions": {
+        "exportCsv": "Exportar CSV",
+        "print": "Imprimir",
+        "unavailable": "Disponível quando o plano estiver completo: informe os parâmetros que faltam."
+    },
+    "print": {
+        "title": "Plano de corte: {{name}}"
     }
 }

@@ -37,8 +37,8 @@ export function serializeProject(data: ProjectData, now = new Date()): string {
     )}\n`;
 }
 
-// Nome em minúsculas, sem acentos, com espaços e símbolos trocados por "-".
-export function exportFileName(name: string): string {
+// Nome em minúsculas, sem acentos, com espaços e símbolos trocados por "-"; vazio vira "projeto".
+export function exportBaseName(name: string): string {
     const slug = name
         .normalize('NFD')
         .replace(/[̀-ͯ]/g, '')
@@ -46,7 +46,11 @@ export function exportFileName(name: string): string {
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '');
 
-    return `${slug === '' ? 'projeto' : slug}${FILE_EXTENSION}`;
+    return slug === '' ? 'projeto' : slug;
+}
+
+export function exportFileName(name: string): string {
+    return `${exportBaseName(name)}${FILE_EXTENSION}`;
 }
 
 export function downloadProject(data: ProjectData): void {

@@ -132,5 +132,13 @@
     },
     "views": {
         "label": "Plan views"
+    },
+    "actions": {
+        "exportCsv": "Export CSV",
+        "print": "Print",
+        "unavailable": "Available once the plan is complete: provide the missing parameters."
+    },
+    "print": {
+        "title": "Cut plan: {{name}}"
     }
 }

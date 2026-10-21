@@ -1,6 +1,13 @@
 import { act, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, test } from 'vite-plus/test';
+import {
+    afterEach,
+    beforeEach,
+    describe,
+    expect,
+    test,
+    vi,
+} from 'vite-plus/test';
 import { activeProjectStore } from '@/hooks/use-active-project';
 import { writeField } from '@/lib/project/fields';
 import { usePreferences } from '@/stores/preferences';
@@ -112,5 +119,57 @@ describe('PlanPanel', () => {
             screen.queryByText('Profundidade da câmara traseira'),
         ).toBeNull();
         expect(screen.queryByRole('row', { name: /Divisória/ })).toBeNull();
+    });
+
+    describe('exportar e imprimir', () => {
+        afterEach(() => {
+            vi.restoreAllMocks();
+        });
+
+        test('com o plano bloqueado os botões ficam desativados e dizem por quê', () => {
+            setField('vb_m3', undefined);
+            renderWithProviders(<PlanPanel />);
+
+            for (const name of ['Exportar CSV', 'Imprimir']) {
+                const button = screen.getByRole('button', { name });
+
+                expect(button).toBeDisabled();
+                expect(button).toHaveAccessibleDescription(
+                    /Disponível quando o plano estiver completo/,
+                );
+            }
+        });
+
+        test('com o plano pronto, Exportar CSV baixa o arquivo e Imprimir abre a impressão', async () => {
+            setField('vb_m3', 0.06);
+            const blobs: Blob[] = [];
+            vi.spyOn(URL, 'createObjectURL').mockImplementation((blob) => {
+                blobs.push(blob as Blob);
+
+                return 'blob:test';
+            });
+            vi.spyOn(URL, 'revokeObjectURL').mockImplementation(
+                () => undefined,
+            );
+            const click = vi
+                .spyOn(HTMLAnchorElement.prototype, 'click')
+                .mockImplementation(() => undefined);
+            const print = vi
+                .spyOn(window, 'print')
+                .mockImplementation(() => undefined);
+            renderWithProviders(<PlanPanel />);
+
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Exportar CSV' }),
+            );
+            expect(click).toHaveBeenCalledTimes(1);
+            expect(blobs[0].type).toBe('text/csv;charset=utf-8');
+            expect(await blobs[0].text()).toContain('Frente');
+
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Imprimir' }),
+            );
+            expect(print).toHaveBeenCalledTimes(1);
+        });
     });
 });

@@ -33,6 +33,8 @@ import {
     useWorkspace,
 } from '@/stores/workspace';
 
+const PrintSheet = lazy(() => import('@/components/workbench/print-sheet'));
+
 const PlanPanel = lazy(() =>
     import('@/components/workbench/plan-panel').then((module) => ({
         default: module.PlanPanel,
@@ -126,102 +128,120 @@ export default function Workbench() {
 
     return (
         <div className="flex min-h-dvh flex-col">
-            <TopBar
-                onAction={runAction}
-                history={history}
-                tabs={<ProjectTabs onClose={requestClose} />}
-                onHelp={() => setHelpOpen(true)}
-                preferences={<PreferencesBar />}
-            />
-            <OfflineBanner />
-            {!storageAvailable && (
-                <Banner tone="warn" className="mx-3 mt-3">
-                    {t('project:storage.unavailable')}
-                </Banner>
-            )}
-            <main className="grid flex-1 grid-cols-1 gap-3 p-3 md:grid-cols-2 xl:grid-cols-[minmax(300px,360px)_minmax(260px,320px)_minmax(0,1fr)] xl:grid-rows-[auto_1fr]">
-                {/* Em ≥ 1280 px o driver ocupa as duas linhas: a altura dele não empurra os resultados. */}
-                <div className="xl:row-span-2">
-                    <DriverPanel
-                        onSubmitDriver={() => setPending(t('catalog.submit'))}
-                    />
-                </div>
-                <BoxPanel />
-                <div className="md:col-span-2 xl:col-span-1 xl:col-start-3 xl:row-span-2 xl:row-start-1 xl:flex xl:flex-col [&>section]:flex-1">
-                    <ViewSwitch selected={view} onChange={setView} />
-                    {view === 'charts' ? (
-                        <ChartPanel
-                            selected={chart}
-                            onSelectedChange={setChart}
-                        />
-                    ) : (
-                        <Suspense fallback={null}>
-                            <PlanPanel />
-                        </Suspense>
-                    )}
-                </div>
-                <div className="md:col-span-2 xl:col-span-1 xl:col-start-2 xl:row-start-2">
-                    <ResultsPanel />
-                </div>
-            </main>
-            <input
-                ref={fileInput}
-                type="file"
-                accept=".json,.buildbass.json,application/json"
-                hidden
-                data-testid="open-file"
-                onChange={(event) => {
-                    const file = event.currentTarget.files?.[0];
-                    // Limpar permite abrir o mesmo arquivo de novo.
-                    event.currentTarget.value = '';
-
-                    if (file !== undefined) {
-                        void openFile(file);
-                    }
-                }}
-            />
-            <FileDrop onFile={(file) => void openFile(file)} />
-            <ShortcutsDialog open={helpOpen} onOpenChange={setHelpOpen} />
-            <TabLimitDialog
-                // Fechar um projeto pelo aviso libera o lugar e encerra o aviso.
-                open={limitOpen && projectCount >= MAX_OPEN_PROJECTS}
-                onCloseProject={(id) => {
-                    setLimitOpen(false);
-                    requestClose(id);
-                }}
-                onCancel={() => setLimitOpen(false)}
-            />
-            <CloseProjectDialog
-                name={
-                    closingProject === undefined
-                        ? null
-                        : displayName(closingProject, t)
+            {/* Ao imprimir o plano, só a folha do plano sai; a bancada some (specs/005, FR-013). */}
+            <div
+                className={
+                    view === 'plan' ? 'contents print:hidden' : 'contents'
                 }
-                onExportAndClose={() => {
-                    if (closingProject !== undefined) {
-                        downloadProject(
-                            projectStore(closingProject.id).getState().data,
-                        );
-                        useWorkspace.getState().closeProject(closingProject.id);
+            >
+                <TopBar
+                    onAction={runAction}
+                    history={history}
+                    tabs={<ProjectTabs onClose={requestClose} />}
+                    onHelp={() => setHelpOpen(true)}
+                    preferences={<PreferencesBar />}
+                />
+                <OfflineBanner />
+                {!storageAvailable && (
+                    <Banner tone="warn" className="mx-3 mt-3">
+                        {t('project:storage.unavailable')}
+                    </Banner>
+                )}
+                <main className="grid flex-1 grid-cols-1 gap-3 p-3 md:grid-cols-2 xl:grid-cols-[minmax(300px,360px)_minmax(260px,320px)_minmax(0,1fr)] xl:grid-rows-[auto_1fr]">
+                    {/* Em ≥ 1280 px o driver ocupa as duas linhas: a altura dele não empurra os resultados. */}
+                    <div className="xl:row-span-2">
+                        <DriverPanel
+                            onSubmitDriver={() =>
+                                setPending(t('catalog.submit'))
+                            }
+                        />
+                    </div>
+                    <BoxPanel />
+                    <div className="md:col-span-2 xl:col-span-1 xl:col-start-3 xl:row-span-2 xl:row-start-1 xl:flex xl:flex-col [&>section]:flex-1">
+                        <ViewSwitch selected={view} onChange={setView} />
+                        {view === 'charts' ? (
+                            <ChartPanel
+                                selected={chart}
+                                onSelectedChange={setChart}
+                            />
+                        ) : (
+                            <Suspense fallback={null}>
+                                <PlanPanel />
+                            </Suspense>
+                        )}
+                    </div>
+                    <div className="md:col-span-2 xl:col-span-1 xl:col-start-2 xl:row-start-2">
+                        <ResultsPanel />
+                    </div>
+                </main>
+                <input
+                    ref={fileInput}
+                    type="file"
+                    accept=".json,.buildbass.json,application/json"
+                    hidden
+                    data-testid="open-file"
+                    onChange={(event) => {
+                        const file = event.currentTarget.files?.[0];
+                        // Limpar permite abrir o mesmo arquivo de novo.
+                        event.currentTarget.value = '';
+
+                        if (file !== undefined) {
+                            void openFile(file);
+                        }
+                    }}
+                />
+                <FileDrop onFile={(file) => void openFile(file)} />
+                <ShortcutsDialog open={helpOpen} onOpenChange={setHelpOpen} />
+                <TabLimitDialog
+                    // Fechar um projeto pelo aviso libera o lugar e encerra o aviso.
+                    open={limitOpen && projectCount >= MAX_OPEN_PROJECTS}
+                    onCloseProject={(id) => {
+                        setLimitOpen(false);
+                        requestClose(id);
+                    }}
+                    onCancel={() => setLimitOpen(false)}
+                />
+                <CloseProjectDialog
+                    name={
+                        closingProject === undefined
+                            ? null
+                            : displayName(closingProject, t)
                     }
-                    setClosing(null);
-                }}
-                onDiscard={() => {
-                    if (closingProject !== undefined) {
-                        useWorkspace.getState().closeProject(closingProject.id);
-                    }
-                    setClosing(null);
-                }}
-                onCancel={() => setClosing(null)}
-            />
-            <OpenErrorDialog
-                error={openError}
-                onClose={() => setOpenError(null)}
-            />
-            <ComingSoonDialog
-                action={pending}
-                onClose={() => setPending(null)}
-            />
+                    onExportAndClose={() => {
+                        if (closingProject !== undefined) {
+                            downloadProject(
+                                projectStore(closingProject.id).getState().data,
+                            );
+                            useWorkspace
+                                .getState()
+                                .closeProject(closingProject.id);
+                        }
+                        setClosing(null);
+                    }}
+                    onDiscard={() => {
+                        if (closingProject !== undefined) {
+                            useWorkspace
+                                .getState()
+                                .closeProject(closingProject.id);
+                        }
+                        setClosing(null);
+                    }}
+                    onCancel={() => setClosing(null)}
+                />
+                <OpenErrorDialog
+                    error={openError}
+                    onClose={() => setOpenError(null)}
+                />
+                <ComingSoonDialog
+                    action={pending}
+                    onClose={() => setPending(null)}
+                />
+            </div>
+            {view === 'plan' && (
+                <Suspense fallback={null}>
+                    <PrintSheet />
+                </Suspense>
+            )}
         </div>
     );
 }

@@ -1,11 +1,14 @@
-import { Suspense, lazy, useState } from 'react';
+import { Download, Printer } from 'lucide-react';
+import { Suspense, lazy, useId, useState } from 'react';
 import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { Banner } from '@/components/ui/banner';
+import { Button } from '@/components/ui/button';
 import { Tabs } from '@/components/ui/tabs';
 import { ValueTile } from '@/components/ui/value-tile';
 import { useActiveProject } from '@/hooks/use-active-project';
 import { useCutPlan } from '@/hooks/use-cut-plan';
+import { csvFormatFor, downloadCutPlanCsv } from '@/lib/cut-plan-export';
 import { planKeySymbol } from '@/lib/cut-plan-text';
 import { displayName } from '@/lib/project/names';
 import { defaultUnitFor } from '@/lib/units/quantities';
@@ -25,6 +28,7 @@ type PlanView = 'drawings' | 'view3d';
 // Plano de corte do projeto ativo (specs/005): configuração, dimensões e lista de peças.
 export function PlanPanel() {
     const { t } = useTranslation(['cutplan', 'project']);
+    const reasonId = useId();
     const { locale } = useLocale();
     const [planView, setPlanView] = useState<PlanView>('drawings');
     const unitSystem = usePreferences((state) => state.unitSystem);
@@ -42,8 +46,45 @@ export function PlanPanel() {
     const symbols = (keys: Parameters<typeof planKeySymbol>[0][]) =>
         list.format(keys.map((key) => planKeySymbol(key, t)));
 
+    const ready = cutPlan.status === 'ready';
+    const actions = (
+        <div className="flex items-center gap-1.5">
+            <Button
+                variant="secondary"
+                disabled={!ready}
+                aria-describedby={ready ? undefined : reasonId}
+                onPress={() => {
+                    if (cutPlan.status === 'ready') {
+                        downloadCutPlanCsv(
+                            cutPlan.plan,
+                            project?.data.name ?? '',
+                            csvFormatFor(locale, unitSystem, t),
+                        );
+                    }
+                }}
+            >
+                <Download aria-hidden="true" className="size-4" />
+                {t('actions.exportCsv')}
+            </Button>
+            <Button
+                variant="secondary"
+                disabled={!ready}
+                aria-describedby={ready ? undefined : reasonId}
+                onPress={() => window.print()}
+            >
+                <Printer aria-hidden="true" className="size-4" />
+                {t('actions.print')}
+            </Button>
+            {!ready && (
+                <span id={reasonId} className="sr-only">
+                    {t('actions.unavailable')}
+                </span>
+            )}
+        </div>
+    );
+
     return (
-        <Panel region="plan" title={t('title')}>
+        <Panel region="plan" title={t('title')} actions={actions}>
             <PlanConfig />
             {cutPlan.status === 'blocked' ? (
                 <div className="flex flex-col gap-2">

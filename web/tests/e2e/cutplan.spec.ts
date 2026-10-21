@@ -30,6 +30,11 @@ async function referenceDriver(page: Page) {
     await fill(page, /^Sd/, '491');
 }
 
+// A folha de impressão também está na página (oculta na tela): os textos se procuram no painel.
+function planRegion(page: Page) {
+    return page.locator('[data-region="plan"]');
+}
+
 async function openPlan(page: Page) {
     await page.getByRole('radio', { name: 'Plano de corte' }).click();
     await expect(page.locator('[data-region="plan"]')).toBeVisible();
@@ -77,7 +82,7 @@ test('plano da selada: dimensões, tabela, espessura, proporção e volume em fa
         .fill('');
     await page.keyboard.press('Tab');
     await expect(
-        page.getByText(/Faltam parâmetros para o plano/),
+        planRegion(page).getByText(/Faltam parâmetros para o plano/),
     ).toBeVisible();
     await expect(page.getByRole('table')).toHaveCount(0);
 
@@ -122,10 +127,12 @@ test('conferência: o líquido do plano é o da simulação e os avisos citam a 
     await expect(check.getByRole('row', { name: /Dutos/ })).not.toContainText(
         '—',
     );
-    await expect(page.getByText(/Igual à simulação/)).toBeVisible();
+    await expect(planRegion(page).getByText(/Igual à simulação/)).toBeVisible();
 
     // O tubo calculado é mais longo que a caixa: o plano pede curva ou dobra.
-    await expect(page.getByText(/precisará de curva ou dobra/)).toBeVisible();
+    await expect(
+        planRegion(page).getByText(/precisará de curva ou dobra/),
+    ).toBeVisible();
 
     // Recorte grande demais: erro nomeando a peça, com texto.
     await fill(page, /^Ød/, '700');
@@ -134,7 +141,7 @@ test('conferência: o líquido do plano é o da simulação e os avisos citam a 
 
     await fill(page, /^Ød/, '285');
     await expect(warnings).not.toContainText(/não cabe no lado menor/);
-    await expect(page.getByText(/Igual à simulação/)).toBeVisible();
+    await expect(planRegion(page).getByText(/Igual à simulação/)).toBeVisible();
 });
 
 test('sem volume o plano diz o que falta e some a conferência (US2)', async ({
@@ -145,7 +152,7 @@ test('sem volume o plano diz o que falta e some a conferência (US2)', async ({
     await page.getByRole('radio', { name: 'Selada' }).click();
     await fill(page, /^Vb/, '60');
     await openPlan(page);
-    await expect(page.getByText(/Igual à simulação/)).toBeVisible();
+    await expect(planRegion(page).getByText(/Igual à simulação/)).toBeVisible();
 
     await page
         .locator('[data-region="box"]')
@@ -153,9 +160,11 @@ test('sem volume o plano diz o que falta e some a conferência (US2)', async ({
         .fill('');
     await page.keyboard.press('Tab');
     await expect(
-        page.getByText(/Faltam parâmetros para o plano/),
+        planRegion(page).getByText(/Faltam parâmetros para o plano/),
     ).toBeVisible();
-    await expect(page.getByText(/Igual à simulação/)).toHaveCount(0);
+    await expect(planRegion(page).getByText(/Igual à simulação/)).toHaveCount(
+        0,
+    );
 });
 
 // Bandpass do quickstart (specs/005, §4): 40 + 60 L, áurea, painel de 18 mm.
@@ -198,13 +207,13 @@ test('plano da bandpass: sete peças, divisória, câmaras e conferência por c�
     await expect(
         check.getByRole('columnheader', { name: 'Câmara frontal' }),
     ).toBeVisible();
-    await expect(page.getByText(/Igual à simulação/)).toBeVisible();
+    await expect(planRegion(page).getByText(/Igual à simulação/)).toBeVisible();
 
     // Trocar de tipo e voltar não perde a espessura nem a proporção.
     await fill(page, /Espessura/, '25');
     await page.getByRole('radio', { name: 'Dutada' }).click();
     await expect(
-        page.getByText(/Faltam parâmetros para o plano: .*Vb/),
+        planRegion(page).getByText(/Faltam parâmetros para o plano: .*Vb/),
     ).toBeVisible();
     await page.getByRole('radio', { name: 'Bandpass' }).click();
     await expect(parts.locator('tbody tr')).toHaveCount(6);
@@ -264,4 +273,77 @@ test('desenhos 2D e vista 3D: um desenho por peça, girar por teclado e por bot�
     await expect(box.locator('[data-id="divider"]')).toHaveCount(0);
     await page.getByRole('button', { name: 'Ver por dentro' }).click();
     await expect(box.locator('[data-id="divider"]')).toHaveCount(1);
+});
+
+async function downloadCsv(page: Page, button: string) {
+    const [download] = await Promise.all([
+        page.waitForEvent('download'),
+        page.getByRole('button', { name: button }).click(),
+    ]);
+    const stream = await download.createReadStream();
+    const chunks: Buffer[] = [];
+
+    for await (const chunk of stream) {
+        chunks.push(chunk as Buffer);
+    }
+
+    return { name: download.suggestedFilename(), bytes: Buffer.concat(chunks) };
+}
+
+test('exportar CSV: ; e vírgula decimal em pt-BR, vírgula e ponto em en (US5)', async ({
+    page,
+}) => {
+    await page.goto('/');
+    await page.getByRole('radio', { name: 'Selada' }).click();
+    await fill(page, /^Vb/, '60');
+    await openPlan(page);
+    await fill(page, /^Ød/, '285');
+
+    const pt = await downloadCsv(page, 'Exportar CSV');
+    const ptText = pt.bytes.toString('utf8');
+
+    expect(pt.name).toBe('projeto-plano-de-corte.csv');
+    expect([...pt.bytes.subarray(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
+    expect(ptText).toContain(
+        'Peça;Posição;Qtd;Comprimento (mm);Largura (mm);Espessura (mm);Recortes',
+    );
+    expect(ptText).toContain(
+        'Frente;Painel da frente;1;669,4;427,5;18,0;Driver Ø 285,0 mm',
+    );
+    expect(ptText).toContain('Lateral;Lados esquerdo e direito;2;');
+
+    await page.getByRole('button', { name: /Idioma/ }).click();
+    await page.getByRole('menuitemradio', { name: 'English' }).click();
+
+    const en = await downloadCsv(page, 'Export CSV');
+    const enText = en.bytes.toString('utf8');
+
+    expect(enText).toContain(
+        'Piece,Position,Qty,Length (mm),Width (mm),Thickness (mm),Cutouts',
+    );
+    expect(enText).toContain(
+        'Front,Front panel,1,669.4,427.5,18.0,Driver Ø 285.0 mm',
+    );
+    expect(enText).toContain('Side,Left and right sides,2,');
+});
+
+test('imprimir: só a folha do plano fica visível (US5)', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('radio', { name: 'Selada' }).click();
+    await fill(page, /^Vb/, '60');
+    await openPlan(page);
+    await page.emulateMedia({ media: 'print' });
+
+    const sheet = page.locator('[data-print-sheet]');
+    await expect(sheet).toBeVisible();
+    await expect(sheet).toContainText('Plano de corte:');
+    await expect(sheet).toContainText('Lista de corte');
+    await expect(sheet).toContainText('Convenção de montagem');
+    await expect(page.locator('[data-region="box"]')).toBeHidden();
+    await expect(page.locator('[data-region="plan"]')).toBeHidden();
+    await expect(page.getByRole('radio', { name: 'Gráficos' })).toBeHidden();
+
+    await page.emulateMedia({ media: 'screen' });
+    await expect(sheet).toBeHidden();
+    await expect(page.locator('[data-region="plan"]')).toBeVisible();
 });
