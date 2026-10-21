@@ -94,3 +94,40 @@ test('bandpass: o seletor tem as três opções e nenhum aviso de indisponível 
 
     await expect(page.getByText(/chega numa próxima versão/)).toHaveCount(0);
 });
+
+test('bandpass: câmara traseira pequena demais avisa e nenhum gráfico quebra (US3)', async ({
+    page,
+}) => {
+    await page.goto('/');
+    await referenceDriver(page);
+    await fill(page, /^Vd/, '2');
+    await bandpassBox(page);
+    await fill(page, /^Vr/, '1');
+
+    await expect(page.getByText(/maior que a câmara traseira/)).toBeVisible();
+    // Sem curva absurda: o gráfico mostra o estado vazio e a tela continua funcionando.
+    await expect(
+        page.getByText('Faltam parâmetros para desenhar o gráfico').first(),
+    ).toBeVisible();
+
+    await fill(page, /^Vr/, '40');
+    await expect(page.getByText(/maior que a câmara traseira/)).toHaveCount(0);
+    await expect(page.locator('[data-region="charts"] canvas')).toBeVisible();
+});
+
+test('bandpass: duto fino com potência alta mostra o erro de velocidade com texto (US3)', async ({
+    page,
+}) => {
+    await page.goto('/');
+    await referenceDriver(page);
+    await bandpassBox(page);
+    await fill(page, /Diâmetro do duto/, '20');
+    await fill(page, /Potência de entrada/, '400');
+
+    const velocity = page
+        .locator('[data-region="results"] span', {
+            hasText: /^Velocidade máx\. no duto$/,
+        })
+        .locator('..');
+    await expect(velocity).toContainText(/Acima de/);
+});

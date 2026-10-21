@@ -2,6 +2,7 @@ import { TriangleAlert } from 'lucide-react';
 import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { Banner } from '@/components/ui/banner';
+import { useActiveProject } from '@/hooks/use-active-project';
 import { useActiveSimulation } from '@/hooks/use-simulation';
 import { formatWithUnit } from '@/lib/units/format';
 import { defaultUnitFor } from '@/lib/units/quantities';
@@ -13,6 +14,7 @@ export function EngineWarnings() {
     const { locale } = useLocale();
     const unitSystem = usePreferences((state) => state.unitSystem);
     const { warnings } = useActiveSimulation();
+    const boxType = useActiveProject((state) => state.data.box.type);
     const length = defaultUnitFor('length', unitSystem);
 
     if (warnings.length === 0) {
@@ -24,6 +26,9 @@ export function EngineWarnings() {
             {warnings.map(({ id, values }) => (
                 <Banner key={id} tone="warn" icon={TriangleAlert}>
                     {t(`warnings.${id}`, {
+                        // Na bandpass o duto é da câmara frontal: `<aviso>_bandpass`, quando existe.
+                        context:
+                            boxType === 'bandpass' ? 'bandpass' : undefined,
                         length:
                             values?.length_m === undefined
                                 ? undefined

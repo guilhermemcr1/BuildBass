@@ -467,3 +467,103 @@ describe('bandpass — volumes, drivers, radiação e determinismo (B9–B14)', 
         expect(simulate(input)).toEqual(simulate(input));
     });
 });
+
+describe('bandpass — avisos (US3)', () => {
+    const ids = (input: ProjectInput) =>
+        simulate(input).warnings.map(({ id }) => id);
+
+    test('câmara traseira menor que o volume dos drivers: aviso, sem curvas e sem NaN', () => {
+        const result = simulate(
+            bandpass({ vr_m3: 0.001 }, { ...REFERENCE, vd_m3: 0.002 }),
+        );
+
+        expect(result.warnings).toEqual([{ id: 'rearVolumeInvalid' }]);
+        expect(result.results.net_rear_m3).toBeCloseTo(-0.001, 12);
+        expect(result.curves).toEqual({});
+    });
+
+    test('duto que não cabe na câmara frontal', () => {
+        const result = simulate(
+            bandpass({
+                vf_m3: 0.0005,
+                fb_hz: 30,
+                port: { shape: 'round', diameter_m: 0.1, count: 1 },
+            }),
+        );
+
+        expect(result.warnings.map(({ id }) => id)).toContain(
+            'portVolumeTooLarge',
+        );
+        expect(result.curves).toEqual({});
+    });
+
+    test('duto curto demais (comprimento ≤ 0)', () => {
+        expect(
+            ids(
+                bandpass({
+                    fb_hz: 200,
+                    port: { shape: 'round', diameter_m: 0.02, count: 1 },
+                }),
+            ),
+        ).toContain('portTooShort');
+    });
+
+    test('duto mais longo que ∛Vf', () => {
+        const result = simulate(
+            bandpass({
+                vf_m3: 0.05,
+                fb_hz: 15,
+                port: { shape: 'round', diameter_m: 0.05, count: 1 },
+            }),
+        );
+        const warning = result.warnings.find(({ id }) => id === 'portTooLong');
+
+        expect(warning?.values?.length_m).toBeGreaterThan(Math.cbrt(0.05));
+    });
+
+    test('câmara frontal zerada não lança nem produz NaN', () => {
+        const result = simulate(bandpass({ vf_m3: 0 }));
+
+        expect(result.curves).toEqual({});
+        expect(result.warnings.map(({ id }) => id)).toContain(
+            'portVolumeTooLarge',
+        );
+        expect(JSON.stringify(result)).not.toContain('null');
+    });
+
+    test('sem Le avisa; potência acima de N·Pe avisa', () => {
+        const { le_h: _le, ...noLe } = REFERENCE;
+
+        expect(ids(bandpass({}, noLe))).toContain('noInductance');
+        expect(
+            ids(
+                bandpass(
+                    {},
+                    { ...REFERENCE, pe_w: 10 },
+                    {
+                        signal: {
+                            mode: 'power',
+                            power_w: 100,
+                            radiation: 'half',
+                        },
+                    },
+                ),
+            ),
+        ).toContain('aboveThermalPower');
+    });
+
+    test('velocidade máxima no duto sai nos resultados e a curva existe', () => {
+        const result = simulate(
+            bandpass(
+                { port: { shape: 'round', diameter_m: 0.08, count: 1 } },
+                { ...REFERENCE, xmax_m: 0.014 },
+            ),
+        );
+
+        expect(result.results.port_velocity_max_ms).toBeGreaterThan(0);
+        expect(result.curves.port_velocity_ms).toHaveLength(
+            FREQUENCIES_HZ.length,
+        );
+        expect(result.results.xmax_power_w).toBeGreaterThan(0);
+    });
+});
