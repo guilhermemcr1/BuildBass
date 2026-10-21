@@ -132,6 +132,45 @@ describe('workspace', () => {
         expect(data.driver).toEqual({ fs_hz: 76.94, qts: 0.717 });
     });
 
+    test('o plano de corte sobrevive ao recarregar (feature 005)', async () => {
+        const id = workspace().activeId;
+        projectStore(id)
+            .getState()
+            .apply((data) => ({
+                ...data,
+                cutPlan: {
+                    thickness_m: 0.025,
+                    proportion: 'custom',
+                    custom: { h: 2.2, w: 1.5, d: 1 },
+                    braces_m3: 0.002,
+                    cutout_m: 0.285,
+                },
+            }));
+
+        const raw = localStorage.getItem(WORKSPACE_KEY) ?? '';
+        useWorkspace.setState(initialWorkspace());
+        localStorage.setItem(WORKSPACE_KEY, raw);
+        await reloadFromStorage();
+
+        expect(workspace().projects[0].data.cutPlan).toEqual({
+            thickness_m: 0.025,
+            proportion: 'custom',
+            custom: { h: 2.2, w: 1.5, d: 1 },
+            braces_m3: 0.002,
+            cutout_m: 0.285,
+        });
+    });
+
+    test('espaço de trabalho salvo antes do plano de corte reabre igual (feature 005)', async () => {
+        const raw = localStorage.getItem(WORKSPACE_KEY) ?? '';
+
+        useWorkspace.setState(initialWorkspace());
+        localStorage.setItem(WORKSPACE_KEY, raw);
+        await reloadFromStorage();
+
+        expect(workspace().projects[0].data).not.toHaveProperty('cutPlan');
+    });
+
     test('espaço de trabalho salvo antes da bandpass reabre igual (feature 004)', async () => {
         const closed = {
             ...createProjectData('Selada'),

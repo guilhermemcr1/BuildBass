@@ -1,0 +1,144 @@
+{
+    "title": "Cut plan",
+    "missing": "Parameters missing for the plan: {{missing}}.",
+    "invalid": "Out-of-range values in the plan: {{invalid}}.",
+    "keys": {
+        "ratio": "Ratio"
+    },
+    "config": {
+        "title": "Settings",
+        "proportion": "Proportion",
+        "ratioLine": "Height : width : depth = {{h}} : {{w}} : {{d}}",
+        "hint": "Suggestions are starting points to avoid repeated dimensions, not a guarantee of better sound."
+    },
+    "proportions": {
+        "golden": "Golden",
+        "louden": "Louden",
+        "equalSteps": "Equal steps",
+        "cube": "Cube",
+        "custom": "Custom"
+    },
+    "dimensions": {
+        "title": "Dimensions",
+        "internal": "Internal",
+        "external": "External",
+        "width": "Width",
+        "height": "Height",
+        "depth": "Depth",
+        "rearDepth": "Rear chamber depth",
+        "frontDepth": "Front chamber depth"
+    },
+    "parts": {
+        "title": "Parts and cutouts",
+        "caption": "Cut list for {{name}}",
+        "columns": {
+            "piece": "Piece",
+            "position": "Position",
+            "quantity": "Qty",
+            "length": "Length",
+            "width": "Width",
+            "thickness": "Thickness",
+            "cutouts": "Cutouts"
+        },
+        "names": {
+            "front": "Front",
+            "back": "Back",
+            "top": "Top",
+            "bottom": "Bottom",
+            "side": "Side",
+            "divider": "Divider"
+        },
+        "positions": {
+            "front": "Front panel",
+            "back": "Rear panel",
+            "top": "Upper face",
+            "bottom": "Lower face",
+            "side": "Left and right sides",
+            "divider": "Between the chambers"
+        },
+        "convention": "Assembly convention: front and back cover the whole face; top and bottom sit between front and back, at full width; the sides sit between top, bottom, front and back. No saw kerf, rabbets or joints.",
+        "none": "—",
+        "conventionDivider": "The divider sits between the sides, top and bottom."
+    },
+    "cutouts": {
+        "driver": "Driver",
+        "port": "Port",
+        "count": "×{{count}}",
+        "round": "Ø {{size}}",
+        "rect": "{{width}} × {{height}}",
+        "triangle": "base {{base}}, height {{height}}",
+        "driverPending": "diameter to be provided",
+        "portPending": "port size to be provided"
+    },
+    "volume": {
+        "title": "Volume check",
+        "caption": "Volume per chamber, in {{unit}}",
+        "rows": {
+            "internal": "Internal",
+            "braces": "Braces",
+            "drivers": "Drivers",
+            "ports": "Ports",
+            "net": "Net",
+            "simulated": "Simulated",
+            "difference": "Difference"
+        },
+        "chambers": {
+            "main": "Enclosure",
+            "rear": "Rear chamber",
+            "front": "Front chamber"
+        },
+        "matches": "Matches the simulation: the plan's net volume is the one the simulation used.",
+        "differs": "Differs from the simulation.",
+        "unavailable": "Without the simulation's net volume, the plan has nothing to be checked against."
+    },
+    "warnings": {
+        "title": "Plan warnings",
+        "cutoutTooBig": "A cutout does not fit the short side of the {{piece}}: reduce the diameter or change the proportion.",
+        "cutoutsDoNotFit": "The cutouts do not fit together in the {{piece}}: reduce the diameter, remove a driver or change the proportion.",
+        "cutoutTight": "Little wood is left in the {{piece}}, less than the panel thickness ({{thickness}}): check that the part holds.",
+        "portLongerThanDepth": "The port ({{length}}) is longer than the internal depth ({{depth}}): it will need a bend or fold.",
+        "driverCutoutUnknown": "The driver cutout diameter ({{field}}) was not provided: the cutout shows as to be provided and positions change once it is.",
+        "portUnknown": "The port has no dimensions: provide them to get its cutout and volume.",
+        "simulationUnavailable": "Without the simulation there is no volume check or port length: complete the driver and the enclosure.",
+        "volumeMismatch": "The plan's net volume differs from the simulation's. This should not happen: check the values and report the case."
+    },
+    "drawings": {
+        "title": "2D drawings",
+        "caption": "Drawing of the {{name}} part: {{width}} by {{height}}",
+        "quantity": "×{{count}}",
+        "desc": "{{name}}: {{width}} by {{height}}, thickness {{thickness}}. Cutouts: {{cutouts}}.",
+        "noCutouts": "none",
+        "pendingLabel": "diameter to be provided",
+        "note": "All parts share the same scale. The drawing's measures are in the parts table."
+    },
+    "view3d": {
+        "title": "3D view",
+        "summary": "Assembled {{type}} enclosure, {{width}} wide, {{height}} high and {{depth}} deep (external measures).",
+        "hint": "Arrow keys rotate the box, + and − zoom, Home resets. You can also drag.",
+        "inside": "See inside",
+        "rotateLeft": "Rotate left",
+        "rotateRight": "Rotate right",
+        "rotateUp": "Rotate up",
+        "rotateDown": "Rotate down",
+        "zoomIn": "Zoom in",
+        "zoomOut": "Zoom out",
+        "reset": "Reset",
+        "controls": "3D view controls"
+    },
+    "types": {
+        "closed": "sealed",
+        "vented": "vented",
+        "bandpass": "bandpass"
+    },
+    "views": {
+        "label": "Plan views"
+    },
+    "actions": {
+        "exportCsv": "Export CSV",
+        "print": "Print",
+        "unavailable": "Available once the plan is complete: provide the missing parameters."
+    },
+    "print": {
+        "title": "Cut plan: {{name}}"
+    }
+}

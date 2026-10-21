@@ -1,0 +1,144 @@
+{
+    "title": "Plano de corte",
+    "missing": "Faltam parâmetros para o plano: {{missing}}.",
+    "invalid": "Valores fora da faixa no plano: {{invalid}}.",
+    "keys": {
+        "ratio": "Proporção"
+    },
+    "config": {
+        "title": "Configuração",
+        "proportion": "Proporção",
+        "ratioLine": "Altura : largura : profundidade = {{h}} : {{w}} : {{d}}",
+        "hint": "As sugestões são pontos de partida para não repetir dimensões, não uma garantia de som melhor."
+    },
+    "proportions": {
+        "golden": "Áurea",
+        "louden": "Louden",
+        "equalSteps": "Passos iguais",
+        "cube": "Cúbica",
+        "custom": "Própria"
+    },
+    "dimensions": {
+        "title": "Dimensões",
+        "internal": "Internas",
+        "external": "Externas",
+        "width": "Largura",
+        "height": "Altura",
+        "depth": "Profundidade",
+        "rearDepth": "Profundidade da câmara traseira",
+        "frontDepth": "Profundidade da câmara frontal"
+    },
+    "parts": {
+        "title": "Peças e recortes",
+        "caption": "Lista de corte de {{name}}",
+        "columns": {
+            "piece": "Peça",
+            "position": "Posição",
+            "quantity": "Qtd",
+            "length": "Comprimento",
+            "width": "Largura",
+            "thickness": "Espessura",
+            "cutouts": "Recortes"
+        },
+        "names": {
+            "front": "Frente",
+            "back": "Fundo",
+            "top": "Topo",
+            "bottom": "Base",
+            "side": "Lateral",
+            "divider": "Divisória"
+        },
+        "positions": {
+            "front": "Painel da frente",
+            "back": "Painel de trás",
+            "top": "Face de cima",
+            "bottom": "Face de baixo",
+            "side": "Lados esquerdo e direito",
+            "divider": "Entre as câmaras"
+        },
+        "convention": "Convenção de montagem: frente e fundo cobrem a face inteira; topo e base ficam entre a frente e o fundo, com a largura total; as laterais ficam entre o topo, a base, a frente e o fundo. Sem perdas de serra, rebaixos ou encaixes.",
+        "none": "—",
+        "conventionDivider": "A divisória fica entre as laterais, o topo e a base."
+    },
+    "cutouts": {
+        "driver": "Driver",
+        "port": "Duto",
+        "count": "×{{count}}",
+        "round": "Ø {{size}}",
+        "rect": "{{width}} × {{height}}",
+        "triangle": "base {{base}}, altura {{height}}",
+        "driverPending": "diâmetro a informar",
+        "portPending": "medidas do duto a informar"
+    },
+    "volume": {
+        "title": "Conferência de volume",
+        "caption": "Volume por câmara, em {{unit}}",
+        "rows": {
+            "internal": "Interno",
+            "braces": "Reforços",
+            "drivers": "Drivers",
+            "ports": "Dutos",
+            "net": "Líquido",
+            "simulated": "Simulado",
+            "difference": "Diferença"
+        },
+        "chambers": {
+            "main": "Caixa",
+            "rear": "Câmara traseira",
+            "front": "Câmara frontal"
+        },
+        "matches": "Igual à simulação: o volume líquido do plano é o que a simulação usou.",
+        "differs": "Diferente da simulação.",
+        "unavailable": "Sem o volume líquido da simulação, o plano não tem com o que ser conferido."
+    },
+    "warnings": {
+        "title": "Avisos do plano",
+        "cutoutTooBig": "Um recorte não cabe no lado menor de {{piece}}: reduza o diâmetro ou mude a proporção.",
+        "cutoutsDoNotFit": "Os recortes não cabem juntos em {{piece}}: reduza o diâmetro, tire um driver ou mude a proporção.",
+        "cutoutTight": "Sobra pouca madeira em {{piece}}, menos que a espessura do painel ({{thickness}}): confira se a peça aguenta.",
+        "portLongerThanDepth": "O duto ({{length}}) é mais longo que a profundidade interna ({{depth}}): ele precisará de curva ou dobra.",
+        "driverCutoutUnknown": "O diâmetro do recorte do driver ({{field}}) não foi informado: o recorte aparece como a informar e as posições mudam quando ele entrar.",
+        "portUnknown": "O duto está sem medidas: informe-as para ter o recorte e o volume dele.",
+        "simulationUnavailable": "Sem a simulação não há conferência de volume nem comprimento do duto: complete o driver e a caixa.",
+        "volumeMismatch": "O volume líquido do plano difere do da simulação. Isso não deveria acontecer: confira os valores e relate o caso."
+    },
+    "drawings": {
+        "title": "Desenhos 2D",
+        "caption": "Desenho da peça {{name}}: {{width}} por {{height}}",
+        "quantity": "×{{count}}",
+        "desc": "{{name}}: {{width}} por {{height}}, espessura {{thickness}}. Recortes: {{cutouts}}.",
+        "noCutouts": "nenhum",
+        "pendingLabel": "diâmetro a informar",
+        "note": "Todas as peças estão na mesma escala. As medidas do desenho estão na tabela de peças."
+    },
+    "view3d": {
+        "title": "Vista 3D",
+        "summary": "Caixa {{type}} montada, {{width}} de largura, {{height}} de altura e {{depth}} de profundidade (medidas externas).",
+        "hint": "Setas giram a caixa, + e − aproximam e afastam, Home reinicia. Também dá para arrastar.",
+        "inside": "Ver por dentro",
+        "rotateLeft": "Girar para a esquerda",
+        "rotateRight": "Girar para a direita",
+        "rotateUp": "Girar para cima",
+        "rotateDown": "Girar para baixo",
+        "zoomIn": "Aproximar",
+        "zoomOut": "Afastar",
+        "reset": "Reiniciar",
+        "controls": "Controles da vista 3D"
+    },
+    "types": {
+        "closed": "selada",
+        "vented": "dutada",
+        "bandpass": "bandpass"
+    },
+    "views": {
+        "label": "Visões do plano"
+    },
+    "actions": {
+        "exportCsv": "Exportar CSV",
+        "print": "Imprimir",
+        "unavailable": "Disponível quando o plano estiver completo: informe os parâmetros que faltam."
+    },
+    "print": {
+        "title": "Plano de corte: {{name}}"
+    }
+}

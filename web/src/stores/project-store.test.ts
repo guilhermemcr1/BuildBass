@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vite-plus/test';
+import { writeField, writeProportion } from '@/lib/project/fields';
 import { createProjectData } from '@/lib/project/types';
 import { createProjectStore } from './project-store';
 
@@ -265,5 +266,62 @@ describe('origem do driver e edição manual', () => {
         project.getState().setDriverValue('fs_hz', undefined);
 
         expect(project.getState().data.driverSource).toEqual(SOURCE);
+    });
+});
+
+describe('plano de corte no store (feature 005)', () => {
+    test('editar um campo do plano é uma etapa de desfazer e refazer', () => {
+        const project = store();
+        project
+            .getState()
+            .apply((data) => writeField(data, 'thickness_m', 0.025));
+
+        expect(project.getState().data.cutPlan).toEqual({ thickness_m: 0.025 });
+        expect(project.temporal.getState().pastStates).toHaveLength(1);
+
+        project.temporal.getState().undo();
+        // Voltar ao início desfaz o cutPlan inteiro, não deixa um objeto vazio.
+        expect(project.getState().data.cutPlan).toBeUndefined();
+        expect(project.getState().data).not.toHaveProperty('cutPlan');
+
+        project.temporal.getState().redo();
+        expect(project.getState().data.cutPlan).toEqual({ thickness_m: 0.025 });
+    });
+
+    test('trocar a proporção e editar o recorte são etapas separadas', () => {
+        const project = store();
+        project.getState().apply((data) => writeProportion(data, 'louden'));
+        project.getState().apply((data) => writeField(data, 'cutout_m', 0.285));
+
+        project.temporal.getState().undo();
+        expect(project.getState().data.cutPlan).toEqual({
+            proportion: 'louden',
+        });
+        project.temporal.getState().undo();
+        expect(project.getState().data.cutPlan).toBeUndefined();
+    });
+
+    test('não mexe no resto do projeto', () => {
+        const project = store();
+        project.getState().setBoxValue('vb_m3', 0.06);
+        const before = project.getState().data;
+        project
+            .getState()
+            .apply((data) => writeField(data, 'braces_m3', 0.002));
+
+        expect(project.getState().data.box).toBe(before.box);
+        expect(project.getState().data.driver).toBe(before.driver);
+    });
+
+    test('esvaziar o único campo remove o cutPlan', () => {
+        const project = store();
+        project
+            .getState()
+            .apply((data) => writeField(data, 'thickness_m', 0.025));
+        project
+            .getState()
+            .apply((data) => writeField(data, 'thickness_m', undefined));
+
+        expect(project.getState().data).not.toHaveProperty('cutPlan');
     });
 });

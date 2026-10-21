@@ -74,3 +74,48 @@ test('a 360 px a bandpass completa não rola na horizontal (feature 004, US5)', 
 
     expect(overflow).toBeLessThanOrEqual(0);
 });
+
+test('a 360 px o plano de corte não rola na horizontal (feature 005, US7)', async ({
+    page,
+}) => {
+    await page.setViewportSize({ width: 360, height: 800 });
+    await page.goto('/');
+    await page.getByRole('radio', { name: 'Bandpass' }).click();
+
+    for (const [name, value] of [
+        [/^Vr/, '40'],
+        [/^Vf/, '60'],
+        [/^Fb/, '45'],
+    ] as const) {
+        const field = page.getByRole('textbox', { name });
+        await field.fill(value);
+        await field.press('Tab');
+    }
+
+    await page.getByRole('radio', { name: 'Plano de corte' }).click();
+    await expect(
+        page.getByRole('table', { name: /Lista de corte/ }),
+    ).toBeVisible();
+    await expect(page.getByRole('img', { name: 'Frente' })).toBeVisible();
+
+    const overflow = await page.evaluate(
+        () =>
+            document.documentElement.scrollWidth -
+            document.documentElement.clientWidth,
+    );
+
+    expect(overflow).toBeLessThanOrEqual(0);
+
+    // As tabelas rolam dentro do próprio contêiner, não a página.
+    await page.getByRole('tab', { name: 'Vista 3D' }).click();
+    await expect(
+        page.locator('[data-region="plan"] svg[data-yaw]'),
+    ).toBeVisible();
+    expect(
+        await page.evaluate(
+            () =>
+                document.documentElement.scrollWidth -
+                document.documentElement.clientWidth,
+        ),
+    ).toBeLessThanOrEqual(0);
+});

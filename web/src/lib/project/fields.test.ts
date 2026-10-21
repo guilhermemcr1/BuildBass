@@ -1,6 +1,7 @@
 import { expect, test } from 'vite-plus/test';
 import type { ParameterKey } from '@/lib/parameters';
-import { readField, writeField } from './fields';
+import { PROPORTIONS } from '@/cutplan';
+import { readField, writeField, writeProportion } from './fields';
 import { createProjectData } from './types';
 
 test('cada campo da bancada é lido e escrito no lugar certo do projeto', () => {
@@ -58,4 +59,100 @@ test('campos que não são do driver não mexem na origem', () => {
     const data = { ...createProjectData(''), driverSource: source };
 
     expect(writeField(data, 'vb_m3', 0.05).driverSource).toEqual(source);
+});
+
+test('plano de corte: sem cutPlan, lê os valores efetivos (padrões)', () => {
+    const data = createProjectData('');
+
+    expect(readField(data, 'thickness_m')).toBe(0.018);
+    expect(readField(data, 'braces_m3')).toBe(0);
+    expect(readField(data, 'cutout_m')).toBeUndefined();
+    expect(readField(data, 'ratio_h')).toBe(PROPORTIONS.golden.h);
+    expect(readField(data, 'ratio_w')).toBe(PROPORTIONS.golden.w);
+    expect(readField(data, 'ratio_d')).toBe(PROPORTIONS.golden.d);
+});
+
+test('plano de corte: escrever um campo cria cutPlan só com ele', () => {
+    const data = writeField(createProjectData(''), 'thickness_m', 0.02);
+
+    expect(data.cutPlan).toEqual({ thickness_m: 0.02 });
+    expect(readField(data, 'thickness_m')).toBe(0.02);
+    expect(writeField(data, 'cutout_m', 0.285).cutPlan).toEqual({
+        thickness_m: 0.02,
+        cutout_m: 0.285,
+    });
+});
+
+test('plano de corte: esvaziar o último campo remove cutPlan e o projeto volta ao original', () => {
+    const original = createProjectData('');
+    const edited = writeField(original, 'braces_m3', 0.002);
+    const cleared = writeField(edited, 'braces_m3', undefined);
+
+    expect(edited.cutPlan).toEqual({ braces_m3: 0.002 });
+    expect('cutPlan' in cleared).toBe(false);
+    expect(cleared).toEqual(original);
+});
+
+test('plano de corte: esvaziar um campo mantém os outros', () => {
+    const data = writeField(
+        writeField(createProjectData(''), 'thickness_m', 0.02),
+        'cutout_m',
+        0.285,
+    );
+
+    expect(writeField(data, 'cutout_m', undefined).cutPlan).toEqual({
+        thickness_m: 0.02,
+    });
+});
+
+test('plano de corte: editar a razão grava proporção própria semeada com a razão atual', () => {
+    const data = writeField(createProjectData(''), 'ratio_h', 3);
+
+    expect(data.cutPlan).toEqual({
+        proportion: 'custom',
+        custom: { h: 3, w: PROPORTIONS.golden.w, d: PROPORTIONS.golden.d },
+    });
+    expect(readField(data, 'ratio_h')).toBe(3);
+    expect(readField(data, 'ratio_w')).toBe(PROPORTIONS.golden.w);
+});
+
+test('plano de corte: esvaziar um lado da razão não muda nada', () => {
+    const data = writeField(createProjectData(''), 'ratio_h', 3);
+
+    expect(writeField(data, 'ratio_h', undefined)).toBe(data);
+});
+
+test('plano de corte: proporção própria parte da razão que estava ativa; sugestão mantém custom', () => {
+    const base = writeField(createProjectData(''), 'thickness_m', 0.02);
+    const louden = writeProportion(base, 'louden');
+    const custom = writeProportion(louden, 'custom');
+
+    expect(custom.cutPlan).toEqual({
+        thickness_m: 0.02,
+        proportion: 'custom',
+        custom: PROPORTIONS.louden,
+    });
+
+    const edited = writeField(custom, 'ratio_d', 1.2);
+    const cube = writeProportion(edited, 'cube');
+
+    expect(cube.cutPlan?.proportion).toBe('cube');
+    expect(cube.cutPlan?.custom).toEqual({
+        h: PROPORTIONS.louden.h,
+        w: PROPORTIONS.louden.w,
+        d: 1.2,
+    });
+});
+
+test('plano de corte: o resto do projeto fica intacto', () => {
+    const original = writeField(createProjectData('Sub'), 'vb_m3', 0.06);
+    const edited = writeProportion(
+        writeField(original, 'thickness_m', 0.02),
+        'cube',
+    );
+
+    expect({ ...edited, cutPlan: undefined }).toEqual({
+        ...original,
+        cutPlan: undefined,
+    });
 });

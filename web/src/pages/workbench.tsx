@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { Suspense, lazy, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BoxPanel } from '@/components/workbench/box-panel';
 import { CHART_KINDS, ChartPanel } from '@/components/workbench/chart-panel';
@@ -18,6 +18,8 @@ import { ShortcutsDialog } from '@/components/workbench/shortcuts-dialog';
 import { TabLimitDialog } from '@/components/workbench/tab-limit-dialog';
 import { TopBar } from '@/components/workbench/top-bar';
 import type { ProjectAction } from '@/components/workbench/top-bar';
+import { ViewSwitch } from '@/components/workbench/view-switch';
+import type { WorkbenchView } from '@/components/workbench/view-switch';
 import {
     activeProjectStore,
     useActiveHistory,
@@ -30,6 +32,14 @@ import {
     projectStore,
     useWorkspace,
 } from '@/stores/workspace';
+
+const PrintSheet = lazy(() => import('@/components/workbench/print-sheet'));
+
+const PlanPanel = lazy(() =>
+    import('@/components/workbench/plan-panel').then((module) => ({
+        default: module.PlanPanel,
+    })),
+);
 
 // Layout da bancada (FR-007): ≥ 1280 px três colunas (driver | caixa + resultados | gráficos),
 // 768–1279 px duas colunas com gráficos e resultados em largura total, < 768 px uma coluna na
@@ -47,6 +57,7 @@ export default function Workbench() {
         state.projects.find((p) => p.id === closing),
     );
     const [chart, setChart] = useState<ChartKind>('response');
+    const [view, setView] = useState<WorkbenchView>('charts');
     const fileInput = useRef<HTMLInputElement>(null);
     const history = useActiveHistory();
 
@@ -117,92 +128,120 @@ export default function Workbench() {
 
     return (
         <div className="flex min-h-dvh flex-col">
-            <TopBar
-                onAction={runAction}
-                history={history}
-                tabs={<ProjectTabs onClose={requestClose} />}
-                onHelp={() => setHelpOpen(true)}
-                preferences={<PreferencesBar />}
-            />
-            <OfflineBanner />
-            {!storageAvailable && (
-                <Banner tone="warn" className="mx-3 mt-3">
-                    {t('project:storage.unavailable')}
-                </Banner>
-            )}
-            <main className="grid flex-1 grid-cols-1 gap-3 p-3 md:grid-cols-2 xl:grid-cols-[minmax(300px,360px)_minmax(260px,320px)_minmax(0,1fr)] xl:grid-rows-[auto_1fr]">
-                {/* Em ≥ 1280 px o driver ocupa as duas linhas: a altura dele não empurra os resultados. */}
-                <div className="xl:row-span-2">
-                    <DriverPanel
-                        onSubmitDriver={() => setPending(t('catalog.submit'))}
-                    />
-                </div>
-                <BoxPanel />
-                <div className="md:col-span-2 xl:col-span-1 xl:col-start-3 xl:row-span-2 xl:row-start-1 xl:flex xl:flex-col [&>section]:flex-1">
-                    <ChartPanel selected={chart} onSelectedChange={setChart} />
-                </div>
-                <div className="md:col-span-2 xl:col-span-1 xl:col-start-2 xl:row-start-2">
-                    <ResultsPanel />
-                </div>
-            </main>
-            <input
-                ref={fileInput}
-                type="file"
-                accept=".json,.buildbass.json,application/json"
-                hidden
-                data-testid="open-file"
-                onChange={(event) => {
-                    const file = event.currentTarget.files?.[0];
-                    // Limpar permite abrir o mesmo arquivo de novo.
-                    event.currentTarget.value = '';
-
-                    if (file !== undefined) {
-                        void openFile(file);
-                    }
-                }}
-            />
-            <FileDrop onFile={(file) => void openFile(file)} />
-            <ShortcutsDialog open={helpOpen} onOpenChange={setHelpOpen} />
-            <TabLimitDialog
-                // Fechar um projeto pelo aviso libera o lugar e encerra o aviso.
-                open={limitOpen && projectCount >= MAX_OPEN_PROJECTS}
-                onCloseProject={(id) => {
-                    setLimitOpen(false);
-                    requestClose(id);
-                }}
-                onCancel={() => setLimitOpen(false)}
-            />
-            <CloseProjectDialog
-                name={
-                    closingProject === undefined
-                        ? null
-                        : displayName(closingProject, t)
+            {/* Ao imprimir o plano, só a folha do plano sai; a bancada some (specs/005, FR-013). */}
+            <div
+                className={
+                    view === 'plan' ? 'contents print:hidden' : 'contents'
                 }
-                onExportAndClose={() => {
-                    if (closingProject !== undefined) {
-                        downloadProject(
-                            projectStore(closingProject.id).getState().data,
-                        );
-                        useWorkspace.getState().closeProject(closingProject.id);
+            >
+                <TopBar
+                    onAction={runAction}
+                    history={history}
+                    tabs={<ProjectTabs onClose={requestClose} />}
+                    onHelp={() => setHelpOpen(true)}
+                    preferences={<PreferencesBar />}
+                />
+                <OfflineBanner />
+                {!storageAvailable && (
+                    <Banner tone="warn" className="mx-3 mt-3">
+                        {t('project:storage.unavailable')}
+                    </Banner>
+                )}
+                <main className="grid flex-1 grid-cols-1 gap-3 p-3 md:grid-cols-2 xl:grid-cols-[minmax(300px,360px)_minmax(260px,320px)_minmax(0,1fr)] xl:grid-rows-[auto_1fr]">
+                    {/* Em ≥ 1280 px o driver ocupa as duas linhas: a altura dele não empurra os resultados. */}
+                    <div className="xl:row-span-2">
+                        <DriverPanel
+                            onSubmitDriver={() =>
+                                setPending(t('catalog.submit'))
+                            }
+                        />
+                    </div>
+                    <BoxPanel />
+                    <div className="md:col-span-2 xl:col-span-1 xl:col-start-3 xl:row-span-2 xl:row-start-1 xl:flex xl:flex-col [&>section]:flex-1">
+                        <ViewSwitch selected={view} onChange={setView} />
+                        {view === 'charts' ? (
+                            <ChartPanel
+                                selected={chart}
+                                onSelectedChange={setChart}
+                            />
+                        ) : (
+                            <Suspense fallback={null}>
+                                <PlanPanel />
+                            </Suspense>
+                        )}
+                    </div>
+                    <div className="md:col-span-2 xl:col-span-1 xl:col-start-2 xl:row-start-2">
+                        <ResultsPanel />
+                    </div>
+                </main>
+                <input
+                    ref={fileInput}
+                    type="file"
+                    accept=".json,.buildbass.json,application/json"
+                    hidden
+                    data-testid="open-file"
+                    onChange={(event) => {
+                        const file = event.currentTarget.files?.[0];
+                        // Limpar permite abrir o mesmo arquivo de novo.
+                        event.currentTarget.value = '';
+
+                        if (file !== undefined) {
+                            void openFile(file);
+                        }
+                    }}
+                />
+                <FileDrop onFile={(file) => void openFile(file)} />
+                <ShortcutsDialog open={helpOpen} onOpenChange={setHelpOpen} />
+                <TabLimitDialog
+                    // Fechar um projeto pelo aviso libera o lugar e encerra o aviso.
+                    open={limitOpen && projectCount >= MAX_OPEN_PROJECTS}
+                    onCloseProject={(id) => {
+                        setLimitOpen(false);
+                        requestClose(id);
+                    }}
+                    onCancel={() => setLimitOpen(false)}
+                />
+                <CloseProjectDialog
+                    name={
+                        closingProject === undefined
+                            ? null
+                            : displayName(closingProject, t)
                     }
-                    setClosing(null);
-                }}
-                onDiscard={() => {
-                    if (closingProject !== undefined) {
-                        useWorkspace.getState().closeProject(closingProject.id);
-                    }
-                    setClosing(null);
-                }}
-                onCancel={() => setClosing(null)}
-            />
-            <OpenErrorDialog
-                error={openError}
-                onClose={() => setOpenError(null)}
-            />
-            <ComingSoonDialog
-                action={pending}
-                onClose={() => setPending(null)}
-            />
+                    onExportAndClose={() => {
+                        if (closingProject !== undefined) {
+                            downloadProject(
+                                projectStore(closingProject.id).getState().data,
+                            );
+                            useWorkspace
+                                .getState()
+                                .closeProject(closingProject.id);
+                        }
+                        setClosing(null);
+                    }}
+                    onDiscard={() => {
+                        if (closingProject !== undefined) {
+                            useWorkspace
+                                .getState()
+                                .closeProject(closingProject.id);
+                        }
+                        setClosing(null);
+                    }}
+                    onCancel={() => setClosing(null)}
+                />
+                <OpenErrorDialog
+                    error={openError}
+                    onClose={() => setOpenError(null)}
+                />
+                <ComingSoonDialog
+                    action={pending}
+                    onClose={() => setPending(null)}
+                />
+            </div>
+            {view === 'plan' && (
+                <Suspense fallback={null}>
+                    <PrintSheet />
+                </Suspense>
+            )}
         </div>
     );
 }

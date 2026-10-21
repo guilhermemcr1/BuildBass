@@ -7,7 +7,7 @@ import type { ProjectData } from './types';
 export const FILE_FORMAT = 'buildbass.project';
 export const FILE_EXTENSION = '.buildbass.json';
 export const MAX_FILE_BYTES = 256 * 1024;
-const APP_VERSION = '0.3.0';
+const APP_VERSION = '0.4.0';
 
 export type OpenErrorCode =
     | 'fileTooLarge'
@@ -21,13 +21,21 @@ export type ParseResult =
     | { ok: true; data: ProjectData }
     | { ok: false; code: OpenErrorCode; path?: string };
 
-// Só o arquivo com caixa bandpass exige a versão 2; os demais continuam v1 e abrem em apps
-// anteriores (specs/004, contracts/project-file.md).
+// A versão gravada é a menor que descreve o arquivo: plano de corte editado = 3, bandpass = 2 e os
+// demais continuam v1 e abrem em apps anteriores (specs/004 e specs/005, contracts/project-file.md).
+function versionOf(data: ProjectData): number {
+    if (data.cutPlan !== undefined) {
+        return 3;
+    }
+
+    return data.box.type === 'bandpass' ? 2 : 1;
+}
+
 export function serializeProject(data: ProjectData, now = new Date()): string {
     return `${JSON.stringify(
         {
             format: FILE_FORMAT,
-            version: data.box.type === 'bandpass' ? CURRENT_VERSION : 1,
+            version: versionOf(data),
             app: APP_VERSION,
             exported_at: now.toISOString(),
             project: data,
@@ -37,8 +45,8 @@ export function serializeProject(data: ProjectData, now = new Date()): string {
     )}\n`;
 }
 
-// Nome em minúsculas, sem acentos, com espaços e símbolos trocados por "-".
-export function exportFileName(name: string): string {
+// Nome em minúsculas, sem acentos, com espaços e símbolos trocados por "-"; vazio vira "projeto".
+export function exportBaseName(name: string): string {
     const slug = name
         .normalize('NFD')
         .replace(/[̀-ͯ]/g, '')
@@ -46,7 +54,11 @@ export function exportFileName(name: string): string {
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '');
 
-    return `${slug === '' ? 'projeto' : slug}${FILE_EXTENSION}`;
+    return slug === '' ? 'projeto' : slug;
+}
+
+export function exportFileName(name: string): string {
+    return `${exportBaseName(name)}${FILE_EXTENSION}`;
 }
 
 export function downloadProject(data: ProjectData): void {

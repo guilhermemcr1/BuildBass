@@ -4,6 +4,7 @@ export { deriveDriver, DRIVER_KEYS } from './driver';
 export { FREQUENCIES_HZ } from './frequencies';
 export { suggestBox } from './alignments';
 export type { Alignment, Suggestion } from './alignments';
+export { portArea } from './port';
 export { signalLevels, simulate } from './simulate';
 export type { SignalLevels } from './simulate';
 export type * from './types';
