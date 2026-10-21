@@ -17,19 +17,20 @@
         "label": "Box type",
         "closed": "Sealed",
         "vented": "Vented",
-        "bandpass": "Bandpass",
-        "bandpassUnavailable": "Bandpass boxes arrive in an upcoming version."
+        "bandpass": "Bandpass"
     },
     "suggest": {
         "button": "Suggest box",
-        "needs": "Fill in {{missing}} to get a suggestion."
+        "needs": "Fill in {{missing}} to get a suggestion.",
+        "bandpassUnavailable": "Suggestion is available for sealed and ported boxes only."
     },
     "port": {
         "title": "Port",
         "shape": "Port shape",
         "round": "Round",
         "rect": "Rectangular",
-        "triangle": "Triangular"
+        "triangle": "Triangular",
+        "titleFront": "Port (front chamber)"
     },
     "drivers": {
         "title": "Drivers",
@@ -78,7 +79,13 @@
         "spl0": "Sensitivity (1 W/1 m)",
         "portVelocity": "Max. port velocity",
         "belowRange": "< 10",
-        "comparison": "Results side by side"
+        "comparison": "Results side by side",
+        "fLow": "Lower cutoff",
+        "fHigh": "Upper cutoff",
+        "fCenter": "Center frequency",
+        "bandwidth": "Bandwidth",
+        "peak": "Peak level",
+        "aboveRange": "> 1000"
     },
     "catalog": {
         "label": "Driver catalog",

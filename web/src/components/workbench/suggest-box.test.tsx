@@ -76,4 +76,17 @@ describe('SuggestBox (US6)', () => {
         );
         expect(activeProjectStore().getState().data.box).toBe(before);
     });
+
+    test('bandpass: desativado, com o motivo, mesmo com Fs, Qts e Vas preenchidos', () => {
+        renderWithProviders(<SuggestBox />);
+        driver(0.35);
+        act(() => activeProjectStore().getState().setBoxType('bandpass'));
+
+        const button = screen.getByRole('button', { name: 'Sugerir caixa' });
+        const reason = 'Sugestão disponível só para caixa selada e dutada.';
+
+        expect(button).toBeDisabled();
+        expect(screen.getByText(reason)).toBeInTheDocument();
+        expect(button).toHaveAccessibleDescription(reason);
+    });
 });

@@ -71,12 +71,12 @@ export function ChartPanel({
     const plotted = useSimulations();
     const xmax = useActiveProject((state) => state.data.driver.xmax_m);
     const [localSelected, setLocalSelected] = useState<ChartKind>('response');
-    const anyVented = plotted.some(
-        ({ project }) => project.data.box.type === 'vented',
+    const anyPorted = plotted.some(
+        ({ project }) => project.data.box.type !== 'closed',
     );
     const requested = selected ?? localSelected;
     const current =
-        requested === 'portVelocity' && !anyVented ? 'response' : requested;
+        requested === 'portVelocity' && !anyPorted ? 'response' : requested;
 
     const listFormat = new Intl.ListFormat(locale, {
         style: 'long',
@@ -201,7 +201,7 @@ export function ChartPanel({
                 items={CHART_KINDS.map((id) => ({
                     id,
                     label: t(`charts.${id}`),
-                    disabled: id === 'portVelocity' && !anyVented,
+                    disabled: id === 'portVelocity' && !anyPorted,
                 }))}
                 selected={current}
                 onChange={(kind) => {
@@ -301,7 +301,7 @@ export function ChartPanel({
                     );
                 }}
             </Tabs>
-            {!anyVented && (
+            {!anyPorted && (
                 <p className="text-[11px] text-muted">
                     {t('charts.portVelocity')}: {t('engine:charts.noPort')}
                 </p>

@@ -46,3 +46,31 @@ test('a 360 px as regiões empilham na ordem driver → caixa → gráficos → 
 
     expect(tops).toEqual([...tops].sort((a, b) => a - b));
 });
+
+test('a 360 px a bandpass completa não rola na horizontal (feature 004, US5)', async ({
+    page,
+}) => {
+    await page.setViewportSize({ width: 360, height: 800 });
+    await page.goto('/');
+    await page.getByRole('radio', { name: 'Bandpass' }).click();
+
+    for (const [name, value] of [
+        [/^Vr/, '40'],
+        [/^Vf/, '60'],
+        [/^Fb/, '45'],
+    ] as const) {
+        const field = page.getByRole('textbox', { name });
+        await field.fill(value);
+        await field.press('Tab');
+    }
+
+    await expect(page.getByText('Duto (câmara frontal)')).toBeVisible();
+
+    const overflow = await page.evaluate(
+        () =>
+            document.documentElement.scrollWidth -
+            document.documentElement.clientWidth,
+    );
+
+    expect(overflow).toBeLessThanOrEqual(0);
+});

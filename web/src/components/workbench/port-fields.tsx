@@ -25,6 +25,9 @@ function reshape(port: PortInput, shape: PortShape): PortInput {
 export function PortFields() {
     const { t } = useTranslation('workbench');
     const port = useActiveProject((state) => state.data.box.port);
+    const bandpass = useActiveProject(
+        (state) => state.data.box.type === 'bandpass',
+    );
     const setPort = useActiveProject((state) => state.setPort);
     const diameter = useParameterField('diameter_m');
     const width = useParameterField('width_m');
@@ -35,7 +38,7 @@ export function PortFields() {
     return (
         <fieldset className="flex flex-col gap-3">
             <legend className="mb-1.5 text-xs font-semibold text-muted">
-                {t('port.title')}
+                {t(bandpass ? 'port.titleFront' : 'port.title')}
             </legend>
             <SegmentedControl<PortShape>
                 label={t('port.shape')}

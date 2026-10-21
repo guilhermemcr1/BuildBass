@@ -8,6 +8,8 @@ test('cada campo da bancada é lido e escrito no lugar certo do projeto', () => 
         ['fs_hz', 28],
         ['vd_m3', 0.002],
         ['vb_m3', 0.05],
+        ['vr_m3', 0.04],
+        ['vf_m3', 0.06],
         ['fb_hz', 32],
         ['ql', 10],
         ['diameter_m', 0.08],

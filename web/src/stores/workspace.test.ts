@@ -132,6 +132,49 @@ describe('workspace', () => {
         expect(data.driver).toEqual({ fs_hz: 76.94, qts: 0.717 });
     });
 
+    test('espaço de trabalho salvo antes da bandpass reabre igual (feature 004)', async () => {
+        const closed = {
+            ...createProjectData('Selada'),
+            box: {
+                type: 'closed',
+                vb_m3: 0.05,
+                ql: 7,
+                port: { shape: 'round', count: 1 },
+            },
+        };
+        const raw = localStorage.getItem(WORKSPACE_KEY) ?? '';
+        const stored = JSON.parse(raw);
+        stored.state.projects[0].data = closed;
+        stored.version = 1;
+        useWorkspace.setState(initialWorkspace());
+        localStorage.setItem(WORKSPACE_KEY, JSON.stringify(stored));
+        await reloadFromStorage();
+
+        const { data } = workspace().projects[0];
+        expect(data.box.type).toBe('closed');
+        expect(data.box.vb_m3).toBe(0.05);
+        expect('vr_m3' in data.box).toBe(false);
+        expect('vf_m3' in data.box).toBe(false);
+    });
+
+    test('projeto bandpass mantém as câmaras ao recarregar (feature 004)', async () => {
+        const id = workspace().activeId;
+        const store = projectStore(id).getState();
+        store.setBoxValue('vb_m3', 0.05);
+        store.setBoxType('bandpass');
+
+        const raw = localStorage.getItem(WORKSPACE_KEY) ?? '';
+        useWorkspace.setState(initialWorkspace());
+        localStorage.setItem(WORKSPACE_KEY, raw);
+        await reloadFromStorage();
+
+        expect(workspace().projects[0].data.box).toMatchObject({
+            type: 'bandpass',
+            vr_m3: 0.05,
+            vf_m3: 0.05,
+        });
+    });
+
     test('trocar o sistema de unidades limpa as unidades por campo de todos os projetos', () => {
         const id = workspace().activeId;
         projectStore(id).getState().setFieldUnit('vas_m3', 'ft3');

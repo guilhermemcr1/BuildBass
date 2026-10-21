@@ -17,19 +17,20 @@
         "label": "Tipo de caixa",
         "closed": "Selada",
         "vented": "Dutada",
-        "bandpass": "Bandpass",
-        "bandpassUnavailable": "Caixa bandpass chega numa próxima versão."
+        "bandpass": "Bandpass"
     },
     "suggest": {
         "button": "Sugerir caixa",
-        "needs": "Preencha {{missing}} para sugerir."
+        "needs": "Preencha {{missing}} para sugerir.",
+        "bandpassUnavailable": "Sugestão disponível só para caixa selada e dutada."
     },
     "port": {
         "title": "Duto",
         "shape": "Formato do duto",
         "round": "Redondo",
         "rect": "Retangular",
-        "triangle": "Triangular"
+        "triangle": "Triangular",
+        "titleFront": "Duto (câmara frontal)"
     },
     "drivers": {
         "title": "Drivers",
@@ -78,7 +79,13 @@
         "spl0": "Sensibilidade (1 W/1 m)",
         "portVelocity": "Velocidade máx. no duto",
         "belowRange": "< 10",
-        "comparison": "Resultados lado a lado"
+        "comparison": "Resultados lado a lado",
+        "fLow": "Corte inferior",
+        "fHigh": "Corte superior",
+        "fCenter": "Frequência central",
+        "bandwidth": "Largura da banda",
+        "peak": "Nível de pico",
+        "aboveRange": "> 1000"
     },
     "catalog": {
         "label": "Catálogo de drivers",

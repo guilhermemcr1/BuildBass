@@ -92,7 +92,7 @@ describe('arquivo de projeto', () => {
 
     test('versão mais nova', async () => {
         expect(
-            await parseProjectFile(file(envelope({}, { version: 2 }))),
+            await parseProjectFile(file(envelope({}, { version: 3 }))),
         ).toEqual({ ok: false, code: 'newerVersion' });
     });
 
@@ -213,6 +213,122 @@ describe('origem do driver (feature 003)', () => {
         expect(result).toEqual({
             ok: true,
             data: { ...FULL, driverSource: SOURCE },
+        });
+    });
+});
+
+describe('bandpass e versão 2 (feature 004)', () => {
+    const BANDPASS: ProjectData = {
+        ...FULL,
+        name: 'Sub bandpass',
+        box: {
+            type: 'bandpass',
+            vb_m3: 0.06,
+            vr_m3: 0.04,
+            vf_m3: 0.03,
+            ql: 7,
+            fb_hz: 45,
+            port: { shape: 'round', diameter_m: 0.1, count: 1 },
+        },
+        fieldUnits: { vr_m3: 'L', vf_m3: 'ft3' },
+    };
+
+    function versionOf(text: string): number {
+        return JSON.parse(text).version;
+    }
+
+    test('só a bandpass grava a versão 2', () => {
+        expect(versionOf(serializeProject(BANDPASS))).toBe(2);
+        expect(versionOf(serializeProject(FULL))).toBe(1);
+        expect(versionOf(serializeProject(createProjectData('')))).toBe(1);
+    });
+
+    test('ida e volta da bandpass reproduz câmaras e unidades', async () => {
+        const result = await parseProjectFile(file(serializeProject(BANDPASS)));
+
+        expect(result).toEqual({ ok: true, data: BANDPASS });
+    });
+
+    test('abre arquivos das versões 1 e 2', async () => {
+        const v1 = await parseProjectFile(file(envelope(FULL)));
+        const v2 = await parseProjectFile(
+            file(envelope(BANDPASS, { version: 2 })),
+        );
+
+        expect(v1).toEqual({ ok: true, data: FULL });
+        expect(v2).toEqual({ ok: true, data: BANDPASS });
+    });
+
+    test('versão 1 com tipo bandpass também abre', async () => {
+        const result = await parseProjectFile(file(envelope(BANDPASS)));
+
+        expect(result).toEqual({ ok: true, data: BANDPASS });
+    });
+
+    test('bandpass sem câmaras nem Fb abre (os gráficos dizem o que falta)', async () => {
+        const incomplete = {
+            ...BANDPASS,
+            box: {
+                type: 'bandpass',
+                ql: 7,
+                port: BANDPASS.box.port,
+            },
+        };
+        const result = await parseProjectFile(
+            file(envelope(incomplete, { version: 2 })),
+        );
+
+        expect(result).toEqual({ ok: true, data: incomplete });
+    });
+
+    test('volume fora da faixa é recusado com o caminho', async () => {
+        const result = await parseProjectFile(
+            file(
+                envelope(
+                    { ...BANDPASS, box: { ...BANDPASS.box, vr_m3: 50 } },
+                    { version: 2 },
+                ),
+            ),
+        );
+
+        expect(result).toEqual({
+            ok: false,
+            code: 'invalidContent',
+            path: 'project.box.vr_m3',
+        });
+    });
+
+    test('volume que não é número é recusado com o caminho', async () => {
+        const result = await parseProjectFile(
+            file(
+                envelope(
+                    { ...BANDPASS, box: { ...BANDPASS.box, vf_m3: '30 L' } },
+                    { version: 2 },
+                ),
+            ),
+        );
+
+        expect(result).toEqual({
+            ok: false,
+            code: 'invalidContent',
+            path: 'project.box.vf_m3',
+        });
+    });
+
+    test('tipo de caixa desconhecido continua recusado', async () => {
+        const result = await parseProjectFile(
+            file(
+                envelope({
+                    ...FULL,
+                    box: { ...FULL.box, type: 'horn' },
+                }),
+            ),
+        );
+
+        expect(result).toEqual({
+            ok: false,
+            code: 'invalidContent',
+            path: 'project.box.type',
         });
     });
 });

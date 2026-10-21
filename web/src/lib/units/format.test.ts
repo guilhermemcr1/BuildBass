@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vite-plus/test';
 import { EMPTY_VALUE, formatQuantity } from './format';
+import { findUnit, QUANTITIES } from './quantities';
 
 describe('formatação de grandezas', () => {
     test('usa vírgula em pt-BR e ponto em en', () => {
@@ -15,6 +16,12 @@ describe('formatação de grandezas', () => {
     test('não usa notação científica em valores pequenos', () => {
         expect(formatQuantity(0.00045, 'H', 'en')).toBe('0.00045');
         expect(formatQuantity(0.00045, 'mH', 'en')).toBe('0.45');
+    });
+
+    test('largura de banda em oitavas', () => {
+        expect(formatQuantity(1.5, 'oct', 'pt-BR')).toBe('1,50');
+        expect(findUnit('oct').symbol).toBe('oct');
+        expect(QUANTITIES.octaves.siUnit).toBe('oct');
     });
 
     test('mostra traço quando não há valor', () => {

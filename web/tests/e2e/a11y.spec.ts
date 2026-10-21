@@ -278,3 +278,53 @@ for (const theme of ['light', 'dark'] as const) {
         await context.close();
     });
 }
+
+// Caixa bandpass completa (feature 004): região da caixa, resultados e gráfico preenchidos.
+for (const theme of ['light', 'dark'] as const) {
+    test(`sem violações WCAG AA com a bandpass completa no tema ${theme} (feature 004, US5)`, async ({
+        browser,
+    }) => {
+        const context = await browser.newContext({
+            colorScheme: theme,
+            viewport: { width: 1440, height: 900 },
+        });
+        const page = await context.newPage();
+        await page.goto('/');
+        await page.locator('main').waitFor();
+
+        const fill = async (name: RegExp, value: string) => {
+            const field = page.getByRole('textbox', { name });
+            await field.fill(value);
+            await field.press('Tab');
+        };
+
+        await fill(/^Fs/, '28');
+        await fill(/^Qts/, '0,38');
+        await fill(/^Qes/, '0,42');
+        await fill(/^Qms/, '4,1');
+        await fill(/^Vas/, '85');
+        await fill(/^Re/, '3,6');
+        await fill(/^Sd/, '491');
+        await page.getByRole('radio', { name: 'Bandpass' }).click();
+        await fill(/^Vr/, '40');
+        await fill(/^Vf/, '60');
+        await fill(/^Fb/, '45');
+        await fill(/Diâmetro do duto/, '100');
+        await expect(
+            page.locator('[data-region="charts"] canvas'),
+        ).toBeVisible();
+        await page.waitForTimeout(300);
+
+        const results = await new AxeBuilder({ page })
+            .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+            .analyze();
+
+        expect(
+            results.violations.map((violation) => ({
+                id: violation.id,
+                nodes: violation.nodes.map((node) => node.target.join(' ')),
+            })),
+        ).toEqual([]);
+        await context.close();
+    });
+}

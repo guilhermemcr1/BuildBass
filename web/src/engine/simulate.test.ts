@@ -424,3 +424,147 @@ test('desempenho: < 5 ms por projeto completo', () => {
 
     expect((performance.now() - start) / 50).toBeLessThan(5);
 });
+
+// Regressão da feature 004: valores gravados antes da bandpass existir. Selada e dutada têm de
+// continuar saindo bit a bit iguais (a bandpass não pode mexer no caminho delas).
+describe('simulate — selada e dutada não mudaram com a bandpass (004, T013)', () => {
+    const driver: DriverInput = {
+        fs_hz: 28,
+        qes: 0.42,
+        qms: 4.1,
+        vas_m3: 0.085,
+        re_ohm: 3.6,
+        sd_m2: 0.0491,
+        le_h: 0.002,
+        xmax_m: 0.014,
+        vd_m3: 0.002,
+    };
+    const base = {
+        name: 'x',
+        driver,
+        drivers: { count: 1, wiring: 'parallel' as const },
+        signal: {
+            mode: 'power' as const,
+            power_w: 100,
+            radiation: 'half' as const,
+        },
+    };
+    const INDICES = [20, 60, 120, 200, 300];
+    const sample = (values: number[] | undefined) =>
+        INDICES.map((index) => (values ?? [])[index]);
+    const BASELINE = {
+        closed: {
+            spl: [
+                84.65245747009298, 93.15865741434112, 103.97044244720959,
+                109.3035911911155, 103.59422712624819,
+            ],
+            imp: [
+                4.548538679379665, 5.592134216297424, 25.344098097784247,
+                3.7734931549280977, 6.420167125793529,
+            ],
+            exc: [
+                0.00877476366572862, 0.007811459252637687, 0.005639868456212919,
+                0.0013341075226426882, 5.3466265223254545e-5,
+            ],
+            gd: [
+                0.007344596907032733, 0.005996006319453449,
+                0.0045620536795228156, 0.0015737195902196404,
+                0.00020196107648650023,
+            ],
+            results: {
+                voltage_v: 18.973665961010276,
+                power_w: 100,
+                impedance_total_ohm: 3.6,
+                efficiency: 0.004338720047560387,
+                spl0_db: 88.53295534941672,
+                net_volume_m3: 0.048,
+                qtc: 0.6341615608418979,
+                fc_hz: 46.60829682935575,
+                f3_hz: 55.86457305357066,
+                xmax_power_w: 854.4407726932226,
+            },
+        },
+        vented: {
+            spl: [
+                78.09857048106065, 95.36432388840285, 109.15914283990577,
+                109.6426186686709, 103.61401681967413,
+            ],
+            imp: [
+                8.446888766088353, 13.240250727738614, 20.36558571158137,
+                3.7523556097491118, 6.421159480840231,
+            ],
+            exc: [
+                0.01889061380502476, 0.011782116276770102, 0.00541641702206416,
+                0.0013012504903312672, 5.333064060406216e-5,
+            ],
+            gd: [
+                0.013579472032474478, 0.015758058298118636,
+                0.008035337166619643, 0.0014946062494746667,
+                0.00020019099292317504,
+            ],
+            pv: [
+                11.421516528128281, 17.961589897389334, 8.791960410841023,
+                0.43144573675096465, 0.0046433286410526315,
+            ],
+            results: {
+                voltage_v: 18.973665961010276,
+                power_w: 100,
+                impedance_total_ohm: 3.6,
+                efficiency: 0.004338720047560387,
+                spl0_db: 88.53295534941672,
+                fb_hz: 32,
+                port_length_m: 0.2270953787113878,
+                net_volume_m3: 0.07621639706644028,
+                port_velocity_max_ms: 22.06272756469322,
+                f3_hz: 29.902528867274228,
+                xmax_power_w: 664.3582855081249,
+            },
+        },
+    };
+
+    function close(actual: number[], expected: number[]) {
+        actual.forEach((value, index) => {
+            expect(Math.abs(value - expected[index])).toBeLessThanOrEqual(
+                1e-9 * Math.abs(expected[index]),
+            );
+        });
+    }
+
+    test('selada', () => {
+        const result = simulate({
+            ...base,
+            box: {
+                type: 'closed',
+                vb_m3: 0.05,
+                ql: 7,
+                port: { shape: 'round', count: 1 },
+            },
+        });
+
+        close(sample(result.curves.spl_db), BASELINE.closed.spl);
+        close(sample(result.curves.impedance_ohm), BASELINE.closed.imp);
+        close(sample(result.curves.excursion_m), BASELINE.closed.exc);
+        close(sample(result.curves.group_delay_s), BASELINE.closed.gd);
+        expect(result.results).toEqual(BASELINE.closed.results);
+    });
+
+    test('dutada', () => {
+        const result = simulate({
+            ...base,
+            box: {
+                type: 'vented',
+                vb_m3: 0.08,
+                fb_hz: 32,
+                ql: 7,
+                port: { shape: 'round', diameter_m: 0.1, count: 1 },
+            },
+        });
+
+        close(sample(result.curves.spl_db), BASELINE.vented.spl);
+        close(sample(result.curves.impedance_ohm), BASELINE.vented.imp);
+        close(sample(result.curves.excursion_m), BASELINE.vented.exc);
+        close(sample(result.curves.group_delay_s), BASELINE.vented.gd);
+        close(sample(result.curves.port_velocity_ms), BASELINE.vented.pv);
+        expect(result.results).toEqual(BASELINE.vented.results);
+    });
+});

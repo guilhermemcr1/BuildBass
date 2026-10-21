@@ -1,3 +1,4 @@
+import { bandEdges, rearLossReferenceHz, rearNetVolume } from './bandpass';
 import { solveCircuit } from './circuit';
 import type { CircuitParams } from './circuit';
 import { abs, arg, complex, mul } from './complex';
@@ -227,17 +228,28 @@ export function simulate(project: ProjectInput): Simulation {
 
     const { box, drivers, signal } = project;
     const vented = box.type === 'vented';
+    const band = box.type === 'bandpass';
+    // Tipos com duto: a dutada e a bandpass (o duto da câmara frontal).
+    const ported = vented || band;
     const missing = emptyMissing();
     const warnings: EngineWarning[] = [];
     const results: SimulationResults = {};
 
     const boxMissing: FieldKey[] = [];
 
-    if (box.vb_m3 === undefined) {
+    if (band) {
+        if (box.vr_m3 === undefined) {
+            boxMissing.push('vr_m3');
+        }
+
+        if (box.vf_m3 === undefined) {
+            boxMissing.push('vf_m3');
+        }
+    } else if (box.vb_m3 === undefined) {
         boxMissing.push('vb_m3');
     }
 
-    if (vented && box.fb_hz === undefined) {
+    if (ported && box.fb_hz === undefined) {
         boxMissing.push('fb_hz');
     }
 
@@ -287,7 +299,7 @@ export function simulate(project: ProjectInput): Simulation {
         ...absoluteMissing,
         ...signalMissing,
     ];
-    missing.port_velocity_ms = vented
+    missing.port_velocity_ms = ported
         ? [...missing.excursion_m, ...portMissing(box.port)]
         : [];
 
@@ -312,7 +324,7 @@ export function simulate(project: ProjectInput): Simulation {
             );
     }
 
-    if (vented && box.fb_hz !== undefined) {
+    if (ported && box.fb_hz !== undefined) {
         results.fb_hz = box.fb_hz;
     }
 
@@ -325,34 +337,63 @@ export function simulate(project: ProjectInput): Simulation {
         warnings,
     });
 
-    if (responseMissing.length > 0 || box.vb_m3 === undefined) {
+    // Já sem faltas: o volume que leva o duto (a caixa, ou a câmara frontal da bandpass) existe.
+    const chamber = (band ? box.vf_m3 : box.vb_m3) as number | undefined;
+
+    if (responseMissing.length > 0 || chamber === undefined) {
         return empty();
     }
 
     const driversVolume = count * (values.vd_m3 ?? 0);
     const portCount = Math.max(1, Math.round(box.port.count));
-    const area = vented ? portArea(box.port) : undefined;
-    let netVolume = box.vb_m3 - driversVolume;
+    const area = ported ? portArea(box.port) : undefined;
+    let rearNet: number | undefined;
+
+    // Bandpass: o magneto do driver fica na câmara traseira ([D06]).
+    if (band) {
+        rearNet = rearNetVolume(box.vr_m3 as number, driversVolume);
+        results.net_rear_m3 = rearNet;
+
+        if (rearNet <= 0) {
+            warnings.push({ id: 'rearVolumeInvalid' });
+
+            return empty();
+        }
+    }
+
+    // Na bandpass os drivers já saíram da câmara traseira; a frontal só perde o duto.
+    const chamberDrivers = band ? 0 : driversVolume;
+    let netVolume = chamber - chamberDrivers;
 
     if (netVolume <= 0) {
-        results.net_volume_m3 = netVolume;
-        warnings.push({ id: 'netVolumeInvalid' });
+        if (band) {
+            results.net_front_m3 = netVolume;
+        } else {
+            results.net_volume_m3 = netVolume;
+        }
+
+        warnings.push({ id: band ? 'portVolumeTooLarge' : 'netVolumeInvalid' });
 
         return empty();
     }
 
-    // Na dutada, o volume dos dutos também sai da caixa (research.md §7).
+    // Com duto, o volume dos dutos também sai da caixa (research.md §7).
     if (area !== undefined && box.fb_hz !== undefined) {
         const solved = solveNetVolume({
-            vb_m3: box.vb_m3,
-            drivers_m3: driversVolume,
+            vb_m3: chamber,
+            drivers_m3: chamberDrivers,
             fb_hz: box.fb_hz,
             area_m2: area,
             count: portCount,
         });
 
         if (Number.isNaN(solved.length_m)) {
-            results.net_volume_m3 = solved.net_m3;
+            if (band) {
+                results.net_front_m3 = solved.net_m3;
+            } else {
+                results.net_volume_m3 = solved.net_m3;
+            }
+
             warnings.push({ id: 'portVolumeTooLarge' });
 
             return empty();
@@ -363,7 +404,7 @@ export function simulate(project: ProjectInput): Simulation {
 
         if (solved.length_m <= 0) {
             warnings.push({ id: 'portTooShort' });
-        } else if (solved.length_m > Math.cbrt(box.vb_m3)) {
+        } else if (solved.length_m > Math.cbrt(chamber)) {
             // Duto mais longo que a maior medida de uma caixa cúbica: ressonâncias do tubo
             // caem perto da banda e ele dificilmente cabe.
             warnings.push({
@@ -373,7 +414,11 @@ export function simulate(project: ProjectInput): Simulation {
         }
     }
 
-    results.net_volume_m3 = netVolume;
+    if (band) {
+        results.net_front_m3 = netVolume;
+    } else {
+        results.net_volume_m3 = netVolume;
+    }
 
     const fs = values.fs_hz as number;
     const qts = values.qts as number;
@@ -385,7 +430,7 @@ export function simulate(project: ProjectInput): Simulation {
     const alpha = vas / boxPerDriver;
     const cab = boxPerDriver / RHO_C2;
 
-    if (!vented) {
+    if (box.type === 'closed') {
         // [S73c] eq. 9–10.
         results.qtc = qts * Math.sqrt(1 + alpha);
         results.fc_hz = fs * Math.sqrt(1 + alpha);
@@ -395,10 +440,11 @@ export function simulate(project: ProjectInput): Simulation {
     const referenceOmega =
         2 *
         Math.PI *
-        (vented ? (box.fb_hz as number) : (results.fc_hz as number));
+        (ported ? (box.fb_hz as number) : (results.fc_hz as number));
     const ral = box.ql / (referenceOmega * cab);
-    // Massa do duto pela sintonia: Fb = 1 / (2π·√(Map·Cab)).
-    const map = vented
+    // Massa do duto pela sintonia: Fb = 1 / (2π·√(Map·Cab)); na bandpass, Cab é o da câmara
+    // frontal com o cone bloqueado (research.md §2).
+    const map = ported
         ? 1 / ((2 * Math.PI * (box.fb_hz as number)) ** 2 * cab)
         : undefined;
 
@@ -421,6 +467,19 @@ export function simulate(project: ProjectInput): Simulation {
         cab,
         ral,
         map,
+        // Câmara traseira selada da bandpass; perdas medidas na ressonância do driver nela.
+        rear:
+            rearNet === undefined
+                ? undefined
+                : {
+                      cab: rearNet / count / RHO_C2,
+                      ral:
+                          box.ql /
+                          (2 *
+                              Math.PI *
+                              rearLossReferenceHz(fs, vas, rearNet / count) *
+                              (rearNet / count / RHO_C2)),
+                  },
     };
 
     if (absolute && values.le_h === undefined) {
@@ -497,19 +556,44 @@ export function simulate(project: ProjectInput): Simulation {
         results.port_velocity_max_ms = Math.max(...portVelocity);
     }
 
-    const f3 = findF3(model);
-    results.f3_hz = f3.f3;
-    results.f3_below_range = f3.below || undefined;
+    let lowEdge: number | undefined;
 
-    // Potência que leva o cone ao Xmax: x ∝ V, então P·(Xmax/x)², a menor entre F3 e 1000 Hz
-    // (research.md §7); abaixo de F3 a caixa já não é usada.
+    if (band) {
+        // Bordas de −3 dB sobre a curva que o usuário vê (com Le, quando informada).
+        const edges = bandEdges((frequency) => {
+            const point = solveCircuit(perDriver, frequency);
+            const radiated = abs(point.radiated) * perDriverVoltage * count;
+            const level = levelDb(
+                pressure(radiated, 2 * Math.PI * frequency, solidAngle),
+            );
+
+            return absolute ? level : level - levelDb(model.passbandPressure);
+        });
+
+        results.peak_db = edges.peak_db;
+        results.f_low_hz = edges.f_low_hz;
+        results.f_high_hz = edges.f_high_hz;
+        results.f_center_hz = edges.f_center_hz;
+        results.bandwidth_oct = edges.bandwidth_oct;
+        results.f_low_below_range = edges.below_range || undefined;
+        results.f_high_above_range = edges.above_range || undefined;
+        lowEdge = edges.f_low_hz;
+    } else {
+        const f3 = findF3(model);
+        results.f3_hz = f3.f3;
+        results.f3_below_range = f3.below || undefined;
+        lowEdge = f3.f3;
+    }
+
+    // Potência que leva o cone ao Xmax: x ∝ V, então P·(Xmax/x)², a menor entre F3 (na bandpass,
+    // o corte inferior) e 1000 Hz (research.md §7); abaixo dele a caixa já não é usada.
     if (
         curves.excursion_m !== undefined &&
         values.xmax_m !== undefined &&
         values.xmax_m > 0 &&
         results.power_w !== undefined
     ) {
-        const from = f3.f3 ?? FREQUENCIES_HZ[0];
+        const from = lowEdge ?? FREQUENCIES_HZ[0];
         const xmax = values.xmax_m;
         const power = results.power_w;
         results.xmax_power_w = Math.min(

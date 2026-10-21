@@ -93,8 +93,10 @@ export const projectSchema = z.object({
         wiring: z.enum(['series', 'parallel']),
     }),
     box: z.object({
-        type: z.enum(['closed', 'vented']),
+        type: z.enum(['closed', 'vented', 'bandpass']),
         vb_m3: range('vb_m3').optional(),
+        vr_m3: range('vr_m3').optional(),
+        vf_m3: range('vf_m3').optional(),
         ql: range('ql'),
         fb_hz: range('fb_hz').optional(),
         port,

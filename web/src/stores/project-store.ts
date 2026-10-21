@@ -14,7 +14,7 @@ import type {
 } from '@/lib/project/types';
 import type { UnitId } from '@/lib/units/quantities';
 
-type BoxValueKey = 'vb_m3' | 'fb_hz' | 'ql';
+type BoxValueKey = 'vb_m3' | 'vr_m3' | 'vf_m3' | 'fb_hz' | 'ql';
 
 export type ProjectState = {
     data: ProjectData;
@@ -82,11 +82,24 @@ export function createProjectStore(
                                     ? { ...data.box, ql: si ?? 7 }
                                     : withValue(data.box, key, si),
                         })),
+                    // Ao escolher bandpass, as câmaras vazias partem do Vb já digitado (uma etapa só
+                    // de desfazer); cada tipo guarda os próprios campos (specs/004, FR-012).
                     setBoxType: (type) =>
-                        update((data) => ({
-                            ...data,
-                            box: { ...data.box, type },
-                        })),
+                        update((data) => {
+                            const { vb_m3 } = data.box;
+                            const seed =
+                                type === 'bandpass' && vb_m3 !== undefined
+                                    ? {
+                                          vr_m3: data.box.vr_m3 ?? vb_m3,
+                                          vf_m3: data.box.vf_m3 ?? vb_m3,
+                                      }
+                                    : {};
+
+                            return {
+                                ...data,
+                                box: { ...data.box, ...seed, type },
+                            };
+                        }),
                     setPort: (port) =>
                         update((data) => ({
                             ...data,

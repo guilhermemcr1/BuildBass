@@ -51,6 +51,14 @@
         "label": "Volume da caixa",
         "help": "Volume interno bruto da caixa; o volume dos drivers e dos dutos é descontado no cálculo."
     },
+    "vr_m3": {
+        "label": "Volume da câmara traseira (selada)",
+        "help": "Volume bruto da câmara fechada atrás do cone, antes de descontar o driver."
+    },
+    "vf_m3": {
+        "label": "Volume da câmara frontal (dutada)",
+        "help": "Volume bruto da câmara na frente do cone, onde fica o duto, antes de descontar o duto."
+    },
     "fb_hz": {
         "label": "Sintonia do duto",
         "help": "Frequência em que o duto e o volume da caixa ressoam juntos."

@@ -51,6 +51,14 @@
         "label": "Box volume",
         "help": "Gross internal box volume; driver and port volumes are subtracted in the calculation."
     },
+    "vr_m3": {
+        "label": "Rear chamber volume (sealed)",
+        "help": "Gross volume of the sealed chamber behind the cone, before subtracting the driver."
+    },
+    "vf_m3": {
+        "label": "Front chamber volume (ported)",
+        "help": "Gross volume of the chamber in front of the cone, where the port is, before subtracting the port."
+    },
     "fb_hz": {
         "label": "Port tuning",
         "help": "Frequency at which the port and the box volume resonate together."
