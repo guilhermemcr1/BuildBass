@@ -41,6 +41,19 @@ function bandpassProject(box: Partial<BoxInput> = {}) {
     }));
 }
 
+// Bandpass de 6ª ordem completa (mesmo driver de referência).
+function sixthOrderProject(box: Partial<BoxInput> = {}) {
+    bandpassProject({
+        type: 'bandpass6',
+        vr_m3: 0.08,
+        vf_m3: 0.04,
+        fb_hz: 45,
+        fb_rear_hz: 30,
+        port_rear: { shape: 'round', diameter_m: 0.1, count: 1 },
+        ...box,
+    });
+}
+
 describe('ResultsPanel', () => {
     beforeEach(() => {
         useWorkspace.setState(initialWorkspace());
@@ -138,5 +151,63 @@ describe('ResultsPanel', () => {
             2,
         );
         expect(row('Corte inferior')).toHaveTextContent('—');
+    });
+
+    test('bandpass 6ª ordem: tiles da 4ª ordem mais Fbr e o duto traseiro, com o frontal identificado', () => {
+        sixthOrderProject();
+
+        renderWithProviders(<ResultsPanel />);
+
+        for (const label of [
+            'Corte inferior',
+            'Corte superior',
+            'Frequência central',
+            'Largura da banda',
+            'Nível de pico',
+            'Fb',
+            'Fbr',
+            'Comprimento do duto frontal',
+            'Velocidade máx. no duto frontal',
+            'Comprimento do duto traseiro',
+            'Velocidade máx. no duto traseiro',
+            'Potência no Xmax',
+        ]) {
+            expect(screen.getByText(label), label).toBeVisible();
+        }
+
+        expect(tile('Fbr')).toHaveTextContent('30');
+        expect(tile('Comprimento do duto traseiro')).not.toHaveTextContent('—');
+        expect(tile('Velocidade máx. no duto traseiro')).not.toHaveTextContent(
+            '—',
+        );
+        expect(screen.queryByText('Comprimento do duto')).toBeNull();
+        expect(screen.queryByText('F3')).toBeNull();
+    });
+
+    test('bandpass 6ª ordem: um duto curto demais avisa só no tile da sua câmara', () => {
+        sixthOrderProject({
+            vr_m3: 0.2,
+            fb_rear_hz: 100,
+            port_rear: { shape: 'round', diameter_m: 0.05, count: 1 },
+        });
+
+        renderWithProviders(<ResultsPanel />);
+
+        expect(tile('Comprimento do duto traseiro')).toHaveTextContent(
+            'Curto demais',
+        );
+        expect(tile('Comprimento do duto frontal')).not.toHaveTextContent(
+            'Curto demais',
+        );
+    });
+
+    test('a 4ª ordem não mostra Fbr nem o duto traseiro', () => {
+        bandpassProject();
+
+        renderWithProviders(<ResultsPanel />);
+
+        expect(screen.queryByText('Fbr')).toBeNull();
+        expect(screen.queryByText('Comprimento do duto traseiro')).toBeNull();
+        expect(screen.getByText('Comprimento do duto')).toBeVisible();
     });
 });

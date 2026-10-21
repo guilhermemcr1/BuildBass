@@ -13,7 +13,13 @@
         "rearVolumeInvalid": "O volume ocupado pelos drivers é maior que a câmara traseira. Aumente a câmara traseira ou reduza o volume ocupado.",
         "portVolumeTooLarge_bandpass": "O duto não cabe na câmara frontal nessa sintonia. Use um duto mais estreito, menos dutos ou uma câmara frontal maior.",
         "portTooShort_bandpass": "O duto ficaria com comprimento zero ou negativo para essa câmara frontal. Use um duto mais estreito ou menos dutos.",
-        "portTooLong_bandpass": "O duto fica longo ({{length}}) para essa câmara frontal. Considere um duto mais estreito ou outra sintonia."
+        "portTooLong_bandpass": "O duto fica longo ({{length}}) para essa câmara frontal. Considere um duto mais estreito ou outra sintonia.",
+        "portVolumeTooLarge_rear": "O duto não cabe na câmara traseira nessa sintonia. Use um duto mais estreito, menos dutos ou uma câmara traseira maior.",
+        "portVolumeTooLarge_front": "O duto não cabe na câmara frontal nessa sintonia. Use um duto mais estreito, menos dutos ou uma câmara frontal maior.",
+        "portTooShort_rear": "O duto ficaria com comprimento zero ou negativo para essa câmara traseira. Use um duto mais estreito ou menos dutos.",
+        "portTooShort_front": "O duto ficaria com comprimento zero ou negativo para essa câmara frontal. Use um duto mais estreito ou menos dutos.",
+        "portTooLong_rear": "O duto fica longo ({{length}}) para essa câmara traseira. Considere um duto mais estreito ou outra sintonia.",
+        "portTooLong_front": "O duto fica longo ({{length}}) para essa câmara frontal. Considere um duto mais estreito ou outra sintonia."
     },
     "limits": {
         "portWarn": "Atenção: {{value}}",

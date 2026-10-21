@@ -305,7 +305,7 @@ for (const theme of ['light', 'dark'] as const) {
         await fill(/^Vas/, '85');
         await fill(/^Re/, '3,6');
         await fill(/^Sd/, '491');
-        await page.getByRole('radio', { name: 'Bandpass' }).click();
+        await page.getByRole('radio', { name: 'Bandpass 4ª ordem' }).click();
         await fill(/^Vr/, '40');
         await fill(/^Vf/, '60');
         await fill(/^Fb/, '45');
@@ -358,7 +358,9 @@ for (const theme of ['light', 'dark'] as const) {
             await fill(/^Sd/, '491');
 
             if (state === 'bandpass') {
-                await page.getByRole('radio', { name: 'Bandpass' }).click();
+                await page
+                    .getByRole('radio', { name: 'Bandpass 4ª ordem' })
+                    .click();
                 await fill(/^Vr/, '40');
                 await fill(/^Vf/, '60');
                 await fill(/^Fb/, '45');

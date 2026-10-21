@@ -31,7 +31,7 @@ async function referenceDriver(page: Page) {
 }
 
 async function bandpassBox(page: Page) {
-    await page.getByRole('radio', { name: 'Bandpass' }).click();
+    await page.getByRole('radio', { name: 'Bandpass 4ª ordem' }).click();
     await fill(page, /^Vr/, '40');
     await fill(page, /^Vf/, '60');
     await fill(page, /^Fb/, '45');
@@ -83,12 +83,17 @@ test('bandpass: mudar a sintonia atualiza os cortes sem ação extra (US1)', asy
     await expect(high).not.toHaveText(before ?? '');
 });
 
-test('bandpass: o seletor tem as três opções e nenhum aviso de indisponível (US1)', async ({
+test('bandpass: o seletor tem as quatro opções e nenhum aviso de indisponível (US1)', async ({
     page,
 }) => {
     await page.goto('/');
 
-    for (const name of ['Selada', 'Dutada', 'Bandpass']) {
+    for (const name of [
+        'Selada',
+        'Dutada',
+        'Bandpass 4ª ordem',
+        'Bandpass 6ª ordem',
+    ]) {
         await expect(page.getByRole('radio', { name })).toBeEnabled();
     }
 
@@ -173,7 +178,7 @@ test('bandpass: só pelo teclado, Tab alcança tipo, câmaras, Fb, Ql e duto e a
     page,
 }) => {
     await page.goto('/');
-    await page.getByRole('radio', { name: 'Bandpass' }).click();
+    await page.getByRole('radio', { name: 'Bandpass 4ª ordem' }).click();
 
     const targets = [/^Vr/, /^Vf/, /^Fb/, /^Ql/, /Diâmetro do duto/];
 
@@ -184,18 +189,20 @@ test('bandpass: só pelo teclado, Tab alcança tipo, câmaras, Fb, Ql e duto e a
     }
 
     // Seletor de tipo (ToggleButtonGroup): as setas movem o foco entre as opções e Espaço escolhe.
-    await page.getByRole('radio', { name: 'Bandpass' }).focus();
+    await page.getByRole('radio', { name: 'Bandpass 4ª ordem' }).focus();
     await page.keyboard.press('ArrowLeft');
     await expect(page.getByRole('radio', { name: 'Dutada' })).toBeFocused();
     await page.keyboard.press('Space');
     await expect(page.getByRole('radio', { name: 'Dutada' })).toBeChecked();
     await page.keyboard.press('ArrowRight');
     await page.keyboard.press('Space');
-    await expect(page.getByRole('radio', { name: 'Bandpass' })).toBeChecked();
+    await expect(
+        page.getByRole('radio', { name: 'Bandpass 4ª ordem' }),
+    ).toBeChecked();
 
     // Só com Tab, a partir do seletor, o foco passa por todos os campos da caixa.
     const pending = new Set(targets.map(String));
-    await page.getByRole('radio', { name: 'Bandpass' }).focus();
+    await page.getByRole('radio', { name: 'Bandpass 4ª ordem' }).focus();
 
     for (let step = 0; step < 30 && pending.size > 0; step++) {
         await page.keyboard.press('Tab');

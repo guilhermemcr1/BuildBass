@@ -1,4 +1,4 @@
-import { act, screen } from '@testing-library/react';
+import { act, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'vite-plus/test';
 import { activeProjectStore } from '@/hooks/use-active-project';
@@ -19,10 +19,15 @@ describe('BoxPanel — tipos de caixa', () => {
         usePreferences.setState({ unitSystem: 'metric' });
     });
 
-    test('o seletor tem os três tipos, todos ativos, e não avisa que a bandpass não existe', () => {
+    test('o seletor tem os quatro tipos, todos ativos, e não avisa que a bandpass não existe', () => {
         renderWithProviders(<BoxPanel />);
 
-        for (const name of ['Selada', 'Dutada', 'Bandpass']) {
+        for (const name of [
+            'Selada',
+            'Dutada',
+            'Bandpass 4ª ordem',
+            'Bandpass 6ª ordem',
+        ]) {
             expect(screen.getByRole('radio', { name })).not.toBeDisabled();
         }
 
@@ -61,19 +66,30 @@ describe('BoxPanel — tipos de caixa', () => {
         expect(screen.queryByRole('textbox', { name: /^Vb/ })).toBeNull();
     });
 
-    test('escolher Bandpass muda o tipo do projeto ativo', async () => {
+    test('escolher Bandpass 4ª ou 6ª ordem muda o tipo do projeto ativo', async () => {
         renderWithProviders(<BoxPanel />);
 
-        await userEvent.click(screen.getByRole('radio', { name: 'Bandpass' }));
-
+        await userEvent.click(
+            screen.getByRole('radio', { name: 'Bandpass 4ª ordem' }),
+        );
         expect(activeProjectStore().getState().data.box.type).toBe('bandpass');
+
+        await userEvent.click(
+            screen.getByRole('radio', { name: 'Bandpass 6ª ordem' }),
+        );
+        expect(activeProjectStore().getState().data.box.type).toBe('bandpass6');
     });
 
     test('em inglês os tipos e as câmaras aparecem traduzidos', () => {
         boxType('bandpass');
         renderWithProviders(<BoxPanel />, 'en');
 
-        expect(screen.getByRole('radio', { name: 'Bandpass' })).toBeVisible();
+        expect(
+            screen.getByRole('radio', { name: '4th-order bandpass' }),
+        ).toBeVisible();
+        expect(
+            screen.getByRole('radio', { name: '6th-order bandpass' }),
+        ).toBeVisible();
         expect(screen.getByRole('radio', { name: 'Sealed' })).toBeVisible();
         expect(screen.getByRole('radio', { name: 'Vented' })).toBeVisible();
         expect(
@@ -145,5 +161,117 @@ describe('BoxPanel — tipos de caixa', () => {
             '60,0',
         );
         expect(activeProjectStore().getState().data.box.vr_m3).toBe(0.04);
+    });
+});
+
+describe('BoxPanel — bandpass de 6ª ordem', () => {
+    beforeEach(() => {
+        localStorage.clear();
+        useWorkspace.setState(initialWorkspace());
+        usePreferences.setState({ unitSystem: 'metric' });
+    });
+
+    test('mostra as duas câmaras dutadas, cada uma com volume, sintonia e grupo de duto', () => {
+        boxType('bandpass6');
+        renderWithProviders(<BoxPanel />);
+
+        const rear = screen.getByRole('group', {
+            name: 'Câmara traseira (dutada)',
+        });
+        const front = screen.getByRole('group', {
+            name: 'Câmara frontal (dutada)',
+        });
+
+        expect(
+            within(rear).getByRole('textbox', { name: /^Vr/ }),
+        ).toBeVisible();
+        expect(
+            within(rear).getByRole('textbox', { name: /^Fbr/ }),
+        ).toBeVisible();
+        expect(
+            within(rear).getByRole('group', { name: 'Duto (câmara traseira)' }),
+        ).toBeVisible();
+        expect(
+            within(front).getByRole('textbox', { name: /^Vf/ }),
+        ).toBeVisible();
+        expect(
+            within(front).getByRole('textbox', { name: /^Fb$|^Fb\b/ }),
+        ).toBeVisible();
+        expect(
+            within(front).getByRole('group', { name: 'Duto (câmara frontal)' }),
+        ).toBeVisible();
+        expect(screen.getByRole('textbox', { name: /^Ql/ })).toBeVisible();
+        expect(screen.queryByRole('textbox', { name: /^Vb/ })).toBeNull();
+    });
+
+    test('Sugerir caixa fica desativado com o motivo da bandpass', () => {
+        boxType('bandpass6');
+        renderWithProviders(<BoxPanel />);
+
+        expect(
+            screen.getByRole('button', { name: 'Sugerir caixa' }),
+        ).toBeDisabled();
+        expect(
+            screen.getByText(/Sugestão disponível só para caixa selada/),
+        ).toBeVisible();
+    });
+
+    test('a 4ª ordem não mostra Fbr nem o duto traseiro', () => {
+        boxType('bandpass');
+        renderWithProviders(<BoxPanel />);
+
+        expect(screen.queryByRole('textbox', { name: /^Fbr/ })).toBeNull();
+        expect(screen.queryByText('Duto (câmara traseira)')).toBeNull();
+    });
+
+    test('digitar em Fbr grava só fb_rear_hz', async () => {
+        boxType('bandpass6');
+        renderWithProviders(<BoxPanel />);
+
+        const before = activeProjectStore().getState().data.box;
+        await userEvent.type(
+            screen.getByRole('textbox', { name: /^Fbr/ }),
+            '32',
+        );
+        await userEvent.tab();
+
+        const after = activeProjectStore().getState().data.box;
+        expect(after.fb_rear_hz).toBe(32);
+        expect(after.fb_hz).toBe(before.fb_hz);
+    });
+
+    test('unidade por campo do duto traseiro é independente da do frontal', async () => {
+        act(() => {
+            activeProjectStore()
+                .getState()
+                .apply((data) => ({
+                    ...data,
+                    box: {
+                        ...data.box,
+                        type: 'bandpass6',
+                        port: { shape: 'round', diameter_m: 0.1, count: 1 },
+                        port_rear: {
+                            shape: 'round',
+                            diameter_m: 0.1,
+                            count: 1,
+                        },
+                    },
+                }));
+        });
+        renderWithProviders(<BoxPanel />);
+
+        const rear = screen.getByRole('group', {
+            name: 'Duto (câmara traseira)',
+        });
+        await userEvent.click(
+            within(rear).getAllByRole('button', { name: /trocar unidade/ })[0],
+        );
+        await userEvent.click(
+            screen.getByRole('menuitemradio', { name: 'in' }),
+        );
+
+        const { fieldUnits } = activeProjectStore().getState().data;
+        expect(fieldUnits.rear_diameter_m).toBe('in');
+        expect(fieldUnits.diameter_m).toBeUndefined();
     });
 });

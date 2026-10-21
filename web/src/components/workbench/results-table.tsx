@@ -1,5 +1,6 @@
 import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
+import { twoChambers } from '@/engine';
 import type { SimulationResults } from '@/engine';
 import type { ProjectSimulation } from '@/hooks/use-simulation';
 import { displayName } from '@/lib/project/names';
@@ -22,6 +23,11 @@ export function ResultsTable({ items }: { items: ProjectSimulation[] }) {
     const { t } = useTranslation(['workbench', 'project']);
     const { locale } = useLocale();
     const unitSystem = usePreferences((state) => state.unitSystem);
+
+    // Bandpass de 6ª ordem plotada: o duto frontal ganha o complemento e entram as linhas do traseiro.
+    const sixthPlotted = items.some(
+        ({ project }) => project.data.box.type === 'bandpass6',
+    );
 
     const rows: Row[] = [
         {
@@ -80,15 +86,39 @@ export function ResultsTable({ items }: { items: ProjectSimulation[] }) {
         },
         {
             key: 'portLength',
-            label: t('results.portLength'),
+            label: t(
+                sixthPlotted ? 'results.portLengthFront' : 'results.portLength',
+            ),
             unit: defaultUnitFor('length', unitSystem),
             value: (r) => r.port_length_m,
         },
         {
             key: 'portVelocity',
-            label: t('results.portVelocity'),
+            label: t(
+                sixthPlotted
+                    ? 'results.portVelocityFront'
+                    : 'results.portVelocity',
+            ),
             unit: defaultUnitFor('velocity', unitSystem),
             value: (r) => r.port_velocity_max_ms,
+        },
+        {
+            key: 'fbRear',
+            label: t('results.fbRear'),
+            unit: 'Hz',
+            value: (r) => r.fb_rear_hz,
+        },
+        {
+            key: 'portLengthRear',
+            label: t('results.portLengthRear'),
+            unit: defaultUnitFor('length', unitSystem),
+            value: (r) => r.port_rear_length_m,
+        },
+        {
+            key: 'portVelocityRear',
+            label: t('results.portVelocityRear'),
+            unit: defaultUnitFor('velocity', unitSystem),
+            value: (r) => r.port_rear_velocity_max_ms,
         },
         {
             key: 'xmaxPower',
@@ -113,11 +143,13 @@ export function ResultsTable({ items }: { items: ProjectSimulation[] }) {
     // Linhas da bandpass só aparecem se algum projeto plotado a tem (as do F3 e da selada/dutada
     // continuam sempre, como antes).
     const BANDPASS_ROWS = ['fLow', 'fHigh', 'fCenter', 'bandwidth', 'peak'];
-    const bandpassPlotted = items.some(
-        ({ project }) => project.data.box.type === 'bandpass',
+    const REAR_ROWS = ['fbRear', 'portLengthRear', 'portVelocityRear'];
+    const bandpassPlotted = items.some(({ project }) =>
+        twoChambers(project.data.box.type),
     );
     const shown = (row: Row) =>
-        bandpassPlotted || !BANDPASS_ROWS.includes(row.key);
+        (bandpassPlotted || !BANDPASS_ROWS.includes(row.key)) &&
+        (sixthPlotted || !REAR_ROWS.includes(row.key));
 
     // Corte fora da grade de cálculo: texto no lugar do número.
     const outOfRange = (key: string, results: SimulationResults) => {

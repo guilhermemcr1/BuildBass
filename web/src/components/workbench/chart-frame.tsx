@@ -11,6 +11,8 @@ export type ChartSeries = {
     emphasis: boolean;
     // Já na unidade exibida; null = sem valor nesse ponto.
     values: (number | null)[];
+    // Traço tracejado, para separar duas séries do mesmo projeto sem depender só da cor.
+    dashed?: boolean;
 };
 
 export type ChartLimit = {
@@ -37,7 +39,7 @@ type ChartFrameProps = {
 };
 
 type Layout = {
-    series: [string, string, number, boolean][];
+    series: [string, string, number, boolean, boolean][];
     limits: ChartLimit[];
     yRange?: [number, number];
     yIncrs?: number[];
@@ -137,11 +139,12 @@ export default function ChartFrame({
     const [announce, setAnnounce] = useState(false);
 
     const layout = JSON.stringify({
-        series: series.map(({ id, label, slot, emphasis }) => [
+        series: series.map(({ id, label, slot, emphasis, dashed }) => [
             id,
             label,
             slot,
             emphasis,
+            dashed === true,
         ]),
         limits,
         yRange,
@@ -236,11 +239,14 @@ export default function ChartFrame({
                     ],
                     series: [
                         {},
-                        ...config.series.map(([, label, slot, emphasis]) => ({
-                            label,
-                            stroke: token(`--series-${slot}`),
-                            width: emphasis ? 2.5 : 1.5,
-                        })),
+                        ...config.series.map(
+                            ([, label, slot, emphasis, dashed]) => ({
+                                label,
+                                stroke: token(`--series-${slot}`),
+                                width: emphasis ? 2.5 : 1.5,
+                                ...(dashed ? { dash: [8, 5] } : {}),
+                            }),
+                        ),
                         ...config.limits.map((limit) => ({
                             label: limit.label,
                             stroke: token(

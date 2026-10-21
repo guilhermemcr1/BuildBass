@@ -173,7 +173,7 @@ test('plano da bandpass: sete peças, divisória, câmaras e conferência por c�
 }) => {
     await page.goto('/');
     await referenceDriver(page);
-    await page.getByRole('radio', { name: 'Bandpass' }).click();
+    await page.getByRole('radio', { name: 'Bandpass 4ª ordem' }).click();
     await fill(page, /^Vr/, '40');
     await fill(page, /^Vf/, '60');
     await fill(page, /^Fb/, '45');
@@ -215,7 +215,7 @@ test('plano da bandpass: sete peças, divisória, câmaras e conferência por c�
     await expect(
         planRegion(page).getByText(/Faltam parâmetros para o plano: .*Vb/),
     ).toBeVisible();
-    await page.getByRole('radio', { name: 'Bandpass' }).click();
+    await page.getByRole('radio', { name: 'Bandpass 4ª ordem' }).click();
     await expect(parts.locator('tbody tr')).toHaveCount(6);
     await expect(page.getByRole('textbox', { name: /Espessura/ })).toHaveValue(
         /25/,
@@ -227,7 +227,7 @@ test('desenhos 2D e vista 3D: um desenho por peça, girar por teclado e por bot�
 }) => {
     await page.goto('/');
     await referenceDriver(page);
-    await page.getByRole('radio', { name: 'Bandpass' }).click();
+    await page.getByRole('radio', { name: 'Bandpass 4ª ordem' }).click();
     await fill(page, /^Vr/, '40');
     await fill(page, /^Vf/, '60');
     await fill(page, /^Fb/, '45');

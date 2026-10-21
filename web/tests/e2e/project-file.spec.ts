@@ -102,7 +102,7 @@ test('bandpass exportada grava a versão 2 e reabre igual (feature 004, US4)', a
     await fill(page, /^Fs/, '28');
     await fill(page, /^Qts/, '0,38');
     await fill(page, /^Vas/, '85');
-    await page.getByRole('radio', { name: 'Bandpass' }).click();
+    await page.getByRole('radio', { name: 'Bandpass 4ª ordem' }).click();
     await fill(page, /^Vr/, '40');
     await fill(page, /^Vf/, '60');
     await fill(page, /^Fb/, '45');
@@ -128,7 +128,9 @@ test('bandpass exportada grava a versão 2 e reabre igual (feature 004, US4)', a
         buffer: Buffer.from(text),
     });
 
-    await expect(page.getByRole('radio', { name: 'Bandpass' })).toBeChecked();
+    await expect(
+        page.getByRole('radio', { name: 'Bandpass 4ª ordem' }),
+    ).toBeChecked();
     await expect(field(page, /^Vr/)).toHaveValue('40,0');
     await expect(field(page, /^Vf/)).toHaveValue('60,0');
     await expect(field(page, /^Fb/)).toHaveValue('45,0');
@@ -179,7 +181,7 @@ test('trocar para bandpass leva o Vb digitado às duas câmaras (feature 004, US
 }) => {
     await page.goto('/');
     await fill(page, /^Vb/, '50');
-    await page.getByRole('radio', { name: 'Bandpass' }).click();
+    await page.getByRole('radio', { name: 'Bandpass 4ª ordem' }).click();
 
     await expect(field(page, /^Vr/)).toHaveValue('50,0');
     await expect(field(page, /^Vf/)).toHaveValue('50,0');
