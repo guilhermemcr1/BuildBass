@@ -1,3 +1,4 @@
+import type { CutPlanConfig } from '@/cutplan';
 import type { ProjectInput } from '@/engine';
 import type { ParameterKey } from '@/lib/parameters';
 import type { UnitId } from '@/lib/units/quantities';
@@ -26,6 +27,8 @@ export type DriverSource = {
 // O projeto completo (data-model.md): a entrada do motor mais a unidade escolhida em cada campo.
 export type ProjectData = ProjectInput & {
     driverSource?: DriverSource;
+    // Configuração do plano de corte (specs/005): só o que o usuário alterou.
+    cutPlan?: CutPlanConfig;
     fieldUnits: Partial<Record<ParameterKey, UnitId>>;
 };
 

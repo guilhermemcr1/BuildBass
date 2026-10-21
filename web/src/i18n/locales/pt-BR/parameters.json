@@ -102,5 +102,29 @@
     "voltage_v": {
         "label": "Tensão de entrada",
         "help": "Tensão eficaz aplicada aos terminais do conjunto."
+    },
+    "thickness_m": {
+        "label": "Espessura do painel",
+        "help": "Espessura da chapa de madeira usada nos painéis e na divisória."
+    },
+    "braces_m3": {
+        "label": "Volume dos reforços",
+        "help": "Volume total dos reforços internos. A caixa fica maior por esse volume, para o volume líquido continuar o do projeto."
+    },
+    "cutout_m": {
+        "label": "Diâmetro do recorte do driver",
+        "help": "Diâmetro do furo na madeira, conforme a ficha do driver. Sem ele o recorte aparece como a informar."
+    },
+    "ratio_h": {
+        "label": "Proporção — altura",
+        "help": "Peso da altura na proporção altura : largura : profundidade."
+    },
+    "ratio_w": {
+        "label": "Proporção — largura",
+        "help": "Peso da largura na proporção altura : largura : profundidade."
+    },
+    "ratio_d": {
+        "label": "Proporção — profundidade",
+        "help": "Peso da profundidade na proporção altura : largura : profundidade."
     }
 }

@@ -102,5 +102,29 @@
     "voltage_v": {
         "label": "Input voltage",
         "help": "RMS voltage applied to the set's terminals."
+    },
+    "thickness_m": {
+        "label": "Panel thickness",
+        "help": "Thickness of the wood sheet used for the panels and the divider."
+    },
+    "braces_m3": {
+        "label": "Bracing volume",
+        "help": "Total volume of the internal bracing. The box gets bigger by this volume so the net volume stays the project one."
+    },
+    "cutout_m": {
+        "label": "Driver cutout diameter",
+        "help": "Diameter of the hole in the wood, from the driver datasheet. Without it the cutout shows as to be provided."
+    },
+    "ratio_h": {
+        "label": "Ratio — height",
+        "help": "Weight of the height in the height : width : depth ratio."
+    },
+    "ratio_w": {
+        "label": "Ratio — width",
+        "help": "Weight of the width in the height : width : depth ratio."
+    },
+    "ratio_d": {
+        "label": "Ratio — depth",
+        "help": "Weight of the depth in the height : width : depth ratio."
     }
 }

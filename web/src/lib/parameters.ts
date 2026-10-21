@@ -1,3 +1,4 @@
+import { CUT_PLAN_LIMITS } from '@/cutplan/config';
 import type { QuantityId } from '@/lib/units/quantities';
 
 // Definições dos parâmetros editáveis na bancada (data-model.md). As chaves seguem o SI e serão
@@ -30,9 +31,15 @@ export type ParameterKey =
     | 'port_count'
     | 'driver_count'
     | 'power_w'
-    | 'voltage_v';
+    | 'voltage_v'
+    | 'thickness_m'
+    | 'braces_m3'
+    | 'cutout_m'
+    | 'ratio_h'
+    | 'ratio_w'
+    | 'ratio_d';
 
-export type ParameterGroup = 'driver' | 'box' | 'port' | 'signal';
+export type ParameterGroup = 'driver' | 'box' | 'port' | 'signal' | 'plan';
 
 export type ParameterDefinition = {
     key: ParameterKey;
@@ -81,6 +88,55 @@ export const PARAMETERS: Record<ParameterKey, ParameterDefinition> = {
     driver_count: parameter('driver_count', 'N', 'count', 'driver', 1, 8),
     power_w: parameter('power_w', 'P', 'power', 'signal', 0, 50_000),
     voltage_v: parameter('voltage_v', 'V', 'voltage', 'signal', 0, 1000),
+    // Plano de corte (specs/005): faixas em CUT_PLAN_LIMITS.
+    thickness_m: parameter(
+        'thickness_m',
+        't',
+        'length',
+        'plan',
+        CUT_PLAN_LIMITS.thickness_m.min,
+        CUT_PLAN_LIMITS.thickness_m.max,
+    ),
+    braces_m3: parameter(
+        'braces_m3',
+        'Vrf',
+        'volume',
+        'plan',
+        CUT_PLAN_LIMITS.braces_m3.min,
+        CUT_PLAN_LIMITS.braces_m3.max,
+    ),
+    cutout_m: parameter(
+        'cutout_m',
+        'Ød',
+        'length',
+        'plan',
+        CUT_PLAN_LIMITS.cutout_m.min,
+        CUT_PLAN_LIMITS.cutout_m.max,
+    ),
+    ratio_h: parameter(
+        'ratio_h',
+        'Rh',
+        'ratio',
+        'plan',
+        CUT_PLAN_LIMITS.ratio.min,
+        CUT_PLAN_LIMITS.ratio.max,
+    ),
+    ratio_w: parameter(
+        'ratio_w',
+        'Rw',
+        'ratio',
+        'plan',
+        CUT_PLAN_LIMITS.ratio.min,
+        CUT_PLAN_LIMITS.ratio.max,
+    ),
+    ratio_d: parameter(
+        'ratio_d',
+        'Rd',
+        'ratio',
+        'plan',
+        CUT_PLAN_LIMITS.ratio.min,
+        CUT_PLAN_LIMITS.ratio.max,
+    ),
 };
 
 export const DRIVER_PARAMETERS: ParameterKey[] = [
