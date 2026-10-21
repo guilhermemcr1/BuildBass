@@ -92,7 +92,7 @@ describe('arquivo de projeto', () => {
 
     test('versão mais nova', async () => {
         expect(
-            await parseProjectFile(file(envelope({}, { version: 4 }))),
+            await parseProjectFile(file(envelope({}, { version: 5 }))),
         ).toEqual({ ok: false, code: 'newerVersion' });
     });
 
@@ -443,9 +443,176 @@ describe('plano de corte no arquivo (versão 3)', () => {
         });
     });
 
-    test('versão 4 continua pedindo para atualizar o app', async () => {
+    test('versão 5 pede para atualizar o app', async () => {
         expect(
-            await parseProjectFile(file(envelope(PLAN, { version: 4 }))),
+            await parseProjectFile(file(envelope(PLAN, { version: 5 }))),
         ).toEqual({ ok: false, code: 'newerVersion' });
+    });
+});
+
+describe('bandpass de 6ª ordem e versão 4 (feature 007)', () => {
+    const SIXTH: ProjectData = {
+        ...FULL,
+        name: 'Sub bandpass 6',
+        box: {
+            type: 'bandpass6',
+            vb_m3: 0.06,
+            vr_m3: 0.08,
+            vf_m3: 0.04,
+            ql: 7,
+            fb_hz: 60,
+            fb_rear_hz: 30,
+            port: { shape: 'round', diameter_m: 0.075, count: 1 },
+            port_rear: {
+                shape: 'rect',
+                width_m: 0.05,
+                height_m: 0.2,
+                count: 2,
+            },
+        },
+        fieldUnits: {
+            vr_m3: 'L',
+            fb_rear_hz: 'Hz',
+            rear_width_m: 'in',
+        },
+    };
+
+    const versionOf = (text: string): number => JSON.parse(text).version;
+
+    test('a versão gravada depende do tipo: 6ª ordem é 4, mesmo com plano de corte', () => {
+        expect(versionOf(serializeProject(SIXTH))).toBe(4);
+        expect(
+            versionOf(
+                serializeProject({
+                    ...SIXTH,
+                    cutPlan: { thickness_m: 0.025, proportion: 'louden' },
+                }),
+            ),
+        ).toBe(4);
+        expect(
+            versionOf(
+                serializeProject({
+                    ...SIXTH,
+                    box: { ...SIXTH.box, type: 'bandpass' },
+                }),
+            ),
+        ).toBe(2);
+        expect(versionOf(serializeProject(FULL))).toBe(1);
+    });
+
+    test('ida e volta reproduz câmaras, sintonias, os dois dutos e as unidades por campo', async () => {
+        const result = await parseProjectFile(file(serializeProject(SIXTH)));
+
+        expect(result).toEqual({ ok: true, data: SIXTH });
+    });
+
+    test('abre arquivos das versões 1, 2, 3 e 4', async () => {
+        for (const [version, data] of [
+            [1, FULL],
+            [2, { ...FULL, box: { ...FULL.box, type: 'bandpass' } }],
+            [
+                3,
+                {
+                    ...FULL,
+                    cutPlan: { thickness_m: 0.02, proportion: 'louden' },
+                },
+            ],
+            [4, SIXTH],
+        ] as const) {
+            expect(
+                await parseProjectFile(file(envelope(data, { version }))),
+            ).toEqual({ ok: true, data });
+        }
+    });
+
+    test('versão 5 é recusada pedindo para atualizar o app', async () => {
+        expect(
+            await parseProjectFile(file(envelope(SIXTH, { version: 5 }))),
+        ).toEqual({ ok: false, code: 'newerVersion' });
+    });
+
+    test('Fbr fora de 5–500 Hz é recusada com o caminho', async () => {
+        for (const fb_rear_hz of [4, 501]) {
+            expect(
+                await parseProjectFile(
+                    file(
+                        envelope(
+                            { ...SIXTH, box: { ...SIXTH.box, fb_rear_hz } },
+                            { version: 4 },
+                        ),
+                    ),
+                ),
+            ).toEqual({
+                ok: false,
+                code: 'invalidContent',
+                path: 'project.box.fb_rear_hz',
+            });
+        }
+    });
+
+    test('duto traseiro fora da faixa é recusado com o caminho', async () => {
+        const open = (port_rear: unknown) =>
+            parseProjectFile(
+                file(
+                    envelope(
+                        { ...SIXTH, box: { ...SIXTH.box, port_rear } },
+                        { version: 4 },
+                    ),
+                ),
+            );
+
+        expect(await open({ shape: 'round', diameter_m: 5, count: 1 })).toEqual(
+            {
+                ok: false,
+                code: 'invalidContent',
+                path: 'project.box.port_rear.diameter_m',
+            },
+        );
+        expect(
+            await open({ shape: 'round', diameter_m: 0.1, count: 9 }),
+        ).toEqual({
+            ok: false,
+            code: 'invalidContent',
+            path: 'project.box.port_rear.count',
+        });
+        expect(await open({ shape: 'hexagon', count: 1 })).toMatchObject({
+            ok: false,
+            code: 'invalidContent',
+        });
+    });
+
+    test('câmaras, sintonias e dutos ausentes abrem como projeto incompleto', async () => {
+        const incomplete = {
+            ...SIXTH,
+            box: {
+                type: 'bandpass6',
+                ql: 7,
+                port: { shape: 'round', count: 1 },
+            },
+            fieldUnits: {},
+        };
+
+        expect(
+            await parseProjectFile(file(envelope(incomplete, { version: 4 }))),
+        ).toEqual({ ok: true, data: incomplete });
+    });
+
+    test('unidade de outra grandeza em chave nova é descartada sem recusar o arquivo', async () => {
+        const result = await parseProjectFile(
+            file(
+                envelope(
+                    {
+                        ...SIXTH,
+                        fieldUnits: { rear_diameter_m: 'Hz', fb_rear_hz: 'Hz' },
+                    },
+                    { version: 4 },
+                ),
+            ),
+        );
+
+        expect(result).toMatchObject({
+            ok: true,
+            data: { fieldUnits: { fb_rear_hz: 'Hz' } },
+        });
     });
 });

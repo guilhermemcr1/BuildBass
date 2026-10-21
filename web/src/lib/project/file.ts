@@ -21,9 +21,14 @@ export type ParseResult =
     | { ok: true; data: ProjectData }
     | { ok: false; code: OpenErrorCode; path?: string };
 
-// A versão gravada é a menor que descreve o arquivo: plano de corte editado = 3, bandpass = 2 e os
-// demais continuam v1 e abrem em apps anteriores (specs/004 e specs/005, contracts/project-file.md).
+// A versão gravada é a menor que descreve o arquivo: bandpass de 6ª ordem = 4, plano de corte
+// editado = 3, bandpass de 4ª ordem = 2 e os demais continuam v1 e abrem em apps anteriores
+// (specs/004, 005 e 007, contracts/project-file.md).
 function versionOf(data: ProjectData): number {
+    if (data.box.type === 'bandpass6') {
+        return 4;
+    }
+
     if (data.cutPlan !== undefined) {
         return 3;
     }
