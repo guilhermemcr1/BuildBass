@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { Suspense, lazy, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BoxPanel } from '@/components/workbench/box-panel';
 import { CHART_KINDS, ChartPanel } from '@/components/workbench/chart-panel';
@@ -18,6 +18,8 @@ import { ShortcutsDialog } from '@/components/workbench/shortcuts-dialog';
 import { TabLimitDialog } from '@/components/workbench/tab-limit-dialog';
 import { TopBar } from '@/components/workbench/top-bar';
 import type { ProjectAction } from '@/components/workbench/top-bar';
+import { ViewSwitch } from '@/components/workbench/view-switch';
+import type { WorkbenchView } from '@/components/workbench/view-switch';
 import {
     activeProjectStore,
     useActiveHistory,
@@ -30,6 +32,12 @@ import {
     projectStore,
     useWorkspace,
 } from '@/stores/workspace';
+
+const PlanPanel = lazy(() =>
+    import('@/components/workbench/plan-panel').then((module) => ({
+        default: module.PlanPanel,
+    })),
+);
 
 // Layout da bancada (FR-007): ≥ 1280 px três colunas (driver | caixa + resultados | gráficos),
 // 768–1279 px duas colunas com gráficos e resultados em largura total, < 768 px uma coluna na
@@ -47,6 +55,7 @@ export default function Workbench() {
         state.projects.find((p) => p.id === closing),
     );
     const [chart, setChart] = useState<ChartKind>('response');
+    const [view, setView] = useState<WorkbenchView>('charts');
     const fileInput = useRef<HTMLInputElement>(null);
     const history = useActiveHistory();
 
@@ -139,7 +148,17 @@ export default function Workbench() {
                 </div>
                 <BoxPanel />
                 <div className="md:col-span-2 xl:col-span-1 xl:col-start-3 xl:row-span-2 xl:row-start-1 xl:flex xl:flex-col [&>section]:flex-1">
-                    <ChartPanel selected={chart} onSelectedChange={setChart} />
+                    <ViewSwitch selected={view} onChange={setView} />
+                    {view === 'charts' ? (
+                        <ChartPanel
+                            selected={chart}
+                            onSelectedChange={setChart}
+                        />
+                    ) : (
+                        <Suspense fallback={null}>
+                            <PlanPanel />
+                        </Suspense>
+                    )}
                 </div>
                 <div className="md:col-span-2 xl:col-span-1 xl:col-start-2 xl:row-start-2">
                     <ResultsPanel />

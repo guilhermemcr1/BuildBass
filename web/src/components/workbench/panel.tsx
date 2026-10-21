@@ -2,7 +2,7 @@ import { useId } from 'react';
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
-export type Region = 'driver' | 'box' | 'charts' | 'results';
+export type Region = 'driver' | 'box' | 'charts' | 'plan' | 'results';
 
 type PanelProps = {
     region: Region;

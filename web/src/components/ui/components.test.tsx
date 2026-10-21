@@ -5,6 +5,7 @@ import { describe, expect, test, vi } from 'vite-plus/test';
 import { renderWithProviders } from '@/test/render';
 import { Banner, Button, StatusIndicator, Tooltip } from './index';
 import { SearchSelect } from './search-select';
+import { SelectField } from './select-field';
 
 describe('Button', () => {
     test('aciona com Enter e com Espaço', async () => {
@@ -119,5 +120,70 @@ describe('SearchSelect', () => {
             'segunda linha',
         );
         expect(screen.getByText('2 resultados')).toBeInTheDocument();
+    });
+});
+
+describe('SelectField', () => {
+    const options = [
+        { id: 'golden', label: 'Áurea' },
+        { id: 'louden', label: 'Louden' },
+        { id: 'cube', label: 'Cúbica' },
+    ];
+
+    function Harness({ disabled = false }: { disabled?: boolean }) {
+        const [selected, setSelected] = useState('golden');
+
+        return (
+            <SelectField
+                label="Proporção"
+                options={options}
+                selected={selected}
+                onChange={setSelected}
+                disabled={disabled}
+            />
+        );
+    }
+
+    test('tem rótulo acessível e mostra a opção escolhida', () => {
+        renderWithProviders(<Harness />);
+
+        const button = screen.getByRole('button', { name: /Proporção/ });
+
+        expect(button).toHaveTextContent('Áurea');
+    });
+
+    test('abre com Enter, as setas escolhem e o valor aparece no botão', async () => {
+        renderWithProviders(<Harness />);
+
+        await userEvent.tab();
+        await userEvent.keyboard('{Enter}');
+
+        expect(screen.getByRole('listbox')).toBeVisible();
+
+        await userEvent.keyboard('{ArrowDown}{Enter}');
+
+        expect(screen.queryByRole('listbox')).toBeNull();
+        expect(screen.getByRole('button', { name: /Proporção/ })).toHaveTextContent(
+            'Louden',
+        );
+    });
+
+    test('abre com o mouse e escolhe uma opção', async () => {
+        renderWithProviders(<Harness />);
+
+        await userEvent.click(screen.getByRole('button', { name: /Proporção/ }));
+        await userEvent.click(screen.getByRole('option', { name: 'Cúbica' }));
+
+        expect(screen.getByRole('button', { name: /Proporção/ })).toHaveTextContent(
+            'Cúbica',
+        );
+    });
+
+    test('desativado não abre', async () => {
+        renderWithProviders(<Harness disabled />);
+
+        await userEvent.click(screen.getByRole('button', { name: /Proporção/ }));
+
+        expect(screen.queryByRole('listbox')).toBeNull();
     });
 });

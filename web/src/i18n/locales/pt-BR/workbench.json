@@ -112,5 +112,10 @@
         "chartTabs": "Trocar aba de gráfico",
         "help": "Mostrar esta ajuda",
         "hint": "As teclas 1–5, ?, desfazer e refazer valem fora dos campos de texto."
+    },
+    "view": {
+        "label": "Visão",
+        "charts": "Gráficos",
+        "plan": "Plano de corte"
     }
 }

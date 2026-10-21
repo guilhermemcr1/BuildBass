@@ -117,6 +117,8 @@ export type Plan = {
     thickness_m: number;
     dimensions: Dimensions;
     pieces: Piece[];
+    // Comprimento do tubo do duto calculado pela simulação (dutada e bandpass).
+    port_length_m?: number;
     volume: VolumeCheck;
     warnings: PlanWarning[];
 };

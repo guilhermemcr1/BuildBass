@@ -1,0 +1,71 @@
+{
+    "title": "Cut plan",
+    "missing": "Parameters missing for the plan: {{missing}}.",
+    "invalid": "Out-of-range values in the plan: {{invalid}}.",
+    "keys": {
+        "ratio": "Ratio"
+    },
+    "config": {
+        "title": "Settings",
+        "proportion": "Proportion",
+        "ratioLine": "Height : width : depth = {{h}} : {{w}} : {{d}}",
+        "hint": "Suggestions are starting points to avoid repeated dimensions, not a guarantee of better sound."
+    },
+    "proportions": {
+        "golden": "Golden",
+        "louden": "Louden",
+        "equalSteps": "Equal steps",
+        "cube": "Cube",
+        "custom": "Custom"
+    },
+    "dimensions": {
+        "title": "Dimensions",
+        "internal": "Internal",
+        "external": "External",
+        "width": "Width",
+        "height": "Height",
+        "depth": "Depth"
+    },
+    "parts": {
+        "title": "Parts and cutouts",
+        "caption": "Cut list for {{name}}",
+        "columns": {
+            "piece": "Piece",
+            "position": "Position",
+            "quantity": "Qty",
+            "length": "Length",
+            "width": "Width",
+            "thickness": "Thickness",
+            "cutouts": "Cutouts"
+        },
+        "names": {
+            "front": "Front",
+            "back": "Back",
+            "top": "Top",
+            "bottom": "Bottom",
+            "side": "Side",
+            "divider": "Divider"
+        },
+        "positions": {
+            "front": "Front panel",
+            "back": "Rear panel",
+            "top": "Upper face",
+            "bottom": "Lower face",
+            "side": "Left and right sides",
+            "divider": "Between the chambers"
+        },
+        "convention": "Assembly convention: front and back cover the whole face; top and bottom sit between front and back, at full width; the sides sit between top, bottom, front and back. No saw kerf, rabbets or joints.",
+        "none": "—",
+        "conventionDivider": "The divider sits between the sides, top and bottom."
+    },
+    "cutouts": {
+        "driver": "Driver",
+        "port": "Port",
+        "count": "×{{count}}",
+        "round": "Ø {{size}}",
+        "rect": "{{width}} × {{height}}",
+        "triangle": "base {{base}}, height {{height}}",
+        "driverPending": "diameter to be provided",
+        "portPending": "port size to be provided"
+    }
+}

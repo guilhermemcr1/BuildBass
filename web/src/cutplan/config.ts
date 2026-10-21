@@ -60,10 +60,8 @@ function within(value: number, limit: { min: number; max: number }): boolean {
     return Number.isFinite(value) && value >= limit.min && value <= limit.max;
 }
 
-// Chaves com valor fora da faixa, na ordem espessura, razão, reforços, recorte. Só a razão efetiva
-// conta: `custom` é ignorado quando a proporção é uma sugestão.
-export function validateCutPlan(config?: CutPlanConfig): PlanKey[] {
-    const resolved = resolveCutPlan(config);
+// Chaves com valor fora da faixa, na ordem espessura, razão, reforços, recorte.
+export function validateResolved(resolved: ResolvedCutPlanConfig): PlanKey[] {
     const { ratio } = resolved;
     const invalid: PlanKey[] = [];
 
@@ -91,4 +89,9 @@ export function validateCutPlan(config?: CutPlanConfig): PlanKey[] {
     }
 
     return invalid;
+}
+
+// Só a razão efetiva conta: `custom` é ignorado quando a proporção é uma sugestão.
+export function validateCutPlan(config?: CutPlanConfig): PlanKey[] {
+    return validateResolved(resolveCutPlan(config));
 }

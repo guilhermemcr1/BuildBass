@@ -1,0 +1,71 @@
+{
+    "title": "Plano de corte",
+    "missing": "Faltam parâmetros para o plano: {{missing}}.",
+    "invalid": "Valores fora da faixa no plano: {{invalid}}.",
+    "keys": {
+        "ratio": "Proporção"
+    },
+    "config": {
+        "title": "Configuração",
+        "proportion": "Proporção",
+        "ratioLine": "Altura : largura : profundidade = {{h}} : {{w}} : {{d}}",
+        "hint": "As sugestões são pontos de partida para não repetir dimensões, não uma garantia de som melhor."
+    },
+    "proportions": {
+        "golden": "Áurea",
+        "louden": "Louden",
+        "equalSteps": "Passos iguais",
+        "cube": "Cúbica",
+        "custom": "Própria"
+    },
+    "dimensions": {
+        "title": "Dimensões",
+        "internal": "Internas",
+        "external": "Externas",
+        "width": "Largura",
+        "height": "Altura",
+        "depth": "Profundidade"
+    },
+    "parts": {
+        "title": "Peças e recortes",
+        "caption": "Lista de corte de {{name}}",
+        "columns": {
+            "piece": "Peça",
+            "position": "Posição",
+            "quantity": "Qtd",
+            "length": "Comprimento",
+            "width": "Largura",
+            "thickness": "Espessura",
+            "cutouts": "Recortes"
+        },
+        "names": {
+            "front": "Frente",
+            "back": "Fundo",
+            "top": "Topo",
+            "bottom": "Base",
+            "side": "Lateral",
+            "divider": "Divisória"
+        },
+        "positions": {
+            "front": "Painel da frente",
+            "back": "Painel de trás",
+            "top": "Face de cima",
+            "bottom": "Face de baixo",
+            "side": "Lados esquerdo e direito",
+            "divider": "Entre as câmaras"
+        },
+        "convention": "Convenção de montagem: frente e fundo cobrem a face inteira; topo e base ficam entre a frente e o fundo, com a largura total; as laterais ficam entre o topo, a base, a frente e o fundo. Sem perdas de serra, rebaixos ou encaixes.",
+        "none": "—",
+        "conventionDivider": "A divisória fica entre as laterais, o topo e a base."
+    },
+    "cutouts": {
+        "driver": "Driver",
+        "port": "Duto",
+        "count": "×{{count}}",
+        "round": "Ø {{size}}",
+        "rect": "{{width}} × {{height}}",
+        "triangle": "base {{base}}, altura {{height}}",
+        "driverPending": "diâmetro a informar",
+        "portPending": "medidas do duto a informar"
+    }
+}

@@ -1,11 +1,13 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import enCommon from './locales/en/common.json';
+import enCutplan from './locales/en/cutplan.json';
 import enEngine from './locales/en/engine.json';
 import enParameters from './locales/en/parameters.json';
 import enProject from './locales/en/project.json';
 import enWorkbench from './locales/en/workbench.json';
 import ptCommon from './locales/pt-BR/common.json';
+import ptCutplan from './locales/pt-BR/cutplan.json';
 import ptEngine from './locales/pt-BR/engine.json';
 import ptParameters from './locales/pt-BR/parameters.json';
 import ptProject from './locales/pt-BR/project.json';
@@ -22,6 +24,7 @@ export const resources = {
         parameters: ptParameters,
         project: ptProject,
         engine: ptEngine,
+        cutplan: ptCutplan,
     },
     en: {
         common: enCommon,
@@ -29,6 +32,7 @@ export const resources = {
         parameters: enParameters,
         project: enProject,
         engine: enEngine,
+        cutplan: enCutplan,
     },
 } as const;
 
@@ -41,7 +45,14 @@ export function initI18n(locale: Locale): typeof i18n {
         resources,
         lng: locale,
         fallbackLng: 'pt-BR',
-        ns: ['common', 'workbench', 'parameters', 'project', 'engine'],
+        ns: [
+            'common',
+            'workbench',
+            'parameters',
+            'project',
+            'engine',
+            'cutplan',
+        ],
         defaultNS: 'common',
         interpolation: { escapeValue: false },
         returnNull: false,
