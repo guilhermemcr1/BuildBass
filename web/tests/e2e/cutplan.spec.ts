@@ -17,6 +17,19 @@ function tile(page: Page, label: string) {
         .locator('..');
 }
 
+// Driver de referência do quickstart (specs/004, §2).
+async function referenceDriver(page: Page) {
+    await fill(page, /^Fs/, '28');
+    await fill(page, /^Qts/, '0,38');
+    await fill(page, /^Qes/, '0,42');
+    await fill(page, /^Qms/, '4,1');
+    await fill(page, /^Vas/, '85');
+    await fill(page, /^Re/, '3,6');
+    await fill(page, /^Le/, '2,1');
+    await fill(page, /^Xmax/, '14');
+    await fill(page, /^Sd/, '491');
+}
+
 async function openPlan(page: Page) {
     await page.getByRole('radio', { name: 'Plano de corte' }).click();
     await expect(page.locator('[data-region="plan"]')).toBeVisible();
@@ -38,7 +51,7 @@ test('plano da selada: dimensões, tabela, espessura, proporção e volume em fa
     await expect(tile(page, 'Externas · Altura')).toContainText('669,4');
     await expect(tile(page, 'Externas · Profundidade')).toContainText('278,0');
 
-    const table = page.getByRole('table');
+    const table = page.getByRole('table', { name: /Lista de corte/ });
     await expect(table.getByRole('row')).toHaveCount(6);
     await expect(table.getByRole('row', { name: /Lateral/ })).toContainText(
         '2',
@@ -91,4 +104,56 @@ test('plano da dutada: recorte do driver aparece na frente quando o diâmetro é
     await fill(page, /^Ød/, '285');
     await expect(front).toContainText('Driver');
     await expect(front).not.toContainText('diâmetro a informar');
+});
+
+test('conferência: o líquido do plano é o da simulação e os avisos citam a peça (US2)', async ({
+    page,
+}) => {
+    await page.goto('/');
+    await referenceDriver(page);
+    await page.getByRole('radio', { name: 'Dutada' }).click();
+    await fill(page, /^Vb/, '60');
+    await fill(page, /^Fb/, '32');
+    await fill(page, /Diâmetro do duto/, '100');
+    await openPlan(page);
+
+    const check = page.getByRole('table', { name: /Volume por câmara/ });
+    await expect(check).toBeVisible();
+    await expect(check.getByRole('row', { name: /Dutos/ })).not.toContainText(
+        '—',
+    );
+    await expect(page.getByText(/Igual à simulação/)).toBeVisible();
+
+    // O tubo calculado é mais longo que a caixa: o plano pede curva ou dobra.
+    await expect(page.getByText(/precisará de curva ou dobra/)).toBeVisible();
+
+    // Recorte grande demais: erro nomeando a peça, com texto.
+    await fill(page, /^Ød/, '700');
+    const warnings = page.getByRole('list', { name: 'Avisos do plano' });
+    await expect(warnings).toContainText(/não cabe no lado menor de frente/);
+
+    await fill(page, /^Ød/, '285');
+    await expect(warnings).not.toContainText(/não cabe no lado menor/);
+    await expect(page.getByText(/Igual à simulação/)).toBeVisible();
+});
+
+test('sem volume o plano diz o que falta e some a conferência (US2)', async ({
+    page,
+}) => {
+    await page.goto('/');
+    await referenceDriver(page);
+    await page.getByRole('radio', { name: 'Selada' }).click();
+    await fill(page, /^Vb/, '60');
+    await openPlan(page);
+    await expect(page.getByText(/Igual à simulação/)).toBeVisible();
+
+    await page
+        .locator('[data-region="box"]')
+        .getByRole('textbox', { name: /^Vb/ })
+        .fill('');
+    await page.keyboard.press('Tab');
+    await expect(
+        page.getByText(/Faltam parâmetros para o plano/),
+    ).toBeVisible();
+    await expect(page.getByText(/Igual à simulação/)).toHaveCount(0);
 });

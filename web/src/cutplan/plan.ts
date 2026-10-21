@@ -4,16 +4,20 @@ import type {
     ProjectInput,
     SimulationResults,
 } from '@/engine';
+import { portArea } from '@/engine';
 import { validateResolved } from './config';
 import { layoutRow } from './layout';
 import type { LayoutItem } from './layout';
 import type {
     CutPlan,
+    ChamberCheck,
     Cutout,
     Dimensions,
     Piece,
     PlanKey,
+    PlanWarning,
     ResolvedCutPlanConfig,
+    VolumeCheck,
 } from './types';
 
 // Plano de corte (specs/005, research.md §1 e §2): geometria de marcenaria sobre o volume bruto do
@@ -200,6 +204,62 @@ function portMeasures(
     }));
 }
 
+// Diferença acima disso é erro de álgebra, não de arredondamento (research.md §1).
+const MATCH_TOLERANCE = 1e-9;
+
+type ChamberInput = {
+    id: ChamberCheck['id'];
+    depth_m: number;
+    // Parte dos reforços e do volume do projeto que cabe a esta câmara.
+    braces_m3: number;
+    drivers_m3: number;
+    ports_m3: number;
+    simulated_m3: number | undefined;
+};
+
+function chamberCheck(
+    plan: { w_m: number; h_m: number },
+    chamber: ChamberInput,
+): ChamberCheck {
+    const internal_m3 = plan.w_m * plan.h_m * chamber.depth_m;
+    const net_m3 =
+        internal_m3 - chamber.braces_m3 - chamber.drivers_m3 - chamber.ports_m3;
+    const check: ChamberCheck = {
+        id: chamber.id,
+        internal_m3,
+        braces_m3: chamber.braces_m3,
+        drivers_m3: chamber.drivers_m3,
+        ports_m3: chamber.ports_m3,
+        net_m3,
+    };
+
+    if (chamber.simulated_m3 !== undefined && chamber.simulated_m3 > 0) {
+        check.simulated_m3 = chamber.simulated_m3;
+        check.difference_ratio =
+            Math.abs(net_m3 - chamber.simulated_m3) / chamber.simulated_m3;
+    }
+
+    return check;
+}
+
+function volumeCheck(chambers: ChamberCheck[]): VolumeCheck {
+    const compared = chambers.filter(
+        ({ difference_ratio }) => difference_ratio !== undefined,
+    );
+
+    if (compared.length < chambers.length || chambers.length === 0) {
+        return { chambers };
+    }
+
+    return {
+        chambers,
+        matchesSimulation: compared.every(
+            ({ difference_ratio }) =>
+                (difference_ratio as number) <= MATCH_TOLERANCE,
+        ),
+    };
+}
+
 export function buildCutPlan(
     project: ProjectInput,
     results: SimulationResults,
@@ -297,6 +357,108 @@ export function buildCutPlan(
     ];
 
     const portLength = results.port_length_m;
+    const ported = boxType !== 'closed';
+    const portAreaM2 = ported ? portArea(project.box.port) : undefined;
+    const portCount = Math.max(1, Math.round(project.box.port.count));
+    // O mesmo volume de duto que o motor descontou (research.md §1); sem área ou comprimento a
+    // conferência não tem como fechar.
+    const portsVolume =
+        !ported || (portAreaM2 !== undefined && portLength !== undefined)
+            ? portCount * (portAreaM2 ?? 0) * (portLength ?? 0)
+            : undefined;
+    const driversVolume =
+        Math.max(0, Math.round(project.drivers.count)) *
+        (project.driver.vd_m3 ?? 0);
+    const share = (volume: number) =>
+        (volume / projectTotal) * config.braces_m3;
+    const plane = { w_m: internal.w_m, h_m: internal.h_m };
+
+    const chambers: ChamberCheck[] =
+        portsVolume === undefined
+            ? []
+            : 'rear' in volumes
+              ? [
+                    chamberCheck(plane, {
+                        id: 'rear',
+                        depth_m: dimensions.chambers?.rear_d_m ?? 0,
+                        braces_m3: share(volumes.rear),
+                        drivers_m3: driversVolume,
+                        ports_m3: 0,
+                        simulated_m3: results.net_rear_m3,
+                    }),
+                    chamberCheck(plane, {
+                        id: 'front',
+                        depth_m: dimensions.chambers?.front_d_m ?? 0,
+                        braces_m3: share(volumes.front),
+                        drivers_m3: 0,
+                        ports_m3: portsVolume,
+                        simulated_m3: results.net_front_m3,
+                    }),
+                ]
+              : [
+                    chamberCheck(plane, {
+                        id: 'main',
+                        depth_m: internal.d_m,
+                        braces_m3: config.braces_m3,
+                        drivers_m3: driversVolume,
+                        ports_m3: portsVolume,
+                        simulated_m3: results.net_volume_m3,
+                    }),
+                ];
+    const volume = volumeCheck(chambers);
+
+    const warnings: PlanWarning[] = [];
+    const placed: [Piece['role'], PlacedCutouts | undefined][] = [
+        ['front', front],
+        ['divider', divider],
+    ];
+
+    for (const [role, result] of placed) {
+        if (result === undefined) {
+            continue;
+        }
+
+        if (result.tooBig) {
+            warnings.push({ id: 'cutoutTooBig', tone: 'error', piece: role });
+        }
+
+        if (result.doNotFit) {
+            warnings.push({
+                id: 'cutoutsDoNotFit',
+                tone: 'error',
+                piece: role,
+            });
+        }
+
+        if (result.tight && !result.tooBig && !result.doNotFit) {
+            warnings.push({ id: 'cutoutTight', tone: 'warn', piece: role });
+        }
+    }
+
+    // O duto da dutada fica na câmara toda; o da bandpass, na câmara frontal.
+    const portDepth = dimensions.chambers?.front_d_m ?? internal.d_m;
+
+    if (portLength !== undefined && portLength > portDepth) {
+        warnings.push({ id: 'portLongerThanDepth', tone: 'warn' });
+    }
+
+    if (project.drivers.count > 0 && config.cutout_m === undefined) {
+        warnings.push({
+            id: 'driverCutoutUnknown',
+            tone: 'info',
+            key: 'cutout_m',
+        });
+    }
+
+    if (ported && portAreaM2 === undefined) {
+        warnings.push({ id: 'portUnknown', tone: 'info' });
+    }
+
+    if (volume.matchesSimulation === undefined) {
+        warnings.push({ id: 'simulationUnavailable', tone: 'info' });
+    } else if (!volume.matchesSimulation) {
+        warnings.push({ id: 'volumeMismatch', tone: 'error' });
+    }
 
     return {
         status: 'ready',
@@ -306,8 +468,8 @@ export function buildCutPlan(
             dimensions,
             pieces,
             ...(portLength === undefined ? {} : { port_length_m: portLength }),
-            volume: { chambers: [] },
-            warnings: [],
+            volume,
+            warnings,
         },
     };
 }

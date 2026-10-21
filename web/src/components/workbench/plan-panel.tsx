@@ -12,6 +12,8 @@ import { useWorkspace } from '@/stores/workspace';
 import { Panel } from './panel';
 import { PartsTable } from './parts-table';
 import { PlanConfig } from './plan-config';
+import { PlanWarnings } from './plan-warnings';
+import { VolumeCheck } from './volume-check';
 
 // Plano de corte do projeto ativo (specs/005): configuração, dimensões e lista de peças.
 export function PlanPanel() {
@@ -102,6 +104,18 @@ export function PlanPanel() {
                             name={name}
                         />
                     </section>
+                    {cutPlan.plan.volume.chambers.length > 0 && (
+                        <section
+                            aria-label={t('volume.title')}
+                            className="flex flex-col gap-2"
+                        >
+                            <h3 className="text-xs font-semibold text-muted">
+                                {t('volume.title')}
+                            </h3>
+                            <VolumeCheck volume={cutPlan.plan.volume} />
+                        </section>
+                    )}
+                    <PlanWarnings plan={cutPlan.plan} />
                 </>
             )}
         </Panel>

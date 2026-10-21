@@ -67,5 +67,37 @@
         "triangle": "base {{base}}, altura {{height}}",
         "driverPending": "diâmetro a informar",
         "portPending": "medidas do duto a informar"
+    },
+    "volume": {
+        "title": "Conferência de volume",
+        "caption": "Volume por câmara, em {{unit}}",
+        "rows": {
+            "internal": "Interno",
+            "braces": "Reforços",
+            "drivers": "Drivers",
+            "ports": "Dutos",
+            "net": "Líquido",
+            "simulated": "Simulado",
+            "difference": "Diferença"
+        },
+        "chambers": {
+            "main": "Caixa",
+            "rear": "Câmara traseira",
+            "front": "Câmara frontal"
+        },
+        "matches": "Igual à simulação: o volume líquido do plano é o que a simulação usou.",
+        "differs": "Diferente da simulação.",
+        "unavailable": "Sem o volume líquido da simulação, o plano não tem com o que ser conferido."
+    },
+    "warnings": {
+        "title": "Avisos do plano",
+        "cutoutTooBig": "Um recorte não cabe no lado menor de {{piece}}: reduza o diâmetro ou mude a proporção.",
+        "cutoutsDoNotFit": "Os recortes não cabem juntos em {{piece}}: reduza o diâmetro, tire um driver ou mude a proporção.",
+        "cutoutTight": "Sobra pouca madeira em {{piece}}, menos que a espessura do painel ({{thickness}}): confira se a peça aguenta.",
+        "portLongerThanDepth": "O duto ({{length}}) é mais longo que a profundidade interna ({{depth}}): ele precisará de curva ou dobra.",
+        "driverCutoutUnknown": "O diâmetro do recorte do driver ({{field}}) não foi informado: o recorte aparece como a informar e as posições mudam quando ele entrar.",
+        "portUnknown": "O duto está sem medidas: informe-as para ter o recorte e o volume dele.",
+        "simulationUnavailable": "Sem a simulação não há conferência de volume nem comprimento do duto: complete o driver e a caixa.",
+        "volumeMismatch": "O volume líquido do plano difere do da simulação. Isso não deveria acontecer: confira os valores e relate o caso."
     }
 }

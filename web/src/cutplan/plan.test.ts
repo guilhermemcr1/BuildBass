@@ -416,3 +416,246 @@ describe('recortes (C9 no plano)', () => {
         expect(ready(project()).port_length_m).toBeUndefined();
     });
 });
+
+const warningIds = (plan: Plan) => plan.warnings.map(({ id }) => id);
+
+describe('conferência de volume (C4, C5, C16)', () => {
+    test('C4 — selada com 2 drivers e reforços fecha com a simulação', () => {
+        const input = project({}, 2);
+        const plan = ready(input, { braces_m3: 0.003 });
+        const [main] = plan.volume.chambers;
+
+        expect(plan.volume.chambers).toHaveLength(1);
+        expect(main.id).toBe('main');
+        expect(main.internal_m3).toBeCloseTo(0.063, 9);
+        expect(main.braces_m3).toBe(0.003);
+        expect(main.drivers_m3).toBeCloseTo(0.004, 12);
+        expect(main.ports_m3).toBe(0);
+        expect(main.simulated_m3).toBe(simulate(input).results.net_volume_m3);
+        expect(main.difference_ratio).toBeLessThanOrEqual(1e-9);
+        expect(plan.volume.matchesSimulation).toBe(true);
+    });
+
+    test('C5 — dutada com duto redondo e retangular fecha com a simulação', () => {
+        for (const port of [
+            { shape: 'round' as const, diameter_m: 0.1, count: 2 },
+            { shape: 'rect' as const, width_m: 0.3, height_m: 0.05, count: 1 },
+        ]) {
+            const input = project({ type: 'vented', fb_hz: 32, port });
+            const plan = ready(input);
+            const [main] = plan.volume.chambers;
+
+            expect(main.ports_m3).toBeGreaterThan(0);
+            expect(main.net_m3).toBeCloseTo(
+                simulate(input).results.net_volume_m3 as number,
+                9,
+            );
+            expect(plan.volume.matchesSimulation).toBe(true);
+        }
+    });
+
+    test('C16 — varredura de tipos de duto, proporções, espessuras e drivers', () => {
+        const ports = [
+            { shape: 'round' as const, diameter_m: 0.1, count: 1 },
+            { shape: 'rect' as const, width_m: 0.25, height_m: 0.06, count: 1 },
+            {
+                shape: 'triangle' as const,
+                base_m: 0.15,
+                height_m: 0.1,
+                count: 2,
+            },
+        ];
+        const proportions = [
+            'golden',
+            'louden',
+            'equalSteps',
+            'cube',
+            'custom',
+        ] as const;
+
+        for (const port of ports) {
+            for (const proportion of proportions) {
+                for (const thickness_m of [0.012, 0.018, 0.025]) {
+                    for (let count = 1; count <= 8; count += 1) {
+                        const input = project(
+                            { type: 'vented', vb_m3: 0.12, fb_hz: 35, port },
+                            count,
+                        );
+                        const plan = ready(input, {
+                            proportion,
+                            custom: { h: 3, w: 2, d: 1 },
+                            thickness_m,
+                            braces_m3: 0.002,
+                        });
+                        const [main] = plan.volume.chambers;
+
+                        expect(main.difference_ratio).toBeLessThanOrEqual(1e-9);
+                        expect(plan.volume.matchesSimulation).toBe(true);
+                    }
+                }
+            }
+        }
+    });
+
+    test('bandpass: cada câmara fecha com a sua simulação', () => {
+        const input = project(
+            {
+                type: 'bandpass',
+                vr_m3: 0.04,
+                vf_m3: 0.06,
+                fb_hz: 45,
+                port: { shape: 'round', diameter_m: 0.1, count: 1 },
+            },
+            2,
+        );
+        const plan = ready(input, { braces_m3: 0.005 });
+        const [rear, front] = plan.volume.chambers;
+
+        expect([rear.id, front.id]).toEqual(['rear', 'front']);
+        expect(rear.drivers_m3).toBeCloseTo(0.004, 12);
+        expect(rear.ports_m3).toBe(0);
+        expect(front.drivers_m3).toBe(0);
+        expect(front.ports_m3).toBeGreaterThan(0);
+        expect(rear.braces_m3 + front.braces_m3).toBeCloseTo(0.005, 12);
+        expect(rear.difference_ratio).toBeLessThanOrEqual(1e-9);
+        expect(front.difference_ratio).toBeLessThanOrEqual(1e-9);
+        expect(plan.volume.matchesSimulation).toBe(true);
+    });
+
+    test('sem o volume líquido da simulação não há conferência', () => {
+        const input = project();
+        const results = { ...simulate(input).results };
+        delete results.net_volume_m3;
+        const result = buildCutPlan(input, results, resolveCutPlan({}));
+
+        if (result.status !== 'ready') {
+            throw new Error('bloqueado');
+        }
+
+        expect(result.plan.volume.matchesSimulation).toBeUndefined();
+        expect(result.plan.volume.chambers[0].simulated_m3).toBeUndefined();
+        expect(warningIds(result.plan)).toContain('simulationUnavailable');
+    });
+
+    test('volume líquido adulterado gera volumeMismatch', () => {
+        const input = project();
+        const results = {
+            ...simulate(input).results,
+            net_volume_m3: 0.05,
+        };
+        const result = buildCutPlan(input, results, resolveCutPlan({}));
+
+        if (result.status !== 'ready') {
+            throw new Error('bloqueado');
+        }
+
+        expect(result.plan.volume.matchesSimulation).toBe(false);
+        expect(result.plan.warnings).toContainEqual({
+            id: 'volumeMismatch',
+            tone: 'error',
+        });
+    });
+});
+
+describe('avisos (C10)', () => {
+    test('cutoutTooBig: recorte de 0,7 m não cabe no lado menor da frente', () => {
+        const plan = ready(project(), { cutout_m: 0.7 });
+
+        expect(plan.warnings).toContainEqual({
+            id: 'cutoutTooBig',
+            tone: 'error',
+            piece: 'front',
+        });
+    });
+
+    test('cutoutsDoNotFit: oito drivers de 285 mm numa frente estreita', () => {
+        const plan = ready(project({}, 8), { cutout_m: 0.285 });
+
+        expect(plan.warnings).toContainEqual({
+            id: 'cutoutsDoNotFit',
+            tone: 'error',
+            piece: 'front',
+        });
+        expect(
+            plan.pieces[0].cutouts.every(({ center }) => center === undefined),
+        ).toBe(true);
+    });
+
+    test('cutoutTight: sobra menos que a espessura', () => {
+        // Frente externa 441,5 × 691,4 mm; driver de 410 mm deixa 15,75 mm de borda (< 25 mm).
+        const plan = ready(project(), { cutout_m: 0.41, thickness_m: 0.025 });
+
+        expect(warningIds(plan)).toContain('cutoutTight');
+        expect(warningIds(plan)).not.toContain('cutoutTooBig');
+    });
+
+    test('um recorte folgado não avisa', () => {
+        const plan = ready(project(), { cutout_m: 0.2 });
+
+        expect(warningIds(plan)).not.toContain('cutoutTight');
+        expect(warningIds(plan)).not.toContain('cutoutTooBig');
+        expect(warningIds(plan)).not.toContain('cutoutsDoNotFit');
+    });
+
+    test('portLongerThanDepth: duto mais longo que a profundidade interna', () => {
+        const input = project({
+            type: 'vented',
+            vb_m3: 0.02,
+            fb_hz: 25,
+            port: { shape: 'round', diameter_m: 0.05, count: 1 },
+        });
+        const plan = ready(input);
+
+        expect(plan.port_length_m).toBeGreaterThan(
+            plan.dimensions.internal.d_m,
+        );
+        expect(plan.warnings).toContainEqual({
+            id: 'portLongerThanDepth',
+            tone: 'warn',
+        });
+    });
+
+    test('duto que cabe não avisa dobra', () => {
+        const plan = ready(
+            project({
+                type: 'vented',
+                fb_hz: 60,
+                port: { shape: 'round', diameter_m: 0.1, count: 1 },
+            }),
+        );
+
+        expect(plan.port_length_m).toBeLessThan(plan.dimensions.internal.d_m);
+        expect(warningIds(plan)).not.toContain('portLongerThanDepth');
+    });
+
+    test('driverCutoutUnknown: driver sem diâmetro do recorte', () => {
+        expect(ready(project()).warnings).toContainEqual({
+            id: 'driverCutoutUnknown',
+            tone: 'info',
+            key: 'cutout_m',
+        });
+        expect(warningIds(ready(project(), { cutout_m: 0.2 }))).not.toContain(
+            'driverCutoutUnknown',
+        );
+    });
+
+    test('portUnknown: duto sem medidas', () => {
+        const plan = ready(
+            project({
+                type: 'vented',
+                fb_hz: 32,
+                port: { shape: 'rect', width_m: 0.05, count: 1 },
+            }),
+        );
+
+        expect(warningIds(plan)).toContain('portUnknown');
+        expect(warningIds(plan)).toContain('simulationUnavailable');
+        expect(plan.volume.chambers).toEqual([]);
+    });
+
+    test('um plano sem avisos de recorte nem de simulação fecha limpo', () => {
+        const plan = ready(project(), { cutout_m: 0.2 });
+
+        expect(plan.warnings).toEqual([]);
+    });
+});

@@ -67,5 +67,37 @@
         "triangle": "base {{base}}, height {{height}}",
         "driverPending": "diameter to be provided",
         "portPending": "port size to be provided"
+    },
+    "volume": {
+        "title": "Volume check",
+        "caption": "Volume per chamber, in {{unit}}",
+        "rows": {
+            "internal": "Internal",
+            "braces": "Braces",
+            "drivers": "Drivers",
+            "ports": "Ports",
+            "net": "Net",
+            "simulated": "Simulated",
+            "difference": "Difference"
+        },
+        "chambers": {
+            "main": "Enclosure",
+            "rear": "Rear chamber",
+            "front": "Front chamber"
+        },
+        "matches": "Matches the simulation: the plan's net volume is the one the simulation used.",
+        "differs": "Differs from the simulation.",
+        "unavailable": "Without the simulation's net volume, the plan has nothing to be checked against."
+    },
+    "warnings": {
+        "title": "Plan warnings",
+        "cutoutTooBig": "A cutout does not fit the short side of the {{piece}}: reduce the diameter or change the proportion.",
+        "cutoutsDoNotFit": "The cutouts do not fit together in the {{piece}}: reduce the diameter, remove a driver or change the proportion.",
+        "cutoutTight": "Little wood is left in the {{piece}}, less than the panel thickness ({{thickness}}): check that the part holds.",
+        "portLongerThanDepth": "The port ({{length}}) is longer than the internal depth ({{depth}}): it will need a bend or fold.",
+        "driverCutoutUnknown": "The driver cutout diameter ({{field}}) was not provided: the cutout shows as to be provided and positions change once it is.",
+        "portUnknown": "The port has no dimensions: provide them to get its cutout and volume.",
+        "simulationUnavailable": "Without the simulation there is no volume check or port length: complete the driver and the enclosure.",
+        "volumeMismatch": "The plan's net volume differs from the simulation's. This should not happen: check the values and report the case."
     }
 }
