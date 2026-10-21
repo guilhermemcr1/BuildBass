@@ -1,6 +1,7 @@
 import { temporal } from 'zundo';
 import { createStore } from 'zustand/vanilla';
 import type { ParameterKey } from '@/lib/parameters';
+import { withDriver } from '@/lib/project/fields';
 import type {
     BoxType,
     DriverInput,
@@ -70,10 +71,9 @@ export function createProjectStore(
                     data: initial,
                     setName: (name) => update((data) => ({ ...data, name })),
                     setDriverValue: (key, si) =>
-                        update((data) => ({
-                            ...data,
-                            driver: withValue(data.driver, key, si),
-                        })),
+                        update((data) =>
+                            withDriver(data, withValue(data.driver, key, si)),
+                        ),
                     setBoxValue: (key, si) =>
                         update((data) => ({
                             ...data,

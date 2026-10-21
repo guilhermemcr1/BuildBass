@@ -115,6 +115,23 @@ describe('workspace', () => {
         expect(workspace().projects[0].plotted).toBe(false);
     });
 
+    test('a origem do driver copiado sobrevive ao recarregar', async () => {
+        const id = workspace().activeId;
+        const source = { brand: 'Triton', model: 'TR 620 12"', variant: '4 Ω' };
+        projectStore(id)
+            .getState()
+            .applyCatalogDriver({ fs_hz: 76.94, qts: 0.717 }, source);
+
+        const raw = localStorage.getItem(WORKSPACE_KEY) ?? '';
+        useWorkspace.setState(initialWorkspace());
+        localStorage.setItem(WORKSPACE_KEY, raw);
+        await reloadFromStorage();
+
+        const { data } = workspace().projects[0];
+        expect(data.driverSource).toEqual(source);
+        expect(data.driver).toEqual({ fs_hz: 76.94, qts: 0.717 });
+    });
+
     test('trocar o sistema de unidades limpa as unidades por campo de todos os projetos', () => {
         const id = workspace().activeId;
         projectStore(id).getState().setFieldUnit('vas_m3', 'ft3');

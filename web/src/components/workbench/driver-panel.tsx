@@ -9,6 +9,7 @@ import { useActiveProject } from '@/hooks/use-active-project';
 import { useOnlineStatus } from '@/hooks/use-online-status';
 import { DRIVER_PARAMETERS } from '@/lib/parameters';
 import { CatalogSearch } from './catalog-search';
+import { DriverOrigin } from './driver-origin';
 import { DriversFields } from './drivers-fields';
 import { Panel } from './panel';
 import { SignalFields } from './signal-fields';
@@ -90,6 +91,7 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
                 />
                 {submit}
             </div>
+            <DriverOrigin />
             <div className="grid grid-cols-2 items-start gap-2">
                 {DRIVER_PARAMETERS.map((key) => (
                     <DriverField

@@ -169,3 +169,34 @@ describe('applyCatalogDriver', () => {
         expect(second.getState().data.driverSource).toBeUndefined();
     });
 });
+
+describe('origem do driver e edição manual', () => {
+    const SOURCE = { brand: 'Triton', model: 'TR 620 12"' };
+
+    test('editar um parâmetro mantém a origem', () => {
+        const project = store();
+        project.getState().applyCatalogDriver({ fs_hz: 76, qts: 0.7 }, SOURCE);
+
+        project.getState().setDriverValue('qts', 0.5);
+
+        expect(project.getState().data.driverSource).toEqual(SOURCE);
+    });
+
+    test('apagar o último valor do driver remove a origem', () => {
+        const project = store();
+        project.getState().applyCatalogDriver({ fs_hz: 76 }, SOURCE);
+
+        project.getState().setDriverValue('fs_hz', undefined);
+
+        expect('driverSource' in project.getState().data).toBe(false);
+    });
+
+    test('apagar um valor com outros presentes mantém a origem', () => {
+        const project = store();
+        project.getState().applyCatalogDriver({ fs_hz: 76, qts: 0.7 }, SOURCE);
+
+        project.getState().setDriverValue('fs_hz', undefined);
+
+        expect(project.getState().data.driverSource).toEqual(SOURCE);
+    });
+});

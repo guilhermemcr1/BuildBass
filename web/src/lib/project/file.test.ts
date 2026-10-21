@@ -152,3 +152,67 @@ describe('nome do arquivo exportado', () => {
         expect(exportFileName('***')).toBe('projeto.buildbass.json');
     });
 });
+
+describe('origem do driver (feature 003)', () => {
+    const SOURCE = { brand: 'Triton', model: 'TR 620 12"', variant: '4 Ω' };
+
+    test('ida e volta preserva driverSource', async () => {
+        const data: ProjectData = { ...FULL, driverSource: SOURCE };
+        const result = await parseProjectFile(file(serializeProject(data)));
+
+        expect(result).toEqual({ ok: true, data });
+    });
+
+    test('driverSource sem variação também volta igual', async () => {
+        const data: ProjectData = {
+            ...FULL,
+            driverSource: { brand: 'Triton', model: 'TR 620' },
+        };
+        const result = await parseProjectFile(file(serializeProject(data)));
+
+        expect(result).toEqual({ ok: true, data });
+    });
+
+    test('arquivo da feature 002 (sem o campo) abre sem origem', async () => {
+        const result = await parseProjectFile(file(envelope(FULL)));
+
+        expect(result.ok).toBe(true);
+        expect(result.ok && 'driverSource' in result.data).toBe(false);
+    });
+
+    test.each([
+        ['marca vazia', { ...SOURCE, brand: '' }, 'project.driverSource.brand'],
+        [
+            'modelo com mais de 80 caracteres',
+            { ...SOURCE, model: 'x'.repeat(81) },
+            'project.driverSource.model',
+        ],
+        [
+            'variação numérica',
+            { ...SOURCE, variant: 4 },
+            'project.driverSource.variant',
+        ],
+    ])('%s é recusada com o caminho', async (_name, driverSource, path) => {
+        const result = await parseProjectFile(
+            file(envelope({ ...FULL, driverSource })),
+        );
+
+        expect(result).toEqual({ ok: false, code: 'invalidContent', path });
+    });
+
+    test('campo desconhecido dentro de driverSource é ignorado', async () => {
+        const result = await parseProjectFile(
+            file(
+                envelope({
+                    ...FULL,
+                    driverSource: { ...SOURCE, id: 7 },
+                }),
+            ),
+        );
+
+        expect(result).toEqual({
+            ok: true,
+            data: { ...FULL, driverSource: SOURCE },
+        });
+    });
+});
