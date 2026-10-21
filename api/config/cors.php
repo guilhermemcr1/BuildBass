@@ -17,14 +17,15 @@ return [
 
     'paths' => ['api/*', 'up'],
 
-    // O catálogo é só leitura: o navegador só pode pedir GET (e o pré-voo).
-    'allowed_methods' => ['GET', 'HEAD', 'OPTIONS'],
+    // O catálogo é só leitura (GET); a única escrita pública é o envio de driver (POST). Rotas de
+    // alteração/remoção não existem na API, então PUT/PATCH/DELETE nem são liberados.
+    'allowed_methods' => ['GET', 'HEAD', 'OPTIONS', 'POST'],
 
     'allowed_origins' => array_filter(explode(',', (string) env('FRONTEND_URL', 'http://localhost:5173'))),
 
     'allowed_origins_patterns' => [],
 
-    'allowed_headers' => ['*'],
+    'allowed_headers' => ['Content-Type', 'Accept', 'X-Requested-With'],
 
     'exposed_headers' => [],
 

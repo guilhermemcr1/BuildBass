@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Moderator;
 use App\Models\User;
 
 return [
@@ -42,6 +43,12 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Painel de moderação (feature 006): sem login de usuário final.
+        'moderator' => [
+            'driver' => 'session',
+            'provider' => 'moderators',
+        ],
     ],
 
     /*
@@ -65,6 +72,11 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+
+        'moderators' => [
+            'driver' => 'eloquent',
+            'model' => Moderator::class,
         ],
 
         // 'users' => [

@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { BoxPanel } from '@/components/workbench/box-panel';
 import { CHART_KINDS, ChartPanel } from '@/components/workbench/chart-panel';
 import type { ChartKind } from '@/components/workbench/chart-panel';
-import { ComingSoonDialog } from '@/components/workbench/coming-soon-dialog';
 import { Banner } from '@/components/ui/banner';
 import { CloseProjectDialog } from '@/components/workbench/close-project-dialog';
 import { DriverPanel } from '@/components/workbench/driver-panel';
@@ -33,6 +32,10 @@ import {
     useWorkspace,
 } from '@/stores/workspace';
 
+const SubmitDriverDialog = lazy(
+    () => import('@/components/workbench/submit-driver-dialog'),
+);
+
 const PrintSheet = lazy(() => import('@/components/workbench/print-sheet'));
 
 const PlanPanel = lazy(() =>
@@ -46,7 +49,7 @@ const PlanPanel = lazy(() =>
 // ordem do DOM: driver → caixa → gráficos → resultados.
 export default function Workbench() {
     const { t } = useTranslation(['workbench', 'project']);
-    const [pending, setPending] = useState<string | null>(null);
+    const [submitting, setSubmitting] = useState(false);
     const [helpOpen, setHelpOpen] = useState(false);
     const [limitOpen, setLimitOpen] = useState(false);
     const [openError, setOpenError] = useState<OpenError | null>(null);
@@ -151,9 +154,7 @@ export default function Workbench() {
                     {/* Em ≥ 1280 px o driver ocupa as duas linhas: a altura dele não empurra os resultados. */}
                     <div className="xl:row-span-2">
                         <DriverPanel
-                            onSubmitDriver={() =>
-                                setPending(t('catalog.submit'))
-                            }
+                            onSubmitDriver={() => setSubmitting(true)}
                         />
                     </div>
                     <BoxPanel />
@@ -232,10 +233,13 @@ export default function Workbench() {
                     error={openError}
                     onClose={() => setOpenError(null)}
                 />
-                <ComingSoonDialog
-                    action={pending}
-                    onClose={() => setPending(null)}
-                />
+                {submitting && (
+                    <Suspense fallback={null}>
+                        <SubmitDriverDialog
+                            onClose={() => setSubmitting(false)}
+                        />
+                    </Suspense>
+                )}
             </div>
             {view === 'plan' && (
                 <Suspense fallback={null}>

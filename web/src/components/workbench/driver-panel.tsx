@@ -66,8 +66,7 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
     const derived = deriveDriver(driver);
     const offlineReason = t('catalog.offlineReason');
 
-    // Catálogo e envio dependem do servidor (constituição, Princípio V); o envio chega em feature
-    // própria.
+    // Catálogo e envio dependem do servidor (constituição, Princípio V).
     const submit = (
         <Button
             variant="secondary"

@@ -1,0 +1,66 @@
+{
+    "title": "Submit driver to the catalog",
+    "intro": "The parameters below go to a moderator for review. The driver only appears in search once approved; your project does not change.",
+    "sections": {
+        "identification": "Identification",
+        "required": "Required parameters",
+        "optional": "Optional parameters",
+        "origin": "Data source",
+        "contact": "Contact (optional)"
+    },
+    "fields": {
+        "brand": "Manufacturer",
+        "model": "Model",
+        "variant": "Variant (optional)",
+        "variantHint": "Impedance or version, for example 4 Ω.",
+        "source": "Data source",
+        "sourceHint": "Manufacturer datasheet, your own measurement… Cite the revision or date.",
+        "email": "Email to notify you of the decision",
+        "emailHint": "Optional. Used only to tell you whether the driver was approved or rejected, then erased.",
+        "diameter": "Nominal diameter",
+        "diameterHint": "Commercial size of the loudspeaker, for example 12\".",
+        "trap": "Do not fill in this field"
+    },
+    "actions": {
+        "submit": "Submit",
+        "sending": "Sending…",
+        "cancel": "Cancel",
+        "close": "Close",
+        "retry": "Try again",
+        "copy": "Copy protocol",
+        "copied": "Protocol copied"
+    },
+    "errors": {
+        "summary_one": "Fix {{count}} field before submitting.",
+        "summary_other": "Fix {{count}} fields before submitting.",
+        "required": "Fill in this field.",
+        "tooLong": "Use at most {{max}} characters.",
+        "email": "Enter a valid email.",
+        "number": "Enter a valid number.",
+        "range": "Value outside the allowed range."
+    },
+    "failure": {
+        "alreadyInCatalog": "This driver is already in the catalog (same manufacturer, model and variant). Look it up in search.",
+        "alreadyPending": "This driver is already under review. There is no need to submit it again.",
+        "rateLimited": "Too many submissions in a short time. Try again in {{minutes}} min.",
+        "rateLimitedUnknown": "Too many submissions in a short time. Try again later.",
+        "verification": "We could not confirm that you are not a robot. Try again.",
+        "network": "No connection to the server. What you typed was kept; try again.",
+        "server": "The server could not receive the submission. What you typed was kept; try again.",
+        "invalid": "The server rejected some fields. Check the notes below."
+    },
+    "offline": "Offline: submitting needs the server.",
+    "success": {
+        "title": "Submission received",
+        "protocol": "Protocol code",
+        "review": "Your driver goes through review and only appears in search once approved.",
+        "emailNotice": "We will email you when there is a decision.",
+        "projectUnchanged": "Your project was not changed."
+    },
+    "discard": {
+        "title": "Discard the submission?",
+        "body": "You typed data that has not been sent. Closing now discards it.",
+        "keep": "Keep editing",
+        "discard": "Discard submission"
+    }
+}

@@ -40,6 +40,31 @@ class Driver extends Model
         'vd_m3',
     ];
 
+    /** Parâmetros que todo driver precisa ter (os demais podem faltar). */
+    public const REQUIRED_PARAMETERS = ['fs_hz', 'qts', 'vas_m3'];
+
+    /**
+     * Faixas físicas aceitas por parâmetro: [mínimo, máximo], em SI. São as mesmas de
+     * web/src/lib/parameters.ts (PARAMETERS) e de nominal_diameter_m em web/src/lib/catalog/schema.ts;
+     * tests/Fixtures/submission-ranges.json trava a igualdade.
+     */
+    public const RANGES = [
+        'nominal_diameter_m' => [0.03, 1.5],
+        'fs_hz' => [1, 20000],
+        'qts' => [0.05, 10],
+        'qes' => [0.05, 10],
+        'qms' => [0.1, 100],
+        'vas_m3' => [1e-6, 10],
+        're_ohm' => [0.1, 100],
+        'le_h' => [0, 0.1],
+        'xmax_m' => [0, 0.1],
+        'sd_m2' => [1e-4, 2],
+        'pe_w' => [0.1, 50000],
+        'bl_tm' => [0.1, 100],
+        'mms_kg' => [1e-4, 5],
+        'vd_m3' => [0, 0.1],
+    ];
+
     protected $fillable = [
         'brand',
         'model',
