@@ -222,6 +222,53 @@ test('plano da bandpass: sete peças, divisória, câmaras e conferência por c�
     );
 });
 
+// Bandpass de 6ª ordem (specs/007, quickstart cenário 12): duto frontal na frente, traseiro no fundo.
+test('plano da bandpass de 6ª ordem: recortes dos dois dutos e conferência por câmara (feature 007, US5)', async ({
+    page,
+}) => {
+    await page.goto('/');
+    await referenceDriver(page);
+    await page.getByRole('radio', { name: 'Bandpass 6ª ordem' }).click();
+
+    const chamber = (name: string) =>
+        page.getByRole('group', { name, exact: true });
+    const inside = async (group: string, field: RegExp, value: string) => {
+        const box = chamber(group).getByRole('textbox', { name: field });
+        await box.fill(value);
+        await box.press('Tab');
+    };
+
+    await inside('Câmara traseira (dutada)', /^Vr/, '80');
+    await inside('Câmara traseira (dutada)', /^Fbr/, '30');
+    await inside('Câmara traseira (dutada)', /Diâmetro/, '80');
+    await inside('Câmara frontal (dutada)', /^Vf/, '40');
+    await inside('Câmara frontal (dutada)', /^Fb(?!r)/, '45');
+    await inside('Câmara frontal (dutada)', /Diâmetro/, '100');
+    await openPlan(page);
+    await fill(page, /^Ød/, '200');
+
+    const parts = page.getByRole('table', { name: /Lista de corte/ });
+    await expect(parts.locator('tbody tr')).toHaveCount(6);
+    await expect(parts.getByRole('row', { name: /Frente/ })).toContainText(
+        'Duto',
+    );
+    await expect(parts.getByRole('row', { name: /Fundo/ })).toContainText(
+        'Duto',
+    );
+    await expect(parts.getByRole('row', { name: /Divisória/ })).toContainText(
+        'Driver',
+    );
+
+    const check = page.getByRole('table', { name: /Volume por câmara/ });
+    await expect(
+        check.getByRole('columnheader', { name: 'Câmara traseira' }),
+    ).toBeVisible();
+    await expect(
+        check.getByRole('columnheader', { name: 'Câmara frontal' }),
+    ).toBeVisible();
+    await expect(planRegion(page).getByText(/Igual à simulação/)).toBeVisible();
+});
+
 test('desenhos 2D e vista 3D: um desenho por peça, girar por teclado e por botões (US4)', async ({
     page,
 }) => {

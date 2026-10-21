@@ -40,6 +40,8 @@ export function PlanWarnings({ plan }: { plan: Plan }) {
         <ul className="flex flex-col gap-1.5" aria-label={t('warnings.title')}>
             {sorted.map((warning) => {
                 const text = t(`warnings.${warning.id}`, {
+                    // Na bandpass de 6ª ordem o aviso nomeia o duto (`<aviso>_rear` / `_front`).
+                    context: warning.duct,
                     // O nome da peça entra em minúscula no meio da frase.
                     piece:
                         warning.piece === undefined
@@ -50,16 +52,17 @@ export function PlanWarnings({ plan }: { plan: Plan }) {
                             ? ''
                             : planKeySymbol(warning.key, t),
                     thickness: length(plan.thickness_m),
-                    length: length(plan.port_length_m ?? 0),
+                    length: length(warning.length_m ?? plan.port_length_m ?? 0),
                     depth: length(
-                        plan.dimensions.chambers?.front_d_m ??
+                        warning.depth_m ??
+                            plan.dimensions.chambers?.front_d_m ??
                             plan.dimensions.internal.d_m,
                     ),
                 });
 
                 return (
                     <li
-                        key={`${warning.id}-${warning.piece ?? ''}`}
+                        key={`${warning.id}-${warning.piece ?? ''}-${warning.duct ?? ''}`}
                         className="flex items-start"
                     >
                         <StatusIndicator

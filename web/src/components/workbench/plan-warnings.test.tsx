@@ -68,3 +68,56 @@ describe('PlanWarnings', () => {
         expect(container).toBeEmptyDOMElement();
     });
 });
+
+describe('PlanWarnings — bandpass de 6ª ordem (feature 007)', () => {
+    beforeEach(() => {
+        usePreferences.setState({ unitSystem: 'metric' });
+    });
+
+    const SIXTH: Plan = {
+        ...PLAN,
+        boxType: 'bandpass6',
+        dimensions: {
+            ...PLAN.dimensions,
+            chambers: { rear_d_m: 0.15, front_d_m: 0.1 },
+        },
+        warnings: [
+            {
+                id: 'portLongerThanDepth',
+                tone: 'warn',
+                duct: 'rear',
+                length_m: 0.3,
+                depth_m: 0.15,
+            },
+            { id: 'portUnknown', tone: 'info', duct: 'front' },
+        ],
+    };
+
+    test('o aviso de dobra nomeia o duto e usa o comprimento e a profundidade da câmara dele', () => {
+        renderWithProviders(<PlanWarnings plan={SIXTH} />);
+
+        expect(
+            screen.getByText(
+                /O duto traseiro \(300.* mm\) é mais longo que a profundidade da câmara traseira \(150.* mm\)/,
+            ),
+        ).toBeVisible();
+    });
+
+    test('duto sem medidas nomeia a câmara', () => {
+        renderWithProviders(<PlanWarnings plan={SIXTH} />);
+
+        expect(
+            screen.getByText(/duto da câmara frontal está sem medidas/),
+        ).toBeVisible();
+    });
+
+    test('em inglês também', () => {
+        renderWithProviders(<PlanWarnings plan={SIXTH} />, 'en');
+
+        expect(
+            screen.getByText(
+                /The rear port .* longer than the rear chamber depth/,
+            ),
+        ).toBeVisible();
+    });
+});
