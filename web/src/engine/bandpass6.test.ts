@@ -613,3 +613,104 @@ describe('bandpass 6ª ordem — drivers, radiação, faltas, faixa e determinis
         );
     });
 });
+
+describe('bandpass 6ª ordem — avisos por câmara (T34)', () => {
+    const round = (diameter_m: number) => ({
+        shape: 'round' as const,
+        diameter_m,
+        count: 1,
+    });
+
+    // Ql finito (padrão 7): sem perdas, uma sintonia exatamente sobre um ponto da grade dá 0·∞.
+    function warningsOf(box: Partial<BoxInput>, driver = REFERENCE) {
+        const result = simulate(sixth({ ql: 7, ...box }, driver));
+
+        for (const curve of Object.values(result.curves)) {
+            expect(curve.every((value) => !Number.isNaN(value))).toBe(true);
+        }
+
+        return result.warnings.map(({ id, chamber }) => `${id}:${chamber}`);
+    }
+
+    test('drivers que não cabem na câmara traseira: rearVolumeInvalid na traseira', () => {
+        expect(
+            warningsOf(
+                { vr_m3: 0.001, port_rear: round(0.05) },
+                { ...REFERENCE, vd_m3: 0.002 },
+            ),
+        ).toContain('rearVolumeInvalid:rear');
+    });
+
+    test('duto que não cabe: portVolumeTooLarge só na câmara do duto', () => {
+        expect(
+            warningsOf({ vr_m3: 0.002, fb_rear_hz: 30, port_rear: round(0.1) }),
+        ).toContain('portVolumeTooLarge:rear');
+        expect(
+            warningsOf({ vf_m3: 0.002, fb_hz: 30, port: round(0.1) }),
+        ).toContain('portVolumeTooLarge:front');
+        // Duto frontal que não cabe não acusa a traseira.
+        expect(
+            warningsOf({ vf_m3: 0.002, fb_hz: 30, port: round(0.1) }),
+        ).not.toContain('portVolumeTooLarge:rear');
+    });
+
+    test('duto curto demais: portTooShort por duto', () => {
+        expect(
+            warningsOf({
+                vr_m3: 0.2,
+                fb_rear_hz: 100,
+                port_rear: round(0.05),
+            }),
+        ).toContain('portTooShort:rear');
+        expect(
+            warningsOf({ vf_m3: 0.2, fb_hz: 100, port: round(0.05) }),
+        ).toContain('portTooShort:front');
+    });
+
+    test('duto longo demais: portTooLong por duto, com o comprimento', () => {
+        expect(
+            warningsOf({
+                vr_m3: 0.01,
+                fb_rear_hz: 20,
+                port_rear: round(0.02),
+            }),
+        ).toContain('portTooLong:rear');
+
+        const long = simulate(
+            sixth({ vf_m3: 0.01, fb_hz: 20, port: round(0.02) }),
+        ).warnings.find(({ id }) => id === 'portTooLong');
+        expect(long?.chamber).toBe('front');
+        expect(long?.values?.length_m).toBeGreaterThan(0);
+    });
+
+    test('projeto sem problema não tem aviso de câmara', () => {
+        const ids = warningsOf({
+            fb_hz: 45,
+            port: round(0.1),
+            port_rear: round(0.1),
+        });
+
+        expect(
+            ids.filter((id) => /rearVolume|portVolume|portToo/.test(id)),
+        ).toEqual([]);
+    });
+
+    test('os tipos antigos não marcam a câmara nos avisos', () => {
+        const old = simulate({
+            ...sixth({ vf_m3: 0.002, fb_hz: 30, port: round(0.1) }),
+            box: {
+                type: 'bandpass',
+                vr_m3: 0.04,
+                vf_m3: 0.002,
+                fb_hz: 30,
+                ql: LOSSLESS,
+                port: round(0.1),
+            },
+        });
+
+        expect(old.warnings.length).toBeGreaterThan(0);
+        expect(old.warnings.every(({ chamber }) => chamber === undefined)).toBe(
+            true,
+        );
+    });
+});

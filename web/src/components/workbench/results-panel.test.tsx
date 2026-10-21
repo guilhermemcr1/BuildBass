@@ -210,4 +210,52 @@ describe('ResultsPanel', () => {
         expect(screen.queryByText('Comprimento do duto traseiro')).toBeNull();
         expect(screen.getByText('Comprimento do duto')).toBeVisible();
     });
+
+    test('bandpass 6ª ordem: velocidade alta só no duto traseiro avisa nesse duto', () => {
+        sixthOrderProject({
+            port_rear: { shape: 'round', diameter_m: 0.03, count: 1 },
+        });
+
+        renderWithProviders(<ResultsPanel />);
+
+        // 22 m/s: entre 17 e 25 → atenção; o frontal, a ~1,8 m/s, fica abaixo de 17.
+        expect(tile('Velocidade máx. no duto traseiro')).toHaveTextContent(
+            'Ruído audível',
+        );
+        expect(tile('Velocidade máx. no duto frontal')).toHaveTextContent(
+            'Abaixo de',
+        );
+    });
+
+    test('bandpass 6ª ordem: acima de 25 m/s no duto traseiro é erro, e o frontal segue o seu valor', () => {
+        sixthOrderProject({
+            port_rear: { shape: 'round', diameter_m: 0.05, count: 1 },
+        });
+        activeProjectStore().getState().setSignal({ power_w: 20 });
+
+        renderWithProviders(<ResultsPanel />);
+
+        expect(tile('Velocidade máx. no duto traseiro')).toHaveTextContent(
+            'Acima de',
+        );
+        expect(tile('Velocidade máx. no duto frontal')).toHaveTextContent(
+            'Abaixo de',
+        );
+    });
+
+    test('bandpass 6ª ordem: os dois dutos altos mostram os dois estados', () => {
+        sixthOrderProject({
+            port_rear: { shape: 'round', diameter_m: 0.03, count: 1 },
+        });
+        activeProjectStore().getState().setSignal({ power_w: 100 });
+
+        renderWithProviders(<ResultsPanel />);
+
+        expect(tile('Velocidade máx. no duto traseiro')).toHaveTextContent(
+            'Acima de',
+        );
+        expect(tile('Velocidade máx. no duto frontal')).toHaveTextContent(
+            'Ruído audível',
+        );
+    });
 });
