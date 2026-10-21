@@ -100,7 +100,11 @@
         "driverCutoutUnknown": "The driver cutout diameter ({{field}}) was not provided: the cutout shows as to be provided and positions change once it is.",
         "portUnknown": "The port has no dimensions: provide them to get its cutout and volume.",
         "simulationUnavailable": "Without the simulation there is no volume check or port length: complete the driver and the enclosure.",
-        "volumeMismatch": "The plan's net volume differs from the simulation's. This should not happen: check the values and report the case."
+        "volumeMismatch": "The plan's net volume differs from the simulation's. This should not happen: check the values and report the case.",
+        "portLongerThanDepth_rear": "The rear port ({{length}}) is longer than the rear chamber depth ({{depth}}): it will need a bend or fold.",
+        "portLongerThanDepth_front": "The front port ({{length}}) is longer than the front chamber depth ({{depth}}): it will need a bend or fold.",
+        "portUnknown_rear": "The rear chamber port has no dimensions: provide them to get its cutout and volume.",
+        "portUnknown_front": "The front chamber port has no dimensions: provide them to get its cutout and volume."
     },
     "drawings": {
         "title": "2D drawings",
@@ -128,7 +132,8 @@
     "types": {
         "closed": "sealed",
         "vented": "vented",
-        "bandpass": "bandpass"
+        "bandpass": "4th-order bandpass",
+        "bandpass6": "6th-order bandpass"
     },
     "views": {
         "label": "Plan views"

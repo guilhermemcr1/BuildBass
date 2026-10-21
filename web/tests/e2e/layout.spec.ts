@@ -52,7 +52,7 @@ test('a 360 px a bandpass completa não rola na horizontal (feature 004, US5)', 
 }) => {
     await page.setViewportSize({ width: 360, height: 800 });
     await page.goto('/');
-    await page.getByRole('radio', { name: 'Bandpass' }).click();
+    await page.getByRole('radio', { name: 'Bandpass 4ª ordem' }).click();
 
     for (const [name, value] of [
         [/^Vr/, '40'],
@@ -80,7 +80,7 @@ test('a 360 px o plano de corte não rola na horizontal (feature 005, US7)', asy
 }) => {
     await page.setViewportSize({ width: 360, height: 800 });
     await page.goto('/');
-    await page.getByRole('radio', { name: 'Bandpass' }).click();
+    await page.getByRole('radio', { name: 'Bandpass 4ª ordem' }).click();
 
     for (const [name, value] of [
         [/^Vr/, '40'],

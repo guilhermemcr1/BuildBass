@@ -214,6 +214,54 @@ describe('workspace', () => {
         });
     });
 
+    test('projeto bandpass 6ª ordem mantém câmaras, sintonias e dutos ao recarregar (feature 007)', async () => {
+        const id = workspace().activeId;
+        const store = projectStore(id).getState();
+        store.setBoxValue('vb_m3', 0.05);
+        store.setBoxType('bandpass6');
+        store.setBoxValue('fb_rear_hz', 30);
+        store.setPortRear({ shape: 'round', diameter_m: 0.07, count: 2 });
+
+        const raw = localStorage.getItem(WORKSPACE_KEY) ?? '';
+        useWorkspace.setState(initialWorkspace());
+        localStorage.setItem(WORKSPACE_KEY, raw);
+        await reloadFromStorage();
+
+        expect(workspace().projects[0].data.box).toMatchObject({
+            type: 'bandpass6',
+            vr_m3: 0.05,
+            vf_m3: 0.05,
+            fb_rear_hz: 30,
+            port_rear: { shape: 'round', diameter_m: 0.07, count: 2 },
+        });
+    });
+
+    test('espaço de trabalho salvo antes da 6ª ordem (sem os campos novos) reabre igual (feature 007)', async () => {
+        const before = {
+            ...createProjectData('Bandpass 4'),
+            box: {
+                type: 'bandpass',
+                vr_m3: 0.04,
+                vf_m3: 0.06,
+                ql: 7,
+                fb_hz: 45,
+                port: { shape: 'round', diameter_m: 0.1, count: 1 },
+            },
+        };
+        const raw = localStorage.getItem(WORKSPACE_KEY) ?? '';
+        const stored = JSON.parse(raw);
+        stored.state.projects[0].data = before;
+        useWorkspace.setState(initialWorkspace());
+        localStorage.setItem(WORKSPACE_KEY, JSON.stringify(stored));
+        await reloadFromStorage();
+
+        const { data } = workspace().projects[0];
+        expect(data.box.type).toBe('bandpass');
+        expect(data.box.fb_hz).toBe(45);
+        expect('fb_rear_hz' in data.box).toBe(false);
+        expect('port_rear' in data.box).toBe(false);
+    });
+
     test('trocar o sistema de unidades limpa as unidades por campo de todos os projetos', () => {
         const id = workspace().activeId;
         projectStore(id).getState().setFieldUnit('vas_m3', 'ft3');

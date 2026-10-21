@@ -17,7 +17,8 @@
         "label": "Tipo de caixa",
         "closed": "Selada",
         "vented": "Dutada",
-        "bandpass": "Bandpass"
+        "bandpass": "Bandpass 4ª ordem",
+        "bandpass6": "Bandpass 6ª ordem"
     },
     "suggest": {
         "button": "Sugerir caixa",
@@ -30,7 +31,8 @@
         "round": "Redondo",
         "rect": "Retangular",
         "triangle": "Triangular",
-        "titleFront": "Duto (câmara frontal)"
+        "titleFront": "Duto (câmara frontal)",
+        "titleRear": "Duto (câmara traseira)"
     },
     "drivers": {
         "title": "Drivers",
@@ -66,7 +68,9 @@
         "groupDelayAxis": "Atraso de grupo (ms)",
         "portVelocityAxis": "Velocidade do ar ({{unit}})",
         "legend": "Projetos no gráfico",
-        "nonePlotted": "Nenhum projeto ligado no gráfico. Use o olho na aba do projeto."
+        "nonePlotted": "Nenhum projeto ligado no gráfico. Use o olho na aba do projeto.",
+        "seriesFront": "frontal",
+        "seriesRear": "traseiro"
     },
     "results": {
         "f3": "F3",
@@ -85,7 +89,12 @@
         "fCenter": "Frequência central",
         "bandwidth": "Largura da banda",
         "peak": "Nível de pico",
-        "aboveRange": "> 1000"
+        "aboveRange": "> 1000",
+        "fbRear": "Fbr",
+        "portLengthFront": "Comprimento do duto frontal",
+        "portLengthRear": "Comprimento do duto traseiro",
+        "portVelocityFront": "Velocidade máx. no duto frontal",
+        "portVelocityRear": "Velocidade máx. no duto traseiro"
     },
     "catalog": {
         "label": "Catálogo de drivers",
@@ -117,5 +126,9 @@
         "label": "Visão",
         "charts": "Gráficos",
         "plan": "Plano de corte"
+    },
+    "chambers": {
+        "rear": "Câmara traseira (dutada)",
+        "front": "Câmara frontal (dutada)"
     }
 }

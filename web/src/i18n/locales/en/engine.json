@@ -13,7 +13,13 @@
         "rearVolumeInvalid": "The volume taken up by the drivers is larger than the rear chamber. Enlarge the rear chamber or reduce the occupied volume.",
         "portVolumeTooLarge_bandpass": "The port does not fit in the front chamber at this tuning. Use a narrower port, fewer ports or a larger front chamber.",
         "portTooShort_bandpass": "The port would have zero or negative length for this front chamber. Use a narrower port or fewer ports.",
-        "portTooLong_bandpass": "The port is long ({{length}}) for this front chamber. Consider a narrower port or a different tuning."
+        "portTooLong_bandpass": "The port is long ({{length}}) for this front chamber. Consider a narrower port or a different tuning.",
+        "portVolumeTooLarge_rear": "The port doesn't fit in the rear chamber at this tuning. Use a narrower port, fewer ports or a larger rear chamber.",
+        "portVolumeTooLarge_front": "The port doesn't fit in the front chamber at this tuning. Use a narrower port, fewer ports or a larger front chamber.",
+        "portTooShort_rear": "The port would have zero or negative length for this rear chamber. Use a narrower port or fewer ports.",
+        "portTooShort_front": "The port would have zero or negative length for this front chamber. Use a narrower port or fewer ports.",
+        "portTooLong_rear": "The port gets long ({{length}}) for this rear chamber. Consider a narrower port or another tuning.",
+        "portTooLong_front": "The port gets long ({{length}}) for this front chamber. Consider a narrower port or another tuning."
     },
     "limits": {
         "portWarn": "Caution: {{value}}",

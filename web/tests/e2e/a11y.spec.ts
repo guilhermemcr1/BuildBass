@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { json, mockCatalog, ok } from './catalog-mock';
 
 // Roda no projeto "dev" (servidor de desenvolvimento), único lugar onde /dev/ui existe.
@@ -305,7 +306,7 @@ for (const theme of ['light', 'dark'] as const) {
         await fill(/^Vas/, '85');
         await fill(/^Re/, '3,6');
         await fill(/^Sd/, '491');
-        await page.getByRole('radio', { name: 'Bandpass' }).click();
+        await page.getByRole('radio', { name: 'Bandpass 4ª ordem' }).click();
         await fill(/^Vr/, '40');
         await fill(/^Vf/, '60');
         await fill(/^Fb/, '45');
@@ -358,7 +359,9 @@ for (const theme of ['light', 'dark'] as const) {
             await fill(/^Sd/, '491');
 
             if (state === 'bandpass') {
-                await page.getByRole('radio', { name: 'Bandpass' }).click();
+                await page
+                    .getByRole('radio', { name: 'Bandpass 4ª ordem' })
+                    .click();
                 await fill(/^Vr/, '40');
                 await fill(/^Vf/, '60');
                 await fill(/^Fb/, '45');
@@ -485,4 +488,157 @@ test('o formulário de envio é operável só pelo teclado e devolve o foco ao b
     await page.keyboard.press('Escape');
     await expect(dialog).toHaveCount(0);
     await expect(trigger).toBeFocused();
+});
+
+// Bandpass de 6ª ordem (feature 007, US6): região da caixa, resultados e plano de corte.
+const sixthOrderFields = async (page: Page) => {
+    const group = (name: string) =>
+        page.getByRole('group', { name, exact: true });
+    const fill = async (
+        scope: ReturnType<typeof group> | Page,
+        name: RegExp,
+        value: string,
+    ) => {
+        const field = scope.getByRole('textbox', { name });
+        await field.fill(value);
+        await field.press('Tab');
+    };
+
+    // O tipo vem antes dos campos: com um campo em foco, a ajuda dele recolhe ao perder o foco e,
+    // em 360 px (regiões empilhadas), desloca o seletor entre o toque e a soltura.
+    await page.getByRole('radio', { name: 'Bandpass 6ª ordem' }).click();
+
+    for (const [name, value] of [
+        [/^Fs/, '28'],
+        [/^Qts/, '0,38'],
+        [/^Qes/, '0,42'],
+        [/^Qms/, '4,1'],
+        [/^Vas/, '85'],
+        [/^Re/, '3,6'],
+        [/^Sd/, '491'],
+    ] as const) {
+        await fill(page, name, value);
+    }
+
+    const rear = group('Câmara traseira (dutada)');
+    const front = group('Câmara frontal (dutada)');
+    await fill(rear, /^Vr/, '80');
+    await fill(rear, /^Fbr/, '30');
+    await fill(rear, /Diâmetro/, '80');
+    await fill(front, /^Vf/, '40');
+    await fill(front, /^Fb(?!r)/, '45');
+    await fill(front, /Diâmetro/, '100');
+
+    return { rear, front };
+};
+
+for (const theme of ['light', 'dark'] as const) {
+    for (const view of ['bancada', 'plano'] as const) {
+        test(`sem violações WCAG AA na bandpass de 6ª ordem (${view}) no tema ${theme} (feature 007, US6)`, async ({
+            browser,
+        }) => {
+            const context = await browser.newContext({
+                colorScheme: theme,
+                viewport: { width: 1440, height: 900 },
+            });
+            const page = await context.newPage();
+            await page.goto('/');
+            await page.locator('main').waitFor();
+            await sixthOrderFields(page);
+            await expect(
+                page.locator('[data-region="charts"] canvas'),
+            ).toBeVisible();
+
+            if (view === 'plano') {
+                await page
+                    .getByRole('radio', { name: 'Plano de corte' })
+                    .click();
+                const cutout = page.getByRole('textbox', { name: /^Ød/ });
+                await cutout.fill('200');
+                await cutout.press('Tab');
+                await expect(
+                    page.getByRole('img', { name: 'Fundo' }),
+                ).toBeVisible();
+            }
+
+            await page.waitForTimeout(300);
+
+            const results = await new AxeBuilder({ page })
+                .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+                .analyze();
+
+            expect(
+                results.violations.map((violation) => ({
+                    id: violation.id,
+                    nodes: violation.nodes.map((node) => node.target.join(' ')),
+                })),
+            ).toEqual([]);
+            await context.close();
+        });
+    }
+}
+
+test('bandpass de 6ª ordem: a 360 px não rola na horizontal e os dois grupos de duto empilham (feature 007, US6)', async ({
+    page,
+}) => {
+    await page.setViewportSize({ width: 360, height: 800 });
+    await page.goto('/');
+    const { rear, front } = await sixthOrderFields(page);
+
+    const rearDuct = rear.getByRole('group', {
+        name: 'Duto (câmara traseira)',
+    });
+    const frontDuct = front.getByRole('group', {
+        name: 'Duto (câmara frontal)',
+    });
+    const [a, b] = await Promise.all([
+        rearDuct.boundingBox(),
+        frontDuct.boundingBox(),
+    ]);
+
+    expect(a).not.toBeNull();
+    expect(b).not.toBeNull();
+    // Empilhados: o frontal começa abaixo do fim do traseiro.
+    expect((b?.y ?? 0) >= (a?.y ?? 0) + (a?.height ?? 0)).toBe(true);
+
+    const overflow = await page.evaluate(
+        () =>
+            document.documentElement.scrollWidth -
+            document.documentElement.clientWidth,
+    );
+
+    expect(overflow).toBeLessThanOrEqual(0);
+});
+
+test('bandpass de 6ª ordem: todos os campos são alcançáveis só pelo teclado, de trás para a frente (feature 007, US6)', async ({
+    page,
+}) => {
+    await page.goto('/');
+    const { rear, front } = await sixthOrderFields(page);
+
+    const order = [
+        rear.getByRole('textbox', { name: /^Vr/ }),
+        rear.getByRole('textbox', { name: /^Fbr/ }),
+        rear.getByRole('textbox', { name: /Diâmetro/ }),
+        rear.getByRole('textbox', { name: /Quantidade de dutos traseiros/ }),
+        front.getByRole('textbox', { name: /^Vf/ }),
+        front.getByRole('textbox', { name: /^Fb(?!r)/ }),
+        front.getByRole('textbox', { name: /Diâmetro/ }),
+        front.getByRole('textbox', { name: /Quantidade de dutos/ }),
+    ];
+
+    await order[0].focus();
+
+    for (const field of order.slice(1)) {
+        let reached = false;
+
+        for (let step = 0; step < 15 && !reached; step += 1) {
+            await page.keyboard.press('Tab');
+            reached = await field.evaluate(
+                (element) => element === document.activeElement,
+            );
+        }
+
+        expect(reached).toBe(true);
+    }
 });

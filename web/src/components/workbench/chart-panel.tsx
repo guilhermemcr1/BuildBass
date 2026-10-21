@@ -136,6 +136,9 @@ export function ChartPanel({
         const { curve, quantity } = CURVES[kind];
         const unit = unitFor(quantity);
 
+        const convert = (values: readonly number[]) =>
+            values.map((si) => (Number.isFinite(si) ? fromSi(si, unit) : null));
+
         return plotted.flatMap(({ project, active, simulation }) => {
             const values = simulation.curves[curve];
 
@@ -143,15 +146,42 @@ export function ChartPanel({
                 return [];
             }
 
+            const name = displayName(project, t);
+            const common = {
+                slot: project.slot,
+                emphasis: active && plotted.length > 1,
+            };
+            // Bandpass de 6ª ordem: o duto traseiro vira uma segunda série, tracejada, na cor do
+            // projeto; só então a contínua ganha o complemento "frontal".
+            const rear =
+                kind === 'portVelocity'
+                    ? simulation.curves.port_rear_velocity_ms
+                    : undefined;
+
+            if (rear === undefined) {
+                return [
+                    {
+                        ...common,
+                        id: project.id,
+                        label: name,
+                        values: convert(values),
+                    },
+                ];
+            }
+
             return [
                 {
+                    ...common,
                     id: project.id,
-                    label: displayName(project, t),
-                    slot: project.slot,
-                    emphasis: active && plotted.length > 1,
-                    values: values.map((si) =>
-                        Number.isFinite(si) ? fromSi(si, unit) : null,
-                    ),
+                    label: `${name} — ${t('charts.seriesFront')}`,
+                    values: convert(values),
+                },
+                {
+                    ...common,
+                    id: `${project.id}-rear`,
+                    label: `${name} — ${t('charts.seriesRear')}`,
+                    values: convert(rear),
+                    dashed: true,
                 },
             ];
         });
@@ -186,8 +216,16 @@ export function ChartPanel({
     };
 
     const missingText = (first: ProjectSimulation, kind: ChartKind) => {
-        const missing: FieldKey[] =
-            first.simulation.missing[CURVES[kind].curve];
+        // Na 6ª ordem faltam também as medidas do duto traseiro.
+        const missing: FieldKey[] = [
+            ...new Set([
+                ...first.simulation.missing[CURVES[kind].curve],
+                ...(kind === 'portVelocity' &&
+                first.project.data.box.type === 'bandpass6'
+                    ? first.simulation.missing.port_rear_velocity_ms
+                    : []),
+            ]),
+        ];
 
         return missing.length === 0
             ? undefined

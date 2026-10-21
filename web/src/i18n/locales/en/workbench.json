@@ -17,7 +17,8 @@
         "label": "Box type",
         "closed": "Sealed",
         "vented": "Vented",
-        "bandpass": "Bandpass"
+        "bandpass": "4th-order bandpass",
+        "bandpass6": "6th-order bandpass"
     },
     "suggest": {
         "button": "Suggest box",
@@ -30,7 +31,8 @@
         "round": "Round",
         "rect": "Rectangular",
         "triangle": "Triangular",
-        "titleFront": "Port (front chamber)"
+        "titleFront": "Port (front chamber)",
+        "titleRear": "Port (rear chamber)"
     },
     "drivers": {
         "title": "Drivers",
@@ -66,7 +68,9 @@
         "groupDelayAxis": "Group delay (ms)",
         "portVelocityAxis": "Air velocity ({{unit}})",
         "legend": "Projects on the chart",
-        "nonePlotted": "No project is shown on the chart. Use the eye on the project tab."
+        "nonePlotted": "No project is shown on the chart. Use the eye on the project tab.",
+        "seriesFront": "front",
+        "seriesRear": "rear"
     },
     "results": {
         "f3": "F3",
@@ -85,7 +89,12 @@
         "fCenter": "Center frequency",
         "bandwidth": "Bandwidth",
         "peak": "Peak level",
-        "aboveRange": "> 1000"
+        "aboveRange": "> 1000",
+        "fbRear": "Fbr",
+        "portLengthFront": "Front port length",
+        "portLengthRear": "Rear port length",
+        "portVelocityFront": "Max. front port velocity",
+        "portVelocityRear": "Max. rear port velocity"
     },
     "catalog": {
         "label": "Driver catalog",
@@ -117,5 +126,9 @@
         "label": "View",
         "charts": "Charts",
         "plan": "Cut plan"
+    },
+    "chambers": {
+        "rear": "Rear chamber (ported)",
+        "front": "Front chamber (ported)"
     }
 }

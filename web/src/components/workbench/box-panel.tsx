@@ -25,6 +25,7 @@ export function BoxPanel() {
     const rear = useParameterField('vr_m3');
     const front = useParameterField('vf_m3');
     const tuning = useParameterField('fb_hz');
+    const rearTuning = useParameterField('fb_rear_hz');
     const losses = useParameterField('ql');
 
     return (
@@ -38,26 +39,54 @@ export function BoxPanel() {
                         { id: 'closed', label: t('boxType.closed') },
                         { id: 'vented', label: t('boxType.vented') },
                         { id: 'bandpass', label: t('boxType.bandpass') },
+                        { id: 'bandpass6', label: t('boxType.bandpass6') },
                     ]}
                     className="w-full"
                 />
             </div>
-            <div className="flex flex-col gap-3">
-                {boxType === 'bandpass' ? (
-                    <>
+            {boxType === 'bandpass6' ? (
+                <>
+                    <fieldset className="flex flex-col gap-3">
+                        <legend className="mb-1.5 text-xs font-semibold text-muted">
+                            {t('chambers.rear')}
+                        </legend>
                         <SliderField {...rear} {...VB_SLIDER} />
+                        <SliderField {...rearTuning} {...FB_SLIDER} />
+                        <PortFields duct="rear" />
+                    </fieldset>
+                    <fieldset className="flex flex-col gap-3">
+                        <legend className="mb-1.5 text-xs font-semibold text-muted">
+                            {t('chambers.front')}
+                        </legend>
                         <SliderField {...front} {...VB_SLIDER} />
-                    </>
-                ) : (
-                    <SliderField {...volume} {...VB_SLIDER} />
-                )}
-                {boxType !== 'closed' && (
-                    <SliderField {...tuning} {...FB_SLIDER} />
-                )}
-                <ParameterField {...losses} />
-                <SuggestBox key={activeId} />
-            </div>
-            {boxType !== 'closed' && <PortFields />}
+                        <SliderField {...tuning} {...FB_SLIDER} />
+                        <PortFields duct="front" />
+                    </fieldset>
+                    <div className="flex flex-col gap-3">
+                        <ParameterField {...losses} />
+                        <SuggestBox key={activeId} />
+                    </div>
+                </>
+            ) : (
+                <>
+                    <div className="flex flex-col gap-3">
+                        {boxType === 'bandpass' ? (
+                            <>
+                                <SliderField {...rear} {...VB_SLIDER} />
+                                <SliderField {...front} {...VB_SLIDER} />
+                            </>
+                        ) : (
+                            <SliderField {...volume} {...VB_SLIDER} />
+                        )}
+                        {boxType !== 'closed' && (
+                            <SliderField {...tuning} {...FB_SLIDER} />
+                        )}
+                        <ParameterField {...losses} />
+                        <SuggestBox key={activeId} />
+                    </div>
+                    {boxType !== 'closed' && <PortFields />}
+                </>
+            )}
         </Panel>
     );
 }

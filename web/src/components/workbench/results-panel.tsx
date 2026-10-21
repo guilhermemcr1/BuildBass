@@ -2,8 +2,12 @@ import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import type { FieldStatus } from '@/components/ui/status-indicator';
 import { ValueTile } from '@/components/ui/value-tile';
-import { PORT_VELOCITY_ERROR_MS, PORT_VELOCITY_WARN_MS } from '@/engine';
-import type { SimulationResults, WarningId } from '@/engine';
+import {
+    PORT_VELOCITY_ERROR_MS,
+    PORT_VELOCITY_WARN_MS,
+    twoChambers,
+} from '@/engine';
+import type { EngineWarning } from '@/engine';
 import { useActiveProject } from '@/hooks/use-active-project';
 import { useActiveSimulation, useSimulations } from '@/hooks/use-simulation';
 import { formatWithUnit } from '@/lib/units/format';
@@ -16,18 +20,27 @@ import { ResultsTable } from './results-table';
 
 type Status = { status: FieldStatus; statusLabel?: string };
 
+// Na bandpass de 6ª ordem cada duto responde só aos avisos da sua câmara.
 function lengthStatus(
-    warnings: WarningId[],
+    warnings: EngineWarning[],
     t: (key: string) => string,
+    chamber?: 'rear' | 'front',
 ): Status {
-    if (warnings.includes('portTooShort')) {
+    const has = (id: EngineWarning['id']) =>
+        warnings.some(
+            (warning) =>
+                warning.id === id &&
+                (chamber === undefined || warning.chamber === chamber),
+        );
+
+    if (has('portTooShort')) {
         return {
             status: 'error',
             statusLabel: t('engine:status.portTooShort'),
         };
     }
 
-    if (warnings.includes('portTooLong')) {
+    if (has('portTooLong')) {
         return { status: 'warn', statusLabel: t('engine:status.portTooLong') };
     }
 
@@ -36,12 +49,10 @@ function lengthStatus(
 
 // Velocidade máxima no duto contra os limites de 17 e 25 m/s (FR-011).
 function velocityStatus(
-    results: SimulationResults,
+    velocity: number | undefined,
     format: (si: number) => string,
     t: (key: string, options?: Record<string, string>) => string,
 ): Status {
-    const velocity = results.port_velocity_max_ms;
-
     if (velocity === undefined) {
         return { status: 'none' };
     }
@@ -78,8 +89,10 @@ export function ResultsPanel() {
     const boxType = useActiveProject((state) => state.data.box.type);
     const { results, warnings } = useActiveSimulation();
     const velocityUnit: UnitId = defaultUnitFor('velocity', unitSystem);
-    const warningIds = warnings.map(({ id }) => id);
+    const sixth = boxType === 'bandpass6';
     const plotted = useSimulations();
+    const formatVelocity = (si: number) =>
+        formatWithUnit(si, velocityUnit, locale);
 
     return (
         <Panel region="results" title={t('regions.results')}>
@@ -87,7 +100,7 @@ export function ResultsPanel() {
                 <ResultsTable items={plotted} />
             ) : (
                 <div className="grid grid-cols-2 gap-2">
-                    {boxType === 'bandpass' ? (
+                    {twoChambers(boxType) ? (
                         <>
                             <ValueTile
                                 label={t('results.fLow')}
@@ -157,27 +170,66 @@ export function ResultsPanel() {
                                 valueSi={results.fb_hz}
                                 unit="Hz"
                             />
+                            {sixth && (
+                                <ValueTile
+                                    label={t('results.fbRear')}
+                                    valueSi={results.fb_rear_hz}
+                                    unit="Hz"
+                                />
+                            )}
                             <ValueTile
-                                label={t('results.portLength')}
+                                label={t(
+                                    sixth
+                                        ? 'results.portLengthFront'
+                                        : 'results.portLength',
+                                )}
                                 valueSi={results.port_length_m}
                                 unit={defaultUnitFor('length', unitSystem)}
-                                {...lengthStatus(warningIds, t)}
+                                {...lengthStatus(
+                                    warnings,
+                                    t,
+                                    sixth ? 'front' : undefined,
+                                )}
                             />
                             <ValueTile
-                                label={t('results.portVelocity')}
+                                label={t(
+                                    sixth
+                                        ? 'results.portVelocityFront'
+                                        : 'results.portVelocity',
+                                )}
                                 valueSi={results.port_velocity_max_ms}
                                 unit={velocityUnit}
                                 {...velocityStatus(
-                                    results,
-                                    (si) =>
-                                        formatWithUnit(
-                                            si,
-                                            velocityUnit,
-                                            locale,
-                                        ),
+                                    results.port_velocity_max_ms,
+                                    formatVelocity,
                                     t,
                                 )}
                             />
+                            {sixth && (
+                                <>
+                                    <ValueTile
+                                        label={t('results.portLengthRear')}
+                                        valueSi={results.port_rear_length_m}
+                                        unit={defaultUnitFor(
+                                            'length',
+                                            unitSystem,
+                                        )}
+                                        {...lengthStatus(warnings, t, 'rear')}
+                                    />
+                                    <ValueTile
+                                        label={t('results.portVelocityRear')}
+                                        valueSi={
+                                            results.port_rear_velocity_max_ms
+                                        }
+                                        unit={velocityUnit}
+                                        {...velocityStatus(
+                                            results.port_rear_velocity_max_ms,
+                                            formatVelocity,
+                                            t,
+                                        )}
+                                    />
+                                </>
+                            )}
                         </>
                     )}
                     <ValueTile

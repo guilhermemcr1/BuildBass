@@ -4,7 +4,7 @@ import type {
     ProjectInput,
     SimulationResults,
 } from '@/engine';
-import { portArea } from '@/engine';
+import { portArea, twoChambers } from '@/engine';
 import { validateResolved } from './config';
 import { layoutRow } from './layout';
 import type { LayoutItem } from './layout';
@@ -33,8 +33,9 @@ type Volumes = { main: number } | { rear: number; front: number };
 function projectVolumes(
     box: ProjectInput['box'],
 ): { volumes: Volumes } | { missing: PlanKey[]; invalid: PlanKey[] } {
-    const keys: PlanKey[] =
-        box.type === 'bandpass' ? ['vr_m3', 'vf_m3'] : ['vb_m3'];
+    const keys: PlanKey[] = twoChambers(box.type)
+        ? ['vr_m3', 'vf_m3']
+        : ['vb_m3'];
     const values = keys.map((key) => box[key as 'vb_m3' | 'vr_m3' | 'vf_m3']);
     const missing = keys.filter((_key, index) => values[index] === undefined);
     const invalid = keys.filter(
@@ -46,7 +47,7 @@ function projectVolumes(
         return { missing, invalid };
     }
 
-    if (box.type === 'bandpass') {
+    if (twoChambers(box.type)) {
         return {
             volumes: { rear: values[0] as number, front: values[1] as number },
         };
@@ -196,9 +197,9 @@ function driverMeasures(
 }
 
 function portMeasures(
-    project: ProjectInput,
+    port: PortInput,
 ): { kind: Cutout['kind']; measure: PortMeasure }[] {
-    return portCutouts(project.box.port).map((measure) => ({
+    return portCutouts(port).map((measure) => ({
         kind: 'port' as const,
         measure,
     }));
@@ -313,13 +314,22 @@ export function buildCutPlan(
     const frontPanel = { w_m: external.w_m, h_m: external.h_m };
     const dividerPanel = { w_m: internal.w_m, h_m: internal.h_m };
 
+    // Bandpass de 6ª ordem: cada câmara tem o seu duto; o traseiro sai pelo fundo (specs/007).
+    const sixth = boxType === 'bandpass6';
+    const rearPort: PortInput = project.box.port_rear ?? {
+        shape: 'round',
+        count: 1,
+    };
     const frontMeasures = bandpass
-        ? portMeasures(project)
+        ? portMeasures(project.box.port)
         : [
               ...driverMeasures(project, config),
-              ...(boxType === 'vented' ? portMeasures(project) : []),
+              ...(boxType === 'vented' ? portMeasures(project.box.port) : []),
           ];
     const front = placeCutouts(frontPanel, frontMeasures, t);
+    const back = sixth
+        ? placeCutouts(frontPanel, portMeasures(rearPort), t)
+        : undefined;
     const divider = bandpass
         ? placeCutouts(dividerPanel, driverMeasures(project, config), t)
         : undefined;
@@ -343,7 +353,9 @@ export function buildCutPlan(
         piece('front', external.w_m, external.h_m, {
             cutouts: front.cutouts,
         }),
-        piece('back', external.w_m, external.h_m),
+        piece('back', external.w_m, external.h_m, {
+            cutouts: back?.cutouts ?? [],
+        }),
         piece('top', external.w_m, between),
         piece('bottom', external.w_m, between),
         piece('side', between, internal.h_m, { quantity: 2 }),
@@ -357,15 +369,22 @@ export function buildCutPlan(
     ];
 
     const portLength = results.port_length_m;
+    const rearLength = results.port_rear_length_m;
     const ported = boxType !== 'closed';
-    const portAreaM2 = ported ? portArea(project.box.port) : undefined;
-    const portCount = Math.max(1, Math.round(project.box.port.count));
     // O mesmo volume de duto que o motor descontou (research.md §1); sem área ou comprimento a
     // conferência não tem como fechar.
-    const portsVolume =
-        !ported || (portAreaM2 !== undefined && portLength !== undefined)
-            ? portCount * (portAreaM2 ?? 0) * (portLength ?? 0)
+    const ductVolume = (
+        port: PortInput,
+        length: number | undefined,
+    ): number | undefined => {
+        const area = portArea(port);
+
+        return area !== undefined && length !== undefined
+            ? Math.max(1, Math.round(port.count)) * area * length
             : undefined;
+    };
+    const portsVolume = !ported ? 0 : ductVolume(project.box.port, portLength);
+    const rearPortsVolume = sixth ? ductVolume(rearPort, rearLength) : 0;
     const driversVolume =
         Math.max(0, Math.round(project.drivers.count)) *
         (project.driver.vd_m3 ?? 0);
@@ -374,7 +393,7 @@ export function buildCutPlan(
     const plane = { w_m: internal.w_m, h_m: internal.h_m };
 
     const chambers: ChamberCheck[] =
-        portsVolume === undefined
+        portsVolume === undefined || rearPortsVolume === undefined
             ? []
             : 'rear' in volumes
               ? [
@@ -383,7 +402,7 @@ export function buildCutPlan(
                         depth_m: dimensions.chambers?.rear_d_m ?? 0,
                         braces_m3: share(volumes.rear),
                         drivers_m3: driversVolume,
-                        ports_m3: 0,
+                        ports_m3: rearPortsVolume,
                         simulated_m3: results.net_rear_m3,
                     }),
                     chamberCheck(plane, {
@@ -410,6 +429,7 @@ export function buildCutPlan(
     const warnings: PlanWarning[] = [];
     const placed: [Piece['role'], PlacedCutouts | undefined][] = [
         ['front', front],
+        ['back', back],
         ['divider', divider],
     ];
 
@@ -435,10 +455,28 @@ export function buildCutPlan(
         }
     }
 
-    // O duto da dutada fica na câmara toda; o da bandpass, na câmara frontal.
+    // O duto da dutada fica na câmara toda; o da bandpass, na câmara frontal; na de 6ª ordem cada
+    // duto tem a sua câmara.
     const portDepth = dimensions.chambers?.front_d_m ?? internal.d_m;
 
-    if (portLength !== undefined && portLength > portDepth) {
+    if (sixth) {
+        const rearDepth = dimensions.chambers?.rear_d_m ?? internal.d_m;
+
+        for (const [duct, length, depth] of [
+            ['rear', rearLength, rearDepth],
+            ['front', portLength, portDepth],
+        ] as const) {
+            if (length !== undefined && length > depth) {
+                warnings.push({
+                    id: 'portLongerThanDepth',
+                    tone: 'warn',
+                    duct,
+                    length_m: length,
+                    depth_m: depth,
+                });
+            }
+        }
+    } else if (portLength !== undefined && portLength > portDepth) {
         warnings.push({ id: 'portLongerThanDepth', tone: 'warn' });
     }
 
@@ -450,7 +488,16 @@ export function buildCutPlan(
         });
     }
 
-    if (ported && portAreaM2 === undefined) {
+    if (sixth) {
+        for (const [duct, port] of [
+            ['rear', rearPort],
+            ['front', project.box.port],
+        ] as const) {
+            if (portArea(port) === undefined) {
+                warnings.push({ id: 'portUnknown', tone: 'info', duct });
+            }
+        }
+    } else if (ported && portArea(project.box.port) === undefined) {
         warnings.push({ id: 'portUnknown', tone: 'info' });
     }
 
@@ -468,6 +515,9 @@ export function buildCutPlan(
             dimensions,
             pieces,
             ...(portLength === undefined ? {} : { port_length_m: portLength }),
+            ...(!sixth || rearLength === undefined
+                ? {}
+                : { port_rear_length_m: rearLength }),
             volume,
             warnings,
         },

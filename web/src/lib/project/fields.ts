@@ -2,7 +2,7 @@ import { resolveCutPlan } from '@/cutplan';
 import type { CutPlanConfig, CutPlanProportion } from '@/cutplan';
 import { DRIVER_KEYS } from '@/engine';
 import type { ParameterKey } from '@/lib/parameters';
-import type { DriverKey, ProjectData } from './types';
+import type { DriverKey, PortInput, ProjectData } from './types';
 
 // Onde cada campo da bancada mora dentro do projeto (data-model.md).
 type PortKey = 'diameter_m' | 'width_m' | 'height_m' | 'base_m';
@@ -12,6 +12,7 @@ const BOX_KEYS = new Set<ParameterKey>([
     'vr_m3',
     'vf_m3',
     'fb_hz',
+    'fb_rear_hz',
     'ql',
 ]);
 const PLAN_KEYS = new Set<ParameterKey>([
@@ -28,6 +29,15 @@ const PORT_KEYS = new Set<ParameterKey>([
     'height_m',
     'base_m',
 ]);
+// Medidas do duto da câmara traseira (bandpass de 6ª ordem), guardadas em `box.port_rear` com os
+// mesmos nomes do duto frontal.
+const REAR_PORT_KEYS: Partial<Record<ParameterKey, PortKey>> = {
+    rear_diameter_m: 'diameter_m',
+    rear_width_m: 'width_m',
+    rear_height_m: 'height_m',
+    rear_base_m: 'base_m',
+};
+const EMPTY_PORT: PortInput = { shape: 'round', count: 1 };
 
 function driverKey(key: ParameterKey): key is DriverKey {
     return (DRIVER_KEYS as ParameterKey[]).includes(key);
@@ -66,7 +76,9 @@ export function readField(
     }
 
     if (BOX_KEYS.has(key)) {
-        return data.box[key as 'vb_m3' | 'vr_m3' | 'vf_m3' | 'fb_hz' | 'ql'];
+        return data.box[
+            key as 'vb_m3' | 'vr_m3' | 'vf_m3' | 'fb_hz' | 'fb_rear_hz' | 'ql'
+        ];
     }
 
     if (PLAN_KEYS.has(key)) {
@@ -79,9 +91,21 @@ export function readField(
         ];
     }
 
+    const rearKey = REAR_PORT_KEYS[key];
+
+    if (rearKey !== undefined) {
+        return (
+            (data.box.port_rear ?? EMPTY_PORT) as Partial<
+                Record<PortKey, number>
+            >
+        )[rearKey];
+    }
+
     switch (key) {
         case 'port_count':
             return data.box.port.count;
+        case 'rear_port_count':
+            return (data.box.port_rear ?? EMPTY_PORT).count;
         case 'driver_count':
             return data.drivers.count;
         case 'power_w':
@@ -202,6 +226,17 @@ export function writeField(
         };
     }
 
+    const rearKey = REAR_PORT_KEYS[key];
+
+    if (rearKey !== undefined) {
+        const rear = data.box.port_rear ?? EMPTY_PORT;
+
+        return {
+            ...data,
+            box: { ...data.box, port_rear: withField(rear, rearKey, si) },
+        };
+    }
+
     switch (key) {
         case 'port_count':
             return {
@@ -209,6 +244,17 @@ export function writeField(
                 box: {
                     ...data.box,
                     port: { ...data.box.port, count: si ?? 1 },
+                },
+            };
+        case 'rear_port_count':
+            return {
+                ...data,
+                box: {
+                    ...data.box,
+                    port_rear: {
+                        ...(data.box.port_rear ?? EMPTY_PORT),
+                        count: si ?? 1,
+                    },
                 },
             };
         case 'driver_count':

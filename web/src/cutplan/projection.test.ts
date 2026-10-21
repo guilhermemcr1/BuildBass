@@ -209,3 +209,49 @@ describe('projeção da caixa (C15)', () => {
         ).not.toContain('front:driver-1');
     });
 });
+
+describe('bandpass de 6ª ordem na projeção (feature 007)', () => {
+    const sixth = () =>
+        plan({
+            type: 'bandpass6',
+            vr_m3: 0.08,
+            vf_m3: 0.04,
+            fb_hz: 45,
+            fb_rear_hz: 30,
+            port_rear: { shape: 'round', diameter_m: 0.08, count: 1 },
+        });
+
+    test('as sete peças são as mesmas e o recorte do duto traseiro entra no fundo', () => {
+        const polygons = projectBox(sixth(), DEFAULT_VIEW, {
+            translucent: true,
+        });
+
+        expect(
+            ids(polygons.filter(({ kind }) => kind === 'face')),
+        ).toHaveLength(7);
+        expect(ids(polygons)).toContain('back:port-1');
+        expect(ids(polygons)).toContain('front:port-1');
+        expect(ids(polygons)).toContain('divider:driver-1');
+    });
+
+    test('visto por trás, só o fundo aparece e o recorte fica dentro dele', () => {
+        const polygons = projectBox(
+            sixth(),
+            { yaw_rad: Math.PI, pitch_rad: 0, zoom: 1 },
+            { translucent: false },
+        );
+        const face = polygons.find(({ id }) => id === 'back');
+        const hole = polygons.find(({ id }) => id === 'back:port-1');
+        const xs = (face?.points ?? []).map(([x]) => x);
+        const ys = (face?.points ?? []).map(([, y]) => y);
+
+        expect(face).toBeDefined();
+        expect(hole).toBeDefined();
+        for (const [x, y] of hole?.points ?? []) {
+            expect(x).toBeGreaterThan(Math.min(...xs));
+            expect(x).toBeLessThan(Math.max(...xs));
+            expect(y).toBeGreaterThan(Math.min(...ys));
+            expect(y).toBeLessThan(Math.max(...ys));
+        }
+    });
+});

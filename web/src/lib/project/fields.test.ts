@@ -12,9 +12,12 @@ test('cada campo da bancada é lido e escrito no lugar certo do projeto', () => 
         ['vr_m3', 0.04],
         ['vf_m3', 0.06],
         ['fb_hz', 32],
+        ['fb_rear_hz', 24],
         ['ql', 10],
         ['diameter_m', 0.08],
         ['port_count', 2],
+        ['rear_diameter_m', 0.1],
+        ['rear_port_count', 3],
         ['driver_count', 3],
         ['power_w', 100],
         ['voltage_v', 2.83],
@@ -155,4 +158,36 @@ test('plano de corte: o resto do projeto fica intacto', () => {
         ...original,
         cutPlan: undefined,
     });
+});
+
+test('as medidas do duto traseiro ficam em port_rear e não mexem no duto frontal', () => {
+    const base = writeField(createProjectData(''), 'diameter_m', 0.08);
+    const data = writeField(
+        writeField(base, 'rear_diameter_m', 0.12),
+        'rear_port_count',
+        2,
+    );
+
+    expect(data.box.port).toEqual(base.box.port);
+    expect(data.box.port_rear).toEqual({
+        shape: 'round',
+        diameter_m: 0.12,
+        count: 2,
+    });
+    expect(readField(data, 'diameter_m')).toBe(0.08);
+    expect(readField(data, 'rear_diameter_m')).toBe(0.12);
+    expect(readField(createProjectData(''), 'rear_diameter_m')).toBeUndefined();
+    expect(readField(createProjectData(''), 'rear_port_count')).toBe(1);
+
+    const cleared = writeField(data, 'rear_diameter_m', undefined);
+    expect(readField(cleared, 'rear_diameter_m')).toBeUndefined();
+    expect(readField(cleared, 'diameter_m')).toBe(0.08);
+});
+
+test('a unidade escolhida no duto traseiro é guardada à parte da do frontal', () => {
+    const data = createProjectData('');
+    data.fieldUnits = { rear_diameter_m: 'in' };
+
+    expect(data.fieldUnits.rear_diameter_m).toBe('in');
+    expect(data.fieldUnits.diameter_m).toBeUndefined();
 });

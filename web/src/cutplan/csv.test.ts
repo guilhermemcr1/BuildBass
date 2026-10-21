@@ -295,6 +295,30 @@ describe('cutPlanCsv (C14)', () => {
         expect(rows[check].slice(-2)).toEqual(['', '']);
     });
 
+    test('a exportação traz os recortes da peça Fundo (duto traseiro da bandpass de 6ª ordem)', () => {
+        const sixth: Plan = {
+            ...PLAN,
+            boxType: 'bandpass6',
+            pieces: [
+                ...PLAN.pieces,
+                {
+                    role: 'back',
+                    quantity: 1,
+                    w_m: 0.436,
+                    h_m: 0.636,
+                    thickness_m: 0.018,
+                    cutouts: [
+                        { kind: 'port', shape: 'round', diameter_m: 0.08 },
+                    ],
+                },
+            ],
+        };
+        const rows = parse(cutPlanCsv(sixth, format(',')), ';');
+        const back = rows.find((row) => row[0] === 'Fundo');
+
+        expect(back?.join(';')).toContain('port Ø 80,0 mm');
+    });
+
     test('é determinístico', () => {
         expect(cutPlanCsv(PLAN, format(','))).toBe(
             cutPlanCsv(PLAN, format(',')),

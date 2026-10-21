@@ -37,7 +37,7 @@ export function SegmentedControl<T extends string>({
                 }
             }}
             className={cn(
-                'inline-flex gap-1 rounded-md border border-border bg-raised p-[3px]',
+                'inline-flex flex-wrap gap-1 rounded-md border border-border bg-raised p-[3px]',
                 className,
             )}
         >

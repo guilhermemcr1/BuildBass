@@ -23,12 +23,18 @@ export function EngineWarnings() {
 
     return (
         <div className="flex flex-col gap-2">
-            {warnings.map(({ id, values }) => (
-                <Banner key={id} tone="warn" icon={TriangleAlert}>
+            {warnings.map(({ id, chamber, values }) => (
+                <Banner
+                    key={`${id}-${chamber ?? ''}`}
+                    tone="warn"
+                    icon={TriangleAlert}
+                >
                     {t(`warnings.${id}`, {
-                        // Na bandpass o duto é da câmara frontal: `<aviso>_bandpass`, quando existe.
+                        // Na bandpass de 4ª ordem o duto é da câmara frontal (`<aviso>_bandpass`); na de
+                        // 6ª o aviso diz a câmara (`<aviso>_rear` / `<aviso>_front`), quando existe.
                         context:
-                            boxType === 'bandpass' ? 'bandpass' : undefined,
+                            chamber ??
+                            (boxType === 'bandpass' ? 'bandpass' : undefined),
                         length:
                             values?.length_m === undefined
                                 ? undefined

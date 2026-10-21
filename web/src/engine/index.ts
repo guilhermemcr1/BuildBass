@@ -7,4 +7,5 @@ export type { Alignment, Suggestion } from './alignments';
 export { portArea } from './port';
 export { signalLevels, simulate } from './simulate';
 export type { SignalLevels } from './simulate';
+export { twoChambers } from './types';
 export type * from './types';

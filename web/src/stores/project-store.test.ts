@@ -103,6 +103,121 @@ describe('createProjectStore', () => {
         expect('vf_m3' in project.getState().data.box).toBe(false);
     });
 
+    test('bandpass 6ª ordem: semeia vr e vf do Vb, copia o duto e não semeia Fbr, numa etapa só', () => {
+        const project = store();
+        project.getState().setBoxValue('vb_m3', 0.05);
+        project.getState().setPort({
+            shape: 'rect',
+            width_m: 0.05,
+            height_m: 0.2,
+            count: 2,
+        });
+        const steps = project.temporal.getState().pastStates.length;
+
+        project.getState().setBoxType('bandpass6');
+
+        const { box } = project.getState().data;
+        expect(box).toMatchObject({
+            type: 'bandpass6',
+            vr_m3: 0.05,
+            vf_m3: 0.05,
+            port_rear: {
+                shape: 'rect',
+                width_m: 0.05,
+                height_m: 0.2,
+                count: 2,
+            },
+        });
+        expect('fb_rear_hz' in box).toBe(false);
+        expect(project.temporal.getState().pastStates).toHaveLength(steps + 1);
+
+        project.temporal.getState().undo();
+        expect(project.getState().data.box.type).toBe('vented');
+        expect('port_rear' in project.getState().data.box).toBe(false);
+        expect('vr_m3' in project.getState().data.box).toBe(false);
+    });
+
+    test('da bandpass de 4ª para a de 6ª ordem aproveita vr, vf, fb, duto e ql', () => {
+        const project = store();
+        project.getState().apply((data) => ({
+            ...data,
+            box: {
+                ...data.box,
+                type: 'bandpass',
+                vr_m3: 0.08,
+                vf_m3: 0.04,
+                fb_hz: 45,
+                ql: 9,
+                port: { shape: 'round', diameter_m: 0.1, count: 1 },
+            },
+        }));
+
+        project.getState().setBoxType('bandpass6');
+
+        expect(project.getState().data.box).toMatchObject({
+            type: 'bandpass6',
+            vr_m3: 0.08,
+            vf_m3: 0.04,
+            fb_hz: 45,
+            ql: 9,
+            port: { shape: 'round', diameter_m: 0.1, count: 1 },
+            port_rear: { shape: 'round', diameter_m: 0.1, count: 1 },
+        });
+    });
+
+    test('bandpass 6ª ordem: não sobrescreve o duto traseiro nem Fbr já preenchidos', () => {
+        const project = store();
+        project.getState().setBoxType('bandpass6');
+        project.getState().setBoxValue('fb_rear_hz', 30);
+        project.getState().setPortRear({
+            shape: 'round',
+            diameter_m: 0.07,
+            count: 3,
+        });
+
+        project.getState().setBoxType('vented');
+        project.getState().setBoxType('bandpass6');
+
+        expect(project.getState().data.box).toMatchObject({
+            fb_rear_hz: 30,
+            port_rear: { shape: 'round', diameter_m: 0.07, count: 3 },
+        });
+    });
+
+    test('setPortRear só mexe no duto traseiro', () => {
+        const project = store();
+        const front = project.getState().data.box.port;
+
+        project.getState().setPortRear({ shape: 'round', count: 2 });
+
+        expect(project.getState().data.box.port).toBe(front);
+        expect(project.getState().data.box.port_rear).toEqual({
+            shape: 'round',
+            count: 2,
+        });
+    });
+
+    test('trocar de volta preserva os campos de todos os tipos', () => {
+        const project = store();
+        project.getState().setBoxValue('vb_m3', 0.05);
+        project.getState().setBoxValue('fb_hz', 32);
+        project.getState().setBoxType('bandpass6');
+        project.getState().setBoxValue('fb_rear_hz', 28);
+        project.getState().setBoxType('closed');
+        project.getState().setBoxType('bandpass');
+        project.getState().setBoxType('vented');
+
+        expect(project.getState().data.box).toMatchObject({
+            type: 'vented',
+            vb_m3: 0.05,
+            vr_m3: 0.05,
+            vf_m3: 0.05,
+            fb_hz: 32,
+            fb_rear_hz: 28,
+        });
+        expect(project.getState().data.box.port_rear).toBeDefined();
+    });
+
     test('alternar entre os três tipos preserva os campos de cada um', () => {
         const project = store();
         project.getState().setBoxValue('vb_m3', 0.05);

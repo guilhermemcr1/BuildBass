@@ -1,11 +1,14 @@
 import { useTranslation } from 'react-i18next';
 import { ParameterField } from '@/components/ui/parameter-field';
 import { SegmentedControl } from '@/components/ui/segmented-control';
+import { twoChambers } from '@/engine';
 import type { PortInput } from '@/engine';
 import { useActiveProject } from '@/hooks/use-active-project';
 import { useParameterField } from './use-parameter-field';
 
 type PortShape = PortInput['shape'];
+
+const EMPTY_PORT: PortInput = { shape: 'round', count: 1 };
 
 // Troca de formato: a quantidade fica e a altura passa entre retangular e triangular; as demais
 // medidas não têm equivalente direto e ficam vazias.
@@ -22,23 +25,38 @@ function reshape(port: PortInput, shape: PortShape): PortInput {
     }
 }
 
-export function PortFields() {
+type Props = {
+    // Na bandpass de 6ª ordem cada câmara tem o seu duto, com formato e medidas próprios.
+    duct?: 'front' | 'rear';
+};
+
+export function PortFields({ duct = 'front' }: Props) {
     const { t } = useTranslation('workbench');
-    const port = useActiveProject((state) => state.data.box.port);
-    const bandpass = useActiveProject(
-        (state) => state.data.box.type === 'bandpass',
+    const rear = duct === 'rear';
+    const port = useActiveProject((state) =>
+        rear ? (state.data.box.port_rear ?? EMPTY_PORT) : state.data.box.port,
     );
-    const setPort = useActiveProject((state) => state.setPort);
-    const diameter = useParameterField('diameter_m');
-    const width = useParameterField('width_m');
-    const height = useParameterField('height_m');
-    const base = useParameterField('base_m');
-    const count = useParameterField('port_count');
+    const chambered = useActiveProject((state) =>
+        twoChambers(state.data.box.type),
+    );
+    const setPort = useActiveProject((state) =>
+        rear ? state.setPortRear : state.setPort,
+    );
+    const diameter = useParameterField(rear ? 'rear_diameter_m' : 'diameter_m');
+    const width = useParameterField(rear ? 'rear_width_m' : 'width_m');
+    const height = useParameterField(rear ? 'rear_height_m' : 'height_m');
+    const base = useParameterField(rear ? 'rear_base_m' : 'base_m');
+    const count = useParameterField(rear ? 'rear_port_count' : 'port_count');
+    const title = rear
+        ? 'port.titleRear'
+        : chambered
+          ? 'port.titleFront'
+          : 'port.title';
 
     return (
         <fieldset className="flex flex-col gap-3">
             <legend className="mb-1.5 text-xs font-semibold text-muted">
-                {t(bandpass ? 'port.titleFront' : 'port.title')}
+                {t(title)}
             </legend>
             <SegmentedControl<PortShape>
                 label={t('port.shape')}

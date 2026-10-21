@@ -4,7 +4,7 @@ import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { Banner } from '@/components/ui/banner';
 import { Button } from '@/components/ui/button';
-import { deriveDriver, suggestBox } from '@/engine';
+import { deriveDriver, suggestBox, twoChambers } from '@/engine';
 import type { DriverKey } from '@/engine';
 import { useActiveProject } from '@/hooks/use-active-project';
 import { PARAMETERS } from '@/lib/parameters';
@@ -38,10 +38,9 @@ export function SuggestBox() {
                   ),
               });
     // Não há alinhamento clássico de bandpass nesta versão (specs/004, Assumptions).
-    const reason =
-        data.box.type === 'bandpass'
-            ? t('suggest.bandpassUnavailable')
-            : missingReason;
+    const reason = twoChambers(data.box.type)
+        ? t('suggest.bandpassUnavailable')
+        : missingReason;
 
     const suggest = () => {
         const suggestion = suggestBox(data);

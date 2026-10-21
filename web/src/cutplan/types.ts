@@ -110,6 +110,10 @@ export type PlanWarning = {
     tone: 'info' | 'warn' | 'error';
     piece?: PieceRole;
     key?: PlanKey;
+    // Bandpass de 6ª ordem: de qual duto é o aviso, com o comprimento e a profundidade da câmara.
+    duct?: 'rear' | 'front';
+    length_m?: number;
+    depth_m?: number;
 };
 
 export type Plan = {
@@ -119,6 +123,8 @@ export type Plan = {
     pieces: Piece[];
     // Comprimento do tubo do duto calculado pela simulação (dutada e bandpass).
     port_length_m?: number;
+    // Bandpass de 6ª ordem: comprimento do duto da câmara traseira.
+    port_rear_length_m?: number;
     volume: VolumeCheck;
     warnings: PlanWarning[];
 };

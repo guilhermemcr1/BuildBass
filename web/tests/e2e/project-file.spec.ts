@@ -102,7 +102,7 @@ test('bandpass exportada grava a versão 2 e reabre igual (feature 004, US4)', a
     await fill(page, /^Fs/, '28');
     await fill(page, /^Qts/, '0,38');
     await fill(page, /^Vas/, '85');
-    await page.getByRole('radio', { name: 'Bandpass' }).click();
+    await page.getByRole('radio', { name: 'Bandpass 4ª ordem' }).click();
     await fill(page, /^Vr/, '40');
     await fill(page, /^Vf/, '60');
     await fill(page, /^Fb/, '45');
@@ -128,7 +128,9 @@ test('bandpass exportada grava a versão 2 e reabre igual (feature 004, US4)', a
         buffer: Buffer.from(text),
     });
 
-    await expect(page.getByRole('radio', { name: 'Bandpass' })).toBeChecked();
+    await expect(
+        page.getByRole('radio', { name: 'Bandpass 4ª ordem' }),
+    ).toBeChecked();
     await expect(field(page, /^Vr/)).toHaveValue('40,0');
     await expect(field(page, /^Vf/)).toHaveValue('60,0');
     await expect(field(page, /^Fb/)).toHaveValue('45,0');
@@ -162,7 +164,7 @@ test('arquivo de versão futura mostra a mensagem de app mais novo (feature 004,
         buffer: Buffer.from(
             JSON.stringify({
                 format: 'buildbass.project',
-                version: 4,
+                version: 5,
                 project: {},
             }),
         ),
@@ -179,7 +181,7 @@ test('trocar para bandpass leva o Vb digitado às duas câmaras (feature 004, US
 }) => {
     await page.goto('/');
     await fill(page, /^Vb/, '50');
-    await page.getByRole('radio', { name: 'Bandpass' }).click();
+    await page.getByRole('radio', { name: 'Bandpass 4ª ordem' }).click();
 
     await expect(field(page, /^Vr/)).toHaveValue('50,0');
     await expect(field(page, /^Vf/)).toHaveValue('50,0');
@@ -244,7 +246,7 @@ test('plano de corte: ver não muda o arquivo; editar grava a versão 3 e reabre
     ).toBeVisible();
 });
 
-test('plano de corte: arquivo de versão 4 pede atualizar e valor fora da faixa cita o caminho (feature 005, US6)', async ({
+test('plano de corte: arquivo de versão 5 pede atualizar e valor fora da faixa cita o caminho (feature 005, US6)', async ({
     page,
 }) => {
     await page.goto('/');
@@ -255,7 +257,7 @@ test('plano de corte: arquivo de versão 4 pede atualizar e valor fora da faixa 
         'futuro.buildbass.json',
         JSON.stringify({
             format: 'buildbass.project',
-            version: 4,
+            version: 5,
             project: {},
         }),
     );
@@ -293,3 +295,112 @@ test('plano de corte: desfazer e refazer a edição da espessura (feature 005, U
     await page.keyboard.press('ControlOrMeta+Shift+z');
     await expect(field(page, /Espessura/)).toHaveValue('25,0');
 });
+
+test('bandpass de 6ª ordem grava a versão 4 e reabre igual, com os dois dutos (feature 007, US4)', async ({
+    page,
+}) => {
+    await page.goto('/');
+    await fill(page, /^Fs/, '28');
+    await fill(page, /^Qts/, '0,38');
+    await fill(page, /^Vas/, '85');
+    await page.getByRole('radio', { name: 'Bandpass 6ª ordem' }).click();
+
+    const rear = page.getByRole('group', {
+        name: 'Câmara traseira (dutada)',
+        exact: true,
+    });
+    const front = page.getByRole('group', {
+        name: 'Câmara frontal (dutada)',
+        exact: true,
+    });
+    const inside = async (
+        chamber: typeof rear,
+        name: RegExp,
+        value: string,
+    ) => {
+        const box = chamber.getByRole('textbox', { name });
+        await box.fill(value);
+        await box.press('Tab');
+    };
+
+    await inside(rear, /^Vr/, '80');
+    await inside(rear, /^Fbr/, '30');
+    await inside(rear, /Diâmetro/, '80');
+    await inside(front, /^Vf/, '40');
+    await inside(front, /^Fb(?!r)/, '45');
+    await inside(front, /Diâmetro/, '100');
+
+    const text = await exportedFile(page);
+    const file = JSON.parse(text);
+    expect(file.version).toBe(4);
+    expect(file.project.box).toMatchObject({
+        type: 'bandpass6',
+        vr_m3: 0.08,
+        vf_m3: 0.04,
+        fb_hz: 45,
+        fb_rear_hz: 30,
+        port: { shape: 'round', count: 1 },
+        port_rear: { shape: 'round', count: 1 },
+    });
+    expect(file.project.box.port.diameter_m).toBeCloseTo(0.1, 12);
+    expect(file.project.box.port_rear.diameter_m).toBeCloseTo(0.08, 12);
+
+    await page.getByRole('button', { name: 'Novo' }).click();
+    await openFile(page, 'bandpass6.buildbass.json', text);
+
+    await expect(
+        page.getByRole('radio', { name: 'Bandpass 6ª ordem' }),
+    ).toBeChecked();
+    await expect(rear.getByRole('textbox', { name: /^Fbr/ })).toHaveValue(
+        '30,0',
+    );
+    await expect(rear.getByRole('textbox', { name: /Diâmetro/ })).toHaveValue(
+        '80,0',
+    );
+    await expect(front.getByRole('textbox', { name: /Diâmetro/ })).toHaveValue(
+        '100,0',
+    );
+    await expect(page.locator('[data-region="charts"] canvas')).toBeVisible();
+});
+
+const OLD_PROJECT = {
+    name: 'antigo',
+    driver: { fs_hz: 28, qts: 0.38, vas_m3: 0.085 },
+    drivers: { count: 1, wiring: 'parallel' },
+    box: {
+        type: 'bandpass',
+        vr_m3: 0.04,
+        vf_m3: 0.06,
+        ql: 7,
+        fb_hz: 45,
+        port: { shape: 'round', diameter_m: 0.1, count: 1 },
+    },
+    signal: { mode: 'power', power_w: 1, radiation: 'half' },
+    fieldUnits: {},
+};
+
+for (const [version, extra] of [
+    [2, {}],
+    [3, { cutPlan: { thickness_m: 0.02, proportion: 'louden' } }],
+] as const) {
+    test(`abre um arquivo existente de versão ${version} sem mudança (feature 007, US4)`, async ({
+        page,
+    }) => {
+        await page.goto('/');
+        await openFile(
+            page,
+            `v${version}.buildbass.json`,
+            JSON.stringify({
+                format: 'buildbass.project',
+                version,
+                project: { ...OLD_PROJECT, ...extra },
+            }),
+        );
+
+        await expect(
+            page.getByRole('radio', { name: 'Bandpass 4ª ordem' }),
+        ).toBeChecked();
+        await expect(field(page, /^Vr/)).toHaveValue('40,0');
+        await expect(field(page, /^Vf/)).toHaveValue('60,0');
+    });
+}

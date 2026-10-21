@@ -815,3 +815,196 @@ describe('bandpass (C6)', () => {
         });
     });
 });
+
+describe('bandpass de 6ª ordem (feature 007, US5)', () => {
+    const sixth = (box: Partial<BoxInput> = {}, count = 1): ProjectInput =>
+        project(
+            {
+                type: 'bandpass6',
+                vr_m3: 0.08,
+                vf_m3: 0.04,
+                fb_hz: 45,
+                fb_rear_hz: 30,
+                port: { shape: 'round', diameter_m: 0.1, count: 1 },
+                port_rear: { shape: 'round', diameter_m: 0.08, count: 1 },
+                ...box,
+            },
+            count,
+        );
+
+    const piece = (plan: Plan, role: string) =>
+        plan.pieces.find((item) => item.role === role);
+
+    test('as mesmas sete peças da 4ª ordem, com a divisória e as profundidades por câmara', () => {
+        const plan = ready(sixth());
+        const four = ready(
+            project({
+                type: 'bandpass',
+                vr_m3: 0.08,
+                vf_m3: 0.04,
+                fb_hz: 45,
+                port: { shape: 'round', diameter_m: 0.1, count: 1 },
+            }),
+        );
+
+        expect(plan.boxType).toBe('bandpass6');
+        expect(plan.pieces.map(({ role }) => role)).toEqual(
+            four.pieces.map(({ role }) => role),
+        );
+        expect(plan.pieces.reduce((sum, p) => sum + p.quantity, 0)).toBe(7);
+        expect(plan.dimensions.chambers?.rear_d_m).toBeCloseTo(
+            2 * (plan.dimensions.chambers?.front_d_m ?? 0),
+            9,
+        );
+    });
+
+    test('duto frontal na frente, duto traseiro no fundo e driver na divisória', () => {
+        const plan = ready(sixth(), { cutout_m: 0.2 });
+
+        expect(piece(plan, 'front')?.cutouts).toMatchObject([
+            { kind: 'port', shape: 'round', diameter_m: 0.1 },
+        ]);
+        expect(piece(plan, 'back')?.cutouts).toMatchObject([
+            { kind: 'port', shape: 'round', diameter_m: 0.08 },
+        ]);
+        expect(piece(plan, 'divider')?.cutouts.map(({ kind }) => kind)).toEqual(
+            ['driver'],
+        );
+        expect(
+            piece(plan, 'back')?.cutouts.every(
+                ({ center }) => center !== undefined,
+            ),
+        ).toBe(true);
+    });
+
+    test('cada duto segue o seu formato, medidas e quantidade', () => {
+        const plan = ready(
+            sixth({
+                port: {
+                    shape: 'rect',
+                    width_m: 0.12,
+                    height_m: 0.05,
+                    count: 2,
+                },
+                port_rear: {
+                    shape: 'triangle',
+                    base_m: 0.1,
+                    height_m: 0.08,
+                    count: 3,
+                },
+            }),
+        );
+
+        const front = piece(plan, 'front')?.cutouts ?? [];
+        const back = piece(plan, 'back')?.cutouts ?? [];
+
+        expect(front).toHaveLength(2);
+        expect(front.every(({ shape }) => shape === 'rect')).toBe(true);
+        expect(back).toHaveLength(3);
+        expect(back.every(({ shape }) => shape === 'triangle')).toBe(true);
+        expect(back[0]).toMatchObject({ base_m: 0.1, height_m: 0.08 });
+    });
+
+    test('SC-008 — conferência por câmara dentro de 2 % da simulação, com o duto de cada uma', () => {
+        const input = sixth({}, 2);
+        const plan = ready(input, { braces_m3: 0.005 });
+        const results = simulate(input).results;
+        const [rear, front] = plan.volume.chambers;
+        const area = (diameter: number) => (Math.PI * diameter ** 2) / 4;
+
+        expect([rear.id, front.id]).toEqual(['rear', 'front']);
+        expect(rear.ports_m3).toBeCloseTo(
+            area(0.08) * (results.port_rear_length_m as number),
+            12,
+        );
+        expect(front.ports_m3).toBeCloseTo(
+            area(0.1) * (results.port_length_m as number),
+            12,
+        );
+        expect(rear.drivers_m3).toBeGreaterThan(0);
+        expect(front.drivers_m3).toBe(0);
+        expect(rear.difference_ratio).toBeLessThanOrEqual(0.02);
+        expect(front.difference_ratio).toBeLessThanOrEqual(0.02);
+        expect(rear.net_m3).toBeCloseTo(results.net_rear_m3 as number, 9);
+        expect(front.net_m3).toBeCloseTo(results.net_front_m3 as number, 9);
+        expect(plan.volume.matchesSimulation).toBe(true);
+        expect(plan.port_rear_length_m).toBe(results.port_rear_length_m);
+    });
+
+    test('duto mais longo que a câmara avisa só o duto em questão', () => {
+        const plan = ready(
+            sixth({
+                vr_m3: 0.02,
+                fb_rear_hz: 20,
+                port: { shape: 'round', diameter_m: 0.06, count: 1 },
+                port_rear: { shape: 'round', diameter_m: 0.02, count: 1 },
+            }),
+        );
+        const warnings = plan.warnings.filter(
+            ({ id }) => id === 'portLongerThanDepth',
+        );
+
+        expect(warnings).toHaveLength(1);
+        expect(warnings[0]).toMatchObject({ duct: 'rear' });
+        expect(warnings[0].length_m).toBeGreaterThan(
+            warnings[0].depth_m as number,
+        );
+        expect(warnings[0].depth_m).toBeCloseTo(
+            plan.dimensions.chambers?.rear_d_m ?? 0,
+            12,
+        );
+    });
+
+    test('duto sem medidas: recorte pendente, aviso nomeando o duto e sem conferência de volume', () => {
+        const plan = ready(sixth({ port_rear: { shape: 'round', count: 1 } }));
+
+        expect(piece(plan, 'back')?.cutouts[0].pending).toEqual(['diameter_m']);
+        expect(
+            plan.warnings.filter(({ id }) => id === 'portUnknown'),
+        ).toMatchObject([{ duct: 'rear' }]);
+        expect(plan.volume.chambers).toEqual([]);
+    });
+
+    test('sem o duto traseiro definido o plano ainda sai, com o aviso do duto', () => {
+        const input = sixth();
+        delete input.box.port_rear;
+        const plan = ready(input);
+
+        expect(piece(plan, 'back')?.cutouts).toHaveLength(1);
+        expect(
+            plan.warnings.filter(({ id }) => id === 'portUnknown'),
+        ).toMatchObject([{ duct: 'rear' }]);
+    });
+
+    test('bloqueada sem Vr ou sem Vf, nomeando o que falta', () => {
+        const { vr_m3: _vr, ...withoutRear } = sixth().box;
+        const { vf_m3: _vf, ...withoutFront } = sixth().box;
+
+        expect(build({ ...sixth(), box: withoutRear })).toMatchObject({
+            status: 'blocked',
+            missing: ['vr_m3'],
+        });
+        expect(build({ ...sixth(), box: withoutFront })).toMatchObject({
+            status: 'blocked',
+            missing: ['vf_m3'],
+        });
+    });
+
+    test('a 4ª ordem não muda: fundo sem recortes e avisos sem duto', () => {
+        const plan = ready(
+            project({
+                type: 'bandpass',
+                vr_m3: 0.04,
+                vf_m3: 0.06,
+                fb_hz: 45,
+                port: { shape: 'round', diameter_m: 0.1, count: 1 },
+            }),
+        );
+
+        expect(piece(plan, 'back')?.cutouts).toEqual([]);
+        expect(plan.port_rear_length_m).toBeUndefined();
+        expect(plan.warnings.every(({ duct }) => duct === undefined)).toBe(
+            true,
+        );
+    });
+});

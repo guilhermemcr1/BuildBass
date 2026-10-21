@@ -63,6 +63,10 @@
         "label": "Sintonia do duto",
         "help": "Frequência em que o duto e o volume da caixa ressoam juntos."
     },
+    "fb_rear_hz": {
+        "label": "Sintonia da câmara traseira",
+        "help": "Frequência em que a câmara traseira, com o duto dela, ressoa com o cone travado."
+    },
     "vd_m3": {
         "label": "Volume ocupado pelo driver",
         "help": "Volume que o próprio driver ocupa dentro da caixa (ficha técnica). Deixe 0 se não souber."
@@ -87,9 +91,29 @@
         "label": "Base do duto",
         "help": "Base interna de cada duto triangular."
     },
+    "rear_diameter_m": {
+        "label": "Diâmetro do duto traseiro",
+        "help": "Diâmetro interno de cada duto redondo da câmara traseira."
+    },
+    "rear_width_m": {
+        "label": "Largura do duto traseiro",
+        "help": "Largura interna de cada duto retangular da câmara traseira."
+    },
+    "rear_height_m": {
+        "label": "Altura do duto traseiro",
+        "help": "Altura interna de cada duto retangular ou triangular da câmara traseira."
+    },
+    "rear_base_m": {
+        "label": "Base do duto traseiro",
+        "help": "Base interna de cada duto triangular da câmara traseira."
+    },
     "port_count": {
         "label": "Quantidade de dutos",
         "help": "Número de dutos iguais na caixa."
+    },
+    "rear_port_count": {
+        "label": "Quantidade de dutos traseiros",
+        "help": "Número de dutos iguais na câmara traseira."
     },
     "driver_count": {
         "label": "Quantidade de drivers",

@@ -1,5 +1,6 @@
 import { temporal } from 'zundo';
 import { createStore } from 'zustand/vanilla';
+import { twoChambers } from '@/engine';
 import type { ParameterKey } from '@/lib/parameters';
 import { withDriver } from '@/lib/project/fields';
 import type {
@@ -14,7 +15,7 @@ import type {
 } from '@/lib/project/types';
 import type { UnitId } from '@/lib/units/quantities';
 
-type BoxValueKey = 'vb_m3' | 'vr_m3' | 'vf_m3' | 'fb_hz' | 'ql';
+type BoxValueKey = 'vb_m3' | 'vr_m3' | 'vf_m3' | 'fb_hz' | 'fb_rear_hz' | 'ql';
 
 export type ProjectState = {
     data: ProjectData;
@@ -23,6 +24,7 @@ export type ProjectState = {
     setBoxValue: (key: BoxValueKey, si: number | undefined) => void;
     setBoxType: (type: BoxType) => void;
     setPort: (port: PortInput) => void;
+    setPortRear: (port: PortInput) => void;
     setDrivers: (drivers: Partial<DriversInput>) => void;
     setSignal: (signal: Partial<SignalInput>) => void;
     setFieldUnit: (key: ParameterKey, unit: UnitId) => void;
@@ -83,27 +85,44 @@ export function createProjectStore(
                                     : withValue(data.box, key, si),
                         })),
                     // Ao escolher bandpass, as câmaras vazias partem do Vb já digitado (uma etapa só
-                    // de desfazer); cada tipo guarda os próprios campos (specs/004, FR-012).
+                    // de desfazer); cada tipo guarda os próprios campos (specs/004, FR-012). Na de
+                    // 6ª ordem o duto traseiro parte de uma cópia do frontal; Fbr não é semeada
+                    // (specs/007, research.md §8).
                     setBoxType: (type) =>
                         update((data) => {
                             const { vb_m3 } = data.box;
-                            const seed =
-                                type === 'bandpass' && vb_m3 !== undefined
+                            const chambers =
+                                twoChambers(type) && vb_m3 !== undefined
                                     ? {
                                           vr_m3: data.box.vr_m3 ?? vb_m3,
                                           vf_m3: data.box.vf_m3 ?? vb_m3,
                                       }
                                     : {};
+                            const rearPort =
+                                type === 'bandpass6' &&
+                                data.box.port_rear === undefined
+                                    ? { port_rear: data.box.port }
+                                    : {};
 
                             return {
                                 ...data,
-                                box: { ...data.box, ...seed, type },
+                                box: {
+                                    ...data.box,
+                                    ...chambers,
+                                    ...rearPort,
+                                    type,
+                                },
                             };
                         }),
                     setPort: (port) =>
                         update((data) => ({
                             ...data,
                             box: { ...data.box, port },
+                        })),
+                    setPortRear: (port) =>
+                        update((data) => ({
+                            ...data,
+                            box: { ...data.box, port_rear: port },
                         })),
                     setDrivers: (drivers) =>
                         update((data) => ({

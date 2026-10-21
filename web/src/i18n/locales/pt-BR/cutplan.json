@@ -100,7 +100,11 @@
         "driverCutoutUnknown": "O diâmetro do recorte do driver ({{field}}) não foi informado: o recorte aparece como a informar e as posições mudam quando ele entrar.",
         "portUnknown": "O duto está sem medidas: informe-as para ter o recorte e o volume dele.",
         "simulationUnavailable": "Sem a simulação não há conferência de volume nem comprimento do duto: complete o driver e a caixa.",
-        "volumeMismatch": "O volume líquido do plano difere do da simulação. Isso não deveria acontecer: confira os valores e relate o caso."
+        "volumeMismatch": "O volume líquido do plano difere do da simulação. Isso não deveria acontecer: confira os valores e relate o caso.",
+        "portLongerThanDepth_rear": "O duto traseiro ({{length}}) é mais longo que a profundidade da câmara traseira ({{depth}}): ele precisará de curva ou dobra.",
+        "portLongerThanDepth_front": "O duto frontal ({{length}}) é mais longo que a profundidade da câmara frontal ({{depth}}): ele precisará de curva ou dobra.",
+        "portUnknown_rear": "O duto da câmara traseira está sem medidas: informe-as para ter o recorte e o volume dele.",
+        "portUnknown_front": "O duto da câmara frontal está sem medidas: informe-as para ter o recorte e o volume dele."
     },
     "drawings": {
         "title": "Desenhos 2D",
@@ -128,7 +132,8 @@
     "types": {
         "closed": "selada",
         "vented": "dutada",
-        "bandpass": "bandpass"
+        "bandpass": "bandpass de 4ª ordem",
+        "bandpass6": "bandpass de 6ª ordem"
     },
     "views": {
         "label": "Visões do plano"
