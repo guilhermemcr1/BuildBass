@@ -64,6 +64,18 @@ function withField<T extends object>(
     return si === undefined ? without(record, key) : { ...record, [key]: si };
 }
 
+// A origem copiada do catálogo some quando o driver fica sem nenhum valor (specs/003, FR-010).
+export function withDriver(
+    data: ProjectData,
+    driver: ProjectData['driver'],
+): ProjectData {
+    if (Object.keys(driver).length > 0) {
+        return { ...data, driver };
+    }
+
+    return { ...without(data, 'driverSource'), driver };
+}
+
 // Devolve o projeto com o campo alterado; `undefined` apaga o valor digitado.
 export function writeField(
     data: ProjectData,
@@ -71,7 +83,7 @@ export function writeField(
     si: number | undefined,
 ): ProjectData {
     if (driverKey(key)) {
-        return { ...data, driver: withField(data.driver, key, si) };
+        return withDriver(data, withField(data.driver, key, si));
     }
 
     if (key === 'ql') {

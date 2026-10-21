@@ -84,7 +84,17 @@
         "label": "Driver catalog",
         "placeholder": "Search brand or model",
         "submit": "Submit driver",
-        "offlineReason": "Unavailable without a connection to the server."
+        "offlineReason": "Unavailable without a connection to the server.",
+        "searching": "Searching…",
+        "empty": "No driver found for «{{term}}»",
+        "error": "Could not query the catalog right now",
+        "retry": "Try again",
+        "more": "There are more results. Refine your search.",
+        "applying": "Copying parameters…",
+        "applyFailed": "Could not copy this driver. The project was not changed.",
+        "notFound": "This driver is no longer in the catalog.",
+        "originLabel": "Source",
+        "resultSupport": "Fs {{fs}} · Qts {{qts}} · Vas {{vas}}"
     },
     "offline": {
         "title": "Offline.",

@@ -3,12 +3,13 @@ import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { ParameterField } from '@/components/ui/parameter-field';
-import { SearchSelect } from '@/components/ui/search-select';
 import { deriveDriver } from '@/engine';
 import type { DerivedDriver, DriverKey } from '@/engine';
 import { useActiveProject } from '@/hooks/use-active-project';
 import { useOnlineStatus } from '@/hooks/use-online-status';
 import { DRIVER_PARAMETERS } from '@/lib/parameters';
+import { CatalogSearch } from './catalog-search';
+import { DriverOrigin } from './driver-origin';
 import { DriversFields } from './drivers-fields';
 import { Panel } from './panel';
 import { SignalFields } from './signal-fields';
@@ -65,8 +66,8 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
     const derived = deriveDriver(driver);
     const offlineReason = t('catalog.offlineReason');
 
-    // Catálogo e envio dependem do servidor (constituição, Princípio V); a busca e o envio de
-    // fato chegam em features próprias.
+    // Catálogo e envio dependem do servidor (constituição, Princípio V); o envio chega em feature
+    // própria.
     const submit = (
         <Button
             variant="secondary"
@@ -83,17 +84,14 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
     return (
         <Panel region="driver" title={t('regions.driver')}>
             <div className="flex flex-wrap items-end gap-2">
-                <SearchSelect
-                    label={t('catalog.label')}
-                    placeholder={t('catalog.placeholder')}
-                    items={[]}
-                    onSelect={() => undefined}
+                <CatalogSearch
                     disabled={offline}
                     disabledReason={offlineReason}
                     className="min-w-48 flex-1"
                 />
                 {submit}
             </div>
+            <DriverOrigin />
             <div className="grid grid-cols-2 items-start gap-2">
                 {DRIVER_PARAMETERS.map((key) => (
                     <DriverField

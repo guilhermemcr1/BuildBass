@@ -1,10 +1,13 @@
 import { temporal } from 'zundo';
 import { createStore } from 'zustand/vanilla';
 import type { ParameterKey } from '@/lib/parameters';
+import { withDriver } from '@/lib/project/fields';
 import type {
     BoxType,
+    DriverInput,
     DriverKey,
     DriversInput,
+    DriverSource,
     PortInput,
     ProjectData,
     SignalInput,
@@ -24,6 +27,9 @@ export type ProjectState = {
     setSignal: (signal: Partial<SignalInput>) => void;
     setFieldUnit: (key: ParameterKey, unit: UnitId) => void;
     clearFieldUnits: () => void;
+    // Copia um driver do catálogo: substitui o driver por inteiro e registra a origem, numa etapa
+    // só de desfazer (specs/003, FR-006–008).
+    applyCatalogDriver: (driver: DriverInput, source: DriverSource) => void;
     // Várias mudanças numa única etapa de desfazer (ex.: sugestão de caixa, FR-020).
     apply: (update: (data: ProjectData) => ProjectData) => void;
 };
@@ -65,10 +71,9 @@ export function createProjectStore(
                     data: initial,
                     setName: (name) => update((data) => ({ ...data, name })),
                     setDriverValue: (key, si) =>
-                        update((data) => ({
-                            ...data,
-                            driver: withValue(data.driver, key, si),
-                        })),
+                        update((data) =>
+                            withDriver(data, withValue(data.driver, key, si)),
+                        ),
                     setBoxValue: (key, si) =>
                         update((data) => ({
                             ...data,
@@ -104,6 +109,12 @@ export function createProjectStore(
                         })),
                     clearFieldUnits: () =>
                         update((data) => ({ ...data, fieldUnits: {} })),
+                    applyCatalogDriver: (driver, source) =>
+                        update((data) => ({
+                            ...data,
+                            driver,
+                            driverSource: source,
+                        })),
                     apply: update,
                 };
             },

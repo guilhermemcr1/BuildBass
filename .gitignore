@@ -1,6 +1,9 @@
 # Instalador original do BassBox (software comercial + seriais) — nunca versionar
 /BassBox 6 Pro/
 
+# Fichas técnicas (PDF) dos fabricantes, só como fonte dos dados do catálogo — não versionar
+/alto-falantes-manuais/
+
 # Configuração local do Claude Code (skills do Spec Kit, permissões) — fica só na máquina
 /.claude/
 

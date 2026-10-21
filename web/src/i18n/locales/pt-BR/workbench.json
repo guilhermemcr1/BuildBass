@@ -84,7 +84,17 @@
         "label": "Catálogo de drivers",
         "placeholder": "Buscar fabricante ou modelo",
         "submit": "Enviar driver",
-        "offlineReason": "Indisponível sem conexão com o servidor."
+        "offlineReason": "Indisponível sem conexão com o servidor.",
+        "searching": "Buscando…",
+        "empty": "Nenhum driver encontrado para «{{term}}»",
+        "error": "Não foi possível consultar o catálogo agora",
+        "retry": "Tentar de novo",
+        "more": "Há mais resultados. Refine a busca.",
+        "applying": "Copiando parâmetros…",
+        "applyFailed": "Não foi possível copiar este driver. O projeto não foi alterado.",
+        "notFound": "Este driver não está mais no catálogo.",
+        "originLabel": "Origem",
+        "resultSupport": "Fs {{fs}} · Qts {{qts}} · Vas {{vas}}"
     },
     "offline": {
         "title": "Sem conexão.",

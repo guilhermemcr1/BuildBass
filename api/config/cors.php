@@ -17,7 +17,8 @@ return [
 
     'paths' => ['api/*', 'up'],
 
-    'allowed_methods' => ['*'],
+    // O catálogo é só leitura: o navegador só pode pedir GET (e o pré-voo).
+    'allowed_methods' => ['GET', 'HEAD', 'OPTIONS'],
 
     'allowed_origins' => array_filter(explode(',', (string) env('FRONTEND_URL', 'http://localhost:5173'))),
 

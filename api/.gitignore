@@ -14,3 +14,5 @@
 auth.json
 Homestead.json
 Homestead.yaml
+/storage/logs/*.log
+/storage/framework/cache/
