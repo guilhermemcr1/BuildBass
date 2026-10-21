@@ -63,6 +63,10 @@
         "label": "Port tuning",
         "help": "Frequency at which the port and the box volume resonate together."
     },
+    "fb_rear_hz": {
+        "label": "Rear chamber tuning",
+        "help": "Frequency at which the rear chamber and its port resonate with the cone blocked."
+    },
     "vd_m3": {
         "label": "Driver displacement",
         "help": "Volume the driver itself occupies inside the box (datasheet). Leave 0 if unknown."
@@ -87,9 +91,29 @@
         "label": "Port base",
         "help": "Inner base of each triangular port."
     },
+    "rear_diameter_m": {
+        "label": "Rear port diameter",
+        "help": "Inside diameter of each round port of the rear chamber."
+    },
+    "rear_width_m": {
+        "label": "Rear port width",
+        "help": "Inside width of each rectangular port of the rear chamber."
+    },
+    "rear_height_m": {
+        "label": "Rear port height",
+        "help": "Inside height of each rectangular or triangular port of the rear chamber."
+    },
+    "rear_base_m": {
+        "label": "Rear port base",
+        "help": "Inside base of each triangular port of the rear chamber."
+    },
     "port_count": {
         "label": "Number of ports",
         "help": "Number of identical ports in the box."
+    },
+    "rear_port_count": {
+        "label": "Number of rear ports",
+        "help": "Number of identical ports in the rear chamber."
     },
     "driver_count": {
         "label": "Number of drivers",

@@ -23,12 +23,18 @@ export type ParameterKey =
     | 'vr_m3'
     | 'vf_m3'
     | 'fb_hz'
+    | 'fb_rear_hz'
     | 'ql'
     | 'diameter_m'
     | 'width_m'
     | 'height_m'
     | 'base_m'
+    | 'rear_diameter_m'
+    | 'rear_width_m'
+    | 'rear_height_m'
+    | 'rear_base_m'
     | 'port_count'
+    | 'rear_port_count'
     | 'driver_count'
     | 'power_w'
     | 'voltage_v'
@@ -79,12 +85,27 @@ export const PARAMETERS: Record<ParameterKey, ParameterDefinition> = {
     vf_m3: parameter('vf_m3', 'Vf', 'volume', 'box', 1e-4, 20),
     vd_m3: parameter('vd_m3', 'Vd', 'volume', 'driver', 0, 0.1),
     fb_hz: parameter('fb_hz', 'Fb', 'frequency', 'box', 5, 500),
+    // Bandpass de 6ª ordem: sintonia da câmara traseira, na faixa de `fb_hz`.
+    fb_rear_hz: parameter('fb_rear_hz', 'Fbr', 'frequency', 'box', 5, 500),
     ql: parameter('ql', 'Ql', 'ratio', 'box', 1, 100),
     diameter_m: parameter('diameter_m', 'Ø', 'length', 'port', 0.005, 1),
     width_m: parameter('width_m', 'W', 'length', 'port', 0.005, 2),
     height_m: parameter('height_m', 'H', 'length', 'port', 0.005, 2),
     base_m: parameter('base_m', 'B', 'length', 'port', 0.005, 2),
+    // Duto da câmara traseira da bandpass de 6ª ordem: mesmas grandezas e faixas do frontal.
+    rear_diameter_m: parameter(
+        'rear_diameter_m',
+        'Ø',
+        'length',
+        'port',
+        0.005,
+        1,
+    ),
+    rear_width_m: parameter('rear_width_m', 'W', 'length', 'port', 0.005, 2),
+    rear_height_m: parameter('rear_height_m', 'H', 'length', 'port', 0.005, 2),
+    rear_base_m: parameter('rear_base_m', 'B', 'length', 'port', 0.005, 2),
     port_count: parameter('port_count', 'n', 'count', 'port', 1, 8),
+    rear_port_count: parameter('rear_port_count', 'n', 'count', 'port', 1, 8),
     driver_count: parameter('driver_count', 'N', 'count', 'driver', 1, 8),
     power_w: parameter('power_w', 'P', 'power', 'signal', 0, 50_000),
     voltage_v: parameter('voltage_v', 'V', 'voltage', 'signal', 0, 1000),

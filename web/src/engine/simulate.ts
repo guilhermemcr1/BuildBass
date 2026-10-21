@@ -6,6 +6,7 @@ import { AIR_DENSITY, SPEED_OF_SOUND } from './constants';
 import { deriveDriver } from './driver';
 import { FREQUENCIES_HZ } from './frequencies';
 import { netVolume as solveNetVolume, portArea } from './port';
+import { twoChambers } from './types';
 import type {
     CurveId,
     DriverKey,
@@ -15,11 +16,17 @@ import type {
     ProjectInput,
     Simulation,
     SimulationResults,
+    WarningId,
 } from './types';
 
 const RHO_C2 = AIR_DENSITY * SPEED_OF_SOUND ** 2;
 // Pressão de referência do SPL e distância de medição.
 const P_REF = 20e-6;
+// Piso do nível (−120 dB SPL): a bandpass de 6ª ordem pode cancelar a saída por completo (duas
+// sintonias iguais), e o logaritmo de zero não é um número que o gráfico possa desenhar.
+const P_FLOOR = P_REF * 1e-6;
+// Duto da câmara traseira ainda não preenchido (bandpass de 6ª ordem).
+const NO_PORT: PortInput = { shape: 'round', count: 1 };
 const DISTANCE_M = 1;
 // Área usada só no modo normalizado, em que o nível absoluto não importa.
 const NORMALIZED_SD = 0.05;
@@ -41,22 +48,109 @@ type Model = {
     passbandPressure: number;
 };
 
-// Medidas que faltam para a área do duto, pela forma.
-function portMissing(port: PortInput): FieldKey[] {
+// Medidas que faltam para a área do duto, pela forma. O duto da câmara traseira (bandpass de 6ª
+// ordem) usa as mesmas medidas com o prefixo `rear_`.
+function portMissing(port: PortInput, rear = false): FieldKey[] {
+    const key = (name: string) => (rear ? `rear_${name}` : name) as FieldKey;
+
     switch (port.shape) {
         case 'round':
-            return port.diameter_m === undefined ? ['diameter_m'] : [];
+            return port.diameter_m === undefined ? [key('diameter_m')] : [];
         case 'rect':
             return [
-                ...(port.width_m === undefined ? (['width_m'] as const) : []),
-                ...(port.height_m === undefined ? (['height_m'] as const) : []),
+                ...(port.width_m === undefined ? [key('width_m')] : []),
+                ...(port.height_m === undefined ? [key('height_m')] : []),
             ];
         case 'triangle':
             return [
-                ...(port.base_m === undefined ? (['base_m'] as const) : []),
-                ...(port.height_m === undefined ? (['height_m'] as const) : []),
+                ...(port.base_m === undefined ? [key('base_m')] : []),
+                ...(port.height_m === undefined ? [key('height_m')] : []),
             ];
     }
+}
+
+type DuctedChamber = {
+    // Volume líquido: bruto − drivers − dutos (≤ 0 quando nada cabe).
+    net_m3: number;
+    length_m?: number;
+    // false quando os drivers ou os dutos não cabem na câmara.
+    fits: boolean;
+    warnings: EngineWarning[];
+};
+
+type DuctedChamberInput = {
+    volume_m3: number;
+    drivers_m3: number;
+    fb_hz?: number;
+    area_m2?: number;
+    count: number;
+    // Aviso quando só os drivers já não cabem (volume líquido ≤ 0).
+    invalid: WarningId;
+    chamber?: 'rear' | 'front';
+};
+
+// Câmara com duto: volume líquido, comprimento do duto e avisos (research.md §7 da 002; usada pela
+// dutada, pela câmara frontal e pela traseira da 6ª ordem, sem equação repetida). O volume dos
+// dutos sai da câmara e o comprimento depende do volume líquido (`port.ts`).
+function ductedChamber({
+    volume_m3,
+    drivers_m3,
+    fb_hz,
+    area_m2,
+    count,
+    invalid,
+    chamber,
+}: DuctedChamberInput): DuctedChamber {
+    const tag = (
+        id: WarningId,
+        values?: Record<string, number>,
+    ): EngineWarning => ({
+        id,
+        ...(chamber === undefined ? {} : { chamber }),
+        ...(values === undefined ? {} : { values }),
+    });
+    const available = volume_m3 - drivers_m3;
+
+    if (available <= 0) {
+        return { net_m3: available, fits: false, warnings: [tag(invalid)] };
+    }
+
+    if (area_m2 === undefined || fb_hz === undefined) {
+        return { net_m3: available, fits: true, warnings: [] };
+    }
+
+    const solved = solveNetVolume({
+        vb_m3: volume_m3,
+        drivers_m3,
+        fb_hz,
+        area_m2,
+        count,
+    });
+
+    if (Number.isNaN(solved.length_m)) {
+        return {
+            net_m3: solved.net_m3,
+            fits: false,
+            warnings: [tag('portVolumeTooLarge')],
+        };
+    }
+
+    const warnings: EngineWarning[] = [];
+
+    if (solved.length_m <= 0) {
+        warnings.push(tag('portTooShort'));
+    } else if (solved.length_m > Math.cbrt(volume_m3)) {
+        // Duto mais longo que a maior medida de uma caixa cúbica: ressonâncias do tubo caem perto
+        // da banda e ele dificilmente cabe.
+        warnings.push(tag('portTooLong', { length_m: solved.length_m }));
+    }
+
+    return {
+        net_m3: solved.net_m3,
+        length_m: solved.length_m,
+        fits: true,
+        warnings,
+    };
 }
 
 function missingFrom(
@@ -73,6 +167,7 @@ function emptyMissing(): Record<CurveId, FieldKey[]> {
         impedance_ohm: [],
         group_delay_s: [],
         port_velocity_ms: [],
+        port_rear_velocity_ms: [],
     };
 }
 
@@ -83,7 +178,7 @@ function pressure(volumeVelocity: number, omega: number, solidAngle: number) {
 }
 
 function levelDb(rmsPressure: number): number {
-    return 20 * Math.log10(rmsPressure / P_REF);
+    return 20 * Math.log10(Math.max(rmsPressure, P_FLOOR) / P_REF);
 }
 
 function unwrap(phases: number[]): number[] {
@@ -227,10 +322,14 @@ export function simulate(project: ProjectInput): Simulation {
     }
 
     const { box, drivers, signal } = project;
-    const vented = box.type === 'vented';
-    const band = box.type === 'bandpass';
-    // Tipos com duto: a dutada e a bandpass (o duto da câmara frontal).
-    const ported = vented || band;
+    // Duas câmaras separadas pelo driver: bandpass de 4ª (traseira selada) e de 6ª ordem (as duas
+    // dutadas).
+    const band = twoChambers(box.type);
+    const band6 = box.type === 'bandpass6';
+    // Tipos com duto: a dutada e as bandpass (o duto da câmara frontal; na 6ª ordem, também o da
+    // traseira).
+    const ported = box.type !== 'closed';
+    const rearPort = box.port_rear ?? NO_PORT;
     const missing = emptyMissing();
     const warnings: EngineWarning[] = [];
     const results: SimulationResults = {};
@@ -251,6 +350,10 @@ export function simulate(project: ProjectInput): Simulation {
 
     if (ported && box.fb_hz === undefined) {
         boxMissing.push('fb_hz');
+    }
+
+    if (band6 && box.fb_rear_hz === undefined) {
+        boxMissing.push('fb_rear_hz');
     }
 
     const responseMissing = [
@@ -302,6 +405,9 @@ export function simulate(project: ProjectInput): Simulation {
     missing.port_velocity_ms = ported
         ? [...missing.excursion_m, ...portMissing(box.port)]
         : [];
+    missing.port_rear_velocity_ms = band6
+        ? [...missing.excursion_m, ...portMissing(rearPort, true)]
+        : [];
 
     // Eficiência de referência η0 = (4π²/c³)·Fs³·Vas/Qes ([S72] eq. 26), N vezes para N drivers.
     if (
@@ -328,6 +434,10 @@ export function simulate(project: ProjectInput): Simulation {
         results.fb_hz = box.fb_hz;
     }
 
+    if (band6 && box.fb_rear_hz !== undefined) {
+        results.fb_rear_hz = box.fb_rear_hz;
+    }
+
     const empty = (): Simulation => ({
         frequencies_hz: FREQUENCIES_HZ,
         curves: {},
@@ -347,10 +457,13 @@ export function simulate(project: ProjectInput): Simulation {
     const driversVolume = count * (values.vd_m3 ?? 0);
     const portCount = Math.max(1, Math.round(box.port.count));
     const area = ported ? portArea(box.port) : undefined;
+    const rearPortCount = Math.max(1, Math.round(rearPort.count));
+    const rearArea = band6 ? portArea(rearPort) : undefined;
     let rearNet: number | undefined;
+    let failed = false;
 
-    // Bandpass: o magneto do driver fica na câmara traseira ([D06]).
-    if (band) {
+    // Bandpass de 4ª ordem: o magneto do driver fica na câmara traseira selada ([D06]).
+    if (box.type === 'bandpass') {
         rearNet = rearNetVolume(box.vr_m3 as number, driversVolume);
         results.net_rear_m3 = rearNet;
 
@@ -361,64 +474,58 @@ export function simulate(project: ProjectInput): Simulation {
         }
     }
 
-    // Na bandpass os drivers já saíram da câmara traseira; a frontal só perde o duto.
-    const chamberDrivers = band ? 0 : driversVolume;
-    let netVolume = chamber - chamberDrivers;
+    // Bandpass de 6ª ordem: a traseira também leva duto; o driver sai dela e cada duto sai da
+    // câmara dele (research.md §2).
+    if (band6) {
+        const rear = ductedChamber({
+            volume_m3: box.vr_m3 as number,
+            drivers_m3: driversVolume,
+            fb_hz: box.fb_rear_hz,
+            area_m2: rearArea,
+            count: rearPortCount,
+            invalid: 'rearVolumeInvalid',
+            chamber: 'rear',
+        });
 
-    if (netVolume <= 0) {
-        if (band) {
-            results.net_front_m3 = netVolume;
-        } else {
-            results.net_volume_m3 = netVolume;
+        results.net_rear_m3 = rear.net_m3;
+
+        if (rear.length_m !== undefined) {
+            results.port_rear_length_m = rear.length_m;
         }
 
-        warnings.push({ id: band ? 'portVolumeTooLarge' : 'netVolumeInvalid' });
+        warnings.push(...rear.warnings);
+        failed = !rear.fits;
+        rearNet = rear.net_m3;
+    }
 
+    // Na bandpass os drivers já saíram da câmara traseira; a frontal só perde o duto.
+    const front = ductedChamber({
+        volume_m3: chamber,
+        drivers_m3: band ? 0 : driversVolume,
+        fb_hz: box.fb_hz,
+        area_m2: area,
+        count: portCount,
+        invalid: band ? 'portVolumeTooLarge' : 'netVolumeInvalid',
+        chamber: band6 ? 'front' : undefined,
+    });
+
+    if (band) {
+        results.net_front_m3 = front.net_m3;
+    } else {
+        results.net_volume_m3 = front.net_m3;
+    }
+
+    if (front.length_m !== undefined) {
+        results.port_length_m = front.length_m;
+    }
+
+    warnings.push(...front.warnings);
+
+    if (failed || !front.fits) {
         return empty();
     }
 
-    // Com duto, o volume dos dutos também sai da caixa (research.md §7).
-    if (area !== undefined && box.fb_hz !== undefined) {
-        const solved = solveNetVolume({
-            vb_m3: chamber,
-            drivers_m3: chamberDrivers,
-            fb_hz: box.fb_hz,
-            area_m2: area,
-            count: portCount,
-        });
-
-        if (Number.isNaN(solved.length_m)) {
-            if (band) {
-                results.net_front_m3 = solved.net_m3;
-            } else {
-                results.net_volume_m3 = solved.net_m3;
-            }
-
-            warnings.push({ id: 'portVolumeTooLarge' });
-
-            return empty();
-        }
-
-        netVolume = solved.net_m3;
-        results.port_length_m = solved.length_m;
-
-        if (solved.length_m <= 0) {
-            warnings.push({ id: 'portTooShort' });
-        } else if (solved.length_m > Math.cbrt(chamber)) {
-            // Duto mais longo que a maior medida de uma caixa cúbica: ressonâncias do tubo
-            // caem perto da banda e ele dificilmente cabe.
-            warnings.push({
-                id: 'portTooLong',
-                values: { length_m: solved.length_m },
-            });
-        }
-    }
-
-    if (band) {
-        results.net_front_m3 = netVolume;
-    } else {
-        results.net_volume_m3 = netVolume;
-    }
+    const netVolume = front.net_m3;
 
     const fs = values.fs_hz as number;
     const qts = values.qts as number;
@@ -448,6 +555,19 @@ export function simulate(project: ProjectInput): Simulation {
         ? 1 / ((2 * Math.PI * (box.fb_hz as number)) ** 2 * cab)
         : undefined;
 
+    // Câmara traseira dutada da 6ª ordem: compliância por driver, massa do duto pela sintonia dela
+    // e perdas medidas nessa sintonia, como na dutada ([S73v] eq. 7).
+    const rearChamber = (perDriver_m3: number, tuning_hz: number) => {
+        const rearOmega = 2 * Math.PI * tuning_hz;
+        const rearCab = perDriver_m3 / RHO_C2;
+
+        return {
+            cab: rearCab,
+            ral: box.ql / (rearOmega * rearCab),
+            map: 1 / (rearOmega ** 2 * rearCab),
+        };
+    };
+
     // A forma da resposta depende só de Fs, Qts e Vas; Re, Sd e Qms dão a escala absoluta.
     const absolute = absoluteMissing.length === 0;
     const sd = absolute ? (values.sd_m2 as number) : NORMALIZED_SD;
@@ -467,19 +587,21 @@ export function simulate(project: ProjectInput): Simulation {
         cab,
         ral,
         map,
-        // Câmara traseira selada da bandpass; perdas medidas na ressonância do driver nela.
         rear:
             rearNet === undefined
                 ? undefined
-                : {
-                      cab: rearNet / count / RHO_C2,
-                      ral:
-                          box.ql /
-                          (2 *
-                              Math.PI *
-                              rearLossReferenceHz(fs, vas, rearNet / count) *
-                              (rearNet / count / RHO_C2)),
-                  },
+                : band6
+                  ? rearChamber(rearNet / count, box.fb_rear_hz as number)
+                  : // Câmara traseira selada da 4ª ordem; perdas medidas na ressonância do driver.
+                    {
+                        cab: rearNet / count / RHO_C2,
+                        ral:
+                            box.ql /
+                            (2 *
+                                Math.PI *
+                                rearLossReferenceHz(fs, vas, rearNet / count) *
+                                (rearNet / count / RHO_C2)),
+                    },
     };
 
     if (absolute && values.le_h === undefined) {
@@ -513,6 +635,9 @@ export function simulate(project: ProjectInput): Simulation {
     const portVelocity: number[] = [];
     // Área total de saída dos dutos; o fluxo de todos os drivers passa por ela.
     const totalPortArea = area === undefined ? undefined : portCount * area;
+    const rearVelocity: number[] = [];
+    const totalRearArea =
+        rearArea === undefined ? undefined : rearPortCount * rearArea;
 
     for (const frequency of FREQUENCIES_HZ) {
         const omega = 2 * Math.PI * frequency;
@@ -536,6 +661,13 @@ export function simulate(project: ProjectInput): Simulation {
                     totalPortArea,
             );
         }
+
+        if (totalRearArea !== undefined) {
+            rearVelocity.push(
+                (Math.SQRT2 * abs(point.rearPort) * perDriverVoltage * count) /
+                    totalRearArea,
+            );
+        }
     }
 
     const curves: Simulation['curves'] = {
@@ -554,6 +686,14 @@ export function simulate(project: ProjectInput): Simulation {
     if (missing.port_velocity_ms.length === 0 && totalPortArea !== undefined) {
         curves.port_velocity_ms = portVelocity;
         results.port_velocity_max_ms = Math.max(...portVelocity);
+    }
+
+    if (
+        missing.port_rear_velocity_ms.length === 0 &&
+        totalRearArea !== undefined
+    ) {
+        curves.port_rear_velocity_ms = rearVelocity;
+        results.port_rear_velocity_max_ms = Math.max(...rearVelocity);
     }
 
     let lowEdge: number | undefined;

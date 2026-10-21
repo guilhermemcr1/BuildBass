@@ -16,6 +16,12 @@ import type { Complex } from './complex';
 // cone vê as duas como carga:
 //   mecânico:  Bl·i = (Zm + Sd²·(Zb + Zr))·u
 //   frontal:   pf = Zb·Ud,  Up = pf / (jω·Map)   (a única saída acústica é o duto)
+//
+// Bandpass de 6ª ordem (feature 007, research.md §1): a câmara traseira também leva um duto,
+// Zr = 1 / (jωCr + 1/Ralr + 1/(jω·Mapr)), aberto para fora da caixa. O cone rarefaz a câmara
+// traseira quando comprime a frontal, então o ar entra pelo duto traseiro:
+//   traseira:  pr = −Zr·Ud,  Upr = pr / (jω·Mapr)   (negativo: fluxo para dentro)
+//   saída:     U0 = Up + Upr   (os dois dutos irradiam para fora, como uma fonte pontual a 1 m)
 export type CircuitParams = {
     re: number;
     le: number;
@@ -30,9 +36,9 @@ export type CircuitParams = {
     ral: number;
     // Massa acústica do duto; undefined = caixa selada.
     map?: number;
-    // Câmara traseira selada da bandpass (`cab`, `ral` e `map` passam a ser os da câmara
-    // frontal); undefined = selada ou dutada como na feature 002.
-    rear?: { cab: number; ral: number };
+    // Câmara traseira da bandpass (`cab`, `ral` e `map` passam a ser os da câmara frontal);
+    // undefined = selada ou dutada como na feature 002. Com `map` a traseira é dutada (6ª ordem).
+    rear?: { cab: number; ral: number; map?: number };
 };
 
 export type CircuitPoint = {
@@ -40,8 +46,11 @@ export type CircuitPoint = {
     velocity: Complex;
     // Volume total radiado (cone + duto + vazamento) por volt, m³/s/V. Na bandpass, só o duto.
     radiated: Complex;
-    // Volume que sai pelo duto por volt, m³/s/V (zero na selada).
+    // Volume que sai pelo duto por volt, m³/s/V (zero na selada). Na bandpass, o duto frontal.
     port: Complex;
+    // Bandpass de 6ª ordem: volume que sai pelo duto traseiro por volt (negativo = entra); zero sem
+    // duto traseiro.
+    rearPort: Complex;
     // Impedância elétrica nos terminais de um driver, Ω.
     impedance: Complex;
 };
@@ -66,12 +75,16 @@ export function solveCircuit(
     }
 
     const zb = inv(boxAdmittance);
-    const zrear =
+    let rearAdmittance =
         params.rear === undefined
             ? complex(0)
-            : inv(
-                  add(scale(jw, params.rear.cab), complex(1 / params.rear.ral)),
-              );
+            : add(scale(jw, params.rear.cab), complex(1 / params.rear.ral));
+
+    if (params.rear?.map !== undefined) {
+        rearAdmittance = add(rearAdmittance, inv(scale(jw, params.rear.map)));
+    }
+
+    const zrear = params.rear === undefined ? complex(0) : inv(rearAdmittance);
     const motional = add(zm, scale(add(zb, zrear), params.sd ** 2));
     const damping = div(complex(params.bl ** 2), ze);
 
@@ -82,11 +95,19 @@ export function solveCircuit(
     // Bandpass: pressão física na câmara frontal, pf = +Zb·Ud (o cone a comprime).
     if (params.rear !== undefined && params.map !== undefined) {
         const port = div(mul(zb, coneVolume), scale(jw, params.map));
+        const rearPort =
+            params.rear.map === undefined
+                ? complex(0)
+                : div(
+                      scale(mul(zrear, coneVolume), -1),
+                      scale(jw, params.rear.map),
+                  );
 
         return {
             velocity,
-            radiated: port,
+            radiated: add(port, rearPort),
             port,
+            rearPort,
             impedance: add(ze, div(complex(params.bl ** 2), motional)),
         };
     }
@@ -98,5 +119,5 @@ export function solveCircuit(
     const radiated = mul(scale(mul(jw, zb), params.cab), coneVolume);
     const impedance = add(ze, div(complex(params.bl ** 2), motional));
 
-    return { velocity, radiated, port, impedance };
+    return { velocity, radiated, port, rearPort: complex(0), impedance };
 }
