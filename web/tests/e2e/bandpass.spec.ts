@@ -168,3 +168,48 @@ test('três projetos plotados (selada, dutada, bandpass): curvas, legenda e tabe
         ).toBeVisible();
     }
 });
+
+test('bandpass: só pelo teclado, Tab alcança tipo, câmaras, Fb, Ql e duto e as setas movem o foco do seletor (US5)', async ({
+    page,
+}) => {
+    await page.goto('/');
+    await page.getByRole('radio', { name: 'Bandpass' }).click();
+
+    const targets = [/^Vr/, /^Vf/, /^Fb/, /^Ql/, /Diâmetro do duto/];
+
+    for (const name of targets) {
+        await expect(page.getByRole('textbox', { name })).toHaveAccessibleName(
+            name,
+        );
+    }
+
+    // Seletor de tipo (ToggleButtonGroup): as setas movem o foco entre as opções e Espaço escolhe.
+    await page.getByRole('radio', { name: 'Bandpass' }).focus();
+    await page.keyboard.press('ArrowLeft');
+    await expect(page.getByRole('radio', { name: 'Dutada' })).toBeFocused();
+    await page.keyboard.press('Space');
+    await expect(page.getByRole('radio', { name: 'Dutada' })).toBeChecked();
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('Space');
+    await expect(page.getByRole('radio', { name: 'Bandpass' })).toBeChecked();
+
+    // Só com Tab, a partir do seletor, o foco passa por todos os campos da caixa.
+    const pending = new Set(targets.map(String));
+    await page.getByRole('radio', { name: 'Bandpass' }).focus();
+
+    for (let step = 0; step < 30 && pending.size > 0; step++) {
+        await page.keyboard.press('Tab');
+
+        for (const name of targets) {
+            const focused = await page
+                .getByRole('textbox', { name })
+                .evaluate((element) => element === document.activeElement);
+
+            if (focused) {
+                pending.delete(String(name));
+            }
+        }
+    }
+
+    expect([...pending]).toEqual([]);
+});
