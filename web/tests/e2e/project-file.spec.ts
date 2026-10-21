@@ -86,3 +86,101 @@ test('desfazer, refazer e recarregar (US3)', async ({ page }) => {
     await page.reload();
     await expect(field(page, /^Vb/)).toHaveValue('50,0');
 });
+
+async function exportedFile(page: Page) {
+    const downloading = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Exportar' }).click();
+    const path = await (await downloading).path();
+
+    return (await import('node:fs/promises')).readFile(path, 'utf8');
+}
+
+test('bandpass exportada grava a versão 2 e reabre igual (feature 004, US4)', async ({
+    page,
+}) => {
+    await page.goto('/');
+    await fill(page, /^Fs/, '28');
+    await fill(page, /^Qts/, '0,38');
+    await fill(page, /^Vas/, '85');
+    await page.getByRole('radio', { name: 'Bandpass' }).click();
+    await fill(page, /^Vr/, '40');
+    await fill(page, /^Vf/, '60');
+    await fill(page, /^Fb/, '45');
+
+    const text = await exportedFile(page);
+    const file = JSON.parse(text);
+    expect(file.version).toBe(2);
+    expect(file.project.box).toMatchObject({
+        type: 'bandpass',
+        vr_m3: 0.04,
+        vf_m3: 0.06,
+        fb_hz: 45,
+    });
+
+    await page.getByRole('button', { name: 'Novo' }).click();
+    const choosing = page.waitForEvent('filechooser');
+    await page.getByRole('button', { name: 'Abrir' }).click();
+    await (
+        await choosing
+    ).setFiles({
+        name: 'bandpass.buildbass.json',
+        mimeType: 'application/json',
+        buffer: Buffer.from(text),
+    });
+
+    await expect(page.getByRole('radio', { name: 'Bandpass' })).toBeChecked();
+    await expect(field(page, /^Vr/)).toHaveValue('40,0');
+    await expect(field(page, /^Vf/)).toHaveValue('60,0');
+    await expect(field(page, /^Fb/)).toHaveValue('45,0');
+});
+
+test('caixa dutada continua exportando a versão 1 (feature 004, US4)', async ({
+    page,
+}) => {
+    await page.goto('/');
+    await fill(page, /^Vb/, '60');
+    await fill(page, /^Fb/, '32');
+
+    const file = JSON.parse(await exportedFile(page));
+
+    expect(file.version).toBe(1);
+});
+
+test('arquivo de versão futura mostra a mensagem de app mais novo (feature 004, US4)', async ({
+    page,
+}) => {
+    await page.goto('/');
+    await fill(page, /^Fs/, '31');
+
+    const choosing = page.waitForEvent('filechooser');
+    await page.getByRole('button', { name: 'Abrir' }).click();
+    await (
+        await choosing
+    ).setFiles({
+        name: 'futuro.buildbass.json',
+        mimeType: 'application/json',
+        buffer: Buffer.from(
+            JSON.stringify({
+                format: 'buildbass.project',
+                version: 3,
+                project: {},
+            }),
+        ),
+    });
+
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toContainText('versão mais nova do BuildBass');
+    await dialog.getByRole('button', { name: 'Fechar' }).click();
+    await expect(field(page, /^Fs/)).toHaveValue('31,0');
+});
+
+test('trocar para bandpass leva o Vb digitado às duas câmaras (feature 004, US4)', async ({
+    page,
+}) => {
+    await page.goto('/');
+    await fill(page, /^Vb/, '50');
+    await page.getByRole('radio', { name: 'Bandpass' }).click();
+
+    await expect(field(page, /^Vr/)).toHaveValue('50,0');
+    await expect(field(page, /^Vf/)).toHaveValue('50,0');
+});

@@ -131,3 +131,40 @@ test('bandpass: duto fino com potência alta mostra o erro de velocidade com tex
         .locator('..');
     await expect(velocity).toContainText(/Acima de/);
 });
+
+test('três projetos plotados (selada, dutada, bandpass): curvas, legenda e tabela (US4)', async ({
+    page,
+}) => {
+    await page.goto('/');
+    await referenceDriver(page);
+    await page.getByRole('radio', { name: 'Selada' }).click();
+    await fill(page, /^Vb/, '50');
+
+    await page.getByRole('button', { name: 'Novo' }).click();
+    await referenceDriver(page);
+    await page.getByRole('radio', { name: 'Dutada' }).click();
+    await fill(page, /^Vb/, '60');
+    await fill(page, /^Fb/, '32');
+
+    await page.getByRole('button', { name: 'Novo' }).click();
+    await referenceDriver(page);
+    await bandpassBox(page);
+
+    const legend = page.getByRole('list', { name: 'Projetos no gráfico' });
+    await expect(legend.getByRole('listitem')).toHaveCount(3);
+    await expect(page.locator('[data-region="charts"] canvas')).toBeVisible();
+
+    const table = page.locator('[data-region="results"] table');
+    await expect(table.getByRole('columnheader')).toHaveCount(4);
+    await expect(
+        table.getByRole('row', { name: /^Corte inferior/ }),
+    ).toBeVisible();
+    await expect(table.getByRole('row', { name: /^F3/ })).toBeVisible();
+
+    for (const tab of ['Excursão', 'Impedância', 'Velocidade no duto']) {
+        await page.getByRole('tab', { name: tab }).click();
+        await expect(
+            page.locator('[data-region="charts"] canvas'),
+        ).toBeVisible();
+    }
+});

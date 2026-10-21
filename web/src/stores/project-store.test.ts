@@ -59,6 +59,73 @@ describe('createProjectStore', () => {
         expect(project.getState().data.box.port.shape).toBe('round');
     });
 
+    test('bandpass: câmaras nascem do Vb numa etapa só de desfazer (feature 004)', () => {
+        const project = store();
+        project.getState().setBoxValue('vb_m3', 0.05);
+        const steps = project.temporal.getState().pastStates.length;
+
+        project.getState().setBoxType('bandpass');
+
+        expect(project.getState().data.box).toMatchObject({
+            type: 'bandpass',
+            vb_m3: 0.05,
+            vr_m3: 0.05,
+            vf_m3: 0.05,
+        });
+        expect(project.temporal.getState().pastStates).toHaveLength(steps + 1);
+
+        project.temporal.getState().undo();
+        expect(project.getState().data.box.type).toBe('vented');
+        expect('vr_m3' in project.getState().data.box).toBe(false);
+        expect('vf_m3' in project.getState().data.box).toBe(false);
+    });
+
+    test('bandpass: não sobrescreve câmaras já preenchidas', () => {
+        const project = store();
+        project.getState().apply((data) => ({
+            ...data,
+            box: { ...data.box, vb_m3: 0.05, vr_m3: 0.02 },
+        }));
+        project.getState().setBoxType('bandpass');
+
+        expect(project.getState().data.box).toMatchObject({
+            vr_m3: 0.02,
+            vf_m3: 0.05,
+        });
+    });
+
+    test('bandpass: sem Vb nada é criado', () => {
+        const project = store();
+        project.getState().setBoxType('bandpass');
+
+        expect('vr_m3' in project.getState().data.box).toBe(false);
+        expect('vf_m3' in project.getState().data.box).toBe(false);
+    });
+
+    test('alternar entre os três tipos preserva os campos de cada um', () => {
+        const project = store();
+        project.getState().setBoxValue('vb_m3', 0.05);
+        project.getState().setBoxValue('fb_hz', 32);
+        project.getState().setPort({
+            shape: 'rect',
+            width_m: 0.05,
+            height_m: 0.2,
+            count: 1,
+        });
+        project.getState().setBoxType('bandpass');
+        project.getState().setBoxType('closed');
+        project.getState().setBoxType('vented');
+
+        expect(project.getState().data.box).toMatchObject({
+            type: 'vented',
+            vb_m3: 0.05,
+            vr_m3: 0.05,
+            vf_m3: 0.05,
+            fb_hz: 32,
+            port: { shape: 'rect', width_m: 0.05, height_m: 0.2, count: 1 },
+        });
+    });
+
     test('desfazer e refazer passo a passo', () => {
         const project = store();
         project.getState().setBoxValue('vb_m3', 0.05);

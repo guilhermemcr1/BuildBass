@@ -7,7 +7,7 @@ import type { ProjectData } from './types';
 export const FILE_FORMAT = 'buildbass.project';
 export const FILE_EXTENSION = '.buildbass.json';
 export const MAX_FILE_BYTES = 256 * 1024;
-const APP_VERSION = '0.2.0';
+const APP_VERSION = '0.3.0';
 
 export type OpenErrorCode =
     | 'fileTooLarge'
@@ -21,11 +21,13 @@ export type ParseResult =
     | { ok: true; data: ProjectData }
     | { ok: false; code: OpenErrorCode; path?: string };
 
+// Só o arquivo com caixa bandpass exige a versão 2; os demais continuam v1 e abrem em apps
+// anteriores (specs/004, contracts/project-file.md).
 export function serializeProject(data: ProjectData, now = new Date()): string {
     return `${JSON.stringify(
         {
             format: FILE_FORMAT,
-            version: CURRENT_VERSION,
+            version: data.box.type === 'bandpass' ? CURRENT_VERSION : 1,
             app: APP_VERSION,
             exported_at: now.toISOString(),
             project: data,
