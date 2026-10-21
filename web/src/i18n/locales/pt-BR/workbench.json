@@ -94,9 +94,7 @@
         "applyFailed": "Não foi possível copiar este driver. O projeto não foi alterado.",
         "notFound": "Este driver não está mais no catálogo.",
         "originLabel": "Origem",
-        "resultSupport": "Fs {{fs}} · Qts {{qts}} · Vas {{vas}}",
-        "results_one": "{{count}} resultado",
-        "results_other": "{{count}} resultados"
+        "resultSupport": "Fs {{fs}} · Qts {{qts}} · Vas {{vas}}"
     },
     "offline": {
         "title": "Sem conexão.",

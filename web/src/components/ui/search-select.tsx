@@ -1,5 +1,5 @@
 import { Loader2, Search } from 'lucide-react';
-import type { Key, ReactNode } from 'react';
+import type { Key, ReactNode, Ref } from 'react';
 import {
     ComboBox,
     Input,
@@ -39,6 +39,7 @@ type SearchSelectProps = {
     // Linha de estado sob o campo (carregando, vazio, erro, aviso): região viva, fora da lista, para
     // poder ter botões e continuar visível com a lista fechada.
     status?: ReactNode;
+    inputRef?: Ref<HTMLInputElement>;
 };
 
 export function SearchSelect({
@@ -55,6 +56,7 @@ export function SearchSelect({
     openWhenEmpty = false,
     emptyMessage,
     status,
+    inputRef,
 }: SearchSelectProps) {
     const remote = inputValue !== undefined;
     const Icon = loading ? Loader2 : Search;
@@ -73,7 +75,7 @@ export function SearchSelect({
                           // Abre ao digitar mesmo antes de os itens chegarem do servidor.
                           allowsEmptyCollection: openWhenEmpty,
                           selectedKey: null,
-                          menuTrigger: 'input' as const,
+                          menuTrigger: 'focus' as const,
                       }
                     : { defaultItems: items, menuTrigger: 'focus' as const })}
                 isDisabled={disabled}
@@ -96,6 +98,7 @@ export function SearchSelect({
                         )}
                     />
                     <Input
+                        ref={inputRef}
                         placeholder={placeholder}
                         className="w-full min-w-0 bg-transparent text-sm text-foreground outline-none placeholder:text-muted disabled:cursor-not-allowed"
                     />

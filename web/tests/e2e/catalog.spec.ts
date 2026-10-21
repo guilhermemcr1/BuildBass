@@ -1,61 +1,9 @@
 import { expect, test } from '@playwright/test';
-import type { Page, Route } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { json, mockCatalog, SUMMARY } from './catalog-mock';
+import type { Handler } from './catalog-mock';
 
 test.use({ viewport: { width: 1440, height: 900 } });
-
-// A API é simulada: estes testes provam o front pelo contrato (contracts/catalog-api.md), sem
-// precisar de banco. O servidor real tem os próprios testes (Pest) e o quickstart.
-const API = 'http://127.0.0.1:8010';
-const CORS = { 'Access-Control-Allow-Origin': '*' };
-
-const SUMMARY = {
-    id: 2,
-    brand: 'Triton',
-    model: 'TR 620 12"',
-    variant: '4 Ω',
-    fs_hz: 76.94,
-    qts: 0.717,
-    vas_m3: 0.026348,
-};
-
-const DRIVER = {
-    ...SUMMARY,
-    nominal_diameter_m: 0.3048,
-    qes: 0.779,
-    qms: 8.978,
-    re_ohm: 3,
-    le_h: 0.000607,
-    xmax_m: 0.00635,
-    sd_m2: 0.05309,
-    pe_w: 620,
-    bl_tm: 10.9,
-    mms_kg: 0.06392,
-    vd_m3: 0.000333,
-    source: 'Triton, ficha técnica TR 620 12", jul/2018',
-};
-
-function json(route: Route, body: unknown, status = 200) {
-    return route.fulfill({
-        status,
-        headers: { ...CORS, 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-    });
-}
-
-async function mockCatalog(page: Page) {
-    await page.route(`${API}/api/drivers**`, (route) => {
-        const url = new URL(route.request().url());
-
-        if (url.pathname === '/api/drivers/2') {
-            return json(route, { data: DRIVER });
-        }
-
-        return json(route, {
-            data: [SUMMARY],
-            meta: { limit: 20, has_more: false },
-        });
-    });
-}
 
 const search = (page: Page) =>
     page.getByRole('combobox', { name: 'Catálogo de drivers' });
@@ -105,5 +53,108 @@ test('duas abas: só o projeto ativo recebe o driver (US1)', async ({
         .first()
         .click();
 
+    await expect(page.getByRole('textbox', { name: /^Fs/ })).toHaveValue('');
+});
+
+const message = 'Não foi possível consultar o catálogo agora';
+
+test('servidor com erro: mensagem, tentar de novo e a bancada segue editável (US2)', async ({
+    page,
+}) => {
+    let failing = true;
+    const handler: Handler = (route, url) => {
+        if (failing) {
+            return json(route, { message: 'erro' }, 500);
+        }
+
+        return url.pathname === '/api/drivers/2'
+            ? json(route, { data: { ...SUMMARY, source: 'ficha' } })
+            : json(route, {
+                  data: [SUMMARY],
+                  meta: { limit: 20, has_more: false },
+              });
+    };
+    await mockCatalog(page, handler);
+    await page.goto('/');
+
+    await search(page).fill('tr 6');
+    await expect(page.getByText(message)).toBeVisible();
+
+    // Com o catálogo fora, o resto da bancada continua editável.
+    const fs = page.getByRole('textbox', { name: /^Fs/ });
+    await fs.fill('28');
+    await fs.press('Tab');
+    await expect(fs).toHaveValue('28,0');
+
+    failing = false;
+    await page.getByRole('button', { name: 'Tentar de novo' }).click();
+
+    await expect(page.getByRole('option', { name: /Triton/ })).toBeVisible();
+    await expect(page.getByText(message)).toBeHidden();
+});
+
+test('busca sem resultado mostra o termo (US2)', async ({ page }) => {
+    await mockCatalog(page, (route) =>
+        json(route, { data: [], meta: { limit: 20, has_more: false } }),
+    );
+    await page.goto('/');
+
+    await search(page).fill('zzzz');
+
+    await expect(
+        page.getByText('Nenhum driver encontrado para «zzzz»'),
+    ).toBeVisible();
+});
+
+test('respostas fora de ordem: só a última digitação aparece (US2)', async ({
+    page,
+}) => {
+    const answer = (model: string, id: number) => ({
+        data: [{ ...SUMMARY, id, model }],
+        meta: { limit: 20, has_more: false },
+    });
+    await mockCatalog(page, async (route, url) => {
+        const term = url.searchParams.get('q');
+
+        // A busca antiga responde depois da nova.
+        if (term === 'tr') {
+            await new Promise((resolve) => setTimeout(resolve, 1200));
+
+            return json(route, answer('ANTIGO', 7));
+        }
+
+        return json(route, answer('NOVO', 8));
+    });
+    await page.goto('/');
+
+    await search(page).pressSequentially('tr');
+    await page.waitForTimeout(400);
+    await search(page).pressSequentially(' 12');
+
+    await expect(page.getByRole('option', { name: /NOVO/ })).toBeVisible();
+    await page.waitForTimeout(1500);
+    await expect(page.getByRole('option', { name: /ANTIGO/ })).toHaveCount(0);
+    await expect(page.getByRole('option', { name: /NOVO/ })).toBeVisible();
+});
+
+test('driver que saiu do catálogo avisa e não muda o projeto (US2)', async ({
+    page,
+}) => {
+    await mockCatalog(page, (route, url) =>
+        url.pathname === '/api/drivers/2'
+            ? json(route, { message: 'não encontrado' }, 404)
+            : json(route, {
+                  data: [SUMMARY],
+                  meta: { limit: 20, has_more: false },
+              }),
+    );
+    await page.goto('/');
+
+    await search(page).fill('tr 6');
+    await page.getByRole('option', { name: /Triton/ }).click();
+
+    await expect(
+        page.getByText('Este driver não está mais no catálogo.'),
+    ).toBeVisible();
     await expect(page.getByRole('textbox', { name: /^Fs/ })).toHaveValue('');
 });

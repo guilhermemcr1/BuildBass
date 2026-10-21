@@ -94,9 +94,7 @@
         "applyFailed": "Could not copy this driver. The project was not changed.",
         "notFound": "This driver is no longer in the catalog.",
         "originLabel": "Source",
-        "resultSupport": "Fs {{fs}} · Qts {{qts}} · Vas {{vas}}",
-        "results_one": "{{count}} result",
-        "results_other": "{{count}} results"
+        "resultSupport": "Fs {{fs}} · Qts {{qts}} · Vas {{vas}}"
     },
     "offline": {
         "title": "Offline.",

@@ -207,3 +207,138 @@ describe('CatalogSearch — buscar e copiar (US1)', () => {
         expect(search).not.toHaveBeenCalled();
     });
 });
+
+describe('CatalogSearch — falhas e estados (US2)', () => {
+    test('sem resultado mostra a mensagem com o termo', async () => {
+        search.mockResolvedValue(listing([]));
+        renderWithProviders(<CatalogSearch />);
+
+        await userEvent.type(box(), 'zzzz');
+
+        expect(
+            await screen.findByText(
+                'Nenhum driver encontrado para «zzzz»',
+                {},
+                { timeout: 2000 },
+            ),
+        ).toBeInTheDocument();
+    });
+
+    test('mostra que está buscando enquanto o pedido não volta', async () => {
+        search.mockReturnValue(new Promise(() => undefined));
+        renderWithProviders(<CatalogSearch />);
+
+        await userEvent.type(box(), 'tr');
+
+        expect(
+            await screen.findByText('Buscando…', {}, { timeout: 2000 }),
+        ).toBeInTheDocument();
+    });
+
+    test.each(['network', 'server', 'rateLimited', 'invalid'] as const)(
+        'erro %s mostra a mensagem e "Tentar de novo" refaz a busca',
+        async (error) => {
+            search
+                .mockResolvedValueOnce({ ok: false, error })
+                .mockResolvedValueOnce(listing());
+            renderWithProviders(<CatalogSearch />);
+
+            await userEvent.type(box(), 'tr 6');
+            expect(
+                await screen.findByText(
+                    'Não foi possível consultar o catálogo agora',
+                    {},
+                    { timeout: 2000 },
+                ),
+            ).toBeInTheDocument();
+
+            await userEvent.click(
+                await screen.findByRole('button', { name: 'Tentar de novo' }),
+            );
+
+            expect(
+                await screen.findByRole(
+                    'option',
+                    { name: /Triton/ },
+                    { timeout: 2000 },
+                ),
+            ).toBeInTheDocument();
+            expect(
+                screen.queryByText(
+                    'Não foi possível consultar o catálogo agora',
+                ),
+            ).not.toBeInTheDocument();
+            expect(search).toHaveBeenCalledTimes(2);
+        },
+    );
+
+    test('mais resultados que o limite avisa para refinar', async () => {
+        search.mockResolvedValue(listing([SUMMARY], true));
+        renderWithProviders(<CatalogSearch />);
+
+        await typeAndOpen();
+
+        expect(
+            screen.getByText('Há mais resultados. Refine a busca.'),
+        ).toBeInTheDocument();
+    });
+
+    test('driver que saiu do catálogo avisa e não altera o projeto', async () => {
+        detail.mockResolvedValue({ ok: false, error: 'notFound' });
+        renderWithProviders(<CatalogSearch />);
+        const before = activeProjectStore().getState().data;
+
+        await typeAndOpen();
+        await userEvent.keyboard('{ArrowDown}{Enter}');
+
+        expect(
+            await screen.findByText('Este driver não está mais no catálogo.'),
+        ).toBeInTheDocument();
+        expect(activeProjectStore().getState().data).toBe(before);
+        expect(box()).toHaveValue('tr 6');
+    });
+
+    test.each(['network', 'server', 'invalid'] as const)(
+        'falha %s ao buscar o driver deixa o projeto idêntico (FR-009)',
+        async (error) => {
+            detail.mockResolvedValue({ ok: false, error });
+            renderWithProviders(<CatalogSearch />);
+            const before = activeProjectStore().getState().data;
+
+            await typeAndOpen();
+            await userEvent.keyboard('{ArrowDown}{Enter}');
+
+            expect(
+                await screen.findByText(
+                    'Não foi possível copiar este driver. O projeto não foi alterado.',
+                ),
+            ).toBeInTheDocument();
+            expect(activeProjectStore().getState().data).toBe(before);
+            expect(box()).toHaveValue('tr 6');
+        },
+    );
+
+    test('mostra "Copiando parâmetros…" enquanto o detalhe não chega', async () => {
+        let finish!: () => void;
+        detail.mockReturnValue(
+            new Promise((resolve) => {
+                finish = () => resolve({ ok: true, data: { data: DRIVER } });
+            }),
+        );
+        renderWithProviders(<CatalogSearch />);
+
+        await typeAndOpen();
+        await userEvent.keyboard('{ArrowDown}{Enter}');
+
+        expect(
+            await screen.findByText('Copiando parâmetros…'),
+        ).toBeInTheDocument();
+        act(() => finish());
+        await waitFor(() =>
+            expect(
+                screen.queryByText('Copiando parâmetros…'),
+            ).not.toBeInTheDocument(),
+        );
+        expect(activeProjectStore().getState().data.driverSource).toBeDefined();
+    });
+});

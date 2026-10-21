@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
+import { json, mockCatalog, ok } from './catalog-mock';
 
 // Roda no projeto "dev" (servidor de desenvolvimento), único lugar onde /dev/ui existe.
 for (const theme of ['light', 'dark'] as const) {
@@ -77,10 +78,23 @@ test('todo controle da bancada recebe foco visível só com Tab (SC-003)', async
     expect(visited.size).toBeGreaterThan(20);
 });
 
-async function axe(page: import('@playwright/test').Page) {
-    const results = await new AxeBuilder({ page })
-        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-        .analyze();
+async function axe(
+    page: import('@playwright/test').Page,
+    { listOpen = false }: { listOpen?: boolean } = {},
+) {
+    const builder = new AxeBuilder({ page }).withTags([
+        'wcag2a',
+        'wcag2aa',
+        'wcag21a',
+        'wcag21aa',
+    ]);
+
+    // Com a lista do ComboBox aberta, o React Aria esconde o resto da página dos leitores de tela
+    // (padrão modal do componente); a lista fecha ao sair do campo com Tab, então nenhum controle
+    // fica focado e escondido. O axe acusa isso como aria-hidden-focus só nesse estado.
+    const results = await (
+        listOpen ? builder.disableRules(['aria-hidden-focus']) : builder
+    ).analyze();
 
     return results.violations.map((violation) => ({
         id: violation.id,
@@ -215,3 +229,52 @@ test('teclado chega às abas de projeto, aos toggles e ao gráfico', async ({
         ].sort(),
     );
 });
+
+// Catálogo de drivers (feature 003): lista aberta, estado vazio e estado de erro.
+for (const theme of ['light', 'dark'] as const) {
+    test(`catálogo: lista, vazio e erro sem violações no tema ${theme}`, async ({
+        browser,
+    }) => {
+        const context = await browser.newContext({ colorScheme: theme });
+        const page = await context.newPage();
+        let mode: 'ok' | 'empty' | 'error' = 'ok';
+        await mockCatalog(page, (route, url) => {
+            if (mode === 'error') {
+                return json(route, { message: 'erro' }, 500);
+            }
+
+            return mode === 'empty'
+                ? json(route, {
+                      data: [],
+                      meta: { limit: 20, has_more: false },
+                  })
+                : ok(route, url);
+        });
+        await page.goto('/');
+        await page.locator('main').waitFor();
+        const search = page.getByRole('combobox', {
+            name: 'Catálogo de drivers',
+        });
+
+        await search.fill('tr 6');
+        await expect(
+            page.getByRole('option', { name: /Triton/ }),
+        ).toBeVisible();
+        expect(await axe(page, { listOpen: true })).toEqual([]);
+
+        mode = 'empty';
+        await search.fill('zzzz');
+        await expect(
+            page.getByText('Nenhum driver encontrado para «zzzz»'),
+        ).toBeVisible();
+        expect(await axe(page, { listOpen: true })).toEqual([]);
+
+        mode = 'error';
+        await search.fill('zzzz1');
+        await expect(
+            page.getByText('Não foi possível consultar o catálogo agora'),
+        ).toBeVisible();
+        expect(await axe(page)).toEqual([]);
+        await context.close();
+    });
+}
