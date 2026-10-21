@@ -468,6 +468,30 @@ describe('bandpass — volumes, drivers, radiação e determinismo (B9–B14)', 
     });
 });
 
+describe('bandpass — resposta relativa (sem dados elétricos)', () => {
+    test('sem Re a curva sai relativa e as bordas continuam definidas e próximas das absolutas', () => {
+        // Sem Re não há escala elétrica: a resposta sai relativa (Qms e Qts se derivam um do outro).
+        const { re_ohm: _re, ...withoutRe } = REFERENCE;
+        const relative = simulate(bandpass({}, withoutRe));
+        const absolute = simulate(bandpass());
+
+        expect(relative.spl_normalized).toBe(true);
+        expect(absolute.spl_normalized).toBe(false);
+        expect(relative.curves.spl_db).toBeDefined();
+        expect(relative.curves.spl_db?.every(Number.isFinite)).toBe(true);
+
+        const { f_low_hz: lowR, f_high_hz: highR } = relative.results;
+        const { f_low_hz: low, f_high_hz: high } = absolute.results;
+
+        expect(lowR).toBeDefined();
+        expect(highR).toBeDefined();
+        // Re só escala a parte elétrica: as bordas da banda ficam dentro de 10 Hz das absolutas.
+        expect(lowR ?? 0).toBeCloseTo(low ?? 0, -1);
+        expect(highR ?? 0).toBeCloseTo(high ?? 0, -1);
+        expect((highR ?? 0) / (low ?? 1)).toBeGreaterThan(1.2);
+    });
+});
+
 describe('bandpass — avisos (US3)', () => {
     const ids = (input: ProjectInput) =>
         simulate(input).warnings.map(({ id }) => id);
