@@ -81,4 +81,36 @@ describe('PlanPanel', () => {
         expect(screen.getByRole('textbox', { name: /^Rw/ })).toBeVisible();
         expect(screen.getByRole('textbox', { name: /^Rd/ })).toBeVisible();
     });
+
+    test('bandpass mostra a divisória, as profundidades das câmaras e a conferência de duas câmaras', () => {
+        act(() => activeProjectStore().getState().setBoxType('bandpass'));
+        setField('vr_m3', 0.04);
+        setField('vf_m3', 0.06);
+        renderWithProviders(<PlanPanel />);
+
+        const divider = screen.getByRole('row', { name: /Divisória/ });
+
+        expect(within(divider).getByText('Entre as câmaras')).toBeVisible();
+        expect(
+            screen.getByText('Profundidade da câmara traseira'),
+        ).toBeVisible();
+        expect(
+            screen.getByText('Profundidade da câmara frontal'),
+        ).toBeVisible();
+        expect(
+            screen
+                .getByRole('table', { name: /Lista de corte/ })
+                .querySelectorAll('tbody tr'),
+        ).toHaveLength(6);
+    });
+
+    test('selada e dutada não mostram as profundidades por câmara', () => {
+        setField('vb_m3', 0.06);
+        renderWithProviders(<PlanPanel />);
+
+        expect(
+            screen.queryByText('Profundidade da câmara traseira'),
+        ).toBeNull();
+        expect(screen.queryByRole('row', { name: /Divisória/ })).toBeNull();
+    });
 });

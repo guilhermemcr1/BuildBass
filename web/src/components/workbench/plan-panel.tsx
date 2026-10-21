@@ -90,6 +90,26 @@ export function PlanPanel() {
                                 </div>
                             ))}
                         </div>
+                        {cutPlan.plan.dimensions.chambers !== undefined && (
+                            <div className="grid grid-cols-2 gap-2">
+                                <ValueTile
+                                    label={t('dimensions.rearDepth')}
+                                    valueSi={
+                                        cutPlan.plan.dimensions.chambers
+                                            .rear_d_m
+                                    }
+                                    unit={unit}
+                                />
+                                <ValueTile
+                                    label={t('dimensions.frontDepth')}
+                                    valueSi={
+                                        cutPlan.plan.dimensions.chambers
+                                            .front_d_m
+                                    }
+                                    unit={unit}
+                                />
+                            </div>
+                        )}
                     </section>
                     <section
                         aria-label={t('parts.title')}

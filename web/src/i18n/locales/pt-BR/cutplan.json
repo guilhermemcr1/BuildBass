@@ -24,7 +24,9 @@
         "external": "Externas",
         "width": "Largura",
         "height": "Altura",
-        "depth": "Profundidade"
+        "depth": "Profundidade",
+        "rearDepth": "Profundidade da câmara traseira",
+        "frontDepth": "Profundidade da câmara frontal"
     },
     "parts": {
         "title": "Peças e recortes",

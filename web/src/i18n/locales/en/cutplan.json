@@ -24,7 +24,9 @@
         "external": "External",
         "width": "Width",
         "height": "Height",
-        "depth": "Depth"
+        "depth": "Depth",
+        "rearDepth": "Rear chamber depth",
+        "frontDepth": "Front chamber depth"
     },
     "parts": {
         "title": "Parts and cutouts",

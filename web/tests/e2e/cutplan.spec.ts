@@ -157,3 +157,58 @@ test('sem volume o plano diz o que falta e some a conferência (US2)', async ({
     ).toBeVisible();
     await expect(page.getByText(/Igual à simulação/)).toHaveCount(0);
 });
+
+// Bandpass do quickstart (specs/005, §4): 40 + 60 L, áurea, painel de 18 mm.
+test('plano da bandpass: sete peças, divisória, câmaras e conferência por câmara (US3)', async ({
+    page,
+}) => {
+    await page.goto('/');
+    await referenceDriver(page);
+    await page.getByRole('radio', { name: 'Bandpass' }).click();
+    await fill(page, /^Vr/, '40');
+    await fill(page, /^Vf/, '60');
+    await fill(page, /^Fb/, '45');
+    await fill(page, /Diâmetro do duto/, '100');
+    await openPlan(page);
+    await fill(page, /^Ød/, '200');
+
+    const parts = page.getByRole('table', { name: /Lista de corte/ });
+    await expect(parts.locator('tbody tr')).toHaveCount(6);
+
+    const divider = parts.getByRole('row', { name: /Divisória/ });
+    await expect(divider).toContainText('Entre as câmaras');
+    await expect(divider).toContainText('Driver');
+    await expect(parts.getByRole('row', { name: /Frente/ })).toContainText(
+        'Duto',
+    );
+
+    await expect(tile(page, 'Profundidade da câmara traseira')).toContainText(
+        '114,7',
+    );
+    await expect(tile(page, 'Profundidade da câmara frontal')).toContainText(
+        '172,1',
+    );
+    await expect(tile(page, 'Internas · Profundidade')).toContainText('286,9');
+    await expect(tile(page, 'Externas · Profundidade')).toContainText('340,9');
+
+    const check = page.getByRole('table', { name: /Volume por câmara/ });
+    await expect(
+        check.getByRole('columnheader', { name: 'Câmara traseira' }),
+    ).toBeVisible();
+    await expect(
+        check.getByRole('columnheader', { name: 'Câmara frontal' }),
+    ).toBeVisible();
+    await expect(page.getByText(/Igual à simulação/)).toBeVisible();
+
+    // Trocar de tipo e voltar não perde a espessura nem a proporção.
+    await fill(page, /Espessura/, '25');
+    await page.getByRole('radio', { name: 'Dutada' }).click();
+    await expect(
+        page.getByText(/Faltam parâmetros para o plano: .*Vb/),
+    ).toBeVisible();
+    await page.getByRole('radio', { name: 'Bandpass' }).click();
+    await expect(parts.locator('tbody tr')).toHaveCount(6);
+    await expect(page.getByRole('textbox', { name: /Espessura/ })).toHaveValue(
+        /25/,
+    );
+});

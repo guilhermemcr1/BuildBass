@@ -659,3 +659,159 @@ describe('avisos (C10)', () => {
         expect(plan.warnings).toEqual([]);
     });
 });
+
+describe('bandpass (C6)', () => {
+    const bandpass = (count = 1, port: Partial<BoxInput['port']> = {}) =>
+        project(
+            {
+                type: 'bandpass',
+                vr_m3: 0.04,
+                vf_m3: 0.06,
+                fb_hz: 45,
+                port: { shape: 'round', diameter_m: 0.1, count: 1, ...port },
+            },
+            count,
+        );
+
+    test('C6 — 40 + 60 L, áurea, 18 mm: dimensões e profundidade por câmara', () => {
+        const { dimensions } = ready(bandpass());
+
+        expect(dimensions.internal.w_m * 1000).toBeCloseTo(464.2, 0);
+        expect(dimensions.internal.h_m * 1000).toBeCloseTo(751.0, 0);
+        expect(dimensions.internal.d_m * 1000).toBeCloseTo(286.9, 0);
+        expect((dimensions.chambers?.rear_d_m ?? 0) * 1000).toBeCloseTo(
+            114.7,
+            0,
+        );
+        expect((dimensions.chambers?.front_d_m ?? 0) * 1000).toBeCloseTo(
+            172.1,
+            0,
+        );
+        expect(
+            (dimensions.chambers?.rear_d_m ?? 0) +
+                (dimensions.chambers?.front_d_m ?? 0),
+        ).toBeCloseTo(dimensions.internal.d_m, 12);
+        // frente, fundo e divisória: D + 3t
+        expect(dimensions.external.d_m).toBeCloseTo(
+            dimensions.internal.d_m + 3 * 0.018,
+            12,
+        );
+        expect(dimensions.external.d_m * 1000).toBeCloseTo(340.9, 0);
+    });
+
+    test('cada câmara guarda o seu volume mais a parte dos reforços', () => {
+        for (const braces_m3 of [0, 0.004]) {
+            const { dimensions } = ready(bandpass(), { braces_m3 });
+            const area = dimensions.internal.w_m * dimensions.internal.h_m;
+            const beta = braces_m3 / 0.1;
+
+            expect(area * (dimensions.chambers?.rear_d_m ?? 0)).toBeCloseTo(
+                0.04 * (1 + beta),
+                12,
+            );
+            expect(area * (dimensions.chambers?.front_d_m ?? 0)).toBeCloseTo(
+                0.06 * (1 + beta),
+                12,
+            );
+        }
+    });
+
+    test('C8 — sete peças em seis linhas, divisória W × H', () => {
+        const plan = ready(bandpass());
+        const divider = plan.pieces.find((piece) => piece.role === 'divider');
+
+        expect(plan.pieces).toHaveLength(6);
+        expect(plan.pieces.reduce((sum, p) => sum + p.quantity, 0)).toBe(7);
+        expect(divider).toMatchObject({
+            quantity: 1,
+            w_m: plan.dimensions.internal.w_m,
+            h_m: plan.dimensions.internal.h_m,
+            thickness_m: plan.thickness_m,
+        });
+    });
+
+    test('C7 — a profundidade entre frente e fundo é traseira + divisória + frontal', () => {
+        const plan = ready(bandpass());
+        const top = plan.pieces.find((piece) => piece.role === 'top');
+        const { chambers } = plan.dimensions;
+
+        expect(top?.h_m).toBeCloseTo(
+            (chambers?.rear_d_m ?? 0) +
+                plan.thickness_m +
+                (chambers?.front_d_m ?? 0),
+            12,
+        );
+    });
+
+    test('driver(s) na divisória e duto(s) na frente, cada um sozinho', () => {
+        const plan = ready(bandpass(2, { count: 2 }), { cutout_m: 0.2 });
+        const front = plan.pieces.find((piece) => piece.role === 'front');
+        const divider = plan.pieces.find((piece) => piece.role === 'divider');
+
+        expect(front?.cutouts.map(({ kind }) => kind)).toEqual([
+            'port',
+            'port',
+        ]);
+        expect(divider?.cutouts.map(({ kind }) => kind)).toEqual([
+            'driver',
+            'driver',
+        ]);
+        expect(
+            divider?.cutouts.every(({ center }) => center !== undefined),
+        ).toBe(true);
+    });
+
+    test('conferência com duas câmaras: drivers atrás, duto na frente, líquidos conferem', () => {
+        const input = bandpass(2);
+        const plan = ready(input, { braces_m3: 0.005 });
+        const results = simulate(input).results;
+        const [rear, front] = plan.volume.chambers;
+
+        expect([rear.id, front.id]).toEqual(['rear', 'front']);
+        expect(rear.drivers_m3).toBeGreaterThan(0);
+        expect(front.drivers_m3).toBe(0);
+        expect(rear.ports_m3).toBe(0);
+        expect(front.ports_m3).toBeGreaterThan(0);
+        expect(rear.net_m3).toBeCloseTo(results.net_rear_m3 as number, 9);
+        expect(front.net_m3).toBeCloseTo(results.net_front_m3 as number, 9);
+        expect(plan.volume.matchesSimulation).toBe(true);
+    });
+
+    test('bloqueada sem Vr, sem Vf ou sem os dois', () => {
+        const { vr_m3: _vr, ...withoutRear } = bandpass().box;
+        const { vf_m3: _vf, ...withoutFront } = bandpass().box;
+        const { vf_m3: _f, vr_m3: _r, ...withoutBoth } = bandpass().box;
+
+        expect(build({ ...bandpass(), box: withoutRear })).toMatchObject({
+            status: 'blocked',
+            missing: ['vr_m3'],
+        });
+        expect(build({ ...bandpass(), box: withoutFront })).toMatchObject({
+            status: 'blocked',
+            missing: ['vf_m3'],
+        });
+        expect(build({ ...bandpass(), box: withoutBoth })).toMatchObject({
+            status: 'blocked',
+            missing: ['vr_m3', 'vf_m3'],
+        });
+    });
+
+    test('o aviso de duto longo compara com a câmara frontal', () => {
+        const input = project({
+            type: 'bandpass',
+            vr_m3: 0.04,
+            vf_m3: 0.01,
+            fb_hz: 40,
+            port: { shape: 'round', diameter_m: 0.05, count: 1 },
+        });
+        const plan = ready(input);
+
+        expect(plan.port_length_m).toBeGreaterThan(
+            plan.dimensions.chambers?.front_d_m ?? 0,
+        );
+        expect(plan.warnings).toContainEqual({
+            id: 'portLongerThanDepth',
+            tone: 'warn',
+        });
+    });
+});
