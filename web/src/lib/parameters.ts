@@ -19,6 +19,8 @@ export type ParameterKey =
     | 'mms_kg'
     | 'vd_m3'
     | 'vb_m3'
+    | 'vr_m3'
+    | 'vf_m3'
     | 'fb_hz'
     | 'ql'
     | 'diameter_m'
@@ -66,6 +68,8 @@ export const PARAMETERS: Record<ParameterKey, ParameterDefinition> = {
     bl_tm: parameter('bl_tm', 'BL', 'forceFactor', 'driver', 0.1, 100),
     mms_kg: parameter('mms_kg', 'Mms', 'mass', 'driver', 1e-4, 5),
     vb_m3: parameter('vb_m3', 'Vb', 'volume', 'box', 1e-4, 20),
+    vr_m3: parameter('vr_m3', 'Vr', 'volume', 'box', 1e-4, 20),
+    vf_m3: parameter('vf_m3', 'Vf', 'volume', 'box', 1e-4, 20),
     vd_m3: parameter('vd_m3', 'Vd', 'volume', 'driver', 0, 0.1),
     fb_hz: parameter('fb_hz', 'Fb', 'frequency', 'box', 5, 500),
     ql: parameter('ql', 'Ql', 'ratio', 'box', 1, 100),

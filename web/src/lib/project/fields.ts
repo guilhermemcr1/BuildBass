@@ -5,7 +5,13 @@ import type { DriverKey, ProjectData } from './types';
 // Onde cada campo da bancada mora dentro do projeto (data-model.md).
 type PortKey = 'diameter_m' | 'width_m' | 'height_m' | 'base_m';
 
-const BOX_KEYS = new Set<ParameterKey>(['vb_m3', 'fb_hz', 'ql']);
+const BOX_KEYS = new Set<ParameterKey>([
+    'vb_m3',
+    'vr_m3',
+    'vf_m3',
+    'fb_hz',
+    'ql',
+]);
 const PORT_KEYS = new Set<ParameterKey>([
     'diameter_m',
     'width_m',
@@ -26,7 +32,7 @@ export function readField(
     }
 
     if (BOX_KEYS.has(key)) {
-        return data.box[key as 'vb_m3' | 'fb_hz' | 'ql'];
+        return data.box[key as 'vb_m3' | 'vr_m3' | 'vf_m3' | 'fb_hz' | 'ql'];
     }
 
     if (PORT_KEYS.has(key)) {

@@ -30,13 +30,19 @@ export type PortInput =
     | { shape: 'rect'; width_m?: number; height_m?: number; count: number }
     | { shape: 'triangle'; base_m?: number; height_m?: number; count: number };
 
-export type BoxType = 'closed' | 'vented';
+export type BoxType = 'closed' | 'vented' | 'bandpass';
 
 export type BoxInput = {
     type: BoxType;
+    // Selada e dutada: volume bruto da caixa.
     vb_m3?: number;
+    // Bandpass: volume bruto da câmara traseira (selada) e da frontal (dutada).
+    vr_m3?: number;
+    vf_m3?: number;
     ql: number;
+    // Dutada: sintonia da caixa. Bandpass: sintonia da câmara frontal.
     fb_hz?: number;
+    // Dutada: duto da caixa. Bandpass: duto da câmara frontal.
     port: PortInput;
 };
 
@@ -88,6 +94,8 @@ export type DerivedDriver = {
 export type FieldKey =
     | DriverKey
     | 'vb_m3'
+    | 'vr_m3'
+    | 'vf_m3'
     | 'fb_hz'
     | 'diameter_m'
     | 'width_m'
@@ -105,6 +113,7 @@ export type CurveId =
 
 export type WarningId =
     | 'netVolumeInvalid'
+    | 'rearVolumeInvalid'
     | 'portTooShort'
     | 'portTooLong'
     | 'portVolumeTooLarge'
@@ -119,8 +128,20 @@ export type SimulationResults = {
     f3_below_range?: boolean;
     qtc?: number;
     fc_hz?: number;
+    // Bandpass: cortes de −3 dB em relação ao pico, frequência central, largura e pico.
+    f_low_hz?: number;
+    f_high_hz?: number;
+    f_center_hz?: number;
+    bandwidth_oct?: number;
+    peak_db?: number;
+    // Corte inferior abaixo da grade (10 Hz) / superior acima dela (1000 Hz).
+    f_low_below_range?: boolean;
+    f_high_above_range?: boolean;
     fb_hz?: number;
     net_volume_m3?: number;
+    // Bandpass: volumes líquidos das duas câmaras.
+    net_rear_m3?: number;
+    net_front_m3?: number;
     port_length_m?: number;
     port_velocity_max_ms?: number;
     xmax_power_w?: number;

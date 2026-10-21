@@ -21,6 +21,7 @@ export type QuantityId =
     | 'voltage'
     | 'time'
     | 'velocity'
+    | 'octaves'
     | 'count';
 
 export type UnitId =
@@ -58,6 +59,7 @@ export type UnitId =
     | 'ms'
     | 'm/s'
     | 'ft/s'
+    | 'oct'
     | 'count';
 
 export type Unit = {
@@ -195,6 +197,7 @@ export const QUANTITIES: Record<QuantityId, Quantity> = {
         ],
         defaultUnit: { metric: 'm/s', imperial: 'ft/s' },
     },
+    octaves: single('octaves', unit('oct', 'oct', 'both', 1, 2)),
     count: single('count', unit('count', '', 'both', 1, 0)),
 };
 
