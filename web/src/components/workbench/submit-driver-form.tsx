@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import {
     Label,
     NumberField,
@@ -120,6 +120,7 @@ export function SubmitDriverForm({
     const unitSystem = usePreferences((state) => state.unitSystem);
     const [units, setUnits] = useState<Partial<Record<NumericKey, UnitId>>>({});
     const errorCount = Object.keys(errors).length;
+    const offlineId = useId();
 
     const message = (field: SubmissionFieldId): string | undefined => {
         const code: SubmissionErrorCode | undefined = errors[field];
@@ -300,7 +301,9 @@ export function SubmitDriverForm({
                     </p>
                 )}
                 {offline && (
-                    <p className="text-sm text-muted">{t('offline')}</p>
+                    <p id={offlineId} className="text-sm text-muted">
+                        {t('offline')}
+                    </p>
                 )}
             </div>
 
@@ -324,6 +327,7 @@ export function SubmitDriverForm({
                     type="submit"
                     disabled={sending || offline}
                     aria-busy={sending}
+                    aria-describedby={offline ? offlineId : undefined}
                 >
                     {sending ? t('actions.sending') : t('actions.submit')}
                 </Button>

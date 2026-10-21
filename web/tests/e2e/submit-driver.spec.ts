@@ -99,3 +99,118 @@ test('enviar o driver do projeto: pré-preenchido, protocolo e projeto intacto (
         '34,5',
     );
 });
+
+test('sem driver no projeto: preencher à mão e enviar (US4)', async ({
+    page,
+}) => {
+    await mockCatalog(page);
+    const received = await mockSubmission(page);
+    await page.goto('/');
+
+    await page.getByRole('button', { name: 'Enviar driver' }).click();
+    const dialog = page.getByRole('dialog', {
+        name: 'Enviar driver ao catálogo',
+    });
+    await expect(dialog.getByRole('textbox', { name: /^Fs/ })).toHaveValue('');
+
+    await dialog.getByRole('textbox', { name: /Fabricante/ }).fill('Exemplo');
+    await dialog.getByRole('textbox', { name: /Modelo/ }).fill('EX-12');
+    await dialog.getByRole('textbox', { name: /^Fs/ }).fill('40');
+    await dialog.getByRole('textbox', { name: /^Qts/ }).fill('0,4');
+    await dialog.getByRole('textbox', { name: /^Vas/ }).fill('50');
+    await dialog
+        .getByRole('textbox', { name: /Fonte dos dados/ })
+        .fill('Medição própria');
+    await dialog.getByRole('button', { name: 'Enviar' }).click();
+
+    await expect(page.getByText(PROTOCOL)).toBeVisible();
+    expect(received[0]).toMatchObject({ fs_hz: 40, qts: 0.4, vas_m3: 0.05 });
+});
+
+test('falha do servidor: mantém o digitado e o reenvio funciona (US4)', async ({
+    page,
+}) => {
+    await mockCatalog(page);
+    let attempts = 0;
+    await mockSubmission(page, (route) => {
+        attempts += 1;
+
+        return attempts === 1
+            ? route.fulfill({
+                  status: 500,
+                  headers: { ...CORS, 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ message: 'x' }),
+              })
+            : route.fulfill({
+                  status: 201,
+                  headers: { ...CORS, 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                      data: { protocol: PROTOCOL, status: 'pending' },
+                  }),
+              });
+    });
+    await page.goto('/');
+    await fillProjectDriver(page);
+
+    await page.getByRole('button', { name: 'Enviar driver' }).click();
+    const dialog = page.getByRole('dialog', {
+        name: 'Enviar driver ao catálogo',
+    });
+    await dialog.getByRole('textbox', { name: /Fabricante/ }).fill('Exemplo');
+    await dialog.getByRole('textbox', { name: /Modelo/ }).fill('EX-12');
+    await dialog
+        .getByRole('textbox', { name: /Fonte dos dados/ })
+        .fill('Ficha');
+    await dialog.getByRole('button', { name: 'Enviar' }).click();
+
+    await expect(dialog.getByRole('alert')).toContainText(
+        'não conseguiu receber',
+    );
+    await expect(
+        dialog.getByRole('textbox', { name: /Fabricante/ }),
+    ).toHaveValue('Exemplo');
+    await expect(dialog.getByRole('textbox', { name: /^Fs/ })).toHaveValue(
+        '34,5',
+    );
+
+    await dialog.getByRole('button', { name: 'Tentar de novo' }).click();
+
+    await expect(page.getByText(PROTOCOL)).toBeVisible();
+    expect(attempts).toBe(2);
+});
+
+test('perder a conexão com o diálogo aberto desativa o envio sem perder o digitado (US4)', async ({
+    page,
+    context,
+}) => {
+    await mockCatalog(page);
+    await mockSubmission(page);
+    await page.goto('/');
+
+    await page.getByRole('button', { name: 'Enviar driver' }).click();
+    const dialog = page.getByRole('dialog', {
+        name: 'Enviar driver ao catálogo',
+    });
+    await dialog.getByRole('textbox', { name: /Fabricante/ }).fill('Exemplo');
+
+    await context.setOffline(true);
+
+    await expect(dialog.getByRole('button', { name: 'Enviar' })).toBeDisabled({
+        timeout: 5000,
+    });
+    await expect(
+        dialog.getByText('Sem conexão: o envio precisa do servidor.'),
+    ).toBeVisible();
+    await expect(
+        dialog.getByRole('textbox', { name: /Fabricante/ }),
+    ).toHaveValue('Exemplo');
+
+    await context.setOffline(false);
+
+    await expect(dialog.getByRole('button', { name: 'Enviar' })).toBeEnabled({
+        timeout: 8000,
+    });
+    await expect(
+        dialog.getByRole('textbox', { name: /Fabricante/ }),
+    ).toHaveValue('Exemplo');
+});

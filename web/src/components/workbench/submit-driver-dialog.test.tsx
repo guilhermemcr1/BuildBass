@@ -266,3 +266,105 @@ describe('SubmitDriverDialog — recusas do servidor (US3)', () => {
         expect(submit.mock.calls[0][0].website).toBe('robo');
     });
 });
+
+describe('SubmitDriverDialog — sem projeto e falhas (US4)', () => {
+    test('projeto sem driver abre com os campos vazios e aceita preenchimento à mão', async () => {
+        renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
+
+        expect(fill(/^Fs/)).toHaveValue('');
+        expect(fill(/^Qts/)).toHaveValue('');
+        expect(fill(/^Vas/)).toHaveValue('');
+
+        await paste(/^Fs/, '40');
+        await paste(/^Qts/, '0,4');
+        await paste(/^Vas/, '50');
+        await userEvent.tab();
+        await sendValidForm();
+
+        expect(await screen.findByText(PROTOCOL)).toBeInTheDocument();
+        expect(submit.mock.calls[0][0]).toMatchObject({
+            fs_hz: 40,
+            qts: 0.4,
+            vas_m3: 0.05,
+        });
+    });
+
+    test('vazio, os três obrigatórios são apontados e nada é enviado', async () => {
+        renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
+
+        await userEvent.click(screen.getByRole('button', { name: 'Enviar' }));
+
+        expect(submit).not.toHaveBeenCalled();
+        expect(await screen.findByRole('alert')).toHaveTextContent(
+            'Corrija 6 campos antes de enviar.',
+        );
+    });
+
+    test.each([
+        ['network', /Sem conexão com o servidor/],
+        ['server', /não conseguiu receber/],
+    ] as const)(
+        '%s mostra a mensagem, mantém o digitado e o reenvio funciona',
+        async (error, message) => {
+            seedDriver();
+            submit.mockResolvedValueOnce({ ok: false, error });
+            renderWithProviders(
+                <SubmitDriverDialog onClose={() => undefined} />,
+            );
+
+            await sendValidForm();
+
+            expect(await screen.findByRole('alert')).toHaveTextContent(message);
+            expect(fill(/Fabricante/)).toHaveValue('Exemplo');
+            expect(fill(/^Fs/)).toHaveValue('34,5');
+
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Tentar de novo' }),
+            );
+
+            expect(await screen.findByText(PROTOCOL)).toBeInTheDocument();
+            expect(submit).toHaveBeenCalledTimes(2);
+            expect(submit.mock.calls[1][0]).toEqual(submit.mock.calls[0][0]);
+        },
+    );
+
+    test('offline desativa o envio com o motivo visível e reativa ao voltar', async () => {
+        seedDriver();
+        connection.status = 'offline';
+        renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
+
+        const send = screen.getByRole('button', { name: 'Enviar' });
+        expect(send).toBeDisabled();
+        expect(
+            screen.getByText('Sem conexão: o envio precisa do servidor.'),
+        ).toBeVisible();
+        const reason = screen.getByText(
+            'Sem conexão: o envio precisa do servidor.',
+        );
+        expect(send).toHaveAttribute('aria-describedby', reason.id);
+        // O digitado fica: dá para continuar preenchendo offline.
+        await paste(/Fabricante/, 'Exemplo');
+        expect(fill(/Fabricante/)).toHaveValue('Exemplo');
+
+        connection.status = 'online';
+        await paste(/Modelo/, 'EX-1');
+
+        expect(screen.getByRole('button', { name: 'Enviar' })).toBeEnabled();
+        expect(
+            screen.queryByText('Sem conexão: o envio precisa do servidor.'),
+        ).not.toBeInTheDocument();
+    });
+
+    test('offline não envia nem com Enter no formulário', async () => {
+        seedDriver();
+        connection.status = 'offline';
+        renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
+
+        await paste(/Fabricante/, 'Exemplo');
+        await paste(/Modelo/, 'EX-1');
+        await paste(/Fonte dos dados/, 'Ficha');
+        await userEvent.keyboard('{Enter}');
+
+        expect(submit).not.toHaveBeenCalled();
+    });
+});
