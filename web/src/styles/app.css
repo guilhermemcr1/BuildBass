@@ -29,6 +29,16 @@
     --series-2: #b85a00;
     --series-3: #8250df;
     --series-4: #1f6feb;
+    --series-5: #c2255c;
+    --series-6: #0e7490;
+
+    /* Bandeiras do seletor de idioma: cores de identidade, iguais nos dois temas. */
+    --flag-br-green: #009c3b;
+    --flag-br-yellow: #ffdf00;
+    --flag-br-blue: #002776;
+    --flag-us-red: #b22234;
+    --flag-us-blue: #3c3b6e;
+    --flag-white: #ffffff;
 }
 
 [data-theme='dark'] {
@@ -52,6 +62,8 @@
     --series-2: #f59e42;
     --series-3: #c792ea;
     --series-4: #5ab0ff;
+    --series-5: #ff7eb6;
+    --series-6: #22d3ee;
 }
 
 @theme inline {
@@ -74,6 +86,14 @@
     --color-series-2: var(--series-2);
     --color-series-3: var(--series-3);
     --color-series-4: var(--series-4);
+    --color-series-5: var(--series-5);
+    --color-series-6: var(--series-6);
+    --color-flag-br-green: var(--flag-br-green);
+    --color-flag-br-yellow: var(--flag-br-yellow);
+    --color-flag-br-blue: var(--flag-br-blue);
+    --color-flag-us-red: var(--flag-us-red);
+    --color-flag-us-blue: var(--flag-us-blue);
+    --color-flag-white: var(--flag-white);
 
     --font-sans: 'Archivo Variable', ui-sans-serif, system-ui, sans-serif;
     --font-mono: 'IBM Plex Mono', ui-monospace, monospace;

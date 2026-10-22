@@ -13,7 +13,7 @@ vi.mock('./chart-frame', () => ({
         series = [],
     }: {
         limits?: unknown[];
-        series?: { label: string; slot: number; dashed?: boolean }[];
+        series?: { label: string; color: number; dashed?: boolean }[];
     }) => (
         <div
             data-testid="chart-frame"
@@ -50,7 +50,7 @@ function sixthOrder(box: Record<string, unknown> = {}) {
 function seriesOf(frame: HTMLElement) {
     return JSON.parse(frame.dataset.series ?? '[]') as {
         label: string;
-        slot: number;
+        color: number;
         dashed?: boolean;
     }[];
 }
@@ -171,7 +171,7 @@ describe('ChartPanel', () => {
         expect(series[0].dashed).toBeUndefined();
         expect(series[1].label).toMatch(/— traseiro$/);
         expect(series[1].dashed).toBe(true);
-        expect(series[1].slot).toBe(series[0].slot);
+        expect(series[1].color).toBe(series[0].color);
     });
 
     test('em inglês a legenda diz front / rear', async () => {

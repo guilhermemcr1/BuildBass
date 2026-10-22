@@ -70,7 +70,8 @@ export default function Workbench() {
         if (!result.ok) {
             setOpenError({ code: result.code, path: result.path });
         } else if (
-            useWorkspace.getState().openProject(result.data) === 'limit'
+            useWorkspace.getState().openProject(result.data, result.color) ===
+            'limit'
         ) {
             setLimitOpen(true);
         }
@@ -107,7 +108,11 @@ export default function Workbench() {
                 }
                 break;
             case 'export':
-                downloadProject(activeProjectStore().getState().data);
+                downloadProject(
+                    activeProjectStore().getState().data,
+                    workspace.projects.find((p) => p.id === workspace.activeId)
+                        ?.color,
+                );
                 workspace.markExported(workspace.activeId);
                 break;
             case 'undo':
@@ -212,6 +217,7 @@ export default function Workbench() {
                         if (closingProject !== undefined) {
                             downloadProject(
                                 projectStore(closingProject.id).getState().data,
+                                closingProject.color,
                             );
                             useWorkspace
                                 .getState()

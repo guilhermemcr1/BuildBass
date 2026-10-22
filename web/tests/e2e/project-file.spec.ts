@@ -95,7 +95,7 @@ async function exportedFile(page: Page) {
     return (await import('node:fs/promises')).readFile(path, 'utf8');
 }
 
-test('bandpass exportada grava a versão 2 e reabre igual (feature 004, US4)', async ({
+test('bandpass exportada grava a versão 5 e reabre igual (feature 004, US4; 008)', async ({
     page,
 }) => {
     await page.goto('/');
@@ -109,7 +109,7 @@ test('bandpass exportada grava a versão 2 e reabre igual (feature 004, US4)', a
 
     const text = await exportedFile(page);
     const file = JSON.parse(text);
-    expect(file.version).toBe(2);
+    expect(file.version).toBe(5); // a cor do projeto sempre vai (feature 008)
     expect(file.project.box).toMatchObject({
         type: 'bandpass',
         vr_m3: 0.04,
@@ -136,7 +136,7 @@ test('bandpass exportada grava a versão 2 e reabre igual (feature 004, US4)', a
     await expect(field(page, /^Fb/)).toHaveValue('45,0');
 });
 
-test('caixa dutada continua exportando a versão 1 (feature 004, US4)', async ({
+test('caixa dutada exporta a versão 5 com a cor do projeto (feature 004, US4; 008)', async ({
     page,
 }) => {
     await page.goto('/');
@@ -145,7 +145,7 @@ test('caixa dutada continua exportando a versão 1 (feature 004, US4)', async ({
 
     const file = JSON.parse(await exportedFile(page));
 
-    expect(file.version).toBe(1);
+    expect(file.version).toBe(5);
 });
 
 test('arquivo de versão futura mostra a mensagem de app mais novo (feature 004, US4)', async ({
@@ -164,7 +164,7 @@ test('arquivo de versão futura mostra a mensagem de app mais novo (feature 004,
         buffer: Buffer.from(
             JSON.stringify({
                 format: 'buildbass.project',
-                version: 5,
+                version: 6,
                 project: {},
             }),
         ),
@@ -212,9 +212,9 @@ test('plano de corte: ver não muda o arquivo; editar grava a versão 3 e reabre
     await fill(page, /^Vb/, '60');
     await openPlan(page);
 
-    // Só ver o plano deixa o arquivo na versão 1 e sem cutPlan.
+    // Só ver o plano deixa o arquivo sem cutPlan.
     const untouched = JSON.parse(await exportedFile(page));
-    expect(untouched.version).toBe(1);
+    expect(untouched.version).toBe(5);
     expect(untouched.project).not.toHaveProperty('cutPlan');
 
     await fill(page, /Espessura/, '25');
@@ -225,7 +225,7 @@ test('plano de corte: ver não muda o arquivo; editar grava a versão 3 e reabre
 
     const text = await exportedFile(page);
     const file = JSON.parse(text);
-    expect(file.version).toBe(3);
+    expect(file.version).toBe(5);
     expect(file.project.cutPlan).toMatchObject({
         thickness_m: 0.025,
         proportion: 'louden',
@@ -257,7 +257,7 @@ test('plano de corte: arquivo de versão 5 pede atualizar e valor fora da faixa 
         'futuro.buildbass.json',
         JSON.stringify({
             format: 'buildbass.project',
-            version: 5,
+            version: 6,
             project: {},
         }),
     );
@@ -332,7 +332,7 @@ test('bandpass de 6ª ordem grava a versão 4 e reabre igual, com os dois dutos 
 
     const text = await exportedFile(page);
     const file = JSON.parse(text);
-    expect(file.version).toBe(4);
+    expect(file.version).toBe(5);
     expect(file.project.box).toMatchObject({
         type: 'bandpass6',
         vr_m3: 0.08,
@@ -404,3 +404,25 @@ for (const [version, extra] of [
         await expect(field(page, /^Vf/)).toHaveValue('60,0');
     });
 }
+
+test('a cor do projeto vai no arquivo e volta ao reabrir (feature 008, US2)', async ({
+    page,
+}) => {
+    await page.goto('/');
+    await fill(page, /^Fs/, '31');
+
+    const file = JSON.parse(await exportedFile(page));
+
+    expect(file.version).toBe(5);
+    expect(file.color).toBe(1);
+    expect(file.project).not.toHaveProperty('color');
+
+    await openFile(
+        page,
+        'cor.buildbass.json',
+        JSON.stringify({ ...file, color: 4 }),
+    );
+    const reopened = JSON.parse(await exportedFile(page));
+
+    expect(reopened.color).toBe(4);
+});

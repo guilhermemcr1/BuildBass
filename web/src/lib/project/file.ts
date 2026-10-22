@@ -1,5 +1,6 @@
 import { CURRENT_VERSION, migrate } from './migrate';
-import type { ProjectData } from './types';
+import { validColor } from './types';
+import type { ProjectData, SeriesColor } from './types';
 
 // Arquivo .buildbass.json (contracts/project-file.md): entrada não confiável, validada antes de
 // chegar ao estado (constituição, princípio IV).
@@ -18,13 +19,17 @@ export type OpenErrorCode =
     | 'readFailed';
 
 export type ParseResult =
-    | { ok: true; data: ProjectData }
+    | { ok: true; data: ProjectData; color?: SeriesColor }
     | { ok: false; code: OpenErrorCode; path?: string };
 
-// A versão gravada é a menor que descreve o arquivo: bandpass de 6ª ordem = 4, plano de corte
-// editado = 3, bandpass de 4ª ordem = 2 e os demais continuam v1 e abrem em apps anteriores
-// (specs/004, 005 e 007, contracts/project-file.md).
-function versionOf(data: ProjectData): number {
+// A versão gravada é a menor que descreve o arquivo: cor do projeto = 5, bandpass de 6ª ordem = 4,
+// plano de corte editado = 3, bandpass de 4ª ordem = 2 e os demais continuam v1 e abrem em apps
+// anteriores (specs/004, 005, 007 e 008, contracts/project-file.md).
+function versionOf(data: ProjectData, color?: SeriesColor): number {
+    if (color !== undefined) {
+        return 5;
+    }
+
     if (data.box.type === 'bandpass6') {
         return 4;
     }
@@ -36,13 +41,19 @@ function versionOf(data: ProjectData): number {
     return data.box.type === 'bandpass' ? 2 : 1;
 }
 
-export function serializeProject(data: ProjectData, now = new Date()): string {
+// A cor é do projeto aberto (aba), não do `ProjectData`: vai na raiz do arquivo (specs/008, R3).
+export function serializeProject(
+    data: ProjectData,
+    now = new Date(),
+    color?: SeriesColor,
+): string {
     return `${JSON.stringify(
         {
             format: FILE_FORMAT,
-            version: versionOf(data),
+            version: versionOf(data, color),
             app: APP_VERSION,
             exported_at: now.toISOString(),
+            ...(color === undefined ? {} : { color }),
             project: data,
         },
         null,
@@ -66,8 +77,8 @@ export function exportFileName(name: string): string {
     return `${exportBaseName(name)}${FILE_EXTENSION}`;
 }
 
-export function downloadProject(data: ProjectData): void {
-    const blob = new Blob([serializeProject(data)], {
+export function downloadProject(data: ProjectData, color?: SeriesColor): void {
+    const blob = new Blob([serializeProject(data, new Date(), color)], {
         type: 'application/json',
     });
     const url = URL.createObjectURL(blob);
@@ -122,6 +133,11 @@ export async function parseProjectFile(file: File): Promise<ParseResult> {
         return { ok: false, code: 'newerVersion' };
     }
 
+    // Arquivos anteriores à versão 5 não têm cor; se houver, tem de ser uma das seis da paleta.
+    if (raw.color !== undefined && !validColor(raw.color)) {
+        return { ok: false, code: 'invalidContent', path: 'color' };
+    }
+
     const { projectSchema } = await import('./schema');
     const parsed = projectSchema.safeParse(migrate(raw.project, version));
 
@@ -135,5 +151,9 @@ export async function parseProjectFile(file: File): Promise<ParseResult> {
         };
     }
 
-    return { ok: true, data: parsed.data };
+    return {
+        ok: true,
+        data: parsed.data,
+        ...(validColor(raw.color) ? { color: raw.color } : {}),
+    };
 }

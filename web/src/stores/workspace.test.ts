@@ -26,6 +26,7 @@ describe('workspace', () => {
         expect(workspace().activeId).toBe(workspace().projects[0].id);
         expect(workspace().projects[0]).toMatchObject({
             slot: 1,
+            color: 1,
             plotted: true,
             unsaved: false,
         });
@@ -40,6 +41,69 @@ describe('workspace', () => {
         );
         expect(workspace().projects.map((p) => p.slot)).toEqual([1, 2, 3]);
         expect(workspace().activeId).toBe(workspace().projects[2].id);
+    });
+
+    test('cada projeto novo recebe a menor cor livre', () => {
+        workspace().newProject();
+        workspace().newProject();
+
+        expect(workspace().projects.map((p) => p.color)).toEqual([1, 2, 3]);
+
+        const second = workspace().projects[1];
+        workspace().setColor(second.id, 5);
+        workspace().closeProject(workspace().projects[2].id);
+        workspace().newProject();
+
+        expect(workspace().projects.map((p) => p.color)).toEqual([1, 5, 2]);
+    });
+
+    test('abrir um projeto usa a cor recebida, mesmo repetida', () => {
+        workspace().openProject(createProjectData('A'), 4);
+        workspace().openProject(createProjectData('B'), 4);
+
+        expect(workspace().projects.map((p) => p.color)).toEqual([1, 4, 4]);
+    });
+
+    test('setColor troca só a cor daquele projeto e ignora valor inválido', () => {
+        workspace().newProject();
+        const [first, second] = workspace().projects;
+
+        workspace().setColor(second.id, 6);
+        expect(workspace().projects.map((p) => p.color)).toEqual([1, 6]);
+
+        workspace().setColor(first.id, 7 as never);
+        workspace().setColor(first.id, 0 as never);
+        workspace().setColor(first.id, 2.5 as never);
+        expect(workspace().projects.map((p) => p.color)).toEqual([1, 6]);
+    });
+
+    test('a cor persiste e o estado salvo sem cor (versão 1) migra do slot', async () => {
+        workspace().newProject();
+        workspace().setColor(workspace().projects[1].id, 4);
+        const saved = JSON.parse(localStorage.getItem(WORKSPACE_KEY) ?? '{}');
+
+        expect(
+            saved.state.projects.map((p: { color: number }) => p.color),
+        ).toEqual([1, 4]);
+        expect(saved.version).toBe(2);
+
+        const [first, second] = workspace().projects;
+        const legacy = {
+            version: 1,
+            state: {
+                activeId: first.id,
+                projects: [first, second].map(
+                    ({ color: _color, ...p }, index) => ({
+                        ...p,
+                        slot: index + 1,
+                    }),
+                ),
+            },
+        };
+        localStorage.setItem(WORKSPACE_KEY, JSON.stringify(legacy));
+        await reloadFromStorage();
+
+        expect(workspace().projects.map((p) => p.color)).toEqual([1, 2]);
     });
 
     test('abrir um projeto com nome repetido acrescenta (2)', () => {
@@ -98,7 +162,7 @@ describe('workspace', () => {
         workspace().togglePlotted(saved.projects[0].id);
 
         const stored = JSON.parse(localStorage.getItem(WORKSPACE_KEY) ?? '{}');
-        expect(stored.version).toBe(1);
+        expect(stored.version).toBe(2);
         expect(stored.state.projects).toHaveLength(2);
 
         // Simula reabrir o app: estado novo em memória, armazenamento com o que foi salvo.

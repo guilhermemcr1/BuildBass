@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vite-plus/test';
+import { CURRENT_VERSION } from './migrate';
 import {
     MAX_FILE_BYTES,
     exportFileName,
@@ -92,7 +93,7 @@ describe('arquivo de projeto', () => {
 
     test('versão mais nova', async () => {
         expect(
-            await parseProjectFile(file(envelope({}, { version: 5 }))),
+            await parseProjectFile(file(envelope({}, { version: 6 }))),
         ).toEqual({ ok: false, code: 'newerVersion' });
     });
 
@@ -443,9 +444,9 @@ describe('plano de corte no arquivo (versão 3)', () => {
         });
     });
 
-    test('versão 5 pede para atualizar o app', async () => {
+    test('versão 6 pede para atualizar o app', async () => {
         expect(
-            await parseProjectFile(file(envelope(PLAN, { version: 5 }))),
+            await parseProjectFile(file(envelope(PLAN, { version: 6 }))),
         ).toEqual({ ok: false, code: 'newerVersion' });
     });
 });
@@ -525,9 +526,9 @@ describe('bandpass de 6ª ordem e versão 4 (feature 007)', () => {
         }
     });
 
-    test('versão 5 é recusada pedindo para atualizar o app', async () => {
+    test('versão 6 é recusada pedindo para atualizar o app', async () => {
         expect(
-            await parseProjectFile(file(envelope(SIXTH, { version: 5 }))),
+            await parseProjectFile(file(envelope(SIXTH, { version: 6 }))),
         ).toEqual({ ok: false, code: 'newerVersion' });
     });
 
@@ -614,5 +615,62 @@ describe('bandpass de 6ª ordem e versão 4 (feature 007)', () => {
             ok: true,
             data: { fieldUnits: { fb_rear_hz: 'Hz' } },
         });
+    });
+});
+
+describe('cor do projeto e versão 5 (feature 008)', () => {
+    const versionOf = (text: string): number => JSON.parse(text).version;
+
+    test('a versão atual é 5', () => {
+        expect(CURRENT_VERSION).toBe(5);
+    });
+
+    test('com cor o arquivo é gravado como versão 5; sem cor, na menor versão', () => {
+        expect(versionOf(serializeProject(FULL, new Date(), 4))).toBe(5);
+        expect(versionOf(serializeProject(FULL))).toBe(1);
+        expect(
+            versionOf(
+                serializeProject({
+                    ...FULL,
+                    box: { ...FULL.box, type: 'bandpass6' },
+                }),
+            ),
+        ).toBe(4);
+    });
+
+    test('a cor vai na raiz do arquivo, fora do projeto', () => {
+        const parsed = JSON.parse(serializeProject(FULL, new Date(), 4));
+
+        expect(parsed.color).toBe(4);
+        expect(parsed.project.color).toBeUndefined();
+    });
+
+    test('ida e volta devolve a cor', async () => {
+        const result = await parseProjectFile(
+            file(serializeProject(FULL, new Date(), 6)),
+        );
+
+        expect(result).toEqual({ ok: true, data: FULL, color: 6 });
+    });
+
+    test('arquivos das versões 1 a 4 abrem sem cor (SC-011)', async () => {
+        for (const version of [1, 2, 3, 4]) {
+            const result = await parseProjectFile(
+                file(envelope(FULL, { version })),
+            );
+
+            expect(result).toEqual({ ok: true, data: FULL });
+            expect(result.ok && result.color).toBeFalsy();
+        }
+    });
+
+    test('cor fora de 1–6 ou não inteira recusa o arquivo com o caminho', async () => {
+        for (const color of [0, 7, 2.5, '3', null]) {
+            expect(
+                await parseProjectFile(
+                    file(envelope(FULL, { version: 5, color })),
+                ),
+            ).toEqual({ ok: false, code: 'invalidContent', path: 'color' });
+        }
     });
 });

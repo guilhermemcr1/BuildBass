@@ -1,7 +1,11 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import { createProjectData } from '@/lib/project/types';
-import type { ProjectData } from '@/lib/project/types';
+import {
+    SERIES_COLORS,
+    createProjectData,
+    validColor,
+} from '@/lib/project/types';
+import type { ProjectData, SeriesColor } from '@/lib/project/types';
 import { createProjectStore } from './project-store';
 import type { ProjectStore } from './project-store';
 import { createSafeStorage, usePreferences } from './preferences';
@@ -13,9 +17,13 @@ export const MAX_OPEN_PROJECTS = 3;
 
 export type Slot = 1 | 2 | 3;
 
+export type { SeriesColor };
+
 export type OpenProject = {
     id: string;
+    // Só numera o nome padrão ("Projeto sem nome 2"); a cor é `color`.
     slot: Slot;
+    color: SeriesColor;
     data: ProjectData;
     plotted: boolean;
     unsaved: boolean;
@@ -28,9 +36,10 @@ type WorkspaceState = {
     activeId: string;
     storageAvailable: boolean;
     newProject: () => OpenResult;
-    openProject: (data: ProjectData) => OpenResult;
+    openProject: (data: ProjectData, color?: SeriesColor) => OpenResult;
     closeProject: (id: string) => void;
     setActive: (id: string) => void;
+    setColor: (id: string, color: SeriesColor) => void;
     togglePlotted: (id: string) => void;
     markExported: (id: string) => void;
 };
@@ -41,10 +50,24 @@ function freeSlot(projects: OpenProject[]): Slot {
     return SLOTS.find((slot) => projects.every((p) => p.slot !== slot)) ?? 1;
 }
 
-function openEntry(projects: OpenProject[], data: ProjectData): OpenProject {
+// Menor cor livre; com todas em uso (impossível com 3 abas e 6 cores), a primeira.
+function freeColor(projects: OpenProject[]): SeriesColor {
+    return (
+        SERIES_COLORS.find((color) =>
+            projects.every((p) => p.color !== color),
+        ) ?? 1
+    );
+}
+
+function openEntry(
+    projects: OpenProject[],
+    data: ProjectData,
+    color?: SeriesColor,
+): OpenProject {
     return {
         id: crypto.randomUUID(),
         slot: freeSlot(projects),
+        color: color ?? freeColor(projects),
         data,
         plotted: true,
         unsaved: false,
@@ -112,17 +135,18 @@ export const useWorkspace = create<WorkspaceState>()(
 
                 return 'ok';
             },
-            openProject: (data) => {
+            openProject: (data, color) => {
                 const { projects } = get();
 
                 if (projects.length >= MAX_OPEN_PROJECTS) {
                     return 'limit';
                 }
 
-                const entry = openEntry(projects, {
-                    ...data,
-                    name: uniqueName(projects, data.name),
-                });
+                const entry = openEntry(
+                    projects,
+                    { ...data, name: uniqueName(projects, data.name) },
+                    color,
+                );
                 set({ projects: [...projects, entry], activeId: entry.id });
 
                 return 'ok';
@@ -155,6 +179,17 @@ export const useWorkspace = create<WorkspaceState>()(
                     set({ activeId: id });
                 }
             },
+            setColor: (id, color) => {
+                if (!validColor(color)) {
+                    return;
+                }
+
+                set(({ projects }) => ({
+                    projects: projects.map((p) =>
+                        p.id === id ? { ...p, color } : p,
+                    ),
+                }));
+            },
             togglePlotted: (id) =>
                 set(({ projects }) => ({
                     projects: projects.map((p) =>
@@ -170,7 +205,26 @@ export const useWorkspace = create<WorkspaceState>()(
         }),
         {
             name: WORKSPACE_KEY,
-            version: 1,
+            version: 2,
+            // v1 → v2: a cor passa a ser própria do projeto; quem só tinha o slot herda a cor dele.
+            migrate: (persisted, version) => {
+                const state = persisted as {
+                    projects?: { slot?: number; color?: unknown }[];
+                };
+
+                if (version < 2 && Array.isArray(state.projects)) {
+                    state.projects = state.projects.map((p) => ({
+                        ...p,
+                        color: validColor(p.color)
+                            ? p.color
+                            : validColor(p.slot)
+                              ? p.slot
+                              : 1,
+                    }));
+                }
+
+                return state as never;
+            },
             storage: createJSONStorage(() => createSafeStorage()),
             partialize: ({ projects, activeId }) => ({ projects, activeId }),
         },

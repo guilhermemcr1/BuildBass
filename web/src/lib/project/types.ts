@@ -32,6 +32,16 @@ export type ProjectData = ProjectInput & {
     fieldUnits: Partial<Record<ParameterKey, UnitId>>;
 };
 
+// Cor do projeto (tokens --series-N), escolhida pelo usuário na aba (specs/008, FR-006). Vive no
+// projeto aberto e no arquivo, não no `ProjectData`.
+export type SeriesColor = 1 | 2 | 3 | 4 | 5 | 6;
+
+export const SERIES_COLORS: SeriesColor[] = [1, 2, 3, 4, 5, 6];
+
+export function validColor(value: unknown): value is SeriesColor {
+    return SERIES_COLORS.some((color) => color === value);
+}
+
 export const PROJECT_NAME_MAX = 80;
 
 export function createProjectData(name: string): ProjectData {

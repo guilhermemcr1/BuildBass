@@ -148,7 +148,7 @@ export function ChartPanel({
 
             const name = displayName(project, t);
             const common = {
-                slot: project.slot,
+                color: project.color,
                 emphasis: active && plotted.length > 1,
             };
             // Bandpass de 6ª ordem: o duto traseiro vira uma segunda série, tracejada, na cor do
@@ -262,7 +262,7 @@ export function ChartPanel({
                         ({ project, active, simulation }) => ({
                             id: project.id,
                             label: displayName(project, t),
-                            slot: project.slot,
+                            color: project.color,
                             emphasis: active && plotted.length > 1,
                             empty:
                                 simulation.curves[CURVES[kind].curve] ===

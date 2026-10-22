@@ -46,6 +46,8 @@ const TOKENS: { name: string; swatch: string }[] = [
     { name: 'series-2', swatch: 'bg-series-2' },
     { name: 'series-3', swatch: 'bg-series-3' },
     { name: 'series-4', swatch: 'bg-series-4' },
+    { name: 'series-5', swatch: 'bg-series-5' },
+    { name: 'series-6', swatch: 'bg-series-6' },
 ];
 
 const FIELD_STATES: { status: FieldStatus; messageKey?: string }[] = [

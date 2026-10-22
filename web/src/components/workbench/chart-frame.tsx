@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import uPlot from 'uplot';
+import type { SeriesColor } from '@/lib/project/types';
 import 'uplot/dist/uPlot.min.css';
 
 export type ChartSeries = {
     id: string;
     label: string;
-    slot: 1 | 2 | 3;
+    color: SeriesColor;
     // Projeto ativo: linha mais grossa.
     emphasis: boolean;
     // Já na unidade exibida; null = sem valor nesse ponto.
@@ -139,10 +140,10 @@ export default function ChartFrame({
     const [announce, setAnnounce] = useState(false);
 
     const layout = JSON.stringify({
-        series: series.map(({ id, label, slot, emphasis, dashed }) => [
+        series: series.map(({ id, label, color, emphasis, dashed }) => [
             id,
             label,
-            slot,
+            color,
             emphasis,
             dashed === true,
         ]),
@@ -240,9 +241,9 @@ export default function ChartFrame({
                     series: [
                         {},
                         ...config.series.map(
-                            ([, label, slot, emphasis, dashed]) => ({
+                            ([, label, color, emphasis, dashed]) => ({
                                 label,
-                                stroke: token(`--series-${slot}`),
+                                stroke: token(`--series-${color}`),
                                 width: emphasis ? 2.5 : 1.5,
                                 ...(dashed ? { dash: [8, 5] } : {}),
                             }),

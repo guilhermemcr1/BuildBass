@@ -1,11 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
+import type { SeriesColor } from '@/lib/project/types';
 import { SWATCH } from './swatch';
 
 export type LegendItem = {
     id: string;
     label: string;
-    slot: 1 | 2 | 3;
+    color: SeriesColor;
     emphasis: boolean;
     // Projeto plotado que ainda não tem dados para esta curva.
     empty: boolean;
@@ -29,7 +30,7 @@ export function ChartLegend({ items }: { items: LegendItem[] }) {
                         aria-hidden="true"
                         className={cn(
                             'h-0.5 w-4 rounded-full',
-                            SWATCH[item.slot],
+                            SWATCH[item.color],
                             item.emphasis && 'h-1',
                         )}
                     />
