@@ -5,6 +5,7 @@ namespace App\Filament\Resources\DriverSubmissions\Schemas;
 use App\Enums\SubmissionStatus;
 use App\Models\Driver;
 use App\Models\DriverSubmission;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
@@ -51,13 +52,17 @@ class DriverSubmissionForm
 
         return $schema->components([
             Section::make('Identificação')
-                ->columns(3)
+                ->columns(4)
                 ->schema([
                     TextInput::make('brand')->label('Fabricante')->required()->maxLength(80)
                         ->disabled(fn (?DriverSubmission $record): bool => ! $editable($record)),
                     TextInput::make('model')->label('Modelo')->required()->maxLength(80)
                         ->disabled(fn (?DriverSubmission $record): bool => ! $editable($record)),
                     TextInput::make('variant')->label('Variante')->maxLength(40)
+                        ->disabled(fn (?DriverSubmission $record): bool => ! $editable($record)),
+                    Select::make('type')->label('Tipo')
+                        ->options(array_combine(Driver::TYPES, array_map('ucfirst', Driver::TYPES)))
+                        ->placeholder('Não informado')
                         ->disabled(fn (?DriverSubmission $record): bool => ! $editable($record)),
                 ]),
             Section::make('Parâmetros (SI)')

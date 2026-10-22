@@ -14,10 +14,21 @@ describe('formFromProject', () => {
             brand: 'Exemplo',
             model: 'EX-12',
             variant: '4 Ω',
+            type: '',
             source: '',
             contact_email: '',
             numbers: { fs_hz: 34.5, qts: 0.41, vas_m3: 0.085, xmax_m: 0.008 },
         });
+    });
+
+    test('leva o tipo da identificação para o formulário', () => {
+        const form = formFromProject(
+            { fs_hz: 40 },
+            { brand: 'Exemplo', type: 'midbass' },
+        );
+
+        expect(form.type).toBe('midbass');
+        expect(form.model).toBe('');
     });
 
     test('sem origem deixa a identificação em branco', () => {

@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { DRIVER_KEYS } from '@/engine';
 import type { DriverKey } from '@/engine';
 import { PARAMETERS } from '@/lib/parameters';
+import { DRIVER_TYPES } from '@/lib/project/types';
+import type { DriverType } from '@/lib/project/types';
 
 // Regras do envio de driver (specs/006, data-model.md §5). Espelham o Form Request do servidor
 // (api/app/Http/Requests/StoreDriverSubmissionRequest.php); as faixas vêm de PARAMETERS e o
@@ -41,6 +43,8 @@ export type SubmissionForm = {
     brand: string;
     model: string;
     variant: string;
+    // Vazio = não informado.
+    type: DriverType | '';
     source: string;
     contact_email: string;
     numbers: Partial<Record<NumericKey, number>>;
@@ -88,6 +92,7 @@ export const submissionSchema = z.object({
     brand: text(TEXT_LIMITS.brand, true),
     model: text(TEXT_LIMITS.model, true),
     variant: text(TEXT_LIMITS.variant, false),
+    type: z.union([z.literal(''), z.enum(DRIVER_TYPES)]),
     source: text(TEXT_LIMITS.source, true),
     // Vazio é permitido (e-mail é opcional); preenchido precisa ser e-mail.
     contact_email: z
@@ -154,6 +159,7 @@ export type SubmissionPayload = Partial<Record<NumericKey, number>> & {
     brand: string;
     model: string;
     variant?: string;
+    type?: DriverType;
     source: string;
     contact_email?: string;
     locale: 'pt-BR' | 'en';
@@ -179,6 +185,10 @@ export function toPayload(
 
     if (variant !== '') {
         payload.variant = variant;
+    }
+
+    if (form.type !== '') {
+        payload.type = form.type;
     }
 
     if (email !== '') {

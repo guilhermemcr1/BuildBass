@@ -4,12 +4,16 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Banner } from '@/components/ui/banner';
 import { Button } from '@/components/ui/button';
+import { ColorPicker } from '@/components/ui/color-picker';
 import { Dialog } from '@/components/ui/dialog';
+import { Flag } from '@/components/ui/flag';
+import { HelpTip } from '@/components/ui/help-tip';
 import { InlineTextField } from '@/components/ui/inline-text-field';
 import { Menu } from '@/components/ui/menu';
 import { ParameterField } from '@/components/ui/parameter-field';
 import { SearchSelect } from '@/components/ui/search-select';
 import { SegmentedControl } from '@/components/ui/segmented-control';
+import { ShowMore } from '@/components/ui/show-more';
 import { SliderField } from '@/components/ui/slider-field';
 import { StatusIndicator } from '@/components/ui/status-indicator';
 import type { FieldStatus } from '@/components/ui/status-indicator';
@@ -19,6 +23,7 @@ import { Tooltip } from '@/components/ui/tooltip';
 import { ValueTile } from '@/components/ui/value-tile';
 import { LanguageSwitch } from '@/components/workbench/language-switch';
 import { ThemeSwitch } from '@/components/workbench/theme-switch';
+import type { SeriesColor } from '@/lib/project/types';
 import type { UnitId } from '@/lib/units/quantities';
 import { usePreferences } from '@/stores/preferences';
 
@@ -46,6 +51,8 @@ const TOKENS: { name: string; swatch: string }[] = [
     { name: 'series-2', swatch: 'bg-series-2' },
     { name: 'series-3', swatch: 'bg-series-3' },
     { name: 'series-4', swatch: 'bg-series-4' },
+    { name: 'series-5', swatch: 'bg-series-5' },
+    { name: 'series-6', swatch: 'bg-series-6' },
 ];
 
 const FIELD_STATES: { status: FieldStatus; messageKey?: string }[] = [
@@ -94,6 +101,7 @@ export default function UiReference() {
     const tokenValues = useTokenValues();
     const [dialogOpen, setDialogOpen] = useState(false);
     const [segment, setSegment] = useState<'a' | 'b' | 'c'>('a');
+    const [color, setColor] = useState<SeriesColor>(1);
     const [tab, setTab] = useState<'one' | 'two' | 'three'>('one');
     const [shown, setShown] = useState(true);
     const [editingName, setEditingName] = useState(false);
@@ -328,6 +336,59 @@ export default function UiReference() {
                         <StatusIndicator status="unchecked" />
                     </div>
                 </div>
+            </Section>
+
+            <Section title={t('reference.refinement')}>
+                <div className="flex flex-wrap items-start gap-6">
+                    <div className="flex flex-col gap-1.5">
+                        <span className="text-xs font-semibold text-muted">
+                            {t('reference.helpTip')}
+                        </span>
+                        <HelpTip
+                            label={t('reference.helpTip')}
+                            content={t('reference.helpTipBody')}
+                        >
+                            <span className="w-fit cursor-help rounded-sm border border-border bg-raised px-2 py-1 num text-sm">
+                                Fs
+                            </span>
+                        </HelpTip>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                        <span className="text-xs font-semibold text-muted">
+                            {t('reference.statusCompact')}
+                        </span>
+                        <StatusIndicator status="ok" size="compact" />
+                        <StatusIndicator status="warn" size="compact" />
+                        <StatusIndicator status="error" size="compact" />
+                        <StatusIndicator status="unchecked" size="compact" />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                        <span className="text-xs font-semibold text-muted">
+                            {t('reference.colors')}
+                        </span>
+                        <ColorPicker value={color} onChange={setColor} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                        <span className="text-xs font-semibold text-muted">
+                            {t('reference.flags')}
+                        </span>
+                        <div className="flex items-center gap-3 text-sm">
+                            <span className="flex items-center gap-2">
+                                <Flag country="br" />
+                                BR
+                            </span>
+                            <span className="flex items-center gap-2">
+                                <Flag country="us" />
+                                EN
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <ShowMore id="driverAdvanced" filled={1}>
+                    <p className="text-sm text-muted">
+                        {t('reference.showMoreBody')}
+                    </p>
+                </ShowMore>
             </Section>
 
             <Dialog

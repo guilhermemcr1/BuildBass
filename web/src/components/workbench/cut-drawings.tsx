@@ -11,6 +11,10 @@ import { usePreferences } from '@/stores/preferences';
 // O desenho usa milímetros como unidade de tela; a unidade exibida nas cotas é a do usuário.
 const MM = 1000;
 
+// Lado maior do maior desenho, em rem: todos seguem na mesma escala, mas o desenho não cresce com
+// a largura do painel (antes a peça mais larga ocupava a linha inteira e o plano passava de 7 000 px).
+const DRAWING_REM = 22;
+
 type Format = (si: number) => string;
 
 function CutoutShape({
@@ -157,8 +161,10 @@ function PieceDrawing({
 
     return (
         <figure
-            className="flex flex-col gap-1"
-            style={{ width: `${((width + 2 * pad) / scale.max) * 100}%` }}
+            className="flex max-w-full flex-col gap-1"
+            style={{
+                width: `${((width + 2 * pad) / scale.max) * DRAWING_REM}rem`,
+            }}
         >
             <svg
                 role="img"
@@ -240,10 +246,9 @@ export function CutDrawings({ plan }: { plan: Plan }) {
     const longest = Math.max(
         ...plan.pieces.map((piece) => Math.max(piece.w_m, piece.h_m)),
     );
-    const widest = Math.max(...plan.pieces.map((piece) => piece.w_m));
     const size = longest * MM * 0.025;
     const pad = size * 3.2;
-    const scale = { size, pad, max: widest * MM + 2 * pad };
+    const scale = { size, pad, max: longest * MM + 2 * pad };
 
     return (
         <div className="flex flex-col gap-3">

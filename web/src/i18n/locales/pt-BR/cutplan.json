@@ -9,7 +9,27 @@
         "title": "Configuração",
         "proportion": "Proporção",
         "ratioLine": "Altura : largura : profundidade = {{h}} : {{w}} : {{d}}",
-        "hint": "As sugestões são pontos de partida para não repetir dimensões, não uma garantia de som melhor."
+        "groups": {
+            "panel": "Painel",
+            "proportion": "Proporção",
+            "cutout": "Recorte",
+            "sheet": "Chapa",
+            "shape": "Proporção da caixa"
+        },
+        "help": {
+            "panel": "Espessura da madeira dos painéis. Ela define o tamanho das peças: o volume interno do projeto é mantido e as medidas externas crescem com a espessura.",
+            "proportion": "Relação entre altura, largura e profundidade da caixa. Áurea: 2,62 : 1,62 : 1. Louden: 1,9 : 1,4 : 1, evita lados múltiplos entre si. Passos iguais: 1,59 : 1,26 : 1. Cúbica: lados iguais. Própria: você informa. São pontos de partida, não garantia de som melhor.",
+            "cutout": "Furo do driver no painel da frente. O diâmetro vem da ficha técnica; sem ele, o recorte aparece como \"a informar\".",
+            "sheet": "Informe a chapa que você tem (por exemplo, 2,75 × 1,85 m) para ver como encaixar as peças e quantas chapas gastam. A espessura é a do painel.",
+            "dimensions": "Internas: o volume que o driver \"vê\". Externas: as medidas da caixa pronta, com a espessura da madeira somada.",
+            "info": "Ajuda: {{topic}}",
+            "totalsHelp": "Quanto de madeira o projeto gasta: área e comprimento de corte, com e sem a espessura do MDF.",
+            "partsHelp": "Cada peça com as medidas finais e os recortes. É a lista para levar à marcenaria.",
+            "volumeHelp": "Confere se o volume líquido da caixa no plano bate com o da simulação; se não bater, o som muda.",
+            "shape": "Altura : largura : profundidade da caixa. Escolha uma proporção pronta ou edite os três números para modelar: o volume (Vb) continua o mesmo e as medidas se ajustam."
+        },
+        "axes": "L × A × P",
+        "needsVolume": "Informe o volume (Vb) para ver as medidas."
     },
     "proportions": {
         "golden": "Áurea",
@@ -104,7 +124,8 @@
         "portLongerThanDepth_rear": "O duto traseiro ({{length}}) é mais longo que a profundidade da câmara traseira ({{depth}}): ele precisará de curva ou dobra.",
         "portLongerThanDepth_front": "O duto frontal ({{length}}) é mais longo que a profundidade da câmara frontal ({{depth}}): ele precisará de curva ou dobra.",
         "portUnknown_rear": "O duto da câmara traseira está sem medidas: informe-as para ter o recorte e o volume dele.",
-        "portUnknown_front": "O duto da câmara frontal está sem medidas: informe-as para ter o recorte e o volume dele."
+        "portUnknown_front": "O duto da câmara frontal está sem medidas: informe-as para ter o recorte e o volume dele.",
+        "driverTooDeep": "O alto-falante tem {{length}} atrás do painel e a câmara só {{depth}} de profundidade interna: ele não cabe, aumente a profundidade ou mude a proporção."
     },
     "drawings": {
         "title": "Desenhos 2D",
@@ -127,7 +148,14 @@
         "zoomIn": "Aproximar",
         "zoomOut": "Afastar",
         "reset": "Reiniciar",
-        "controls": "Controles da vista 3D"
+        "controls": "Controles da vista 3D",
+        "driver": "Alto-falante",
+        "summaryDriver": "Alto-falante na frente.",
+        "dimension": {
+            "width": "Largura",
+            "height": "Altura",
+            "depth": "Profundidade"
+        }
     },
     "types": {
         "closed": "selada",
@@ -145,5 +173,46 @@
     },
     "print": {
         "title": "Plano de corte: {{name}}"
+    },
+    "totals": {
+        "title": "Corte total",
+        "gross": "Sem desconto do MDF",
+        "net": "Com desconto do MDF",
+        "difference": "Diferença do MDF",
+        "pieces": "Peças",
+        "area": "Área",
+        "cutLength": "Corte",
+        "hint": "“Sem desconto” usa as seis faces pelas medidas internas, sem a espessura. “Com desconto” usa as peças do plano, com a espessura somada. A diferença é o que o MDF acrescenta."
+    },
+    "sheet": {
+        "title": "Chapa que você tem",
+        "rotate": "Pode girar as peças"
+    },
+    "sheets": {
+        "title": "Chapas",
+        "sheet": "Chapa",
+        "piece": "Peça",
+        "unit": "Unidade",
+        "x": "x",
+        "y": "y",
+        "length": "Comprimento",
+        "width": "Largura",
+        "rotated": "Girada",
+        "yes": "sim",
+        "no": "não",
+        "utilization": "Aproveitamento",
+        "waste": "Sobra",
+        "oversize": "Não cabe",
+        "sheetOf": "Chapa {{n}} de {{total}}",
+        "summary": "{{count}} chapa(s), aproveitamento de {{utilization}}, sobra de {{waste}}.",
+        "oversizeWarning": "Não cabem na chapa informada: {{pieces}}.",
+        "rotatedMark": "girada",
+        "drawing": "Chapa {{n}} com {{count}} peça(s), aproveitamento de {{utilization}}",
+        "empty": "Nenhuma peça coube na chapa informada."
+    },
+    "summary": {
+        "pieces_one": "{{count}} peça",
+        "pieces_other": "{{count}} peças",
+        "blocked": "faltam parâmetros"
     }
 }

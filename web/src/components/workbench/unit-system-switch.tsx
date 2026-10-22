@@ -14,8 +14,8 @@ export function UnitSystemSwitch() {
             selected={unitSystem}
             onChange={setUnitSystem}
             options={[
-                { id: 'metric', label: t('units.metric') },
-                { id: 'imperial', label: t('units.imperial') },
+                { id: 'metric', label: t('units.metric'), short: 'mm' },
+                { id: 'imperial', label: t('units.imperial'), short: 'in' },
             ]}
         />
     );

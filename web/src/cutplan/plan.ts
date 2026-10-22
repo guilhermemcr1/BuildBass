@@ -13,6 +13,7 @@ import type {
     ChamberCheck,
     Cutout,
     Dimensions,
+    DriverBody,
     Piece,
     PlanKey,
     PlanWarning,
@@ -178,21 +179,44 @@ export function placeCutouts(
     };
 }
 
+// Recorte do driver: redondo (Ø C), quadrado (C × C) ou retangular (C × D), conforme o formato.
+function driverMeasure(config: ResolvedCutPlanConfig, body: DriverBody) {
+    const c = config.cutout_m;
+    const shape = body.shape ?? 'round';
+
+    if (shape === 'round') {
+        return {
+            shape: 'round' as const,
+            w_m: c,
+            h_m: c,
+            pending: c === undefined ? (['cutout_m'] as PlanKey[]) : [],
+        };
+    }
+
+    const side = shape === 'square' ? c : body.d_m;
+    const pending: PlanKey[] = [];
+
+    if (c === undefined) {
+        pending.push('cutout_m');
+    }
+
+    if (side === undefined && c !== undefined) {
+        pending.push('drv_d_m');
+    }
+
+    return { shape: 'rect' as const, w_m: c, h_m: side, pending };
+}
+
 function driverMeasures(
     project: ProjectInput,
     config: ResolvedCutPlanConfig,
+    body: DriverBody,
 ): { kind: Cutout['kind']; measure: PortMeasure }[] {
     const count = Math.max(0, Math.round(project.drivers.count));
-    const diameter = config.cutout_m;
 
     return Array.from({ length: count }, () => ({
         kind: 'driver' as const,
-        measure: {
-            shape: 'round' as const,
-            w_m: diameter,
-            h_m: diameter,
-            pending: diameter === undefined ? (['cutout_m'] as PlanKey[]) : [],
-        },
+        measure: driverMeasure(config, body),
     }));
 }
 
@@ -265,6 +289,7 @@ export function buildCutPlan(
     project: ProjectInput,
     results: SimulationResults,
     config: ResolvedCutPlanConfig,
+    body: DriverBody = {},
 ): CutPlan {
     const found = projectVolumes(project.box);
     const configInvalid = validateResolved(config);
@@ -323,7 +348,7 @@ export function buildCutPlan(
     const frontMeasures = bandpass
         ? portMeasures(project.box.port)
         : [
-              ...driverMeasures(project, config),
+              ...driverMeasures(project, config, body),
               ...(boxType === 'vented' ? portMeasures(project.box.port) : []),
           ];
     const front = placeCutouts(frontPanel, frontMeasures, t);
@@ -331,7 +356,7 @@ export function buildCutPlan(
         ? placeCutouts(frontPanel, portMeasures(rearPort), t)
         : undefined;
     const divider = bandpass
-        ? placeCutouts(dividerPanel, driverMeasures(project, config), t)
+        ? placeCutouts(dividerPanel, driverMeasures(project, config, body), t)
         : undefined;
 
     const piece = (
@@ -478,6 +503,23 @@ export function buildCutPlan(
         }
     } else if (portLength !== undefined && portLength > portDepth) {
         warnings.push({ id: 'portLongerThanDepth', tone: 'warn' });
+    }
+
+    // O driver entra pela frente: o que fica atrás do painel é a profundidade total menos o aro.
+    // Na bandpass ele fica na câmara traseira.
+    const driverChamber = dimensions.chambers?.rear_d_m ?? internal.d_m;
+
+    if (
+        project.drivers.count > 0 &&
+        body.depth_m !== undefined &&
+        body.depth_m > driverChamber
+    ) {
+        warnings.push({
+            id: 'driverTooDeep',
+            tone: 'warn',
+            length_m: body.depth_m,
+            depth_m: driverChamber,
+        });
     }
 
     if (project.drivers.count > 0 && config.cutout_m === undefined) {

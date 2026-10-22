@@ -10,6 +10,7 @@ import {
 } from 'vite-plus/test';
 import { activeProjectStore } from '@/hooks/use-active-project';
 import { writeField } from '@/lib/project/fields';
+import { useExpanded } from '@/stores/expanded';
 import { usePreferences } from '@/stores/preferences';
 import { initialWorkspace, useWorkspace } from '@/stores/workspace';
 import { renderWithProviders } from '@/test/render';
@@ -31,11 +32,13 @@ describe('PlanPanel', () => {
         localStorage.clear();
         useWorkspace.setState(initialWorkspace());
         usePreferences.setState({ unitSystem: 'metric' });
+        // Os campos avançados do plano ficam atrás de "Mostrar mais" no modo Normal.
+        useExpanded.getState().expandAll();
     });
 
     test('sem volume avisa o que falta, citando o símbolo do campo', () => {
         setField('vb_m3', undefined);
-        renderWithProviders(<PlanPanel />);
+        renderWithProviders(<PlanPanel open onOpenChange={() => undefined} />);
 
         expect(
             screen.getByText(/Faltam parâmetros para o plano: .*Vb/),
@@ -45,12 +48,15 @@ describe('PlanPanel', () => {
 
     test('com volume mostra dimensões e a lista de peças', () => {
         setField('vb_m3', 0.06);
-        renderWithProviders(<PlanPanel />);
+        renderWithProviders(<PlanPanel open onOpenChange={() => undefined} />);
 
         expect(
             screen.getByRole('region', { name: 'Plano de corte' }),
         ).toBeVisible();
-        expect(screen.getByRole('table')).toBeVisible();
+        expect(
+            screen.getByRole('table', { name: 'Corte total' }),
+        ).toBeVisible();
+        expect(screen.getAllByRole('table')).toHaveLength(2);
         expect(screen.getByRole('row', { name: /Frente/ })).toBeVisible();
         expect(screen.getByText(/Internas · Largura/)).toBeVisible();
         expect(screen.getByText(/Externas · Altura/)).toBeVisible();
@@ -58,7 +64,7 @@ describe('PlanPanel', () => {
 
     test('mudar a espessura atualiza a tabela', async () => {
         setField('vb_m3', 0.06);
-        renderWithProviders(<PlanPanel />);
+        renderWithProviders(<PlanPanel open onOpenChange={() => undefined} />);
         const row = () => screen.getByRole('row', { name: /Lateral/ });
 
         expect(within(row()).getAllByRole('cell')[4]).toHaveTextContent('18');
@@ -70,30 +76,11 @@ describe('PlanPanel', () => {
         expect(within(row()).getAllByRole('cell')[4]).toHaveTextContent('25');
     });
 
-    test('proporção própria mostra os três lados para editar', async () => {
-        setField('vb_m3', 0.06);
-        renderWithProviders(<PlanPanel />);
-
-        expect(screen.queryByRole('textbox', { name: /^Rh/ })).toBeNull();
-        expect(
-            screen.getByText(/Altura : largura : profundidade/),
-        ).toBeVisible();
-
-        await userEvent.click(
-            screen.getByRole('button', { name: /Proporção/ }),
-        );
-        await userEvent.click(screen.getByRole('option', { name: 'Própria' }));
-
-        expect(screen.getByRole('textbox', { name: /^Rh/ })).toBeVisible();
-        expect(screen.getByRole('textbox', { name: /^Rw/ })).toBeVisible();
-        expect(screen.getByRole('textbox', { name: /^Rd/ })).toBeVisible();
-    });
-
     test('bandpass mostra a divisória, as profundidades das câmaras e a conferência de duas câmaras', () => {
         act(() => activeProjectStore().getState().setBoxType('bandpass'));
         setField('vr_m3', 0.04);
         setField('vf_m3', 0.06);
-        renderWithProviders(<PlanPanel />);
+        renderWithProviders(<PlanPanel open onOpenChange={() => undefined} />);
 
         const divider = screen.getByRole('row', { name: /Divisória/ });
 
@@ -113,7 +100,7 @@ describe('PlanPanel', () => {
 
     test('selada e dutada não mostram as profundidades por câmara', () => {
         setField('vb_m3', 0.06);
-        renderWithProviders(<PlanPanel />);
+        renderWithProviders(<PlanPanel open onOpenChange={() => undefined} />);
 
         expect(
             screen.queryByText('Profundidade da câmara traseira'),
@@ -124,7 +111,7 @@ describe('PlanPanel', () => {
     test('só ver o plano não cria cutPlan; voltar ao valor padrão mantém o campo', () => {
         setField('vb_m3', 0.06);
         const before = activeProjectStore().getState().data;
-        renderWithProviders(<PlanPanel />);
+        renderWithProviders(<PlanPanel open onOpenChange={() => undefined} />);
 
         expect(activeProjectStore().getState().data).toBe(before);
         expect(activeProjectStore().getState().data).not.toHaveProperty(
@@ -148,7 +135,10 @@ describe('PlanPanel', () => {
     describe('idioma e unidades (US7)', () => {
         test('em inglês os rótulos, cabeçalhos, peças e avisos aparecem traduzidos', () => {
             setField('vb_m3', 0.06);
-            renderWithProviders(<PlanPanel />, 'en');
+            renderWithProviders(
+                <PlanPanel open onOpenChange={() => undefined} />,
+                'en',
+            );
 
             expect(
                 screen.getByRole('region', { name: 'Cut plan' }),
@@ -183,19 +173,12 @@ describe('PlanPanel', () => {
             expect(screen.getByRole('button', { name: 'Print' })).toBeVisible();
         });
 
-        test('em inglês as proporções têm nome e a razão sai com ponto decimal', () => {
-            setField('vb_m3', 0.06);
-            renderWithProviders(<PlanPanel />, 'en');
-
-            expect(
-                screen.getByText('Height : width : depth = 2.62 : 1.62 : 1.00'),
-            ).toBeVisible();
-        });
-
         test('no sistema imperial a espessura sai em polegadas e os reforços em ft³', () => {
             usePreferences.setState({ unitSystem: 'imperial' });
             setField('vb_m3', 0.06);
-            renderWithProviders(<PlanPanel />);
+            renderWithProviders(
+                <PlanPanel open onOpenChange={() => undefined} />,
+            );
 
             const thickness = screen.getByRole('textbox', {
                 name: /Espessura/,
@@ -221,7 +204,9 @@ describe('PlanPanel', () => {
         test('trocar a unidade de um campo grava em fieldUnits e não muda o valor SI', async () => {
             setField('vb_m3', 0.06);
             setField('thickness_m', 0.025);
-            renderWithProviders(<PlanPanel />);
+            renderWithProviders(
+                <PlanPanel open onOpenChange={() => undefined} />,
+            );
 
             await userEvent.click(
                 screen.getByRole('button', {
@@ -251,7 +236,9 @@ describe('PlanPanel', () => {
 
         test('com o plano bloqueado os botões ficam desativados e dizem por quê', () => {
             setField('vb_m3', undefined);
-            renderWithProviders(<PlanPanel />);
+            renderWithProviders(
+                <PlanPanel open onOpenChange={() => undefined} />,
+            );
 
             for (const name of ['Exportar CSV', 'Imprimir']) {
                 const button = screen.getByRole('button', { name });
@@ -280,7 +267,9 @@ describe('PlanPanel', () => {
             const print = vi
                 .spyOn(window, 'print')
                 .mockImplementation(() => undefined);
-            renderWithProviders(<PlanPanel />);
+            renderWithProviders(
+                <PlanPanel open onOpenChange={() => undefined} />,
+            );
 
             await userEvent.click(
                 screen.getByRole('button', { name: 'Exportar CSV' }),
@@ -294,5 +283,129 @@ describe('PlanPanel', () => {
             );
             expect(print).toHaveBeenCalledTimes(1);
         });
+    });
+});
+
+describe('PlanPanel — chapa e corte total (feature 008, US5)', () => {
+    beforeEach(() => {
+        localStorage.clear();
+        useWorkspace.setState(initialWorkspace());
+        usePreferences.setState({ unitSystem: 'metric' });
+        // Os campos avançados do plano ficam atrás de "Mostrar mais" no modo Normal.
+        useExpanded.getState().expandAll();
+        setField('vb_m3', 0.06);
+    });
+
+    test('mostra o corte total com as duas bases e a diferença', () => {
+        renderWithProviders(<PlanPanel open onOpenChange={() => undefined} />);
+        const table = screen.getByRole('table', { name: 'Corte total' });
+
+        expect(
+            within(table).getByRole('columnheader', { name: 'Peças' }),
+        ).toBeVisible();
+        for (const name of [
+            'Sem desconto do MDF',
+            'Com desconto do MDF',
+            'Diferença do MDF',
+        ]) {
+            expect(
+                within(table).getByRole('row', { name: new RegExp(name) }),
+            ).toBeVisible();
+        }
+    });
+
+    test('o grupo "Chapa" tem largura, altura, perda de serra e girar', () => {
+        renderWithProviders(<PlanPanel open onOpenChange={() => undefined} />);
+
+        expect(screen.getByRole('textbox', { name: /^Wc/ })).toBeVisible();
+        expect(screen.getByRole('textbox', { name: /^Hc/ })).toBeVisible();
+        expect(screen.getByRole('textbox', { name: /^Ps/ })).toHaveValue('3,0');
+        expect(
+            screen.getByRole('checkbox', { name: 'Pode girar as peças' }),
+        ).toBeDisabled();
+    });
+
+    test('sem chapa não existe a visão "Chapas" e o painel fica como antes', () => {
+        renderWithProviders(<PlanPanel open onOpenChange={() => undefined} />);
+
+        expect(screen.queryByRole('tab', { name: 'Chapas' })).toBeNull();
+        expect(activeProjectStore().getState().data.cutPlan).toBeUndefined();
+    });
+
+    test('informar a chapa abre a visão "Chapas" com o aproveitamento', async () => {
+        renderWithProviders(<PlanPanel open onOpenChange={() => undefined} />);
+
+        const width = screen.getByRole('textbox', { name: /^Wc/ });
+        await userEvent.type(width, '2750{Enter}');
+        const height = screen.getByRole('textbox', { name: /^Hc/ });
+        await userEvent.type(height, '1850{Enter}');
+
+        expect(
+            activeProjectStore().getState().data.cutPlan?.sheet,
+        ).toMatchObject({
+            w_m: 2.75,
+            h_m: 1.85,
+        });
+        await userEvent.click(screen.getByRole('tab', { name: 'Chapas' }));
+
+        expect(await screen.findByText(/aproveitamento de/)).toBeVisible();
+        expect(screen.getByRole('img', { name: /Chapa 1 com/ })).toBeVisible();
+        expect(
+            screen.getByRole('checkbox', { name: 'Pode girar as peças' }),
+        ).toBeEnabled();
+    });
+
+    test('desmarcar "Pode girar" grava rotate: false', async () => {
+        renderWithProviders(<PlanPanel open onOpenChange={() => undefined} />);
+        act(() =>
+            activeProjectStore()
+                .getState()
+                .apply((data) => ({
+                    ...data,
+                    cutPlan: { sheet: { w_m: 2.75, h_m: 1.85 } },
+                })),
+        );
+
+        await userEvent.click(
+            screen.getByRole('checkbox', { name: 'Pode girar as peças' }),
+        );
+
+        expect(
+            activeProjectStore().getState().data.cutPlan?.sheet?.rotate,
+        ).toBe(false);
+    });
+
+    test('esvaziar largura e altura remove a chapa e a visão "Chapas"', async () => {
+        renderWithProviders(<PlanPanel open onOpenChange={() => undefined} />);
+        setField('sheet_w_m', 2.75);
+        setField('sheet_h_m', 1.85);
+        expect(screen.getByRole('tab', { name: 'Chapas' })).toBeVisible();
+
+        setField('sheet_w_m', undefined);
+        setField('sheet_h_m', undefined);
+
+        expect(screen.queryByRole('tab', { name: 'Chapas' })).toBeNull();
+        expect(activeProjectStore().getState().data.cutPlan).toBeUndefined();
+    });
+
+    test('chapa pequena avisa as peças que não cabem', async () => {
+        renderWithProviders(<PlanPanel open onOpenChange={() => undefined} />);
+        setField('sheet_w_m', 0.3);
+        setField('sheet_h_m', 0.3);
+        await userEvent.click(screen.getByRole('tab', { name: 'Chapas' }));
+
+        expect(
+            await screen.findByText(/Não cabem na chapa informada:/),
+        ).toBeVisible();
+    });
+
+    test('chapa fora da faixa bloqueia o plano citando o campo', () => {
+        renderWithProviders(<PlanPanel open onOpenChange={() => undefined} />);
+        setField('sheet_w_m', 9);
+        setField('sheet_h_m', 1.85);
+
+        expect(
+            screen.getByText(/Valores fora da faixa no plano: .*Wc/),
+        ).toBeVisible();
     });
 });

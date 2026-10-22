@@ -46,7 +46,7 @@ export function TabLimitDialog({
                                 aria-hidden="true"
                                 className={cn(
                                     'size-2.5 shrink-0 rounded-full',
-                                    SWATCH[project.slot],
+                                    SWATCH[project.color],
                                 )}
                             />
                             <span className="flex-1 truncate text-sm">

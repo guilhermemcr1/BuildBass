@@ -10,6 +10,7 @@ import {
     Text,
 } from 'react-aria-components';
 import { cn } from '@/lib/utils';
+import { FIELD_BOX } from './field-box';
 
 export type SearchOption = {
     id: string;
@@ -89,7 +90,12 @@ export function SearchSelect({
                 <Label className="text-xs font-semibold text-muted">
                     {label}
                 </Label>
-                <div className="flex h-[34px] items-center gap-2 rounded-md border border-border bg-raised px-2.5 focus-within:border-accent group-data-[disabled]:opacity-60">
+                <div
+                    className={cn(
+                        FIELD_BOX,
+                        'items-center gap-2 px-2.5 group-data-[disabled]:opacity-60',
+                    )}
+                >
                     <Icon
                         aria-hidden="true"
                         className={cn(
@@ -110,7 +116,7 @@ export function SearchSelect({
                 )}
                 <Popover
                     className={cn(
-                        'w-(--trigger-width) rounded-md border border-border bg-raised p-1 shadow-lg',
+                        'pop w-(--trigger-width) rounded-md border border-border bg-raised p-1 shadow-lg',
                         items.length === 0 &&
                             emptyMessage === undefined &&
                             'hidden',

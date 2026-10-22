@@ -43,9 +43,27 @@ export type ParameterKey =
     | 'cutout_m'
     | 'ratio_h'
     | 'ratio_w'
-    | 'ratio_d';
+    | 'ratio_d'
+    | 'drv_a_m'
+    | 'drv_b_m'
+    | 'drv_d_m'
+    | 'drv_e_m'
+    | 'drv_f_m'
+    | 'drv_g_m'
+    | 'dim_h_m'
+    | 'dim_w_m'
+    | 'dim_d_m'
+    | 'sheet_w_m'
+    | 'sheet_h_m'
+    | 'kerf_m';
 
-export type ParameterGroup = 'driver' | 'box' | 'port' | 'signal' | 'plan';
+export type ParameterGroup =
+    | 'driver'
+    | 'dims'
+    | 'box'
+    | 'port'
+    | 'signal'
+    | 'plan';
 
 export type ParameterDefinition = {
     key: ParameterKey;
@@ -158,6 +176,43 @@ export const PARAMETERS: Record<ParameterKey, ParameterDefinition> = {
         CUT_PLAN_LIMITS.ratio.min,
         CUT_PLAN_LIMITS.ratio.max,
     ),
+    // Medidas físicas do alto-falante (aba Dimensions do BassBox); A–G seguem o desenho dela.
+    drv_a_m: parameter('drv_a_m', 'A', 'length', 'dims', 0.03, 1.5),
+    drv_b_m: parameter('drv_b_m', 'B', 'length', 'dims', 0.02, 1.5),
+    drv_d_m: parameter('drv_d_m', 'D', 'length', 'dims', 0.03, 1.5),
+    drv_e_m: parameter('drv_e_m', 'E', 'length', 'dims', 0.005, 1),
+    drv_f_m: parameter('drv_f_m', 'F', 'length', 'dims', 0.001, 0.2),
+    drv_g_m: parameter('drv_g_m', 'G', 'length', 'dims', 0.01, 1),
+    // Medidas internas da caixa (editáveis na Caixa): editar uma ajusta as outras duas e mantém o
+    // volume. Não ficam no projeto: derivam da proporção (`writeDimension`).
+    dim_h_m: parameter('dim_h_m', 'Hi', 'length', 'plan', 0.02, 3),
+    dim_w_m: parameter('dim_w_m', 'Wi', 'length', 'plan', 0.02, 3),
+    dim_d_m: parameter('dim_d_m', 'Di', 'length', 'plan', 0.02, 3),
+    // Chapa que o usuário tem e perda de serra (specs/008).
+    sheet_w_m: parameter(
+        'sheet_w_m',
+        'Wc',
+        'length',
+        'plan',
+        CUT_PLAN_LIMITS.sheet_w_m.min,
+        CUT_PLAN_LIMITS.sheet_w_m.max,
+    ),
+    sheet_h_m: parameter(
+        'sheet_h_m',
+        'Hc',
+        'length',
+        'plan',
+        CUT_PLAN_LIMITS.sheet_h_m.min,
+        CUT_PLAN_LIMITS.sheet_h_m.max,
+    ),
+    kerf_m: parameter(
+        'kerf_m',
+        'Ps',
+        'length',
+        'plan',
+        CUT_PLAN_LIMITS.kerf_m.min,
+        CUT_PLAN_LIMITS.kerf_m.max,
+    ),
 };
 
 export const DRIVER_PARAMETERS: ParameterKey[] = [
@@ -175,6 +230,55 @@ export const DRIVER_PARAMETERS: ParameterKey[] = [
     'mms_kg',
     'vd_m3',
 ];
+
+// Campos do driver sempre à vista no modo Normal (specs/008, R13); os demais ficam atrás de
+// "Mostrar mais". Fonte única: mudar a lista é editar esta constante.
+export const ESSENTIAL_DRIVER_PARAMETERS: ParameterKey[] =
+    DRIVER_PARAMETERS.filter((key) =>
+        ['fs_hz', 'qts', 'vas_m3', 'sd_m2', 'xmax_m', 'pe_w'].includes(key),
+    );
+
+// Seções recolhíveis da bancada ("Mostrar mais").
+export type SectionId = 'driverAdvanced' | 'driverDims' | 'planAdvanced';
+
+export const SECTION_IDS: SectionId[] = [
+    'driverAdvanced',
+    'driverDims',
+    'planAdvanced',
+];
+
+// Medidas físicas do alto-falante, na seção "Dimensões" do Driver: A, B, D, E, F, G e o volume do
+// motor (M-Vd, `vd_m3`); o recorte C é `cutout_m`.
+export const DRIVER_DIMENSION_PARAMETERS: ParameterKey[] = [
+    'drv_a_m',
+    'drv_b_m',
+    'cutout_m',
+    'drv_d_m',
+    'drv_e_m',
+    'drv_f_m',
+    'drv_g_m',
+    'vd_m3',
+];
+
+const PLAN_ADVANCED_PARAMETERS: ParameterKey[] = ['braces_m3', 'kerf_m'];
+
+// Em que seção recolhível o campo mora; `undefined` = sempre à vista.
+export function sectionOf(parameter: ParameterKey): SectionId | undefined {
+    if (parameter === 'vd_m3' || PARAMETERS[parameter].group === 'dims') {
+        return 'driverDims';
+    }
+
+    if (
+        DRIVER_PARAMETERS.includes(parameter) &&
+        !ESSENTIAL_DRIVER_PARAMETERS.includes(parameter)
+    ) {
+        return 'driverAdvanced';
+    }
+
+    return PLAN_ADVANCED_PARAMETERS.includes(parameter)
+        ? 'planAdvanced'
+        : undefined;
+}
 
 export function withinRange(key: ParameterKey, si: number): boolean {
     const { min, max } = PARAMETERS[key];

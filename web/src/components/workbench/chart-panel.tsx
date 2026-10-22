@@ -1,18 +1,27 @@
 import { Suspense, lazy, useState } from 'react';
 import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/ui/button';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Tabs } from '@/components/ui/tabs';
-import { PORT_VELOCITY_ERROR_MS, PORT_VELOCITY_WARN_MS } from '@/engine';
+import {
+    ANALYSIS_MAX_HZ,
+    CHART_MAX_HZ,
+    PORT_VELOCITY_ERROR_MS,
+    PORT_VELOCITY_WARN_MS,
+} from '@/engine';
 import type { CurveId, FieldKey } from '@/engine';
 import { useActiveProject } from '@/hooks/use-active-project';
 import { useSimulations } from '@/hooks/use-simulation';
 import type { ProjectSimulation } from '@/hooks/use-simulation';
-import { PARAMETERS } from '@/lib/parameters';
+import { PARAMETERS, sectionOf } from '@/lib/parameters';
+import type { SectionId } from '@/lib/parameters';
 import { displayName } from '@/lib/project/names';
 import { fromSi } from '@/lib/units/convert';
 import { formatWithUnit } from '@/lib/units/format';
 import { defaultUnitFor, findUnit } from '@/lib/units/quantities';
 import type { QuantityId, UnitId } from '@/lib/units/quantities';
+import { useExpanded } from '@/stores/expanded';
 import { usePreferences } from '@/stores/preferences';
 import { ChartLegend } from './chart-legend';
 import type { ChartLimit, ChartSeries } from './chart-frame';
@@ -43,10 +52,40 @@ const CURVES: Record<ChartKind, { curve: CurveId; quantity: QuantityId }> = {
     portVelocity: { curve: 'port_velocity_ms', quantity: 'velocity' },
 };
 
-// Faixa da resposta: 42 dB de janela com o topo logo acima do maior valor.
-function levelRange(series: ChartSeries[]): [number, number] {
+const MIN_HZ = 10;
+
+// Até onde o gráfico vai (Hz). 1 kHz é a faixa em que o modelo e os resultados valem; acima
+// disso as curvas são o mesmo modelo estendido, só para olhar.
+const RANGE_MAX_OPTIONS = [200, ANALYSIS_MAX_HZ, 5000, 10000, CHART_MAX_HZ];
+const RANGE_SHORT: Record<number, string> = {
+    200: '200',
+    1000: '1k',
+    5000: '5k',
+    10000: '10k',
+    20000: '20k',
+};
+const RANGE_NAME: Record<number, string> = {
+    200: '200 Hz',
+    1000: '1 kHz',
+    5000: '5 kHz',
+    10000: '10 kHz',
+    20000: '20 kHz',
+};
+
+// Faixa da resposta: 42 dB de janela com o topo logo acima do maior valor visível.
+function levelRange(
+    series: ChartSeries[],
+    frequencies: readonly number[],
+    [min, max]: [number, number],
+): [number, number] {
     const values = series
-        .flatMap((item) => item.values)
+        .flatMap((item) =>
+            item.values.filter((_, index) => {
+                const frequency = frequencies[index];
+
+                return frequency >= min && frequency <= max;
+            }),
+        )
         .filter((v) => v !== null);
     const top = Math.ceil((Math.max(...values, 0) + 3) / 6) * 6;
 
@@ -68,9 +107,15 @@ export function ChartPanel({
     const { t } = useTranslation(['workbench', 'engine', 'project']);
     const { locale } = useLocale();
     const unitSystem = usePreferences((state) => state.unitSystem);
+    const open = useExpanded((state) => state.open);
+    const expand = useExpanded((state) => state.expand);
     const plotted = useSimulations();
     const xmax = useActiveProject((state) => state.data.driver.xmax_m);
     const [localSelected, setLocalSelected] = useState<ChartKind>('response');
+    // Até quantos Hz o gráfico vai, e o zoom por arrastar (sobrepõe a faixa até voltar).
+    const [maxHz, setMaxHz] = useState(ANALYSIS_MAX_HZ);
+    const [zoom, setZoom] = useState<[number, number] | null>(null);
+    const xRange: [number, number] = zoom ?? [MIN_HZ, maxHz];
     const anyPorted = plotted.some(
         ({ project }) => project.data.box.type !== 'closed',
     );
@@ -148,7 +193,7 @@ export function ChartPanel({
 
             const name = displayName(project, t);
             const common = {
-                slot: project.slot,
+                color: project.color,
                 emphasis: active && plotted.length > 1,
             };
             // Bandpass de 6ª ordem: o duto traseiro vira uma segunda série, tracejada, na cor do
@@ -215,25 +260,68 @@ export function ChartPanel({
         }
     };
 
-    const missingText = (first: ProjectSimulation, kind: ChartKind) => {
-        // Na 6ª ordem faltam também as medidas do duto traseiro.
-        const missing: FieldKey[] = [
-            ...new Set([
-                ...first.simulation.missing[CURVES[kind].curve],
-                ...(kind === 'portVelocity' &&
-                first.project.data.box.type === 'bandpass6'
-                    ? first.simulation.missing.port_rear_velocity_ms
-                    : []),
-            ]),
-        ];
+    const missingKeys = (
+        first: ProjectSimulation,
+        kind: ChartKind,
+    ): FieldKey[] => [
+        ...new Set([
+            ...first.simulation.missing[CURVES[kind].curve],
+            // Na 6ª ordem faltam também as medidas do duto traseiro.
+            ...(kind === 'portVelocity' &&
+            first.project.data.box.type === 'bandpass6'
+                ? first.simulation.missing.port_rear_velocity_ms
+                : []),
+        ]),
+    ];
 
-        return missing.length === 0
-            ? undefined
-            : listFormat.format(missing.map((key) => PARAMETERS[key].symbol));
-    };
+    // Seções "Mostrar mais" recolhidas que guardam algum campo que falta (FR-031a): a mensagem
+    // oferece abri-las em vez de deixar o usuário procurar.
+    const hiddenSections = (missing: FieldKey[]): SectionId[] => [
+        ...new Set(
+            missing
+                .map((key) => sectionOf(key))
+                .filter(
+                    (section): section is SectionId =>
+                        section !== undefined && !open[section],
+                ),
+        ),
+    ];
 
     return (
-        <Panel region="charts" title={t('regions.charts')} className="min-h-96">
+        <Panel
+            region="charts"
+            title={t('regions.charts')}
+            className="min-h-96"
+            actions={
+                <div className="flex items-center gap-2">
+                    {zoom !== null && (
+                        <Button
+                            variant="quiet"
+                            className="h-7 px-2 text-xs"
+                            onPress={() => setZoom(null)}
+                        >
+                            {t('charts.zoomReset')}
+                        </Button>
+                    )}
+                    <SegmentedControl<string>
+                        label={t('charts.rangeLabel')}
+                        size="sm"
+                        selected={String(maxHz)}
+                        onChange={(id) => {
+                            setMaxHz(Number(id));
+                            setZoom(null);
+                        }}
+                        options={RANGE_MAX_OPTIONS.map((hz) => ({
+                            id: String(hz),
+                            label: t('charts.rangeUpTo', {
+                                value: RANGE_NAME[hz],
+                            }),
+                            short: RANGE_SHORT[hz],
+                        }))}
+                    />
+                </div>
+            }
+        >
             <Tabs<ChartKind>
                 label={t('charts.label')}
                 items={CHART_KINDS.map((id) => ({
@@ -254,15 +342,22 @@ export function ChartPanel({
                     const normalized = plotted.some(
                         ({ simulation }) => simulation.spl_normalized,
                     );
+                    const missingFields =
+                        first === undefined ? [] : missingKeys(first, kind);
                     const missing =
-                        first === undefined
+                        missingFields.length === 0
                             ? undefined
-                            : missingText(first, kind);
+                            : listFormat.format(
+                                  missingFields.map(
+                                      (key) => PARAMETERS[key].symbol,
+                                  ),
+                              );
+                    const hidden = hiddenSections(missingFields);
                     const legend = plotted.map(
                         ({ project, active, simulation }) => ({
                             id: project.id,
                             label: displayName(project, t),
-                            slot: project.slot,
+                            color: project.color,
                             emphasis: active && plotted.length > 1,
                             empty:
                                 simulation.curves[CURVES[kind].curve] ===
@@ -299,7 +394,13 @@ export function ChartPanel({
                                             kind === 'response'
                                                 ? normalized
                                                     ? [-36, 6]
-                                                    : levelRange(series)
+                                                    : levelRange(
+                                                          series,
+                                                          first?.simulation
+                                                              .frequencies_hz ??
+                                                              [],
+                                                          xRange,
+                                                      )
                                                 : undefined
                                         }
                                         yIncrs={
@@ -307,6 +408,10 @@ export function ChartPanel({
                                                 ? [3, 6, 12]
                                                 : undefined
                                         }
+                                        xRange={xRange}
+                                        onZoom={setZoom}
+                                        onZoomReset={() => setZoom(null)}
+                                        peakLabel={t('charts.peak')}
                                     />
                                 </Suspense>
                                 {series.length === 0 && (
@@ -328,6 +433,31 @@ export function ChartPanel({
                                                                 { missing },
                                                             )}
                                                         </p>
+                                                    )}
+                                                    {hidden.length > 0 && (
+                                                        <Button
+                                                            variant="secondary"
+                                                            className="pointer-events-auto mt-2"
+                                                            onPress={() =>
+                                                                hidden.forEach(
+                                                                    expand,
+                                                                )
+                                                            }
+                                                        >
+                                                            {t(
+                                                                'charts.showField',
+                                                                {
+                                                                    count: missingFields.filter(
+                                                                        (key) =>
+                                                                            hidden.includes(
+                                                                                sectionOf(
+                                                                                    key,
+                                                                                ) as SectionId,
+                                                                            ),
+                                                                    ).length,
+                                                                },
+                                                            )}
+                                                        </Button>
                                                     )}
                                                 </>
                                             )}

@@ -8,6 +8,7 @@ export function emptyForm(): SubmissionForm {
         brand: '',
         model: '',
         variant: '',
+        type: '',
         source: '',
         contact_email: '',
         numbers: {},
@@ -15,7 +16,7 @@ export function emptyForm(): SubmissionForm {
 }
 
 // Cópia do driver do projeto para o formulário (FR-002, FR-022): valores em SI, sem alterar o
-// projeto; a origem (fabricante, modelo, variante) pré-preenche a identificação quando existe.
+// projeto; a identificação (fabricante, modelo, variante, tipo) pré-preenche a identificação quando existe.
 export function formFromProject(
     driver: DriverInput,
     source: DriverSource | undefined,
@@ -32,9 +33,10 @@ export function formFromProject(
     }
 
     if (source !== undefined) {
-        form.brand = source.brand;
-        form.model = source.model;
+        form.brand = source.brand ?? '';
+        form.model = source.model ?? '';
         form.variant = source.variant ?? '';
+        form.type = source.type ?? '';
     }
 
     return form;

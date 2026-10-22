@@ -1,4 +1,4 @@
-import { FREQUENCIES_HZ } from './frequencies';
+import { ANALYSIS_FREQUENCIES_HZ } from './frequencies';
 
 // Apoio da caixa bandpass de 4ª ordem (feature 004, research.md §2, §5 e §7). O circuito em si
 // fica em circuit.ts; aqui só o que é específico da bandpass.
@@ -40,7 +40,7 @@ const DROP_DB = 3;
 // cada cruzamento é refinado por bisseção em log f. A frequência central é a média geométrica e a
 // largura vem em oitavas.
 export function bandEdges(level: (frequency: number) => number): BandEdges {
-    const grid = FREQUENCIES_HZ;
+    const grid = ANALYSIS_FREQUENCIES_HZ;
     const levels = grid.map(level);
     const peak = Math.max(...levels);
     const threshold = peak - DROP_DB;

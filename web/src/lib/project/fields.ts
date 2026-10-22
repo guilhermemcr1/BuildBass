@@ -1,8 +1,14 @@
-import { resolveCutPlan } from '@/cutplan';
-import type { CutPlanConfig, CutPlanProportion } from '@/cutplan';
+import { CUT_PLAN_LIMITS, DEFAULT_KERF_M, resolveCutPlan } from '@/cutplan';
+import type { CutPlanConfig, CutPlanProportion, SheetConfig } from '@/cutplan';
 import { DRIVER_KEYS } from '@/engine';
 import type { ParameterKey } from '@/lib/parameters';
-import type { DriverKey, PortInput, ProjectData } from './types';
+import type {
+    DriverDims,
+    DriverKey,
+    DriverSource,
+    PortInput,
+    ProjectData,
+} from './types';
 
 // Onde cada campo da bancada mora dentro do projeto (data-model.md).
 type PortKey = 'diameter_m' | 'width_m' | 'height_m' | 'base_m';
@@ -22,7 +28,19 @@ const PLAN_KEYS = new Set<ParameterKey>([
     'ratio_h',
     'ratio_w',
     'ratio_d',
+    'sheet_w_m',
+    'sheet_h_m',
+    'kerf_m',
 ]);
+// Medidas físicas do alto-falante: campo da bancada → chave em `driverDims`.
+const DIMS_KEYS = {
+    drv_a_m: 'a_m',
+    drv_b_m: 'b_m',
+    drv_d_m: 'd_m',
+    drv_e_m: 'e_m',
+    drv_f_m: 'f_m',
+    drv_g_m: 'g_m',
+} as const;
 const PORT_KEYS = new Set<ParameterKey>([
     'diameter_m',
     'width_m',
@@ -62,6 +80,12 @@ function readPlanField(
             return config.ratio.w;
         case 'ratio_d':
             return config.ratio.d;
+        case 'sheet_w_m':
+            return data.cutPlan?.sheet?.w_m;
+        case 'sheet_h_m':
+            return data.cutPlan?.sheet?.h_m;
+        case 'kerf_m':
+            return data.cutPlan?.sheet?.kerf_m ?? DEFAULT_KERF_M;
         default:
             return undefined;
     }
@@ -73,6 +97,10 @@ export function readField(
 ): number | undefined {
     if (driverKey(key)) {
         return data.driver[key];
+    }
+
+    if (key in DIMS_KEYS) {
+        return data.driverDims?.[DIMS_KEYS[key as keyof typeof DIMS_KEYS]];
     }
 
     if (BOX_KEYS.has(key)) {
@@ -127,9 +155,11 @@ function without<T extends object>(record: T, key: string): T {
 function withField<T extends object>(
     record: T,
     key: string,
-    si: number | undefined,
+    value: unknown,
 ): T {
-    return si === undefined ? without(record, key) : { ...record, [key]: si };
+    return value === undefined
+        ? without(record, key)
+        : { ...record, [key]: value };
 }
 
 // Um cutPlan vazio não existe: o projeto volta a ser igual ao de antes de mexer no plano.
@@ -142,6 +172,23 @@ function withCutPlan(data: ProjectData, cutPlan: CutPlanConfig): ProjectData {
 }
 
 const RATIO_SIDE = { ratio_h: 'h', ratio_w: 'w', ratio_d: 'd' } as const;
+const SHEET_FIELD = {
+    sheet_w_m: 'w_m',
+    sheet_h_m: 'h_m',
+    kerf_m: 'kerf_m',
+} as const;
+
+// A chapa some do projeto quando largura e altura ficam vazias (sobrariam só a perda de serra e a
+// rotação, que sem chapa não significam nada).
+function withSheet(data: ProjectData, sheet: SheetConfig): ProjectData {
+    const current = data.cutPlan ?? {};
+
+    if (sheet.w_m === undefined && sheet.h_m === undefined) {
+        return withCutPlan(data, without(current, 'sheet'));
+    }
+
+    return withCutPlan(data, { ...current, sheet });
+}
 
 function writePlanField(
     data: ProjectData,
@@ -164,7 +211,58 @@ function writePlanField(
         return withCutPlan(data, { ...current, proportion: 'custom', custom });
     }
 
+    if (key === 'sheet_w_m' || key === 'sheet_h_m' || key === 'kerf_m') {
+        return withSheet(
+            data,
+            withField(current.sheet ?? {}, SHEET_FIELD[key], si),
+        );
+    }
+
     return withCutPlan(data, withField(current, key, si));
+}
+
+// "Pode girar as peças": só vale com a chapa começada.
+export function writeSheetRotate(
+    data: ProjectData,
+    rotate: boolean,
+): ProjectData {
+    const sheet = data.cutPlan?.sheet;
+
+    return sheet === undefined ? data : withSheet(data, { ...sheet, rotate });
+}
+
+type Axis = 'h' | 'w' | 'd';
+
+// Define uma medida interna da caixa e ajusta as outras duas para o volume continuar o mesmo: as
+// duas ficam na razão que tinham e dividem a diferença. Guarda o resultado como proporção "própria"
+// (normalizada pela profundidade). Medida que levaria a razão para fora da faixa não entra.
+export function writeDimension(
+    data: ProjectData,
+    internal: { h_m: number; w_m: number; d_m: number },
+    axis: Axis,
+    si: number,
+): ProjectData {
+    const old = internal[`${axis}_m` as 'h_m' | 'w_m' | 'd_m'];
+    const others = Math.sqrt(old / si);
+    const next = {
+        h: axis === 'h' ? si : internal.h_m * others,
+        w: axis === 'w' ? si : internal.w_m * others,
+        d: axis === 'd' ? si : internal.d_m * others,
+    };
+    const custom = { h: next.h / next.d, w: next.w / next.d, d: 1 };
+    const { min, max } = CUT_PLAN_LIMITS.ratio;
+
+    if (
+        [custom.h, custom.w, custom.d].some((side) => side < min || side > max)
+    ) {
+        return data;
+    }
+
+    return withCutPlan(data, {
+        ...data.cutPlan,
+        proportion: 'custom',
+        custom,
+    });
 }
 
 // Escolhe a proporção; "própria" parte da razão que estava ativa, para a caixa não pular.
@@ -185,16 +283,54 @@ export function writeProportion(
     return withCutPlan(data, { ...current, proportion });
 }
 
-// A origem copiada do catálogo some quando o driver fica sem nenhum valor (specs/003, FR-010).
+// Sem nenhuma medida nem formato, `driverDims` não existe: o projeto volta a ser o de antes.
+export function withDriverDims(
+    data: ProjectData,
+    driverDims: DriverDims,
+): ProjectData {
+    return Object.keys(driverDims).length === 0
+        ? without(data, 'driverDims')
+        : { ...data, driverDims };
+}
+
+// Formato do alto-falante e tipo de pistão (listas, não números).
+export function writeDriverChoice(
+    data: ProjectData,
+    key: 'shape' | 'piston',
+    value: DriverDims['shape'] | DriverDims['piston'] | undefined,
+): ProjectData {
+    return withDriverDims(data, withField(data.driverDims ?? {}, key, value));
+}
+
+// A identificação (marca, modelo, tipo) é um dado do projeto, editável à mão: ela fica mesmo com o
+// driver sem valores, e só o usuário a apaga.
 export function withDriver(
     data: ProjectData,
     driver: ProjectData['driver'],
 ): ProjectData {
-    if (Object.keys(driver).length > 0) {
-        return { ...data, driver };
+    return { ...data, driver };
+}
+
+// Aplica uma mudança na identificação do driver: texto vazio (depois de aparar) ou `undefined`
+// apaga a parte; sem nenhuma parte sobrando, a identificação some do projeto.
+export function withIdentity(
+    data: ProjectData,
+    patch: Partial<DriverSource>,
+): ProjectData {
+    const next: Record<string, unknown> = { ...data.driverSource, ...patch };
+
+    for (const [key, value] of Object.entries(next)) {
+        if (
+            value === undefined ||
+            (typeof value === 'string' && value.trim() === '')
+        ) {
+            delete next[key];
+        }
     }
 
-    return { ...without(data, 'driverSource'), driver };
+    return Object.keys(next).length === 0
+        ? without(data, 'driverSource')
+        : { ...data, driverSource: next as DriverSource };
 }
 
 // Devolve o projeto com o campo alterado; `undefined` apaga o valor digitado.
@@ -205,6 +341,17 @@ export function writeField(
 ): ProjectData {
     if (driverKey(key)) {
         return withDriver(data, withField(data.driver, key, si));
+    }
+
+    if (key in DIMS_KEYS) {
+        return withDriverDims(
+            data,
+            withField(
+                data.driverDims ?? {},
+                DIMS_KEYS[key as keyof typeof DIMS_KEYS],
+                si,
+            ),
+        );
     }
 
     if (key === 'ql') {

@@ -1,6 +1,7 @@
 import { FieldError, Input, Label, Text, TextField } from 'react-aria-components';
 import type { InputHTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
+import { FIELD_BOX, FIELD_INPUT } from './field-box';
 
 type TextInputProps = {
     label: string;
@@ -8,6 +9,8 @@ type TextInputProps = {
     onChange: (value: string) => void;
     maxLength?: number;
     hint?: string;
+    // Exemplo apagado do que digitar; nunca substitui o rótulo.
+    placeholder?: string;
     // Texto do erro; presente = campo inválido.
     error?: string;
     required?: boolean;
@@ -24,6 +27,7 @@ export function TextInput({
     onChange,
     maxLength,
     hint,
+    placeholder,
     error,
     required = false,
     disabled = false,
@@ -48,12 +52,15 @@ export function TextInput({
                 {label}
                 {required && <span aria-hidden="true"> *</span>}
             </Label>
-            <Input
+            <div
                 className={cn(
-                    'h-[34px] rounded-md border bg-raised px-2.5 text-sm text-foreground outline-none focus:border-accent data-[disabled]:text-disabled',
-                    error === undefined ? 'border-border' : 'border-status-error',
+                    FIELD_BOX,
+                    'group-data-[disabled]:opacity-60',
+                    error !== undefined && 'border-status-error',
                 )}
-            />
+            >
+                <Input className={FIELD_INPUT} placeholder={placeholder} />
+            </div>
             {hint !== undefined && (
                 <Text slot="description" className="text-[11px] text-muted">
                     {hint}

@@ -4,6 +4,7 @@ import type {
     PlanKey,
     Ratio,
     ResolvedCutPlanConfig,
+    SheetConfig,
 } from './types';
 
 // Limites (SI) usados pelo esquema do arquivo, pelos campos da bancada e pela validação
@@ -13,7 +14,14 @@ export const CUT_PLAN_LIMITS = {
     braces_m3: { min: 0, max: 20 },
     cutout_m: { min: 0.03, max: 1 },
     ratio: { min: 0.1, max: 10 },
+    // Chapa e perda de serra (specs/008, data-model.md §2).
+    sheet_w_m: { min: 0.1, max: 5 },
+    sheet_h_m: { min: 0.1, max: 5 },
+    kerf_m: { min: 0, max: 0.02 },
 } as const;
+
+// Perda de serra típica de uma serra circular de bancada (~3 mm); o usuário ajusta.
+export const DEFAULT_KERF_M = 0.003;
 
 // Painel de MDF comum (research.md §2).
 export const DEFAULT_THICKNESS_M = 0.018;
@@ -53,6 +61,24 @@ export function resolveCutPlan(
         ratio: { ...ratio },
         braces_m3: config.braces_m3 ?? 0,
         ...(config.cutout_m === undefined ? {} : { cutout_m: config.cutout_m }),
+        ...resolveSheet(config.sheet),
+    };
+}
+
+function resolveSheet(
+    sheet?: SheetConfig,
+): Pick<ResolvedCutPlanConfig, 'sheet'> {
+    if (sheet?.w_m === undefined || sheet.h_m === undefined) {
+        return {};
+    }
+
+    return {
+        sheet: {
+            w_m: sheet.w_m,
+            h_m: sheet.h_m,
+            kerf_m: sheet.kerf_m ?? DEFAULT_KERF_M,
+            rotate: sheet.rotate ?? true,
+        },
     };
 }
 
@@ -60,7 +86,7 @@ function within(value: number, limit: { min: number; max: number }): boolean {
     return Number.isFinite(value) && value >= limit.min && value <= limit.max;
 }
 
-// Chaves com valor fora da faixa, na ordem espessura, razão, reforços, recorte.
+// Chaves com valor fora da faixa, na ordem espessura, razão, reforços, recorte, chapa.
 export function validateResolved(resolved: ResolvedCutPlanConfig): PlanKey[] {
     const { ratio } = resolved;
     const invalid: PlanKey[] = [];
@@ -86,6 +112,22 @@ export function validateResolved(resolved: ResolvedCutPlanConfig): PlanKey[] {
         !within(resolved.cutout_m, CUT_PLAN_LIMITS.cutout_m)
     ) {
         invalid.push('cutout_m');
+    }
+
+    const { sheet } = resolved;
+
+    if (sheet !== undefined) {
+        if (!within(sheet.w_m, CUT_PLAN_LIMITS.sheet_w_m)) {
+            invalid.push('sheet_w_m');
+        }
+
+        if (!within(sheet.h_m, CUT_PLAN_LIMITS.sheet_h_m)) {
+            invalid.push('sheet_h_m');
+        }
+
+        if (!within(sheet.kerf_m, CUT_PLAN_LIMITS.kerf_m)) {
+            invalid.push('kerf_m');
+        }
     }
 
     return invalid;

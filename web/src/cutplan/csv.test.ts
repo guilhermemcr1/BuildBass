@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vite-plus/test';
 import { cutPlanCsv } from './csv';
+import { nestPieces } from './nesting';
 import type { CsvFormat } from './csv';
 import type { Plan } from './types';
 
@@ -54,6 +55,31 @@ const LABELS: CsvFormat['labels'] = {
             front: 'Câmara frontal',
         },
     },
+    totals: {
+        title: 'Corte total',
+        gross: 'Sem desconto do MDF',
+        net: 'Com desconto do MDF',
+        difference: 'Diferença do MDF',
+        pieces: 'Peças',
+        area: 'Área',
+        cutLength: 'Corte',
+    },
+    sheets: {
+        title: 'Chapas',
+        sheet: 'Chapa',
+        piece: 'Peça',
+        unit: 'Unidade',
+        x: 'x',
+        y: 'y',
+        length: 'Comprimento',
+        width: 'Largura',
+        rotated: 'Girada',
+        yes: 'sim',
+        no: 'não',
+        utilization: 'Aproveitamento',
+        waste: 'Sobra',
+        oversize: 'Não cabe',
+    },
 };
 
 function format(decimal: ',' | '.'): CsvFormat {
@@ -64,6 +90,8 @@ function format(decimal: ',' | '.'): CsvFormat {
         number: (m) => text(m * 1000, 1),
         volume: (m3) => text(m3 * 1000, 1),
         percent: (ratio) => `${text(ratio * 100, 2)} %`,
+        area: (m2) => text(m2, 3),
+        areaSymbol: 'm²',
         unitSymbol: 'mm',
         volumeSymbol: 'L',
         decimalSeparator: decimal,
@@ -323,5 +351,76 @@ describe('cutPlanCsv (C14)', () => {
         expect(cutPlanCsv(PLAN, format(','))).toBe(
             cutPlanCsv(PLAN, format(',')),
         );
+    });
+});
+
+describe('cutPlanCsv — corte total e chapas (feature 008)', () => {
+    test('sempre traz o bloco "Corte total" com as duas bases e a diferença', () => {
+        const rows = parse(cutPlanCsv(PLAN, format(',')), ';');
+        const at = rows.findIndex((row) => row[0] === 'Corte total');
+
+        expect(rows[at]).toEqual([
+            'Corte total',
+            'Peças',
+            'Área (m²)',
+            'Corte (mm)',
+        ]);
+        expect(rows[at + 1][0]).toBe('Sem desconto do MDF');
+        expect(rows[at + 2][0]).toBe('Com desconto do MDF');
+        expect(rows[at + 3][0]).toBe('Diferença do MDF');
+        // Peças: 1 frente + 2 laterais = 3 (com desconto).
+        expect(rows[at + 2][1]).toBe('3');
+    });
+
+    test('sem chapa não há o bloco "Chapas"', () => {
+        const rows = parse(cutPlanCsv(PLAN, format(',')), ';');
+
+        expect(rows.some((row) => row[0] === 'Chapas')).toBe(false);
+    });
+
+    test('com chapa: uma linha por colocação, aproveitamento e sobra', () => {
+        const layout = nestPieces(PLAN.pieces, {
+            w_m: 2.75,
+            h_m: 1.85,
+            kerf_m: 0.003,
+            rotate: true,
+        });
+        const rows = parse(cutPlanCsv(PLAN, format(','), layout), ';');
+        const at = rows.findIndex((row) => row[0] === 'Chapas');
+
+        expect(rows[at].slice(1)).toEqual([
+            'Chapa',
+            'Peça',
+            'Unidade',
+            'x (mm)',
+            'y (mm)',
+            'Comprimento (mm)',
+            'Largura (mm)',
+            'Girada',
+        ]);
+        const placed = rows.slice(at + 1, at + 4);
+
+        expect(placed.map((row) => row[2]).sort()).toEqual([
+            'Frente',
+            'Lateral',
+            'Lateral',
+        ]);
+        expect(placed.every((row) => row[1] === '1')).toBe(true);
+        expect(rows.some((row) => row[0] === 'Aproveitamento')).toBe(true);
+        expect(rows.some((row) => row[0].startsWith('Sobra'))).toBe(true);
+    });
+
+    test('peça que não cabe aparece como "Não cabe"', () => {
+        const layout = nestPieces(PLAN.pieces, {
+            w_m: 0.3,
+            h_m: 0.3,
+            kerf_m: 0.003,
+            rotate: true,
+        });
+        const rows = parse(cutPlanCsv(PLAN, format(','), layout), ';');
+
+        expect(
+            rows.filter((row) => row[0] === 'Não cabe').length,
+        ).toBeGreaterThan(0);
     });
 });

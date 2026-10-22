@@ -19,7 +19,8 @@ class DriverResource extends DriverSummaryResource
     {
         $optional = [];
 
-        foreach (Driver::OPTIONAL_PARAMETERS as $key) {
+        // O diâmetro nominal já vai no resumo (null quando falta); aqui só o que ainda não foi.
+        foreach (array_diff(Driver::OPTIONAL_PARAMETERS, ['nominal_diameter_m']) as $key) {
             if ($this->{$key} !== null) {
                 $optional[$key] = $this->{$key};
             }

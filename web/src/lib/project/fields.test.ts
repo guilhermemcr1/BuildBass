@@ -1,7 +1,14 @@
 import { expect, test } from 'vite-plus/test';
 import type { ParameterKey } from '@/lib/parameters';
 import { PROPORTIONS } from '@/cutplan';
-import { readField, writeField, writeProportion } from './fields';
+import {
+    readField,
+    withIdentity,
+    writeDimension,
+    writeDriverChoice,
+    writeField,
+    writeProportion,
+} from './fields';
 import { createProjectData } from './types';
 
 test('cada campo da bancada é lido e escrito no lugar certo do projeto', () => {
@@ -21,6 +28,12 @@ test('cada campo da bancada é lido e escrito no lugar certo do projeto', () => 
         ['driver_count', 3],
         ['power_w', 100],
         ['voltage_v', 2.83],
+        ['drv_a_m', 0.308],
+        ['drv_b_m', 0.283],
+        ['drv_d_m', 0.2],
+        ['drv_e_m', 0.08],
+        ['drv_f_m', 0.01],
+        ['drv_g_m', 0.16],
     ];
 
     for (const [key, value] of cases) {
@@ -36,7 +49,7 @@ test('apagar um campo remove o valor digitado', () => {
     expect(writeField(data, 'ql', undefined).box.ql).toBe(7);
 });
 
-test('escrever um campo do driver mantém a origem; esvaziar o driver a remove', () => {
+test('escrever um campo do driver mantém a identificação, inclusive com o driver esvaziado', () => {
     const source = { brand: 'Triton', model: 'TR 620 12"' };
     const base = {
         ...writeField(
@@ -54,7 +67,29 @@ test('escrever um campo do driver mantém a origem; esvaziar o driver a remove',
     const emptied = writeField(onlyFs, 'fs_hz', undefined);
 
     expect(emptied.driver).toEqual({});
-    expect('driverSource' in emptied).toBe(false);
+    expect(emptied.driverSource).toEqual(source);
+});
+
+test('withIdentity mescla partes, apaga as vazias e remove a identificação sem nada', () => {
+    const base = createProjectData('');
+    const named = withIdentity(base, { brand: 'Triton', model: ' TR 620 ' });
+
+    expect(named.driverSource).toEqual({ brand: 'Triton', model: ' TR 620 ' });
+
+    const typed = withIdentity(named, { type: 'subwoofer', variant: '4 Ω' });
+
+    expect(typed.driverSource).toEqual({
+        brand: 'Triton',
+        model: ' TR 620 ',
+        type: 'subwoofer',
+        variant: '4 Ω',
+    });
+    expect(
+        withIdentity(typed, { type: undefined, variant: '  ' }).driverSource,
+    ).toEqual({ brand: 'Triton', model: ' TR 620 ' });
+    expect(
+        'driverSource' in withIdentity(named, { brand: '', model: undefined }),
+    ).toBe(false);
 });
 
 test('campos que não são do driver não mexem na origem', () => {
@@ -190,4 +225,43 @@ test('a unidade escolhida no duto traseiro é guardada à parte da do frontal', 
 
     expect(data.fieldUnits.rear_diameter_m).toBe('in');
     expect(data.fieldUnits.diameter_m).toBeUndefined();
+});
+
+test('writeDimension fixa a medida digitada, ajusta as outras duas e mantém o volume', () => {
+    const internal = { h_m: 0.6, w_m: 0.4, d_m: 0.25 };
+    const data = writeDimension(createProjectData(''), internal, 'h', 0.75);
+    const { custom, proportion } = data.cutPlan ?? {};
+
+    expect(proportion).toBe('custom');
+    expect(custom?.d).toBe(1);
+
+    // Ratio normalizada pela profundidade: escalada de volta, recupera as medidas e o volume.
+    const volume = 0.6 * 0.4 * 0.25;
+    const depth = Math.cbrt(volume / ((custom?.h ?? 0) * (custom?.w ?? 0)));
+    const h = (custom?.h ?? 0) * depth;
+
+    expect(h).toBeCloseTo(0.75, 9);
+    expect(h * (custom?.w ?? 0) * depth * depth).toBeCloseTo(volume, 9);
+});
+
+test('writeDimension recusa medida que leva a razão para fora da faixa', () => {
+    const data = createProjectData('');
+    const internal = { h_m: 0.6, w_m: 0.4, d_m: 0.25 };
+
+    expect(writeDimension(data, internal, 'h', 5)).toBe(data);
+});
+
+test('formato e medidas do alto-falante somem do projeto quando esvaziados', () => {
+    const base = createProjectData('p');
+    const shaped = writeDriverChoice(base, 'shape', 'square');
+    const sized = writeField(shaped, 'drv_g_m', 0.16);
+
+    expect(sized.driverDims).toEqual({ shape: 'square', g_m: 0.16 });
+    expect(
+        writeField(
+            writeDriverChoice(sized, 'shape', undefined),
+            'drv_g_m',
+            undefined,
+        ),
+    ).toEqual(base);
 });

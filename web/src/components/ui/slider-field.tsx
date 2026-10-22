@@ -65,9 +65,16 @@ export function SliderField({
                 }
                 className="px-2"
             >
-                <SliderTrack className="relative h-5 w-full before:absolute before:top-1/2 before:h-1 before:w-full before:-translate-y-1/2 before:rounded-full before:bg-border">
-                    <SliderThumb className="top-1/2 size-4 rounded-full border-2 border-accent bg-surface outline-none data-[dragging]:bg-accent data-[focus-visible]:outline-2 data-[focus-visible]:outline-solid data-[focus-visible]:outline-offset-2 data-[focus-visible]:outline-accent" />
-                </SliderTrack>
+                {({ state }) => (
+                    <SliderTrack className="relative h-5 w-full before:absolute before:top-1/2 before:h-1 before:w-full before:-translate-y-1/2 before:rounded-full before:bg-border">
+                        <div
+                            aria-hidden="true"
+                            className="absolute top-1/2 left-0 h-1 -translate-y-1/2 rounded-full bg-accent"
+                            style={{ width: `${state.getThumbPercent(0) * 100}%` }}
+                        />
+                        <SliderThumb className="top-1/2 size-3.5 rounded-full border-2 border-accent bg-surface shadow-sm outline-none motion-safe:transition-transform data-[dragging]:scale-125 data-[dragging]:bg-accent data-[hovered]:scale-110 data-[focus-visible]:outline-2 data-[focus-visible]:outline-solid data-[focus-visible]:outline-offset-2 data-[focus-visible]:outline-accent" />
+                    </SliderTrack>
+                )}
             </Slider>
         </div>
     );

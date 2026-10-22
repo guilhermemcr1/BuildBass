@@ -10,6 +10,7 @@ return [
     'max' => 'Use no máximo :max caracteres.',
     'min' => 'Preencha este campo.',
     'email' => 'Informe um e-mail válido.',
+    'in' => 'Escolha um dos tipos disponíveis.',
     'honeypot' => 'Requisição recusada.',
     'duplicate_in_catalog' => 'Este driver já está no catálogo.',
     'duplicate_pending' => 'Este driver já está em análise.',

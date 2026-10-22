@@ -79,6 +79,34 @@ describe('ProjectTabs', () => {
         expect(onClose).toHaveBeenCalledWith(id);
     });
 
+    test('cada aba mostra a cor do projeto, sem botão de cor (a cor fica na barra superior)', () => {
+        renderWithProviders(<ProjectTabs onClose={() => undefined} />);
+        const first = workspace().projects[0];
+
+        expect(
+            screen.queryByRole('button', { name: /^Cor de / }),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.getByRole('listitem').querySelector('[aria-hidden="true"]'),
+        ).toHaveClass(`bg-series-${first.color}`);
+    });
+
+    test('nome vazio na edição volta ao anterior', async () => {
+        renderWithProviders(<ProjectTabs onClose={() => undefined} />);
+        const id = workspace().projects[0].id;
+        act(() => projectStore(id).getState().setName('Caixa A'));
+
+        await userEvent.dblClick(
+            screen.getByRole('button', { name: /^Caixa A/ }),
+        );
+        await userEvent.clear(
+            screen.getByRole('textbox', { name: 'Renomear Caixa A' }),
+        );
+        await userEvent.keyboard('{Escape}');
+
+        expect(projectStore(id).getState().data.name).toBe('Caixa A');
+    });
+
     test('projeto alterado mostra o aviso de não exportado', () => {
         renderWithProviders(<ProjectTabs onClose={() => undefined} />);
         act(() =>

@@ -121,7 +121,7 @@ describe('CutDrawings', () => {
         const { container } = renderWithProviders(<CutDrawings plan={PLAN} />);
         const figures = [...container.querySelectorAll('figure')];
         const svgs = [...container.querySelectorAll('svg')];
-        const widthPercent = figures.map((figure) =>
+        const widthRem = figures.map((figure) =>
             Number.parseFloat((figure as HTMLElement).style.width),
         );
         const viewBoxWidth = svgs.map((svg) =>
@@ -129,9 +129,10 @@ describe('CutDrawings', () => {
         );
 
         // Largura na tela / largura no desenho (unidades do viewBox) é a mesma em todos.
-        const ratios = widthPercent.map((p, index) => p / viewBoxWidth[index]);
+        const ratios = widthRem.map((p, index) => p / viewBoxWidth[index]);
 
         expect(ratios[0]).toBeCloseTo(ratios[1], 9);
-        expect(Math.max(...widthPercent)).toBeCloseTo(100, 9);
+        // A escala é em rem: o maior desenho nunca passa de 22rem, qualquer que seja o painel.
+        expect(Math.max(...widthRem)).toBeLessThanOrEqual(22);
     });
 });

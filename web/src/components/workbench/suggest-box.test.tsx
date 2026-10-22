@@ -24,7 +24,7 @@ describe('SuggestBox (US6)', () => {
     });
 
     test('sem Fs, Qts e Vas fica desativado e diz o que falta', () => {
-        renderWithProviders(<SuggestBox />);
+        renderWithProviders(<SuggestBox title="Volume">{null}</SuggestBox>);
 
         expect(
             screen.getByRole('button', { name: 'Sugerir caixa' }),
@@ -35,7 +35,7 @@ describe('SuggestBox (US6)', () => {
     });
 
     test('aplica Vb e Fb numa só etapa de desfazer e mostra o alinhamento', async () => {
-        renderWithProviders(<SuggestBox />);
+        renderWithProviders(<SuggestBox title="Volume">{null}</SuggestBox>);
         driver(0.35);
         // Edições a menos de 400 ms viram uma etapa só; a sugestão precisa ser a dela.
         await new Promise((resolve) => setTimeout(resolve, 450));
@@ -63,7 +63,7 @@ describe('SuggestBox (US6)', () => {
     });
 
     test('Qts alto para dutada explica e não muda a caixa', async () => {
-        renderWithProviders(<SuggestBox />);
+        renderWithProviders(<SuggestBox title="Volume">{null}</SuggestBox>);
         driver(0.55);
         const before = activeProjectStore().getState().data.box;
 
@@ -78,7 +78,7 @@ describe('SuggestBox (US6)', () => {
     });
 
     test('bandpass: desativado, com o motivo, mesmo com Fs, Qts e Vas preenchidos', () => {
-        renderWithProviders(<SuggestBox />);
+        renderWithProviders(<SuggestBox title="Volume">{null}</SuggestBox>);
         driver(0.35);
         act(() => activeProjectStore().getState().setBoxType('bandpass'));
 

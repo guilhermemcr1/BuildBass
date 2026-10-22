@@ -12,8 +12,8 @@ import type { KeyboardEvent, PointerEvent, ReactNode } from 'react';
 import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { ToggleButton } from '@/components/ui/toggle-button';
-import { DEFAULT_VIEW, projectBox } from '@/cutplan';
+import { Switch } from '@/components/ui/switch';
+import { DEFAULT_VIEW, dimensionLines, projectBox } from '@/cutplan';
 import type { Plan, View } from '@/cutplan';
 import { formatWithUnit } from '@/lib/units/format';
 import { defaultUnitFor } from '@/lib/units/quantities';
@@ -29,6 +29,11 @@ const DRAG_RAD = 0.01;
 
 function clamp(value: number, min: number, max: number) {
     return Math.min(max, Math.max(min, value));
+}
+
+// Tom da face pela luz: de `raised` (iluminada) até um pouco de `foreground` (na sombra).
+function faceTone(light: number) {
+    return `color-mix(in oklab, var(--color-foreground) ${Math.round(4 + (1 - light) * 18)}%, var(--color-raised))`;
 }
 
 function turned(view: View, yaw: number, pitch: number): View {
@@ -76,10 +81,23 @@ export function Box3dView({ plan }: { plan: Plan }) {
     const drag = useRef<{ x: number; y: number } | null>(null);
     const { external } = plan.dimensions;
     // Meia diagonal da caixa com folga: com zoom 1 ela cabe no quadro em qualquer ângulo.
+    // As cotas ficam fora da caixa, então o quadro ganha folga para elas e para o texto.
     const radius =
-        (Math.hypot(external.w_m, external.h_m, external.d_m) / 2) * 1.15;
+        (Math.hypot(external.w_m, external.h_m, external.d_m) / 2) * 1.35;
     const polygons = projectBox(plan, view, { translucent: inside });
+    const lines = dimensionLines(plan, view);
     const format = (si: number) => formatWithUnit(si, unit, locale);
+    const driverShown = polygons.find((polygon) => polygon.part === 'driver');
+    const driverOnFront = projectBox(
+        plan,
+        { yaw_rad: 0, pitch_rad: 0, zoom: 1 },
+        { translucent: false },
+    ).some((polygon) => polygon.part === 'driver');
+    const centroid = (points: [number, number][]): [number, number] => [
+        points.reduce((sum, [x]) => sum + x, 0) / points.length,
+        points.reduce((sum, [, y]) => sum + y, 0) / points.length,
+    ];
+    const fontSize = radius * 0.07;
 
     const onKeyDown = (event: KeyboardEvent) => {
         const handlers: Record<string, () => void> = {
@@ -121,7 +139,7 @@ export function Box3dView({ plan }: { plan: Plan }) {
                     width: format(external.w_m),
                     height: format(external.h_m),
                     depth: format(external.d_m),
-                })}
+                }).concat(driverOnFront ? ` ${t('view3d.summaryDriver')}` : '')}
                 data-yaw={view.yaw_rad.toFixed(3)}
                 data-pitch={view.pitch_rad.toFixed(3)}
                 data-zoom={view.zoom.toFixed(3)}
@@ -141,28 +159,149 @@ export function Box3dView({ plan }: { plan: Plan }) {
                     drag.current = null;
                 }}
             >
-                {polygons.map((polygon) => (
-                    <polygon
-                        key={polygon.id}
-                        data-id={polygon.id}
-                        // O eixo y do SVG cresce para baixo.
-                        points={polygon.points
-                            .map(([x, y]) => `${x},${-y}`)
-                            .join(' ')}
-                        className={
-                            polygon.kind === 'cutout'
-                                ? 'fill-background stroke-foreground'
-                                : inside
-                                  ? 'fill-accent-soft stroke-foreground'
-                                  : 'fill-raised stroke-foreground'
-                        }
-                        fillOpacity={
-                            inside && polygon.kind === 'face' ? 0.35 : 1
-                        }
-                        strokeWidth={radius * 0.006}
-                        strokeLinejoin="round"
-                    />
-                ))}
+                {polygons.map((polygon) => {
+                    const driver = polygon.part === 'driver';
+                    const hole = polygon.kind === 'cutout';
+                    // Por dentro, o que está atrás fica tracejado e fraco para não competir com a frente.
+                    const behind = inside && !polygon.facing;
+
+                    return (
+                        <polygon
+                            key={polygon.id}
+                            data-id={polygon.id}
+                            data-part={polygon.part}
+                            // O eixo y do SVG cresce para baixo.
+                            points={polygon.points
+                                .map(([x, y]) => `${x},${-y}`)
+                                .join(' ')}
+                            className={
+                                driver
+                                    ? 'fill-accent-soft stroke-accent'
+                                    : hole
+                                      ? 'fill-foreground stroke-foreground'
+                                      : inside
+                                        ? 'fill-accent-soft stroke-foreground'
+                                        : 'stroke-foreground'
+                            }
+                            // Cada face recebe um tom da luz; o volume se lê sem contorno pesado.
+                            style={
+                                hole || inside
+                                    ? undefined
+                                    : { fill: faceTone(polygon.light) }
+                            }
+                            fillOpacity={
+                                driver
+                                    ? behind
+                                        ? 0.5
+                                        : 1
+                                    : hole
+                                      ? behind
+                                          ? 0.15
+                                          : 0.8
+                                      : inside
+                                        ? behind
+                                            ? 0.12
+                                            : 0.35
+                                        : 1
+                            }
+                            strokeOpacity={behind ? 0.4 : hole ? 0.9 : 0.75}
+                            strokeDasharray={
+                                behind
+                                    ? `${radius * 0.015} ${radius * 0.012}`
+                                    : undefined
+                            }
+                            strokeWidth={
+                                driver ? radius * 0.012 : radius * 0.005
+                            }
+                            strokeLinejoin="round"
+                        />
+                    );
+                })}
+                {driverShown !== undefined && (
+                    <text
+                        data-driver-label=""
+                        x={centroid(driverShown.points)[0]}
+                        y={-centroid(driverShown.points)[1]}
+                        fontSize={fontSize}
+                        textAnchor="middle"
+                        dominantBaseline="central"
+                        className="fill-foreground stroke-background font-semibold"
+                        strokeWidth={fontSize * 0.25}
+                        style={{ paintOrder: 'stroke' }}
+                    >
+                        {t('view3d.driver')}
+                    </text>
+                )}
+                {lines.map((line) => {
+                    const dx = line.to[0] - line.from[0];
+                    const dy = line.to[1] - line.from[1];
+                    const length = Math.hypot(dx, dy) || 1;
+                    // Normal da cota (para fora da caixa): dela saem as linhas de chamada e os traços.
+                    const nx = -dy / length;
+                    const ny = dx / length;
+                    const side = Math.sign(
+                        (line.from[0] - line.edge[0][0]) * nx +
+                            (line.from[1] - line.edge[0][1]) * ny,
+                    );
+                    const tick = radius * 0.015;
+                    const ends = [
+                        [line.edge[0], line.from],
+                        [line.edge[1], line.to],
+                    ] as const;
+                    // Prolonga a chamada um pouco além da cota, como no desenho técnico.
+                    const overshoot = radius * 0.012;
+                    const extensions = ends
+                        .map(([edge, end]) => {
+                            const ex = end[0] - edge[0];
+                            const ey = end[1] - edge[1];
+                            const el = Math.hypot(ex, ey) || 1;
+
+                            return `M${edge[0]},${-edge[1]}L${end[0] + (ex / el) * overshoot},${-(end[1] + (ey / el) * overshoot)}`;
+                        })
+                        .join('');
+                    const ticks = ends
+                        .map(
+                            ([, end]) =>
+                                `M${end[0] - (nx * side + dx / length) * tick},${-(end[1] - (ny * side + dy / length) * tick)}L${end[0] + (nx * side + dx / length) * tick},${-(end[1] + (ny * side + dy / length) * tick)}`,
+                        )
+                        .join('');
+
+                    return (
+                        <g
+                            key={line.axis}
+                            data-dimension={line.axis}
+                            className="stroke-muted"
+                            fill="none"
+                        >
+                            <line
+                                x1={line.from[0]}
+                                y1={-line.from[1]}
+                                x2={line.to[0]}
+                                y2={-line.to[1]}
+                                strokeWidth={radius * 0.005}
+                            />
+                            <path
+                                d={extensions + ticks}
+                                strokeWidth={radius * 0.004}
+                                strokeOpacity={0.8}
+                            />
+                            <text
+                                x={line.label[0]}
+                                y={-line.label[1]}
+                                fontSize={fontSize}
+                                textAnchor="middle"
+                                dominantBaseline="central"
+                                className="fill-foreground stroke-background"
+                                strokeWidth={fontSize * 0.7}
+                                strokeOpacity={1}
+                                strokeLinejoin="round"
+                                style={{ paintOrder: 'stroke' }}
+                            >
+                                {format(line.value_m)}
+                            </text>
+                        </g>
+                    );
+                })}
             </svg>
             <p className="text-[11px] text-muted">{t('view3d.hint')}</p>
             <div
@@ -212,13 +351,9 @@ export function Box3dView({ plan }: { plan: Plan }) {
                 >
                     <RotateCcw aria-hidden="true" className="size-4" />
                 </ViewButton>
-                <ToggleButton
-                    pressed={inside}
-                    onPressedChange={setInside}
-                    className="h-8 w-auto px-3 text-sm"
-                >
+                <Switch selected={inside} onChange={setInside} className="ml-2">
                     {t('view3d.inside')}
-                </ToggleButton>
+                </Switch>
             </div>
         </div>
     );

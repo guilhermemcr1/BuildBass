@@ -110,3 +110,18 @@ it('segue sem escrita no catálogo', function () {
     $this->postJson('/api/drivers', validSubmission())->assertStatus(405);
     expect(Driver::count())->toBe(0);
 });
+
+it('guarda o tipo opcional do envio', function () {
+    $this->postJson('/api/driver-submissions', validSubmission(['type' => 'subwoofer']))->assertCreated();
+
+    expect(DriverSubmission::query()->firstOrFail()->type)->toBe('subwoofer');
+});
+
+it('aceita envio sem tipo e recusa tipo fora da lista', function () {
+    $this->postJson('/api/driver-submissions', validSubmission())->assertCreated();
+    expect(DriverSubmission::query()->firstOrFail()->type)->toBeNull();
+
+    $this->postJson('/api/driver-submissions', validSubmission(['model' => 'EX-15', 'type' => 'tuba']))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('type');
+});

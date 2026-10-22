@@ -1,8 +1,9 @@
-import { act, screen } from '@testing-library/react';
+import { act, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { activeProjectStore } from '@/hooks/use-active-project';
 import { renderWithProviders } from '@/test/render';
+import { useSavedDrivers } from '@/stores/saved-drivers';
 import { initialWorkspace, useWorkspace } from '@/stores/workspace';
 import { DriverPanel } from './driver-panel';
 
@@ -36,7 +37,7 @@ describe('DriverPanel — consistência e calculados (US4)', () => {
         const qts = field('Qts');
         expect(qts).toHaveValue('0,38');
         expect(qts).toHaveClass('text-muted');
-        expect(qts.closest('[class*="group"]')).toHaveTextContent('calculado');
+        expect(qts.closest('.group')).toHaveTextContent('calculado');
     });
 
     test('Qts divergente cita a relação e o percentual', () => {
@@ -57,6 +58,55 @@ describe('DriverPanel — consistência e calculados (US4)', () => {
     });
 });
 
+// Salvar, "Meus alto-falantes" e enviar ficam no menu "⋯" ao lado de "Buscar driver".
+async function openActions() {
+    await userEvent.click(
+        screen.getByRole('button', { name: 'Mais ações do driver' }),
+    );
+}
+
+describe('DriverPanel — cabeçalho compacto (feature 008, US3)', () => {
+    beforeEach(() => {
+        localStorage.clear();
+        useWorkspace.setState(initialWorkspace());
+        connection.status = 'online';
+    });
+
+    test('sem campo de busca fixo: só "Buscar driver" e um menu com as demais ações', async () => {
+        renderWithProviders(<DriverPanel onSubmitDriver={() => undefined} />);
+
+        expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+        expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
+        expect(
+            screen.getByRole('button', { name: 'Buscar driver' }),
+        ).toBeInTheDocument();
+        expect(
+            screen.queryByRole('button', { name: /Enviar driver/ }),
+        ).not.toBeInTheDocument();
+
+        await openActions();
+
+        expect(
+            screen.getAllByRole('menuitem').map((item) => item.textContent),
+        ).toEqual([
+            'Salvar este alto-falante',
+            'Meus alto-falantes',
+            'Enviar driver',
+        ]);
+    });
+
+    test('offline, a busca continua abrindo e o campo segue ativo para os salvos', async () => {
+        connection.status = 'offline';
+        renderWithProviders(<DriverPanel onSubmitDriver={() => undefined} />);
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Buscar driver' }),
+        );
+
+        expect(screen.getByRole('searchbox')).toBeEnabled();
+    });
+});
+
 describe('DriverPanel — enviar driver (specs/006, US4)', () => {
     beforeEach(() => {
         localStorage.clear();
@@ -68,8 +118,9 @@ describe('DriverPanel — enviar driver (specs/006, US4)', () => {
         const onSubmitDriver = vi.fn();
         renderWithProviders(<DriverPanel onSubmitDriver={onSubmitDriver} />);
 
+        await openActions();
         await userEvent.click(
-            screen.getByRole('button', { name: /Enviar driver/ }),
+            screen.getByRole('menuitem', { name: /Enviar driver/ }),
         );
 
         expect(onSubmitDriver).toHaveBeenCalledTimes(1);
@@ -79,11 +130,80 @@ describe('DriverPanel — enviar driver (specs/006, US4)', () => {
         connection.status = 'offline';
         const onSubmitDriver = vi.fn();
         renderWithProviders(<DriverPanel onSubmitDriver={onSubmitDriver} />);
-        const button = screen.getByRole('button', { name: /Enviar driver/ });
+        await openActions();
+        const item = screen.getByRole('menuitem', { name: /Enviar driver/ });
 
-        expect(button).toBeDisabled();
+        expect(item).toHaveAttribute('aria-disabled', 'true');
 
-        await userEvent.click(button);
+        await userEvent.click(item);
         expect(onSubmitDriver).not.toHaveBeenCalled();
+    });
+});
+
+describe('DriverPanel — alto-falantes salvos (specs/008, US6)', () => {
+    beforeEach(() => {
+        localStorage.clear();
+        useWorkspace.setState(initialWorkspace());
+        useSavedDrivers.setState({ items: [] });
+        connection.status = 'online';
+    });
+
+    test('salvar fica desativado sem parâmetros e funciona offline', async () => {
+        connection.status = 'offline';
+        renderWithProviders(<DriverPanel onSubmitDriver={() => undefined} />);
+        await openActions();
+
+        expect(
+            screen.getByRole('menuitem', { name: 'Salvar este alto-falante' }),
+        ).toHaveAttribute('aria-disabled', 'true');
+
+        act(() => activeProjectStore().getState().setDriverValue('fs_hz', 32));
+
+        expect(
+            screen.getByRole('menuitem', { name: 'Salvar este alto-falante' }),
+        ).not.toHaveAttribute('aria-disabled');
+    });
+
+    test('abre o diálogo de salvar com a origem do driver e guarda na lista', async () => {
+        renderWithProviders(<DriverPanel onSubmitDriver={() => undefined} />);
+        act(() => {
+            const state = activeProjectStore().getState();
+            state.applyCatalogDriver(
+                { fs_hz: 32, qts: 0.4, vas_m3: 0.1 },
+                { brand: 'Triton', model: 'TR 620' },
+            );
+        });
+
+        await openActions();
+        await userEvent.click(
+            screen.getByRole('menuitem', { name: 'Salvar este alto-falante' }),
+        );
+        const dialog = await screen.findByRole('dialog', {
+            name: 'Salvar alto-falante',
+        });
+        expect(
+            within(dialog).getByRole('textbox', { name: /Marca/ }),
+        ).toHaveValue('Triton');
+        await userEvent.click(
+            within(dialog).getByRole('button', { name: 'Salvar' }),
+        );
+
+        expect(useSavedDrivers.getState().items).toMatchObject([
+            { brand: 'Triton', model: 'TR 620' },
+        ]);
+        expect(screen.getByText('Dos meus alto-falantes')).toBeVisible();
+    });
+
+    test('"Meus alto-falantes" abre o gerenciamento', async () => {
+        renderWithProviders(<DriverPanel onSubmitDriver={() => undefined} />);
+
+        await openActions();
+        await userEvent.click(
+            screen.getByRole('menuitem', { name: 'Meus alto-falantes' }),
+        );
+
+        expect(
+            await screen.findByRole('dialog', { name: 'Meus alto-falantes' }),
+        ).toBeVisible();
     });
 });

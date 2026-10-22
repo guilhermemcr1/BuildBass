@@ -62,3 +62,23 @@ export async function mockCatalog(page: Page, handler: Handler = ok) {
         handler(route, new URL(route.request().url())),
     );
 }
+
+// Abre o popover "Buscar driver" (se ainda fechado) e devolve o campo de busca.
+export async function openPicker(page: Page) {
+    // Um popover recém-fechado ainda está visível durante o fade de saída: espera ele sair.
+    await page.locator('[data-exiting]').waitFor({ state: 'detached' });
+
+    const field = page.getByRole('searchbox', { name: 'Buscar driver' });
+
+    if (!(await field.isVisible())) {
+        await page.getByRole('button', { name: 'Buscar driver' }).click();
+    }
+
+    return field;
+}
+
+// Salvar, "Meus alto-falantes" e enviar ficam no menu "⋯" do painel do Driver.
+export async function driverAction(page: Page, name: string): Promise<void> {
+    await page.getByRole('button', { name: 'Mais ações do driver' }).click();
+    await page.getByRole('menuitem', { name }).click();
+}

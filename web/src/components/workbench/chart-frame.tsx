@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import uPlot from 'uplot';
+import type { SeriesColor } from '@/lib/project/types';
+import { cn } from '@/lib/utils';
+import { RING_SWATCH, SWATCH } from './swatch';
 import 'uplot/dist/uPlot.min.css';
 
 export type ChartSeries = {
     id: string;
     label: string;
-    slot: 1 | 2 | 3;
+    color: SeriesColor;
     // Projeto ativo: linha mais grossa.
     emphasis: boolean;
     // Já na unidade exibida; null = sem valor nesse ponto.
@@ -36,6 +39,13 @@ type ChartFrameProps = {
     // Faixa fixa do eixo y; sem ela, o uPlot ajusta aos dados.
     yRange?: [number, number];
     yIncrs?: number[];
+    // Faixa visível do eixo de frequência (Hz). Quem manda é o painel; o arrastar do mouse pede
+    // uma faixa nova por `onZoom` e o duplo clique pede para voltar por `onZoomReset`.
+    xRange: [number, number];
+    onZoom?: (range: [number, number]) => void;
+    onZoomReset?: () => void;
+    // Rótulo do maior valor de cada curva na faixa visível ("Pico").
+    peakLabel: string;
 };
 
 type Layout = {
@@ -45,7 +55,9 @@ type Layout = {
     yIncrs?: number[];
 };
 
-const FREQUENCY_RANGE: [number, number] = [10, 1000];
+// Arrastar menos que isso é um clique, não um zoom; e o zoom não passa de 1,2× entre as pontas.
+const MIN_DRAG_PX = 8;
+const MIN_ZOOM_RATIO = 1.2;
 
 function token(name: string): string {
     return getComputedStyle(document.documentElement)
@@ -53,19 +65,84 @@ function token(name: string): string {
         .trim();
 }
 
-// Num eixo log só 1, 2 e 5 de cada década recebem rótulo; as demais linhas ficam só na grade.
-function frequencyTick(value: number | null): string {
+// Num eixo log só 1, 2 e 5 de cada década recebem rótulo; as demais linhas ficam só na grade. Com
+// zoom de poucas oitavas todas as linhas ganham rótulo, senão sobraria quase nada para ler.
+function frequencyTick(value: number | null, all: boolean): string {
     if (value === null) {
         return '';
     }
 
-    const mantissa = Math.round(value / 10 ** Math.floor(Math.log10(value)));
+    const mantissa = Number(
+        (value / 10 ** Math.floor(Math.log10(value))).toPrecision(6),
+    );
 
-    if (![1, 2, 5].includes(mantissa)) {
+    if (!all && ![1, 2, 5].includes(mantissa)) {
         return '';
     }
 
     return value >= 1000 ? `${value / 1000}k` : String(value);
+}
+
+// Pontos do eixo de frequência: 1…9 de cada década; se a faixa visível for estreita (zoom), passa
+// para meio em meio e depois para décimo em décimo até haver pelo menos 4 pontos para ler.
+function frequencySplits(min: number, max: number): number[] {
+    for (const step of [10, 5, 1]) {
+        const ticks: number[] = [];
+
+        for (
+            let decade = Math.floor(Math.log10(min));
+            decade <= Math.ceil(Math.log10(max));
+            decade++
+        ) {
+            const base = 10 ** decade;
+
+            // Mantissa em décimos (10 = 1,0 … 99 = 9,9), inteira para não acumular erro de ponto
+            // flutuante.
+            for (let tenths = 10; tenths < 100; tenths += step) {
+                const value = Number(((tenths * base) / 10).toPrecision(6));
+
+                if (value >= min && value <= max) {
+                    ticks.push(value);
+                }
+            }
+        }
+
+        if (ticks.length >= 4 || step === 1) {
+            return ticks;
+        }
+    }
+
+    return [];
+}
+
+type Peak = { index: number; value: number };
+
+// Maior valor da curva dentro da faixa visível (o pico exibido no tooltip e marcado no gráfico).
+function peakOf(
+    frequencies: readonly number[],
+    values: (number | null)[],
+    [min, max]: [number, number],
+): Peak | undefined {
+    let best: Peak | undefined;
+
+    values.forEach((value, index) => {
+        const frequency = frequencies[index];
+
+        if (
+            value === null ||
+            frequency === undefined ||
+            frequency < min ||
+            frequency > max
+        ) {
+            return;
+        }
+
+        if (best === undefined || value > best.value) {
+            best = { index, value };
+        }
+    });
+
+    return best;
 }
 
 function chartData(
@@ -126,11 +203,19 @@ export default function ChartFrame({
     limits = [],
     yRange,
     yIncrs,
+    xRange,
+    onZoom,
+    onZoomReset,
+    peakLabel,
 }: ChartFrameProps) {
     const container = useRef<HTMLDivElement>(null);
     const plotRef = useRef<uPlot | undefined>(undefined);
     const data = chartData(frequencies, series, limits);
     const dataRef = useRef(data);
+    // Lidos de dentro dos hooks do uPlot, que nascem uma vez por composição de séries.
+    const xRangeRef = useRef(xRange);
+    const zoomRef = useRef({ onZoom, onZoomReset });
+    const colorsRef = useRef<string[]>([]);
     // Ponto sob o cursor (mouse ou teclado) e se ele veio do teclado (só então é anunciado).
     const [cursor, setCursor] = useState<{
         index: number;
@@ -139,10 +224,10 @@ export default function ChartFrame({
     const [announce, setAnnounce] = useState(false);
 
     const layout = JSON.stringify({
-        series: series.map(({ id, label, slot, emphasis, dashed }) => [
+        series: series.map(({ id, label, color, emphasis, dashed }) => [
             id,
             label,
-            slot,
+            color,
             emphasis,
             dashed === true,
         ]),
@@ -153,6 +238,9 @@ export default function ChartFrame({
 
     useEffect(() => {
         dataRef.current = data;
+        xRangeRef.current = xRange;
+        zoomRef.current = { onZoom, onZoomReset };
+        // setData recalcula as escalas, e a do x lê `xRangeRef`: mudar a faixa passa por aqui.
         plotRef.current?.setData(data);
     });
 
@@ -167,6 +255,9 @@ export default function ChartFrame({
 
         const build = () => {
             plotRef.current?.destroy();
+            colorsRef.current = config.series.map(([, , color]) =>
+                token(`--series-${color}`),
+            );
 
             const grid = { stroke: token('--border'), width: 1 };
             const axis = {
@@ -185,10 +276,102 @@ export default function ChartFrame({
                     cursor: {
                         x: true,
                         y: false,
-                        drag: { x: false, y: false },
+                        drag: {
+                            x: true,
+                            y: false,
+                            setScale: false,
+                            dist: MIN_DRAG_PX,
+                        },
                         points: { size: 7 },
                     },
                     hooks: {
+                        ready: [
+                            (plot) => {
+                                plot.over.addEventListener('dblclick', () =>
+                                    zoomRef.current.onZoomReset?.(),
+                                );
+                            },
+                        ],
+                        // Arrastar na horizontal pede o zoom; o retângulo some em seguida.
+                        setSelect: [
+                            (plot) => {
+                                const { left, width } = plot.select;
+
+                                plot.setSelect(
+                                    { left: 0, top: 0, width: 0, height: 0 },
+                                    false,
+                                );
+
+                                if (width < MIN_DRAG_PX) {
+                                    return;
+                                }
+
+                                const low = plot.posToVal(left, 'x');
+                                const high = plot.posToVal(left + width, 'x');
+
+                                if (high / low >= MIN_ZOOM_RATIO) {
+                                    zoomRef.current.onZoom?.([low, high]);
+                                }
+                            },
+                        ],
+                        // O pico de cada curva, marcado com um anel na cor dela.
+                        draw: [
+                            (plot) => {
+                                const { ctx } = plot;
+                                const { left, top, width, height } = plot.bbox;
+                                const frequencies = dataRef
+                                    .current[0] as number[];
+
+                                ctx.save();
+                                ctx.beginPath();
+                                ctx.rect(left, top, width, height);
+                                ctx.clip();
+
+                                colorsRef.current.forEach(
+                                    (stroke, position) => {
+                                        const peak = peakOf(
+                                            frequencies,
+                                            dataRef.current[position + 1] as (
+                                                | number
+                                                | null
+                                            )[],
+                                            xRangeRef.current,
+                                        );
+
+                                        if (peak === undefined) {
+                                            return;
+                                        }
+
+                                        const x = plot.valToPos(
+                                            frequencies[peak.index],
+                                            'x',
+                                            true,
+                                        );
+                                        const y = plot.valToPos(
+                                            peak.value,
+                                            'y',
+                                            true,
+                                        );
+
+                                        ctx.beginPath();
+                                        ctx.arc(
+                                            x,
+                                            y,
+                                            5 * devicePixelRatio,
+                                            0,
+                                            2 * Math.PI,
+                                        );
+                                        ctx.lineWidth = 2 * devicePixelRatio;
+                                        ctx.strokeStyle = stroke;
+                                        ctx.fillStyle = token('--surface');
+                                        ctx.fill();
+                                        ctx.stroke();
+                                    },
+                                );
+
+                                ctx.restore();
+                            },
+                        ],
                         setCursor: [
                             (plot) => {
                                 const index = plot.cursor.idx;
@@ -216,7 +399,11 @@ export default function ChartFrame({
                         ],
                     },
                     scales: {
-                        x: { time: false, distr: 3, range: FREQUENCY_RANGE },
+                        x: {
+                            time: false,
+                            distr: 3,
+                            range: () => xRangeRef.current,
+                        },
                         y:
                             config.yRange === undefined
                                 ? {}
@@ -226,7 +413,22 @@ export default function ChartFrame({
                         {
                             ...axis,
                             label: xLabel,
-                            values: (_plot, ticks) => ticks.map(frequencyTick),
+                            splits: (_plot, _axis, min, max) =>
+                                frequencySplits(min, max),
+                            // O filtro padrão do eixo log esconde tudo que não é década; os
+                            // rótulos são escolhidos em `values`.
+                            filter: (_plot, splits) => splits,
+                            values: (plot, ticks) => {
+                                const { min, max } = plot.scales.x;
+                                const narrow =
+                                    min !== undefined &&
+                                    max !== undefined &&
+                                    max / min < 6;
+
+                                return ticks.map((tick) =>
+                                    frequencyTick(tick, narrow),
+                                );
+                            },
                         },
                         {
                             ...axis,
@@ -240,10 +442,12 @@ export default function ChartFrame({
                     series: [
                         {},
                         ...config.series.map(
-                            ([, label, slot, emphasis, dashed]) => ({
+                            ([, label, color, emphasis, dashed]) => ({
                                 label,
-                                stroke: token(`--series-${slot}`),
+                                stroke: token(`--series-${color}`),
                                 width: emphasis ? 2.5 : 1.5,
+                                // Com zoom o uPlot desenharia um ponto por amostra.
+                                points: { show: false },
                                 ...(dashed ? { dash: [8, 5] } : {}),
                             }),
                         ),
@@ -328,11 +532,25 @@ export default function ChartFrame({
             ? undefined
             : {
                   frequency: frequencies[cursor.index],
-                  values: series.map((item) => ({
-                      id: item.id,
-                      label: item.label,
-                      value: item.values[cursor.index] ?? null,
-                  })),
+                  values: series.map((item) => {
+                      const peak = peakOf(frequencies, item.values, xRange);
+
+                      return {
+                          id: item.id,
+                          label: item.label,
+                          color: item.color,
+                          dashed: item.dashed === true,
+                          emphasis: item.emphasis,
+                          value: item.values[cursor.index] ?? null,
+                          peak:
+                              peak === undefined
+                                  ? undefined
+                                  : {
+                                        value: peak.value,
+                                        frequency: frequencies[peak.index],
+                                    },
+                      };
+                  }),
               };
     const reading =
         point === undefined || point.frequency === undefined
@@ -371,25 +589,85 @@ export default function ChartFrame({
             <div ref={container} className="h-full w-full" />
             {point !== undefined &&
                 reading !== '' && (
-                    // Posição só se conhece em tempo de execução (exceção do uPlot, T064).
+                    // Posição só se conhece em tempo de execução (exceção do uPlot, T064). O balão
+                    // fica ao lado do cursor, no lado com mais espaço, para não cobrir a curva.
                     <div
                         aria-hidden="true"
-                        className="pointer-events-none absolute top-2 z-10 -translate-x-1/2 rounded-md border border-border bg-surface px-2 py-1 text-xs whitespace-nowrap shadow-sm"
-                        style={{ left: cursor?.left }}
+                        data-testid="chart-tooltip"
+                        className="pointer-events-none absolute top-2 z-10 flex min-w-36 flex-col gap-1.5 rounded-md border border-border bg-surface px-2.5 py-2 text-xs whitespace-nowrap shadow-md"
+                        style={
+                            (cursor?.left ?? 0) >
+                            (container.current?.clientWidth ?? 0) / 2
+                                ? {
+                                      right:
+                                          (container.current?.clientWidth ??
+                                              0) -
+                                          (cursor?.left ?? 0) +
+                                          12,
+                                  }
+                                : { left: (cursor?.left ?? 0) + 12 }
+                        }
                     >
                         <div className="num font-semibold">
                             {formatFrequency(point.frequency)}
                         </div>
-                        {point.values.map(({ id, label: name, value }) => (
-                            <div key={id}>
-                                {series.length > 1 && (
-                                    <span className="text-muted">{name} </span>
-                                )}
-                                <span className="num">
-                                    {value === null ? '—' : formatValue(value)}
-                                </span>
-                            </div>
-                        ))}
+                        {point.values.map(
+                            ({
+                                id,
+                                label: name,
+                                value,
+                                color,
+                                dashed,
+                                emphasis,
+                                peak,
+                            }) => (
+                                <div key={id} className="flex flex-col">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <span className="flex min-w-0 items-center gap-1.5">
+                                            <span
+                                                aria-hidden="true"
+                                                className={cn(
+                                                    'w-3 shrink-0',
+                                                    dashed
+                                                        ? cn(
+                                                              'border-t-2 border-dashed',
+                                                              RING_SWATCH[
+                                                                  color
+                                                              ],
+                                                          )
+                                                        : cn(
+                                                              'h-0.5 rounded-full',
+                                                              SWATCH[color],
+                                                          ),
+                                                )}
+                                            />
+                                            <span
+                                                className={cn(
+                                                    'truncate',
+                                                    emphasis
+                                                        ? 'font-semibold'
+                                                        : 'text-muted',
+                                                )}
+                                            >
+                                                {name}
+                                            </span>
+                                        </span>
+                                        <span className="num font-semibold">
+                                            {value === null
+                                                ? '—'
+                                                : formatValue(value)}
+                                        </span>
+                                    </div>
+                                    {peak !== undefined && (
+                                        <div className="pl-[18px] num text-[11px] text-muted">
+                                            {peakLabel}{' '}
+                                            {formatValue(peak.value)} ·{' '}
+                                            {formatFrequency(peak.frequency)}
+                                        </div>
+                                    )}
+                                </div>
+                            ),
+                        )}
                     </div>
                 )}
             <p aria-live="polite" className="sr-only">

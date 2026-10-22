@@ -1,13 +1,18 @@
 import { readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { DRIVER_ID, json, mockCatalog, SUMMARY } from './catalog-mock';
+import {
+    DRIVER_ID,
+    json,
+    mockCatalog,
+    openPicker,
+    SUMMARY,
+} from './catalog-mock';
 import type { Handler } from './catalog-mock';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
-const search = (page: Page) =>
-    page.getByRole('combobox', { name: 'Catálogo de drivers' });
+const search = openPicker;
 
 test('buscar, escolher e preencher o driver do projeto (US1)', async ({
     page,
@@ -15,7 +20,7 @@ test('buscar, escolher e preencher o driver do projeto (US1)', async ({
     await mockCatalog(page);
     await page.goto('/');
 
-    await search(page).fill('tr 6');
+    await (await search(page)).fill('tr 6');
     const option = page.getByRole('option', { name: /Triton/ });
     await expect(option).toContainText('Triton TR 620 12" (4 Ω)');
     await expect(option).toContainText('Fs 76,9 Hz · Qts 0,72 · Vas 26,3 L');
@@ -28,7 +33,8 @@ test('buscar, escolher e preencher o driver do projeto (US1)', async ({
     await expect(page.getByRole('textbox', { name: /^Qts/ })).toHaveValue(
         '0,72',
     );
-    await expect(search(page)).toHaveValue('');
+    // Escolher fecha o popover.
+    await expect(page.getByRole('searchbox')).toHaveCount(0);
 
     // O driver já preenche os gráficos: nenhum gráfico pede mais Fs, Qts ou Vas.
     await page.getByRole('button', { name: /^Desfazer/ }).click();
@@ -42,7 +48,7 @@ test('duas abas: só o projeto ativo recebe o driver (US1)', async ({
     await page.goto('/');
     await page.keyboard.press('Alt+n');
 
-    await search(page).fill('tr 6');
+    await (await search(page)).fill('tr 6');
     await page.getByRole('option', { name: /Triton/ }).click();
     await expect(page.getByRole('textbox', { name: /^Fs/ })).toHaveValue(
         '76,9',
@@ -50,7 +56,7 @@ test('duas abas: só o projeto ativo recebe o driver (US1)', async ({
 
     await page
         .getByRole('navigation', { name: 'Projetos abertos' })
-        .getByRole('button')
+        .getByRole('button', { name: /^Projeto sem nome/ })
         .first()
         .click();
 
@@ -78,16 +84,18 @@ test('servidor com erro: mensagem, tentar de novo e a bancada segue editável (U
     await mockCatalog(page, handler);
     await page.goto('/');
 
-    await search(page).fill('tr 6');
+    await (await search(page)).fill('tr 6');
     await expect(page.getByText(message)).toBeVisible();
 
-    // Com o catálogo fora, o resto da bancada continua editável.
+    // Com o catálogo fora, o resto da bancada continua editável (o popover fecha com Esc).
+    await page.keyboard.press('Escape');
     const fs = page.getByRole('textbox', { name: /^Fs/ });
     await fs.fill('28');
     await fs.press('Tab');
     await expect(fs).toHaveValue('28,0');
 
     failing = false;
+    await openPicker(page);
     await page.getByRole('button', { name: 'Tentar de novo' }).click();
 
     await expect(page.getByRole('option', { name: /Triton/ })).toBeVisible();
@@ -100,7 +108,7 @@ test('busca sem resultado mostra o termo (US2)', async ({ page }) => {
     );
     await page.goto('/');
 
-    await search(page).fill('zzzz');
+    await (await search(page)).fill('zzzz');
 
     await expect(
         page.getByText('Nenhum driver encontrado para «zzzz»'),
@@ -134,9 +142,9 @@ test('respostas fora de ordem: só a última digitação aparece (US2)', async (
     });
     await page.goto('/');
 
-    await search(page).pressSequentially('tr');
+    await (await search(page)).pressSequentially('tr');
     await page.waitForTimeout(400);
-    await search(page).pressSequentially(' 12');
+    await (await search(page)).pressSequentially(' 12');
 
     await expect(page.getByRole('option', { name: /NOVO/ })).toBeVisible();
     await page.waitForTimeout(1500);
@@ -157,7 +165,7 @@ test('driver que saiu do catálogo avisa e não muda o projeto (US2)', async ({
     );
     await page.goto('/');
 
-    await search(page).fill('tr 6');
+    await (await search(page)).fill('tr 6');
     await page.getByRole('option', { name: /Triton/ }).click();
 
     await expect(
@@ -166,10 +174,18 @@ test('driver que saiu do catálogo avisa e não muda o projeto (US2)', async ({
     await expect(page.getByRole('textbox', { name: /^Fs/ })).toHaveValue('');
 });
 
-const ORIGIN = 'Origem: Triton TR 620 12" (4 Ω)';
+async function expectIdentity(page: Page, filled: boolean) {
+    const brand = page.getByRole('textbox', { name: /^Marca/ });
+    const model = page.getByRole('textbox', { name: /^Modelo/ });
+    const variant = page.getByRole('textbox', { name: /^Variação/ });
+
+    await expect(brand).toHaveValue(filled ? 'Triton' : '');
+    await expect(model).toHaveValue(filled ? 'TR 620 12"' : '');
+    await expect(variant).toHaveValue(filled ? '4 Ω' : '');
+}
 
 async function choose(page: Page) {
-    await search(page).fill('tr 6');
+    await (await search(page)).fill('tr 6');
     await page.getByRole('option', { name: /Triton/ }).click();
     await expect(page.getByRole('textbox', { name: /^Fs/ })).toHaveValue(
         '76,9',
@@ -182,7 +198,7 @@ test('a origem vai no arquivo exportado e volta ao reabrir (US4)', async ({
     await mockCatalog(page);
     await page.goto('/');
     await choose(page);
-    await expect(page.getByText(ORIGIN)).toBeVisible();
+    await expectIdentity(page, true);
 
     const downloading = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Exportar' }).click();
@@ -195,19 +211,19 @@ test('a origem vai no arquivo exportado e volta ao reabrir (US4)', async ({
     });
 
     await page.getByRole('button', { name: 'Novo' }).click();
-    await expect(page.getByText(ORIGIN)).toBeHidden();
+    await expectIdentity(page, false);
 
     const choosing = page.waitForEvent('filechooser');
     await page.getByRole('button', { name: 'Abrir' }).click();
     await (await choosing).setFiles(path);
 
-    await expect(page.getByText(ORIGIN)).toBeVisible();
+    await expectIdentity(page, true);
     await expect(page.getByRole('textbox', { name: /^Fs/ })).toHaveValue(
         '76,9',
     );
 });
 
-test('editar um parâmetro mantém a origem; esvaziar o driver a remove (US4)', async ({
+test('editar um parâmetro ou esvaziar o driver mantém a identificação (US4)', async ({
     page,
 }) => {
     await mockCatalog(page);
@@ -217,7 +233,7 @@ test('editar um parâmetro mantém a origem; esvaziar o driver a remove (US4)', 
     const qts = page.getByRole('textbox', { name: /^Qts/ });
     await qts.fill('0,5');
     await qts.press('Tab');
-    await expect(page.getByText(ORIGIN)).toBeVisible();
+    await expectIdentity(page, true);
 
     for (const name of [
         /^Fs/,
@@ -239,7 +255,7 @@ test('editar um parâmetro mantém a origem; esvaziar o driver a remove (US4)', 
         await field.press('Tab');
     }
 
-    await expect(page.getByText(ORIGIN)).toBeHidden();
+    await expectIdentity(page, true);
 });
 
 test('arquivo da feature 002, sem origem, abre normalmente (US4)', async ({
@@ -278,5 +294,5 @@ test('arquivo da feature 002, sem origem, abre normalmente (US4)', async ({
     await expect(page.getByRole('textbox', { name: /^Fs/ })).toHaveValue(
         '28,0',
     );
-    await expect(page.getByText(/^Origem:/)).toBeHidden();
+    await expectIdentity(page, false);
 });

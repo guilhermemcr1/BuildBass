@@ -1,9 +1,9 @@
-import { screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 import { useState } from 'react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vite-plus/test';
 import { renderWithProviders } from '@/test/render';
-import { Banner, Button, StatusIndicator, Tooltip } from './index';
+import { Banner, Button, StatusIndicator, Switch, Tooltip } from './index';
 import { SearchSelect } from './search-select';
 import { SelectField } from './select-field';
 
@@ -47,6 +47,99 @@ describe('Tooltip', () => {
         expect(await screen.findByRole('tooltip')).toHaveTextContent(
             'Frequência de ressonância',
         );
+    });
+});
+
+describe('Switch', () => {
+    function Probe() {
+        const [on, setOn] = useState(false);
+
+        return (
+            <Switch selected={on} onChange={setOn}>
+                Modo Pro
+            </Switch>
+        );
+    }
+
+    test('liga e desliga com clique e com Espaço, e expõe o estado', async () => {
+        renderWithProviders(<Probe />);
+        const toggle = screen.getByRole('switch', { name: 'Modo Pro' });
+
+        expect(toggle).not.toBeChecked();
+
+        await userEvent.click(toggle);
+        expect(toggle).toBeChecked();
+
+        await userEvent.keyboard(' ');
+        expect(toggle).not.toBeChecked();
+    });
+});
+
+describe('Tooltip com delay', () => {
+    test('espera o delay ao pairar, também ao passar de um gatilho para outro', async () => {
+        vi.useFakeTimers({ shouldAdvanceTime: true });
+
+        try {
+            const user = userEvent.setup({
+                advanceTimers: (ms) => vi.advanceTimersByTime(ms),
+            });
+
+            renderWithProviders(
+                <>
+                    <Tooltip content="Ajuda A" delay={1000}>
+                        <Button>A</Button>
+                    </Tooltip>
+                    <Tooltip content="Ajuda B" delay={1000}>
+                        <Button>B</Button>
+                    </Tooltip>
+                </>,
+            );
+
+            // O primeiro movimento só arma os ouvintes globais do React Aria.
+            await user.pointer({ target: document.body });
+            await user.pointer({ target: screen.getByRole('button', { name: 'A' }) });
+            await act(() => vi.advanceTimersByTimeAsync(900));
+            expect(screen.queryByRole('tooltip')).toBeNull();
+
+            await act(() => vi.advanceTimersByTimeAsync(200));
+            expect(screen.getByRole('tooltip')).toHaveTextContent('Ajuda A');
+
+            // O segundo gatilho logo em seguida: o "aquecimento" do React Aria não pode pular a espera.
+            await user.pointer({ target: screen.getByRole('button', { name: 'B' }) });
+            await act(() => vi.advanceTimersByTimeAsync(900));
+            expect(screen.queryByText('Ajuda B')).toBeNull();
+
+            await act(() => vi.advanceTimersByTimeAsync(200));
+            expect(screen.getByRole('tooltip')).toHaveTextContent('Ajuda B');
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    test('sair antes do delay cancela a abertura', async () => {
+        vi.useFakeTimers({ shouldAdvanceTime: true });
+
+        try {
+            const user = userEvent.setup({
+                advanceTimers: (ms) => vi.advanceTimersByTime(ms),
+            });
+
+            renderWithProviders(
+                <Tooltip content="Ajuda A" delay={1000}>
+                    <Button>A</Button>
+                </Tooltip>,
+            );
+
+            await user.pointer({ target: document.body });
+            await user.pointer({ target: screen.getByRole('button', { name: 'A' }) });
+            await act(() => vi.advanceTimersByTimeAsync(500));
+            await user.pointer({ target: document.body });
+            await act(() => vi.advanceTimersByTimeAsync(2000));
+
+            expect(screen.queryByRole('tooltip')).toBeNull();
+        } finally {
+            vi.useRealTimers();
+        }
     });
 });
 

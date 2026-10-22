@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vite-plus/test';
+import { CURRENT_VERSION } from './migrate';
 import {
     MAX_FILE_BYTES,
     exportFileName,
@@ -92,7 +93,7 @@ describe('arquivo de projeto', () => {
 
     test('versão mais nova', async () => {
         expect(
-            await parseProjectFile(file(envelope({}, { version: 5 }))),
+            await parseProjectFile(file(envelope({}, { version: 7 }))),
         ).toEqual({ ok: false, code: 'newerVersion' });
     });
 
@@ -443,9 +444,9 @@ describe('plano de corte no arquivo (versão 3)', () => {
         });
     });
 
-    test('versão 5 pede para atualizar o app', async () => {
+    test('versão 7 pede para atualizar o app', async () => {
         expect(
-            await parseProjectFile(file(envelope(PLAN, { version: 5 }))),
+            await parseProjectFile(file(envelope(PLAN, { version: 7 }))),
         ).toEqual({ ok: false, code: 'newerVersion' });
     });
 });
@@ -525,9 +526,9 @@ describe('bandpass de 6ª ordem e versão 4 (feature 007)', () => {
         }
     });
 
-    test('versão 5 é recusada pedindo para atualizar o app', async () => {
+    test('versão 7 é recusada pedindo para atualizar o app', async () => {
         expect(
-            await parseProjectFile(file(envelope(SIXTH, { version: 5 }))),
+            await parseProjectFile(file(envelope(SIXTH, { version: 7 }))),
         ).toEqual({ ok: false, code: 'newerVersion' });
     });
 
@@ -614,5 +615,174 @@ describe('bandpass de 6ª ordem e versão 4 (feature 007)', () => {
             ok: true,
             data: { fieldUnits: { fb_rear_hz: 'Hz' } },
         });
+    });
+});
+
+describe('cor do projeto e versão 5 (feature 008)', () => {
+    const versionOf = (text: string): number => JSON.parse(text).version;
+
+    test('a versão atual é 6', () => {
+        expect(CURRENT_VERSION).toBe(6);
+    });
+
+    test('com cor o arquivo é gravado como versão 5; sem cor, na menor versão', () => {
+        expect(versionOf(serializeProject(FULL, new Date(), 4))).toBe(5);
+        expect(versionOf(serializeProject(FULL))).toBe(1);
+        expect(
+            versionOf(
+                serializeProject({
+                    ...FULL,
+                    box: { ...FULL.box, type: 'bandpass6' },
+                }),
+            ),
+        ).toBe(4);
+    });
+
+    test('a cor vai na raiz do arquivo, fora do projeto', () => {
+        const parsed = JSON.parse(serializeProject(FULL, new Date(), 4));
+
+        expect(parsed.color).toBe(4);
+        expect(parsed.project.color).toBeUndefined();
+    });
+
+    test('ida e volta devolve a cor', async () => {
+        const result = await parseProjectFile(
+            file(serializeProject(FULL, new Date(), 6)),
+        );
+
+        expect(result).toEqual({ ok: true, data: FULL, color: 6 });
+    });
+
+    test('arquivos das versões 1 a 4 abrem sem cor (SC-011)', async () => {
+        for (const version of [1, 2, 3, 4]) {
+            const result = await parseProjectFile(
+                file(envelope(FULL, { version })),
+            );
+
+            expect(result).toEqual({ ok: true, data: FULL });
+            expect(result.ok && result.color).toBeFalsy();
+        }
+    });
+
+    test('cor fora de 1–6 ou não inteira recusa o arquivo com o caminho', async () => {
+        for (const color of [0, 7, 2.5, '3', null]) {
+            expect(
+                await parseProjectFile(
+                    file(envelope(FULL, { version: 5, color })),
+                ),
+            ).toEqual({ ok: false, code: 'invalidContent', path: 'color' });
+        }
+    });
+});
+
+describe('chapa do usuário no arquivo (feature 008)', () => {
+    const withSheet = (sheet: unknown) =>
+        ({ ...FULL, cutPlan: { sheet } }) as ProjectData;
+    const sheet = { w_m: 2.75, h_m: 1.85, kerf_m: 0.003, rotate: false };
+
+    test('com chapa o arquivo é gravado como versão 5, mesmo sem cor', () => {
+        expect(JSON.parse(serializeProject(withSheet(sheet))).version).toBe(5);
+    });
+
+    test('ida e volta devolve a chapa', async () => {
+        const result = await parseProjectFile(
+            file(serializeProject(withSheet(sheet))),
+        );
+
+        expect(result).toEqual({ ok: true, data: withSheet(sheet) });
+    });
+
+    test('chapa só com os dois lados também é aceita (perda de serra e rotação opcionais)', async () => {
+        const minimal = { w_m: 2.75, h_m: 1.85 };
+        const result = await parseProjectFile(
+            file(envelope(withSheet(minimal), { version: 5 })),
+        );
+
+        expect(result).toEqual({ ok: true, data: withSheet(minimal) });
+    });
+
+    test('chapa incompleta (rascunho) não vai para o arquivo', () => {
+        const text = serializeProject(withSheet({ w_m: 2.75 }));
+
+        expect(JSON.parse(text).project.cutPlan).toBeUndefined();
+        expect(JSON.parse(text).version).toBe(1);
+        expect(
+            JSON.parse(
+                serializeProject({
+                    ...FULL,
+                    cutPlan: { thickness_m: 0.015, sheet: { h_m: 1.85 } },
+                }),
+            ).project.cutPlan,
+        ).toEqual({ thickness_m: 0.015 });
+    });
+
+    test('faixas: fora de 0,1–5 m ou de 0–20 mm recusa o arquivo com o caminho', async () => {
+        for (const [bad, path] of [
+            [{ ...sheet, w_m: 5.1 }, 'project.cutPlan.sheet.w_m'],
+            [{ ...sheet, h_m: 0.09 }, 'project.cutPlan.sheet.h_m'],
+            [{ ...sheet, kerf_m: 0.021 }, 'project.cutPlan.sheet.kerf_m'],
+        ] as const) {
+            expect(
+                await parseProjectFile(
+                    file(envelope(withSheet(bad), { version: 5 })),
+                ),
+            ).toEqual({ ok: false, code: 'invalidContent', path });
+        }
+    });
+
+    test('rotate precisa ser booleano', async () => {
+        expect(
+            await parseProjectFile(
+                file(
+                    envelope(withSheet({ ...sheet, rotate: 'sim' }), {
+                        version: 5,
+                    }),
+                ),
+            ),
+        ).toEqual({
+            ok: false,
+            code: 'invalidContent',
+            path: 'project.cutPlan.sheet.rotate',
+        });
+    });
+
+    test('objeto sem largura ou altura recusa o arquivo com o caminho', async () => {
+        for (const [bad, path] of [
+            [{ h_m: 1.85 }, 'project.cutPlan.sheet.w_m'],
+            [{ w_m: 2.75 }, 'project.cutPlan.sheet.h_m'],
+        ] as const) {
+            expect(
+                await parseProjectFile(
+                    file(envelope(withSheet(bad), { version: 5 })),
+                ),
+            ).toEqual({ ok: false, code: 'invalidContent', path });
+        }
+    });
+});
+
+describe('medidas do alto-falante e versão 6', () => {
+    const withDims = (driverDims: unknown) =>
+        ({ ...FULL, driverDims }) as ProjectData;
+
+    test('formato e medidas fazem o arquivo ir como versão 6 e voltam iguais', async () => {
+        const data = withDims({
+            shape: 'rect',
+            piston: 'dome',
+            a_m: 0.308,
+            d_m: 0.2,
+            g_m: 0.16,
+        });
+        const text = serializeProject(data);
+
+        expect(JSON.parse(text).version).toBe(6);
+        expect(await parseProjectFile(file(text))).toEqual({ ok: true, data });
+    });
+
+    test('medida fora da faixa ou formato desconhecido torna o arquivo inválido', async () => {
+        for (const bad of [{ a_m: 50 }, { shape: 'oval' }, { g_m: -1 }]) {
+            expect(
+                await parseProjectFile(file(serializeProject(withDims(bad)))),
+            ).toMatchObject({ ok: false, code: 'invalidContent' });
+        }
     });
 });

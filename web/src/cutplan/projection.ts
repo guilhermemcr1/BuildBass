@@ -13,6 +13,24 @@ export type Polygon = {
     points: [number, number][];
     // Mais perto do observador = maior; os recortes ficam um pouco à frente da própria face.
     depth: number;
+    // Só nos recortes: de que peça da caixa é o furo.
+    part?: 'driver' | 'port';
+    // A face (ou o recorte dela) está virada para o observador; as de trás só aparecem na vista translúcida.
+    facing: boolean;
+    // Iluminação da face, de 0 (sombra) a 1 (de frente para a luz); quem desenha traduz em tom.
+    light: number;
+};
+
+// Cota de uma aresta da caixa (specs/008): linha afastada da aresta, com o ponto do texto no meio.
+export type DimensionLine = {
+    axis: 'width' | 'height' | 'depth';
+    // Medida externa, em metros.
+    value_m: number;
+    from: [number, number];
+    to: [number, number];
+    label: [number, number];
+    // A aresta medida, para as linhas de chamada que ligam a cota a ela.
+    edge: [[number, number], [number, number]];
 };
 
 export const DEFAULT_VIEW: View = { yaw_rad: -0.6, pitch_rad: 0.45, zoom: 1 };
@@ -33,6 +51,9 @@ const CIRCLE_POINTS = 24;
 const CUTOUT_LIFT_M = 1e-6;
 // Normal quase perpendicular ao observador: a face aparece de lado e não é desenhada.
 const EDGE_ON = 1e-9;
+// Luz vinda de cima, da esquerda e de frente, no referencial do observador (z para ele).
+const LIGHT: Vec = [-0.35, 0.75, 0.55];
+const LIGHT_NORM = Math.hypot(...LIGHT);
 
 // Eixos do mundo: x largura (esquerda → direita), y altura (baixo → cima), z profundidade (fundo
 // → frente). A frente fica em +z e olha para o observador com guinada e inclinação nulas. As
@@ -223,7 +244,15 @@ export function projectBox(
     const polygons: Polygon[] = [];
 
     for (const face of faces(plan)) {
-        const facing = rotate(face.normal, yaw, pitch)[2] > EDGE_ON;
+        const turned = rotate(face.normal, yaw, pitch);
+        const facing = turned[2] > EDGE_ON;
+        const light = Math.max(
+            0,
+            (turned[0] * LIGHT[0] +
+                turned[1] * LIGHT[1] +
+                turned[2] * LIGHT[2]) /
+                LIGHT_NORM,
+        );
 
         // Sem transparência só aparecem as faces externas viradas para o observador.
         if (!options.translucent && (face.inner || !facing)) {
@@ -245,6 +274,8 @@ export function projectBox(
             kind: 'face',
             points: corners.map(({ xy }) => xy),
             depth: centre.depth,
+            facing,
+            light,
         });
 
         const counters: Record<string, number> = {};
@@ -264,9 +295,105 @@ export function projectBox(
                 kind: 'cutout',
                 points: lifted.map(({ xy }) => xy),
                 depth: centre.depth + CUTOUT_LIFT_M,
+                part: cutout.kind,
+                facing,
+                light,
             });
         }
     }
 
     return polygons.sort((a, b) => a.depth - b.depth);
+}
+
+// Afastamento das cotas em relação às arestas, como fração do raio (meia diagonal da caixa).
+const DIMENSION_OFFSET = 0.08;
+
+// As três cotas (largura, altura, profundidade externas), cada uma na aresta que fica no contorno
+// da caixa na tela e afastada dela para fora, para nunca cair sobre uma face nem duplicar uma
+// linha do desenho. Mesmas coordenadas de `projectBox`; o texto formatado é de quem desenha.
+export function dimensionLines(plan: Plan, view: View): DimensionLine[] {
+    const { yaw_rad: yaw, pitch_rad: pitch, zoom } = view;
+    const { w_m, h_m, d_m } = plan.dimensions.external;
+    const size: Vec = [w_m, h_m, d_m];
+    const project = (point: Vec): [number, number] => {
+        const [x, y] = rotate(point, yaw, pitch);
+
+        return [x * zoom, y * zoom];
+    };
+    const offset = DIMENSION_OFFSET * (Math.hypot(w_m, h_m, d_m) / 2) * zoom;
+    const axes: [DimensionLine['axis'], number][] = [
+        ['width', 0],
+        ['height', 1],
+        ['depth', 2],
+    ];
+
+    return axes.map(([axis, index]) => {
+        const [a, b] = [0, 1, 2].filter((other) => other !== index);
+        let best:
+            | {
+                  score: number;
+                  edge: [[number, number], [number, number]];
+                  away: [number, number];
+              }
+            | undefined;
+
+        // Das quatro arestas paralelas, a mais para fora (na normal da própria aresta) é a do contorno.
+        for (const sa of [-1, 1]) {
+            for (const sb of [-1, 1]) {
+                const start: Vec = [0, 0, 0];
+
+                start[index] = -size[index] / 2;
+                start[a] = (sa * size[a]) / 2;
+                start[b] = (sb * size[b]) / 2;
+
+                const end: Vec = [...start];
+
+                end[index] = size[index] / 2;
+
+                const from = project(start);
+                const to = project(end);
+                const middle = [(from[0] + to[0]) / 2, (from[1] + to[1]) / 2];
+                const [dx, dy] = [to[0] - from[0], to[1] - from[1]];
+                const length = Math.hypot(dx, dy);
+                const far = Math.hypot(middle[0], middle[1]);
+                // Olhando ao longo do eixo a aresta vira um ponto: vale a direção a partir do centro.
+                const candidates: [number, number][] =
+                    length > 1e-12
+                        ? [
+                              [-dy / length, dx / length],
+                              [dy / length, -dx / length],
+                          ]
+                        : [
+                              far > 1e-12
+                                  ? [middle[0] / far, middle[1] / far]
+                                  : [0, 1],
+                          ];
+
+                for (const away of candidates) {
+                    const score = middle[0] * away[0] + middle[1] * away[1];
+
+                    if (best === undefined || score > best.score) {
+                        best = { score, edge: [from, to], away };
+                    }
+                }
+            }
+        }
+
+        const { edge, away } = best!;
+        const shift = (point: [number, number]): [number, number] => [
+            point[0] + away[0] * offset,
+            point[1] + away[1] * offset,
+        ];
+        const from = shift(edge[0]);
+        const to = shift(edge[1]);
+
+        return {
+            axis,
+            value_m: size[index],
+            from,
+            to,
+            label: [(from[0] + to[0]) / 2, (from[1] + to[1]) / 2],
+            edge,
+        };
+    });
 }

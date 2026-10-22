@@ -12,24 +12,35 @@ test('sem conexão mostra o aviso, desativa o servidor e preserva os dados', asy
     await fs.press('Tab');
 
     const banner = page.getByRole('status').filter({ hasText: 'Sem conexão.' });
-    const catalog = page.getByRole('combobox', { name: 'Catálogo de drivers' });
-    const submit = page.getByRole('button', { name: /Enviar driver/ });
+    const pick = page.getByRole('button', { name: 'Buscar driver' });
+    const catalog = page.getByRole('searchbox', { name: 'Buscar driver' });
 
+    await pick.click();
     await expect(catalog).toBeEnabled();
+    await page.keyboard.press('Escape');
 
     await context.setOffline(true);
 
     await expect(banner).toBeVisible({ timeout: 5000 });
-    await expect(catalog).toBeDisabled();
-    await expect(submit).toBeDisabled();
+    await pick.click();
+    // O campo segue ativo offline: "Meus alto-falantes" é local; só catálogo e recentes caem.
+    await expect(catalog).toBeEnabled();
     await expect(
         page.getByText('Indisponível sem conexão com o servidor.').first(),
     ).toBeVisible();
+    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: 'Mais ações do driver' }).click();
+    await expect(
+        page.getByRole('menuitem', { name: /Enviar driver/ }),
+    ).toHaveAttribute('aria-disabled', 'true');
+    await page.keyboard.press('Escape');
     await expect(fs).toHaveValue('28,5');
 
     await context.setOffline(false);
 
     await expect(banner).toBeHidden({ timeout: 5000 });
+    await pick.click();
     await expect(catalog).toBeEnabled();
+    await page.keyboard.press('Escape');
     await expect(fs).toHaveValue('28,5');
 });

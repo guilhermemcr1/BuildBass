@@ -21,6 +21,7 @@ function form(overrides: Partial<SubmissionForm> = {}): SubmissionForm {
         brand: 'Exemplo',
         model: 'EX-1',
         variant: '',
+        type: '',
         source: 'Ficha técnica',
         contact_email: '',
         numbers: { fs_hz: 40, qts: 0.4, vas_m3: 0.05 },
@@ -146,6 +147,20 @@ describe('toPayload', () => {
             locale: 'en',
             website: '',
         });
+    });
+
+    test('o tipo só vai no envio quando escolhido, e um tipo inválido não passa na validação', () => {
+        expect(toPayload(form(), { locale: 'pt-BR' })).not.toHaveProperty(
+            'type',
+        );
+        expect(
+            toPayload(form({ type: 'subwoofer' }), { locale: 'pt-BR' }),
+        ).toMatchObject({ type: 'subwoofer' });
+        expect(
+            validateSubmission(
+                form({ type: 'tweeter' as SubmissionForm['type'] }),
+            ).ok,
+        ).toBe(false);
     });
 
     test('inclui variante, e-mail e token quando existem', () => {

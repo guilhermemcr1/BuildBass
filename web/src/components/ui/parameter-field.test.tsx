@@ -67,6 +67,87 @@ describe('ParameterField', () => {
         },
     );
 
+    test.each([
+        ['pt-BR', '28.5', 28.5],
+        ['en', '28,5', 28.5],
+    ] as [Locale, string, number][])(
+        'em %s o separador do outro idioma, digitado, é decimal e não milhar (%s)',
+        async (locale, typed, expected) => {
+            const onChangeSi = vi.fn();
+            renderWithProviders(
+                <Harness
+                    parameter="fs_hz"
+                    initialUnit="Hz"
+                    onChangeSi={onChangeSi}
+                />,
+                locale,
+            );
+
+            await typeInto(screen.getByRole('textbox'), typed);
+
+            expect(onChangeSi).toHaveBeenLastCalledWith(expected);
+        },
+    );
+
+    test.each([
+        ['28.5', 28.5],
+        ['1.000', 1000],
+        ['1e3', 1000],
+        ['28 Hz', 28],
+    ] as [string, number][])(
+        'colar %j em pt-BR resulta em %d',
+        async (pasted, expected) => {
+            const onChangeSi = vi.fn();
+            renderWithProviders(
+                <Harness
+                    parameter="fs_hz"
+                    initialSi={40}
+                    initialUnit="Hz"
+                    onChangeSi={onChangeSi}
+                />,
+            );
+            const input = screen.getByRole('textbox');
+
+            await userEvent.clear(input);
+            await userEvent.paste(pasted);
+            await userEvent.tab();
+
+            expect(onChangeSi).toHaveBeenLastCalledWith(expected);
+        },
+    );
+
+    test('colar texto sem número não altera o campo', async () => {
+        const onChangeSi = vi.fn();
+        renderWithProviders(
+            <Harness
+                parameter="fs_hz"
+                initialSi={40}
+                initialUnit="Hz"
+                onChangeSi={onChangeSi}
+            />,
+        );
+        const input = screen.getByRole('textbox');
+
+        await userEvent.click(input);
+        await userEvent.paste('abc');
+        await userEvent.tab();
+
+        expect(input).toHaveValue('40,0');
+        expect(onChangeSi).not.toHaveBeenCalled();
+    });
+
+    test('a faixa fora do limite não deixa espaço sobrando quando a unidade é vazia', async () => {
+        renderWithProviders(
+            <Harness parameter="qts" initialSi={0.38} initialUnit="none" />,
+        );
+
+        await typeInto(screen.getByRole('textbox'), '50');
+
+        expect(
+            screen.getByText('Fora da faixa aceita (0,05 a 10,00).'),
+        ).toBeInTheDocument();
+    });
+
     test('passar pelo campo sem editar não troca o valor exato pelo arredondado', async () => {
         const onChangeSi = vi.fn();
         renderWithProviders(
@@ -156,5 +237,77 @@ describe('ParameterField', () => {
         expect(screen.getByRole('textbox')).toHaveAccessibleDescription(
             'Frequência em que o cone ressoa livre no ar, sem caixa.',
         );
+    });
+
+    test('focar o campo não faz a ajuda aparecer no fluxo (não expande o campo)', async () => {
+        const { container } = renderWithProviders(
+            <Harness parameter="fs_hz" initialUnit="Hz" />,
+        );
+        const description = container.querySelector('[slot="description"]');
+
+        expect(description).toHaveClass('sr-only');
+
+        await userEvent.click(screen.getByRole('textbox'));
+
+        expect(screen.getByRole('textbox')).toHaveFocus();
+        expect(container.querySelector('[slot="description"]')).toHaveClass(
+            'sr-only',
+        );
+        expect(container.querySelector('[slot="description"]')?.className)
+            .not.toMatch(/not-sr-only/);
+    });
+
+    test('a explicação aparece como tooltip ao focar o campo numérico', async () => {
+        renderWithProviders(<Harness parameter="fs_hz" initialUnit="Hz" />);
+
+        await userEvent.tab();
+
+        expect(screen.getByRole('textbox')).toHaveFocus();
+        expect(await screen.findByRole('tooltip')).toHaveTextContent(
+            'Frequência em que o cone ressoa livre no ar, sem caixa.',
+        );
+    });
+
+    test('a explicação aparece no tooltip do símbolo ao pairar o mouse', async () => {
+        renderWithProviders(<Harness parameter="fs_hz" initialUnit="Hz" />);
+        const user = userEvent.setup();
+
+        await user.pointer({ target: document.body });
+        await user.pointer({ target: screen.getByText('Fs') });
+
+        expect(await screen.findByRole('tooltip')).toHaveTextContent(
+            'Frequência em que o cone ressoa livre no ar, sem caixa.',
+        );
+    });
+
+    test('o status usa a versão compacta (ícone e texto curto)', () => {
+        renderWithProviders(
+            <ParameterField
+                parameter="fs_hz"
+                valueSi={28}
+                unit="Hz"
+                onChangeSi={() => undefined}
+                status="warn"
+            />,
+        );
+
+        expect(
+            screen.getByText('Atenção', { selector: ':not(.sr-only)' }),
+        ).toBeVisible();
+    });
+
+    test('sem verificação não ocupa linha: só OK, atenção e erro aparecem', () => {
+        renderWithProviders(
+            <ParameterField
+                parameter="fs_hz"
+                valueSi={28}
+                unit="Hz"
+                onChangeSi={() => undefined}
+                status="unchecked"
+            />,
+        );
+
+        expect(screen.queryByText('Sem verif.')).toBeNull();
+        expect(screen.queryByText('Sem verificação')).toBeNull();
     });
 });

@@ -122,7 +122,7 @@ describe('useDriverSearch', () => {
         );
 
         await act(() => vi.advanceTimersByTimeAsync(300));
-        const firstSignal = search.mock.calls[0][1];
+        const firstSignal = search.mock.calls[0][2];
 
         rerender({ term: 'tr 1' });
         expect(firstSignal?.aborted).toBe(true);
@@ -180,6 +180,53 @@ describe('useDriverSearch', () => {
         expect(result.current.items).toHaveLength(1);
 
         rerender({ term: '' });
+
+        expect(result.current.status).toBe('idle');
+        expect(result.current.items).toEqual([]);
+    });
+    test('só com filtro busca sem texto e manda os filtros ao cliente', async () => {
+        search.mockResolvedValue({ ok: true, data: response([1]) });
+        const { result } = renderHook(() =>
+            useDriverSearch('', { filters: { brand: 'Triton' } }),
+        );
+
+        await act(() => vi.advanceTimersByTimeAsync(300));
+
+        expect(search).toHaveBeenCalledTimes(1);
+        expect(search.mock.calls[0][0]).toBe('');
+        expect(search.mock.calls[0][1]).toEqual({ brand: 'Triton' });
+        expect(result.current.status).toBe('ready');
+    });
+
+    test('filtros com a mesma forma não refazem a busca a cada render', async () => {
+        search.mockResolvedValue({ ok: true, data: response([1]) });
+        const { rerender } = renderHook(() =>
+            useDriverSearch('tr', { filters: { brand: 'Triton' } }),
+        );
+
+        await act(() => vi.advanceTimersByTimeAsync(300));
+        rerender();
+        await act(() => vi.advanceTimersByTimeAsync(300));
+
+        expect(search).toHaveBeenCalledTimes(1);
+    });
+
+    test('trocar o filtro busca de novo, e filtro vazio sem texto volta a idle', async () => {
+        search.mockResolvedValue({ ok: true, data: response([1]) });
+        const { result, rerender } = renderHook(
+            ({ brand }: { brand: string | undefined }) =>
+                useDriverSearch('', { filters: { brand } }),
+            { initialProps: { brand: 'Triton' as string | undefined } },
+        );
+
+        await act(() => vi.advanceTimersByTimeAsync(300));
+        rerender({ brand: 'Outra' });
+        await act(() => vi.advanceTimersByTimeAsync(300));
+
+        expect(search).toHaveBeenCalledTimes(2);
+        expect(search.mock.calls[1][1]).toEqual({ brand: 'Outra' });
+
+        rerender({ brand: undefined });
 
         expect(result.current.status).toBe('idle');
         expect(result.current.items).toEqual([]);

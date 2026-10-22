@@ -43,8 +43,8 @@
     "signal": {
         "title": "Signal",
         "mode": "Signal in",
-        "power": "Power (W)",
-        "voltage": "Voltage (V)",
+        "power": "Power",
+        "voltage": "Voltage",
         "equivalent": "≈ {{value}} into the total Re ({{re}})",
         "radiation": "Radiation",
         "half": "Half space",
@@ -70,9 +70,16 @@
         "legend": "Projects on the chart",
         "nonePlotted": "No project is shown on the chart. Use the eye on the project tab.",
         "seriesFront": "front",
-        "seriesRear": "rear"
+        "seriesRear": "rear",
+        "showField_one": "Show field",
+        "showField_other": "Show fields",
+        "peak": "Peak",
+        "rangeLabel": "Frequency range",
+        "rangeUpTo": "Up to {{value}}",
+        "zoomReset": "Reset zoom"
     },
     "results": {
+        "compared": "{{count}} projects plotted",
         "f3": "F3",
         "fb": "Fb",
         "portLength": "Port length",
@@ -110,7 +117,8 @@
         "applyFailed": "Could not copy this driver. The project was not changed.",
         "notFound": "This driver is no longer in the catalog.",
         "originLabel": "Source",
-        "resultSupport": "Fs {{fs}} · Qts {{qts}} · Vas {{vas}}"
+        "resultSupport": "Fs {{fs}} · Qts {{qts}} · Vas {{vas}}",
+        "resultDiameter": "Ø {{diameter}}"
     },
     "offline": {
         "title": "Offline.",
@@ -130,5 +138,154 @@
     "chambers": {
         "rear": "Rear chamber (ported)",
         "front": "Front chamber (ported)"
+    },
+    "picker": {
+        "open": "Find driver",
+        "label": "Find driver",
+        "placeholder": "Brand or model",
+        "mine": "My speakers",
+        "recent": "Recent",
+        "catalog": "Catalog",
+        "hint": "Type at least 2 letters of the brand or model.",
+        "offline": "Offline: recent and catalog are unavailable.",
+        "notFoundHelp": "Can't find it?",
+        "submit": "Submit driver",
+        "filters": "Filters",
+        "brand": "Brand",
+        "brandAny": "All brands",
+        "diameter": "Diameter",
+        "diameterAny": "Any",
+        "clearFilters": "Clear filters",
+        "emptyFiltered": "No drivers match these filters.",
+        "hintFilters": "Type at least 2 letters or pick a brand or a diameter."
+    },
+    "boxDialog": {
+        "open3d": "View box in 3D",
+        "openDialog": "Expand box",
+        "title": "Box",
+        "close": "Close",
+        "speaker": "Speaker on the box",
+        "thumbnailEmpty": "Fill in the project to see the box in 3D",
+        "missing": "To see the box in 3D, provide: {{missing}}.",
+        "invalid": "Values out of range: {{invalid}}."
+    },
+    "saved": {
+        "saveButton": "Save this speaker",
+        "manageButton": "My speakers",
+        "saveTitle": "Save speaker",
+        "editTitle": "Edit speaker",
+        "manageTitle": "My speakers",
+        "originSaved": "saved",
+        "fields": {
+            "brand": "Brand",
+            "model": "Model",
+            "variant": "Variant (optional)",
+            "diameter": "Nominal diameter",
+            "cutout": "Cutout diameter",
+            "depth": "Depth"
+        },
+        "physical": "Physical sizes (optional)",
+        "params_one": "{{count}} T/S parameter from the project will be saved with it.",
+        "params_other": "{{count}} T/S parameters from the project will be saved with it.",
+        "errors": {
+            "required": "Required field.",
+            "tooLong": "At most {{max}} characters.",
+            "range": "Out of range ({{min}} – {{max}}).",
+            "full": "The list reached {{max}} speakers. Delete one to save another.",
+            "duplicateOther": "Another speaker already has this brand, model and variant."
+        },
+        "actions": {
+            "save": "Save",
+            "cancel": "Cancel",
+            "replace": "Replace",
+            "close": "Close"
+        },
+        "duplicate": {
+            "title": "A speaker with this name already exists",
+            "body": "“{{name}}” is already in your list. Replace it with the current data?"
+        },
+        "list": {
+            "search": "Search my speakers",
+            "empty": "You haven't saved any speaker yet.",
+            "noMatch": "No results for “{{term}}”.",
+            "use": "Use {{name}} in the project",
+            "edit": "Edit {{name}}",
+            "delete": "Delete {{name}}",
+            "sizeDiameter": "Ø {{value}}",
+            "sizeCutout": "cutout {{value}}",
+            "sizeDepth": "depth {{value}}"
+        },
+        "deleteConfirm": {
+            "title": "Delete speaker?",
+            "body": "“{{name}}” leaves your list in this browser. Projects already using it don't change.",
+            "confirm": "Delete",
+            "cancel": "Cancel"
+        },
+        "file": {
+            "export": "Export",
+            "import": "Import",
+            "errors": {
+                "fileTooLarge": "The file is over 512 KB and doesn't look like a BuildBass list.",
+                "invalidJson": "The file is not valid JSON.",
+                "notBuildbass": "The file is not a BuildBass speaker list.",
+                "newerVersion": "The list was saved by a newer BuildBass version. Update the app to import it.",
+                "tooMany": "The file has more than {{max}} speakers.",
+                "invalidContent": "The file has an invalid value at “{{path}}”.",
+                "readFailed": "Could not read the file."
+            },
+            "duplicates_one": "{{count}} speaker in the file is already in your list.",
+            "duplicates_other": "{{count}} speakers in the file are already in your list.",
+            "replace": "Replace",
+            "keep": "Keep current ones",
+            "result": "Import finished: {{added}} added, {{replaced}} replaced, {{ignored}} ignored.",
+            "tooManyTotal": "The import would leave the list with {{total}} speakers (maximum {{max}}). Nothing was imported."
+        },
+        "storageOff": "This browser doesn't allow storing data: the list is lost when the page closes. Export it so you don't lose it.",
+        "localOnly": "The list stays only in this browser. Export a file to keep a backup or move it to another device."
+    },
+    "driverMenu": "More driver actions",
+    "boxGroups": {
+        "volume": "Volume",
+        "tuning": "Volume and tuning",
+        "losses": "Losses"
+    },
+    "dims": {
+        "title": "Loudspeaker dimensions",
+        "shape": {
+            "label": "Shape",
+            "round": "Round",
+            "square": "Square",
+            "rect": "Rectangular"
+        },
+        "piston": {
+            "label": "Piston type",
+            "cone": "Cone",
+            "dome": "Dome",
+            "flat": "Flat"
+        },
+        "drawing": "Cross-section sketch of the loudspeaker with sizes A to G",
+        "hint": "Letters follow the sketch. The cutout (C) and the motor volume (M-Vd) are the same fields as in the cut plan and the simulation.",
+        "front": "front",
+        "back": "back"
+    },
+    "identity": {
+        "title": "Identification",
+        "brand": "Brand",
+        "model": "Model",
+        "variant": "Variant",
+        "type": "Type",
+        "typeNone": "Not specified",
+        "brandPlaceholder": "E.g. Triton",
+        "modelPlaceholder": "E.g. TR 620 12\"",
+        "variantPlaceholder": "E.g. 4 Ω",
+        "applied": "Driver applied: {{name}}",
+        "fromMine": "From my speakers"
+    },
+    "driverType": {
+        "subwoofer": "Subwoofer",
+        "woofer": "Woofer",
+        "midbass": "Midbass",
+        "midrange": "Midrange",
+        "fullrange": "Full-range"
     }
 }

@@ -1,4 +1,4 @@
-import { ChevronDown } from 'lucide-react';
+import { Check, ChevronDown } from 'lucide-react';
 import type { Key } from 'react';
 import {
     Button,
@@ -22,6 +22,8 @@ type SelectFieldProps<T extends string> = {
     selected: T;
     onChange: (id: T) => void;
     disabled?: boolean;
+    // O título do grupo já diz o que é: o rótulo fica só para o leitor de tela.
+    hideLabel?: boolean;
     className?: string;
 };
 
@@ -32,6 +34,7 @@ export function SelectField<T extends string>({
     selected,
     onChange,
     disabled = false,
+    hideLabel = false,
     className,
 }: SelectFieldProps<T>) {
     return (
@@ -45,24 +48,41 @@ export function SelectField<T extends string>({
             isDisabled={disabled}
             className={cn('group flex flex-col gap-1', className)}
         >
-            <Label className="text-xs font-semibold text-muted">{label}</Label>
-            <Button className="flex h-[34px] cursor-default items-center justify-between gap-2 rounded-md border border-border bg-raised px-2.5 text-sm text-foreground outline-none data-[disabled]:opacity-60 data-[focus-visible]:outline-2 data-[focus-visible]:outline-solid data-[focus-visible]:outline-accent data-[pressed]:border-accent">
+            <Label
+                className={cn(
+                    'text-xs font-semibold text-muted',
+                    hideLabel && 'sr-only',
+                )}
+            >
+                {label}
+            </Label>
+            <Button className="flex h-8 cursor-default items-center justify-between gap-2 rounded-md border border-border bg-raised px-2.5 text-sm motion-safe:transition-colors text-foreground outline-none data-[disabled]:opacity-60 data-[focus-visible]:outline-2 data-[focus-visible]:outline-solid data-[focus-visible]:outline-accent data-[pressed]:border-accent">
                 <SelectValue className="truncate" />
                 <ChevronDown
                     aria-hidden="true"
-                    className="size-4 shrink-0 text-muted"
+                    className="size-4 shrink-0 text-muted motion-safe:transition-transform group-data-[open]:rotate-180"
                 />
             </Button>
-            <Popover className="w-(--trigger-width) rounded-md border border-border bg-raised p-1 shadow-lg">
+            <Popover className="pop w-(--trigger-width) rounded-md border border-border bg-raised p-1 shadow-lg">
                 <ListBox className="max-h-64 overflow-auto outline-none">
                     {options.map((option) => (
                         <ListBoxItem
                             key={option.id}
                             id={option.id}
                             textValue={option.label}
-                            className="cursor-default rounded-sm px-2.5 py-1.5 text-sm outline-none data-[focused]:bg-surface data-[selected]:font-semibold"
+                            className="flex cursor-default items-center justify-between gap-2 rounded-sm px-2.5 py-1.5 text-sm outline-none motion-safe:transition-colors data-[focused]:bg-surface data-[selected]:font-semibold data-[selected]:text-accent-soft"
                         >
-                            {option.label}
+                            {({ isSelected }) => (
+                                <>
+                                    {option.label}
+                                    {isSelected && (
+                                        <Check
+                                            aria-hidden="true"
+                                            className="size-3.5 shrink-0"
+                                        />
+                                    )}
+                                </>
+                            )}
                         </ListBoxItem>
                     ))}
                 </ListBox>

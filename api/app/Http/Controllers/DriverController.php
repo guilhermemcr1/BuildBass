@@ -7,6 +7,7 @@ use App\Http\Requests\ShowDriverRequest;
 use App\Http\Resources\DriverResource;
 use App\Http\Resources\DriverSummaryResource;
 use App\Services\DriverCatalogService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class DriverController extends Controller
@@ -15,7 +16,11 @@ class DriverController extends Controller
 
     public function index(SearchDriversRequest $request): AnonymousResourceCollection
     {
-        $result = $this->catalog->search((string) $request->validated('q'));
+        $validated = $request->validated();
+        $result = $this->catalog->search(
+            isset($validated['q']) ? (string) $validated['q'] : null,
+            array_intersect_key($validated, array_flip(SearchDriversRequest::FILTERS)),
+        );
 
         return DriverSummaryResource::collection($result['drivers'])->additional([
             'meta' => [
@@ -23,6 +28,11 @@ class DriverController extends Controller
                 'has_more' => $result['hasMore'],
             ],
         ]);
+    }
+
+    public function brands(): JsonResponse
+    {
+        return response()->json(['data' => $this->catalog->brands()]);
     }
 
     public function show(ShowDriverRequest $request): DriverResource

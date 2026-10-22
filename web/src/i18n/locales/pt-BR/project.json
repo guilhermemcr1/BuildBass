@@ -5,7 +5,10 @@
         "plot": "Mostrar {{name}} no gráfico",
         "close": "Fechar {{name}}",
         "rename": "Renomear {{name}}",
-        "unsaved": "alterações não exportadas"
+        "unsaved": "alterações não exportadas",
+        "color": "Cor do projeto",
+        "colorOption": "Cor {{n}}",
+        "colorOf": "Cor de {{name}}"
     },
     "dialogs": {
         "close": {
@@ -38,5 +41,10 @@
     },
     "storage": {
         "unavailable": "O navegador não permite salvar dados: os projetos abertos não serão lembrados ao recarregar. Exporte para não perder o trabalho."
+    },
+    "name": {
+        "label": "Nome do projeto",
+        "save": "Salvar nome",
+        "cancel": "Cancelar edição do nome"
     }
 }

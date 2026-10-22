@@ -5,11 +5,17 @@
         "ok": "Consistente",
         "warn": "Atenção",
         "error": "Erro",
-        "unchecked": "Sem verificação"
+        "unchecked": "Sem verificação",
+        "short": {
+            "ok": "OK",
+            "warn": "Atenção",
+            "error": "Erro",
+            "unchecked": "Sem verif."
+        }
     },
     "validation": {
         "invalidNumber": "Digite um número válido.",
-        "outOfRange": "Fora da faixa aceita ({{min}} a {{max}} {{unit}})."
+        "outOfRange": "Fora da faixa aceita ({{min}} a {{max}}{{unit}})."
     },
     "units": {
         "system": "Sistema de unidades",
@@ -19,6 +25,7 @@
         "changeFrom": "{{unit}} — trocar unidade de {{parameter}}"
     },
     "theme": {
+        "current": "Tema: {{name}}",
         "label": "Tema",
         "light": "Claro",
         "dark": "Escuro",
@@ -29,6 +36,9 @@
         "current": "{{code}} — Idioma",
         "pt-BR": "Português (Brasil)",
         "en": "English"
+    },
+    "dialog": {
+        "close": "Fechar janela"
     },
     "preferences": "Preferências",
     "comingSoon": {
@@ -72,6 +82,28 @@
         "stateUnchecked": "não verificável",
         "toggle": "Mostrar no gráfico",
         "inlineName": "Nome (duplo clique para editar)",
-        "inlineValue": "Projeto de exemplo"
+        "inlineValue": "Projeto de exemplo",
+        "refinement": "Refinamento da bancada",
+        "helpTip": "Ajuda em tooltip",
+        "helpTipBody": "Passe o mouse ou foque o símbolo; Esc fecha.",
+        "statusCompact": "Status compacto",
+        "colors": "Cor do projeto",
+        "flags": "Idioma com bandeira",
+        "showMoreBody": "Campo avançado de exemplo, dentro de “Mostrar mais”."
+    },
+    "help": {
+        "of": "Ajuda de {{parameter}}"
+    },
+    "mode": {
+        "label": "Modo",
+        "normal": "Normal",
+        "pro": "Pro",
+        "proSwitch": "Modo Pro"
+    },
+    "showMore": {
+        "more": "Mostrar mais",
+        "less": "Mostrar menos",
+        "filled_one": "({{count}} preenchido)",
+        "filled_other": "({{count}} preenchidos)"
     }
 }

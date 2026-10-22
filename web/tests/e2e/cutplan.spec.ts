@@ -30,14 +30,33 @@ async function referenceDriver(page: Page) {
     await fill(page, /^Sd/, '491');
 }
 
+// O recorte (Ød) também aparece nas dimensões do alto-falante: aqui se edita o do plano.
+async function fillPlan(page: Page, name: RegExp, value: string) {
+    const field = page
+        .locator('[data-region="plan"]')
+        .getByRole('textbox', { name });
+    await field.fill(value);
+    await field.press('Tab');
+}
+
 // A folha de impressão também está na página (oculta na tela): os textos se procuram no painel.
 function planRegion(page: Page) {
     return page.locator('[data-region="plan"]');
 }
 
 async function openPlan(page: Page) {
-    await page.getByRole('radio', { name: 'Plano de corte' }).click();
-    await expect(page.locator('[data-region="plan"]')).toBeVisible();
+    const toggle = page.getByRole('button', {
+        name: 'Plano de corte',
+        exact: true,
+    });
+    // Aberto uma vez, o plano segue aberto ao trocar de projeto.
+    if ((await toggle.getAttribute('aria-expanded')) !== 'true') {
+        await toggle.click();
+    }
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(
+        page.getByRole('textbox', { name: /Espessura/ }),
+    ).toBeVisible();
 }
 
 // Caixa selada de 60 L do quickstart (specs/005, §1): proporção áurea, painel de 18 mm.
@@ -61,7 +80,8 @@ test('plano da selada: dimensões, tabela, espessura, proporção e volume em fa
     await expect(table.getByRole('row', { name: /Lateral/ })).toContainText(
         '2',
     );
-    await expect(page.locator('[data-region="charts"]')).toHaveCount(0);
+    // O plano fica abaixo dos gráficos, que continuam na tela.
+    await expect(page.locator('[data-region="charts"]')).toBeVisible();
 
     // Espessura maior: o interior se mantém e o exterior cresce.
     await fill(page, /Espessura/, '25');
@@ -69,7 +89,7 @@ test('plano da selada: dimensões, tabela, espessura, proporção e volume em fa
     await expect(tile(page, 'Externas · Largura')).toContainText('441,5');
 
     // Proporção: cúbica deixa os três lados internos iguais.
-    await page.getByRole('button', { name: /Proporção/ }).click();
+    await page.getByRole('button', { name: /^(?!Ajuda).*Proporção/ }).click();
     await page.getByRole('option', { name: 'Cúbica' }).click();
     await expect(tile(page, 'Internas · Largura')).toContainText('391,5');
     await expect(tile(page, 'Internas · Altura')).toContainText('391,5');
@@ -86,10 +106,12 @@ test('plano da selada: dimensões, tabela, espessura, proporção e volume em fa
     ).toBeVisible();
     await expect(page.getByRole('table')).toHaveCount(0);
 
-    // Voltar para os gráficos.
-    await page.getByRole('radio', { name: 'Gráficos' }).click();
+    // Recolher o plano: os gráficos continuam na tela e o conteúdo do plano some.
+    await page
+        .getByRole('button', { name: 'Plano de corte', exact: true })
+        .click();
     await expect(page.locator('[data-region="charts"]')).toBeVisible();
-    await expect(page.locator('[data-region="plan"]')).toHaveCount(0);
+    await expect(page.getByRole('textbox', { name: /Espessura/ })).toBeHidden();
 });
 
 test('plano da dutada: recorte do driver aparece na frente quando o diâmetro é informado', async ({
@@ -106,7 +128,7 @@ test('plano da dutada: recorte do driver aparece na frente quando o diâmetro é
     await expect(front).toContainText('diâmetro a informar');
     await expect(front).toContainText('Duto');
 
-    await fill(page, /^Ød/, '285');
+    await fillPlan(page, /^Ød/, '285');
     await expect(front).toContainText('Driver');
     await expect(front).not.toContainText('diâmetro a informar');
 });
@@ -135,11 +157,11 @@ test('conferência: o líquido do plano é o da simulação e os avisos citam a 
     ).toBeVisible();
 
     // Recorte grande demais: erro nomeando a peça, com texto.
-    await fill(page, /^Ød/, '700');
+    await fillPlan(page, /^Ød/, '700');
     const warnings = page.getByRole('list', { name: 'Avisos do plano' });
     await expect(warnings).toContainText(/não cabe no lado menor de frente/);
 
-    await fill(page, /^Ød/, '285');
+    await fillPlan(page, /^Ød/, '285');
     await expect(warnings).not.toContainText(/não cabe no lado menor/);
     await expect(planRegion(page).getByText(/Igual à simulação/)).toBeVisible();
 });
@@ -179,7 +201,7 @@ test('plano da bandpass: sete peças, divisória, câmaras e conferência por c�
     await fill(page, /^Fb/, '45');
     await fill(page, /Diâmetro do duto/, '100');
     await openPlan(page);
-    await fill(page, /^Ød/, '200');
+    await fillPlan(page, /^Ød/, '200');
 
     const parts = page.getByRole('table', { name: /Lista de corte/ });
     await expect(parts.locator('tbody tr')).toHaveCount(6);
@@ -245,7 +267,7 @@ test('plano da bandpass de 6ª ordem: recortes dos dois dutos e conferência por
     await inside('Câmara frontal (dutada)', /^Fb(?!r)/, '45');
     await inside('Câmara frontal (dutada)', /Diâmetro/, '100');
     await openPlan(page);
-    await fill(page, /^Ød/, '200');
+    await fillPlan(page, /^Ød/, '200');
 
     const parts = page.getByRole('table', { name: /Lista de corte/ });
     await expect(parts.locator('tbody tr')).toHaveCount(6);
@@ -280,7 +302,7 @@ test('desenhos 2D e vista 3D: um desenho por peça, girar por teclado e por bot�
     await fill(page, /^Fb/, '45');
     await fill(page, /Diâmetro do duto/, '100');
     await openPlan(page);
-    await fill(page, /^Ød/, '200');
+    await fillPlan(page, /^Ød/, '200');
 
     // Desenhos 2D: um por linha da tabela, e a lista em texto continua inteira.
     await expect(
@@ -295,9 +317,9 @@ test('desenhos 2D e vista 3D: um desenho por peça, girar por teclado e por bot�
         page.getByRole('table', { name: /Lista de corte/ }).locator('tbody tr'),
     ).toHaveCount(6);
 
-    // Vista 3D: carrega ao abrir a aba e gira.
-    await page.getByRole('tab', { name: 'Vista 3D' }).click();
-    const box = page.locator('[data-region="plan"] svg[data-yaw]');
+    // Vista 3D: carrega ao abrir o modal da caixa e gira.
+    await page.getByRole('button', { name: 'Ampliar caixa' }).click();
+    const box = page.getByRole('dialog').locator('svg[data-yaw]');
     await expect(box).toBeVisible();
     await expect(box).toHaveAccessibleName(/bandpass.*de largura/);
 
@@ -318,7 +340,7 @@ test('desenhos 2D e vista 3D: um desenho por peça, girar por teclado e por bot�
 
     // Por dentro: a divisória aparece.
     await expect(box.locator('[data-id="divider"]')).toHaveCount(0);
-    await page.getByRole('button', { name: 'Ver por dentro' }).click();
+    await page.getByText('Ver por dentro').click();
     await expect(box.locator('[data-id="divider"]')).toHaveCount(1);
 });
 
@@ -344,7 +366,7 @@ test('exportar CSV: ; e vírgula decimal em pt-BR, vírgula e ponto em en (US5)'
     await page.getByRole('radio', { name: 'Selada' }).click();
     await fill(page, /^Vb/, '60');
     await openPlan(page);
-    await fill(page, /^Ød/, '285');
+    await fillPlan(page, /^Ød/, '285');
 
     const pt = await downloadCsv(page, 'Exportar CSV');
     const ptText = pt.bytes.toString('utf8');
@@ -379,6 +401,12 @@ test('imprimir: só a folha do plano fica visível (US5)', async ({ page }) => {
     await page.getByRole('radio', { name: 'Selada' }).click();
     await fill(page, /^Vb/, '60');
     await openPlan(page);
+    // A folha só entra na página ao imprimir; o teste troca `print` por um no-op para não abrir o
+    // diálogo do navegador e olha a página como o papel a veria.
+    await page.evaluate(() => {
+        window.print = () => undefined;
+    });
+    await page.getByRole('button', { name: 'Imprimir' }).click();
     await page.emulateMedia({ media: 'print' });
 
     const sheet = page.locator('[data-print-sheet]');
@@ -388,7 +416,7 @@ test('imprimir: só a folha do plano fica visível (US5)', async ({ page }) => {
     await expect(sheet).toContainText('Convenção de montagem');
     await expect(page.locator('[data-region="box"]')).toBeHidden();
     await expect(page.locator('[data-region="plan"]')).toBeHidden();
-    await expect(page.getByRole('radio', { name: 'Gráficos' })).toBeHidden();
+    await expect(page.getByRole('button', { name: 'Novo' })).toBeHidden();
 
     await page.emulateMedia({ media: 'screen' });
     await expect(sheet).toBeHidden();
@@ -402,20 +430,26 @@ test('só pelo teclado: seletor de visão, campos, proporção, botões, abas e 
     await page.getByRole('radio', { name: 'Selada' }).click();
     await fill(page, /^Vb/, '60');
 
-    // O seletor de visão é alcançável e se opera por teclado.
-    await page.getByRole('radio', { name: 'Gráficos' }).focus();
+    // O título do plano abre e fecha a seção por teclado.
+    await page
+        .getByRole('button', { name: 'Plano de corte', exact: true })
+        .focus();
     await page.keyboard.press('Space');
-    await page.getByRole('radio', { name: 'Plano de corte' }).focus();
-    await page.keyboard.press('Space');
-    await expect(page.locator('[data-region="plan"]')).toBeVisible();
+    await expect(
+        page.getByRole('textbox', { name: /Espessura/ }),
+    ).toBeVisible();
 
     // Cada campo da configuração tem nome acessível.
     for (const name of [/Espessura/, /Volume dos reforços/, /^Ød/]) {
-        await expect(page.getByRole('textbox', { name })).toBeVisible();
+        await expect(
+            planRegion(page).getByRole('textbox', { name }),
+        ).toBeVisible();
     }
 
     // Proporção: Enter abre, setas escolhem, Enter confirma.
-    const proportion = page.getByRole('button', { name: /Proporção/ });
+    const proportion = page.getByRole('button', {
+        name: /^(?!Ajuda).*Proporção/,
+    });
     await proportion.focus();
     await page.keyboard.press('Enter');
     await expect(page.getByRole('listbox')).toBeVisible();
@@ -431,15 +465,9 @@ test('só pelo teclado: seletor de visão, campos, proporção, botões, abas e 
         await expect(button).toBeFocused();
     }
 
-    // Abas por setas e a vista 3D gira com as setas.
-    const drawings = page.getByRole('tab', { name: 'Desenhos 2D' });
-    await drawings.focus();
-    await page.keyboard.press('ArrowRight');
-    await expect(page.getByRole('tab', { name: 'Vista 3D' })).toHaveAttribute(
-        'aria-selected',
-        'true',
-    );
-    const box = page.locator('[data-region="plan"] svg[data-yaw]');
+    // A vista 3D (no modal da caixa) gira com as setas.
+    await page.getByRole('button', { name: 'Ampliar caixa' }).click();
+    const box = page.getByRole('dialog').locator('svg[data-yaw]');
     await box.focus();
     const before = Number(await box.getAttribute('data-yaw'));
     await page.keyboard.press('ArrowRight');
@@ -455,4 +483,89 @@ test('só pelo teclado: seletor de visão, campos, proporção, botões, abas e 
             () => document.activeElement?.closest('svg[data-yaw]') === null,
         ),
     ).toBe(true);
+});
+
+// Chapa do usuário e corte total (feature 008, US5).
+test('chapa 2,75 × 1,85 m: visão "Chapas", aproveitamento, total nas duas bases e CSV (US5)', async ({
+    page,
+}) => {
+    await page.goto('/');
+    await page.getByRole('radio', { name: 'Selada' }).click();
+    await fill(page, /^Vb/, '60');
+    await openPlan(page);
+
+    // Corte total com e sem o desconto do MDF, mesmo sem chapa.
+    const totals = page.getByRole('table', { name: 'Corte total' });
+    await expect(totals).toBeVisible();
+    await expect(
+        totals.getByRole('row', { name: /Sem desconto do MDF/ }),
+    ).toBeVisible();
+    await expect(
+        totals.getByRole('row', { name: /Com desconto do MDF/ }),
+    ).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Chapas' })).toHaveCount(0);
+
+    await fill(page, /^Wc/, '2750');
+    await fill(page, /^Hc/, '1850');
+    await page.getByRole('tab', { name: 'Chapas' }).click();
+
+    const region = planRegion(page);
+    await expect(region.getByText(/aproveitamento de/).first()).toBeVisible();
+    await expect(
+        region.getByRole('img', { name: /Chapa 1 com 6 peça\(s\)/ }),
+    ).toBeVisible();
+    await expect(region.locator('[data-piece]')).toHaveCount(6);
+
+    const csv = (await downloadCsv(page, 'Exportar CSV')).bytes.toString(
+        'utf8',
+    );
+    expect(csv).toContain('Corte total;Peças;Área (cm²);Corte (mm)');
+    expect(csv).toContain('Sem desconto do MDF;');
+    expect(csv).toContain('Chapas;Chapa;Peça;Unidade;x (mm);y (mm)');
+    expect(csv).toContain('Aproveitamento;');
+});
+
+test('chapa pequena avisa as peças que não cabem e a chapa sobrevive ao recarregar (US5)', async ({
+    page,
+}) => {
+    await page.goto('/');
+    await page.getByRole('radio', { name: 'Selada' }).click();
+    await fill(page, /^Vb/, '60');
+    await openPlan(page);
+    await fill(page, /^Wc/, '300');
+    await fill(page, /^Hc/, '300');
+    await page.getByRole('tab', { name: 'Chapas' }).click();
+
+    await expect(
+        planRegion(page).getByText(/Não cabem na chapa informada:/),
+    ).toBeVisible();
+
+    await page.reload();
+    await openPlan(page);
+    await expect(page.getByRole('textbox', { name: /^Wc/ })).toHaveValue(
+        '300,0',
+    );
+});
+
+test('medidas internas editáveis na Caixa: a altura digitada vale e o plano segue o volume', async ({
+    page,
+}) => {
+    await page.goto('/');
+    await page.getByRole('radio', { name: 'Selada' }).click();
+    await fill(page, /^Vb/, '60');
+
+    await expect(page.getByRole('textbox', { name: /^Hi —/ })).toHaveValue(
+        '633,4',
+    );
+
+    await fill(page, /^Hi —/, '700');
+    await expect(page.getByRole('textbox', { name: /^Hi —/ })).toHaveValue(
+        '700,0',
+    );
+    await expect(
+        page.getByRole('button', { name: /^(?!Ajuda).*Própria/ }),
+    ).toBeVisible();
+
+    await openPlan(page);
+    await expect(tile(page, 'Internas · Altura')).toContainText('700,0');
 });

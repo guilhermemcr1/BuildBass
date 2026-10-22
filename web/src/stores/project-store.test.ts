@@ -353,6 +353,69 @@ describe('applyCatalogDriver', () => {
     });
 });
 
+describe('applySavedDriver', () => {
+    const SAVED = {
+        brand: 'Marca',
+        model: 'Sub 12',
+        variant: '4 Ω',
+        driver: { fs_hz: 32, qts: 0.42, vas_m3: 0.09 },
+        cutout_m: 0.285,
+    };
+
+    test('aplica driver, origem e recorte numa etapa só de desfazer', () => {
+        const project = store();
+        project.getState().setDriverValue('fs_hz', 30);
+        const steps = project.temporal.getState().pastStates.length;
+
+        project.getState().applySavedDriver(SAVED);
+
+        const { data } = project.getState();
+        expect(data.driver).toEqual(SAVED.driver);
+        expect(data.driverSource).toEqual({
+            brand: 'Marca',
+            model: 'Sub 12',
+            variant: '4 Ω',
+        });
+        expect(data.cutPlan?.cutout_m).toBe(0.285);
+        expect(project.temporal.getState().pastStates).toHaveLength(steps + 1);
+
+        project.temporal.getState().undo();
+        expect(project.getState().data.driver).toEqual({ fs_hz: 30 });
+        expect(project.getState().data.driverSource).toBeUndefined();
+        expect(project.getState().data.cutPlan).toBeUndefined();
+    });
+
+    test('sem recorte salvo, mantém o recorte que o projeto já tinha', () => {
+        const project = store();
+        project.getState().apply((data) => ({
+            ...data,
+            cutPlan: { cutout_m: 0.2 },
+        }));
+        const { cutout_m: _cutout, ...withoutCutout } = SAVED;
+
+        project.getState().applySavedDriver(withoutCutout);
+
+        expect(project.getState().data.cutPlan?.cutout_m).toBe(0.2);
+        expect(project.getState().data.driverSource).toEqual({
+            brand: 'Marca',
+            model: 'Sub 12',
+            variant: '4 Ω',
+        });
+    });
+
+    test('origem sem variante não leva a chave variant', () => {
+        const project = store();
+        const { variant: _variant, ...noVariant } = SAVED;
+
+        project.getState().applySavedDriver(noVariant);
+
+        expect(project.getState().data.driverSource).toEqual({
+            brand: 'Marca',
+            model: 'Sub 12',
+        });
+    });
+});
+
 describe('origem do driver e edição manual', () => {
     const SOURCE = { brand: 'Triton', model: 'TR 620 12"' };
 
@@ -365,13 +428,55 @@ describe('origem do driver e edição manual', () => {
         expect(project.getState().data.driverSource).toEqual(SOURCE);
     });
 
-    test('apagar o último valor do driver remove a origem', () => {
+    test('apagar o último valor do driver mantém a identificação, que agora é visível e editável', () => {
         const project = store();
         project.getState().applyCatalogDriver({ fs_hz: 76 }, SOURCE);
 
         project.getState().setDriverValue('fs_hz', undefined);
 
+        expect(project.getState().data.driverSource).toEqual(SOURCE);
+    });
+
+    test('setDriverIdentity edita as partes, apaga as vazias e desfaz numa etapa', () => {
+        const project = store();
+
+        project
+            .getState()
+            .setDriverIdentity({ brand: 'Triton', type: 'subwoofer' });
+        expect(project.getState().data.driverSource).toEqual({
+            brand: 'Triton',
+            type: 'subwoofer',
+        });
+
+        project.getState().setDriverIdentity({ type: undefined });
+        expect(project.getState().data.driverSource).toEqual({
+            brand: 'Triton',
+        });
+
+        project.getState().setDriverIdentity({ brand: '' });
         expect('driverSource' in project.getState().data).toBe(false);
+
+        project.temporal.getState().undo();
+        expect(project.getState().data.driverSource).toEqual({
+            brand: 'Triton',
+        });
+    });
+
+    test('aplicar um salvo traz o tipo junto', () => {
+        const project = store();
+
+        project.getState().applySavedDriver({
+            brand: 'Triton',
+            model: 'TR 620',
+            type: 'woofer',
+            driver: { fs_hz: 76 },
+        });
+
+        expect(project.getState().data.driverSource).toEqual({
+            brand: 'Triton',
+            model: 'TR 620',
+            type: 'woofer',
+        });
     });
 
     test('apagar um valor com outros presentes mantém a origem', () => {

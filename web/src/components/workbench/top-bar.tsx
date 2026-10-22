@@ -15,8 +15,8 @@ export type ProjectAction = 'new' | 'open' | 'export' | 'undo' | 'redo';
 type TopBarProps = {
     onAction: (action: ProjectAction) => void;
     history: { canUndo: boolean; canRedo: boolean };
-    // Abas dos projetos abertos, entre as ações e as preferências.
-    tabs?: ReactNode;
+    // Nome do projeto ativo (editável), entre as ações e as preferências.
+    projectName?: ReactNode;
     onHelp: () => void;
     preferences?: ReactNode;
 };
@@ -24,7 +24,7 @@ type TopBarProps = {
 export function TopBar({
     onAction,
     history,
-    tabs,
+    projectName,
     onHelp,
     preferences,
 }: TopBarProps) {
@@ -70,7 +70,7 @@ export function TopBar({
                     <Redo2 aria-hidden="true" className="size-4" />
                 </Button>
             </nav>
-            {tabs}
+            {projectName}
             <div className="ml-auto flex flex-wrap items-center gap-2">
                 {preferences}
                 <Button

@@ -50,6 +50,11 @@ test('dois projetos plotados: legenda, tabela e recarregar (US7)', async ({
     await expect(legend).toContainText('Pequena');
     await expect(legend).toContainText('Grande');
 
+    // Com vários projetos a tabela de comparação começa recolhida.
+    await page
+        .locator('[data-region="results"]')
+        .getByRole('button', { name: 'Resultados' })
+        .click();
     const table = page.locator('[data-region="results"] table');
     await expect(table.getByRole('columnheader')).toHaveText([
         /^$|Resultados/,

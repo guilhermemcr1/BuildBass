@@ -1,11 +1,15 @@
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCutPlan } from '@/hooks/use-cut-plan';
+import { useSheetLayout } from '@/hooks/use-sheet-layout';
 import { displayName } from '@/lib/project/names';
 import { useWorkspace } from '@/stores/workspace';
 import { CutDrawings } from './cut-drawings';
+import { CutTotals } from './cut-totals';
 import { PartsTable } from './parts-table';
 import { PlanDimensions } from './plan-dimensions';
 import { PlanWarnings } from './plan-warnings';
+import { SheetLayout } from './sheet-layout';
 import { VolumeCheck } from './volume-check';
 
 // Cores de papel: preto sobre branco, qualquer que seja o tema da tela.
@@ -14,12 +18,33 @@ const PAPER =
 
 // Folha do plano para imprimir (specs/005, FR-013): fica na página, oculta na tela, e é a única
 // coisa visível ao imprimir a visão Plano. Sem a vista 3D e sem controles.
-export function PrintSheet() {
+type PrintSheetProps = {
+    // Chamado depois que a folha está na página; a bancada abre a impressão a partir dele.
+    onReady?: () => void;
+};
+
+export function PrintSheet({ onReady }: PrintSheetProps) {
     const { t } = useTranslation(['cutplan', 'project']);
     const cutPlan = useCutPlan();
+    const suggestion = useSheetLayout(
+        cutPlan.status === 'ready' ? cutPlan.plan : undefined,
+    );
     const project = useWorkspace((state) =>
         state.projects.find((p) => p.id === state.activeId),
     );
+
+    const ready = cutPlan.status === 'ready' && project !== undefined;
+
+    useEffect(() => {
+        if (!ready) {
+            return;
+        }
+
+        // Um quadro depois da montagem, para o layout da folha estar pronto.
+        const frame = requestAnimationFrame(() => onReady?.());
+
+        return () => cancelAnimationFrame(frame);
+    }, [ready]);
 
     if (cutPlan.status !== 'ready' || project === undefined) {
         return null;
@@ -38,12 +63,19 @@ export function PrintSheet() {
                 {t('cutplan:print.title', { name })}
             </h1>
             <PlanDimensions plan={plan} />
+            <CutTotals plan={plan} />
             <PartsTable plan={plan} name={name} />
             {plan.volume.chambers.length > 0 && (
                 <VolumeCheck volume={plan.volume} />
             )}
             <PlanWarnings plan={plan} />
             <CutDrawings plan={plan} />
+            {suggestion !== undefined && (
+                <SheetLayout
+                    layout={suggestion.layout}
+                    sheet={suggestion.sheet}
+                />
+            )}
         </section>
     );
 }

@@ -2,7 +2,7 @@ import { temporal } from 'zundo';
 import { createStore } from 'zustand/vanilla';
 import { twoChambers } from '@/engine';
 import type { ParameterKey } from '@/lib/parameters';
-import { withDriver } from '@/lib/project/fields';
+import { withDriver, withIdentity, writeField } from '@/lib/project/fields';
 import type {
     BoxType,
     DriverInput,
@@ -13,6 +13,7 @@ import type {
     ProjectData,
     SignalInput,
 } from '@/lib/project/types';
+import type { SavedDriverDraft } from '@/lib/saved-drivers/types';
 import type { UnitId } from '@/lib/units/quantities';
 
 type BoxValueKey = 'vb_m3' | 'vr_m3' | 'vf_m3' | 'fb_hz' | 'fb_rear_hz' | 'ql';
@@ -32,6 +33,11 @@ export type ProjectState = {
     // Copia um driver do catálogo: substitui o driver por inteiro e registra a origem, numa etapa
     // só de desfazer (specs/003, FR-006–008).
     applyCatalogDriver: (driver: DriverInput, source: DriverSource) => void;
+    // Edita a identificação do driver (marca, modelo, variação, tipo); parte vazia é apagada.
+    setDriverIdentity: (patch: Partial<DriverSource>) => void;
+    // Aplica um alto-falante salvo pelo usuário: driver, origem e, quando o salvo traz, o recorte
+    // do plano de corte, numa etapa só de desfazer (specs/008, FR-024).
+    applySavedDriver: (saved: SavedDriverDraft) => void;
     // Várias mudanças numa única etapa de desfazer (ex.: sugestão de caixa, FR-020).
     apply: (update: (data: ProjectData) => ProjectData) => void;
 };
@@ -141,12 +147,49 @@ export function createProjectStore(
                         })),
                     clearFieldUnits: () =>
                         update((data) => ({ ...data, fieldUnits: {} })),
+                    setDriverIdentity: (patch) =>
+                        update((data) => withIdentity(data, patch)),
                     applyCatalogDriver: (driver, source) =>
                         update((data) => ({
                             ...data,
                             driver,
                             driverSource: source,
                         })),
+                    applySavedDriver: (saved) =>
+                        update((data) => {
+                            const applied = {
+                                ...data,
+                                driver: saved.driver,
+                                driverSource: {
+                                    brand: saved.brand,
+                                    model: saved.model,
+                                    ...(saved.variant === undefined
+                                        ? {}
+                                        : { variant: saved.variant }),
+                                    ...(saved.type === undefined
+                                        ? {}
+                                        : { type: saved.type }),
+                                },
+                            };
+
+                            // Diâmetro e profundidade salvos são o A e o G das dimensões.
+                            const measures: [
+                                ParameterKey,
+                                number | undefined,
+                            ][] = [
+                                ['cutout_m', saved.cutout_m],
+                                ['drv_a_m', saved.nominal_diameter_m],
+                                ['drv_g_m', saved.depth_m],
+                            ];
+
+                            return measures.reduce<ProjectData>(
+                                (next, [key, si]) =>
+                                    si === undefined
+                                        ? next
+                                        : writeField(next, key, si),
+                                applied,
+                            );
+                        }),
                     apply: update,
                 };
             },
