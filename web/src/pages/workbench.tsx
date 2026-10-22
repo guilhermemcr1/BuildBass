@@ -11,6 +11,7 @@ import { OpenErrorDialog } from '@/components/workbench/open-error-dialog';
 import type { OpenError } from '@/components/workbench/open-error-dialog';
 import { OfflineBanner } from '@/components/workbench/offline-banner';
 import { PreferencesBar } from '@/components/workbench/preferences-bar';
+import { ProjectName } from '@/components/workbench/project-name';
 import { ProjectTabs } from '@/components/workbench/project-tabs';
 import { ResultsPanel } from '@/components/workbench/results-panel';
 import { ShortcutsDialog } from '@/components/workbench/shortcuts-dialog';
@@ -145,7 +146,7 @@ export default function Workbench() {
                 <TopBar
                     onAction={runAction}
                     history={history}
-                    tabs={<ProjectTabs onClose={requestClose} />}
+                    projectName={<ProjectName />}
                     onHelp={() => setHelpOpen(true)}
                     preferences={<PreferencesBar />}
                 />
@@ -157,7 +158,8 @@ export default function Workbench() {
                 )}
                 <main className="grid flex-1 grid-cols-1 gap-3 p-3 md:grid-cols-2 xl:grid-cols-[minmax(300px,360px)_minmax(260px,320px)_minmax(0,1fr)] xl:grid-rows-[auto_1fr]">
                     {/* Em ≥ 1280 px o driver ocupa as duas linhas: a altura dele não empurra os resultados. */}
-                    <div className="xl:row-span-2">
+                    <div className="flex flex-col gap-3 xl:row-span-2">
+                        <ProjectTabs onClose={requestClose} />
                         <DriverPanel
                             onSubmitDriver={() => setSubmitting(true)}
                         />

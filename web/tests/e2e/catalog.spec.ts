@@ -50,7 +50,7 @@ test('duas abas: só o projeto ativo recebe o driver (US1)', async ({
 
     await page
         .getByRole('navigation', { name: 'Projetos abertos' })
-        .getByRole('button')
+        .getByRole('button', { name: /^Projeto sem nome/ })
         .first()
         .click();
 

@@ -90,3 +90,66 @@ test.describe('US1 — campos que não expandem', () => {
         ).toBeVisible();
     });
 });
+
+test.describe('US2 — abas com cor acima do Driver', () => {
+    const tabs = (page: Page) =>
+        page.getByRole('navigation', { name: 'Projetos abertos' });
+
+    // O radio fica escondido sob a amostra; o usuário clica na amostra (o rótulo).
+    const pickColor = (page: Page, n: number) =>
+        page
+            .locator('label')
+            .filter({ has: page.getByRole('radio', { name: `Cor ${n}` }) })
+            .click();
+
+    test('as abas ficam acima do Driver e a barra mostra só o nome do projeto', async ({
+        page,
+    }) => {
+        await page.goto('/');
+
+        const tabsBox = await tabs(page).boundingBox();
+        const driverBox = await box(page, '[data-region="driver"]');
+
+        expect(tabsBox).not.toBeNull();
+        expect(tabsBox!.y + tabsBox!.height).toBeLessThanOrEqual(driverBox.y);
+        await expect(
+            page.locator('header').getByRole('navigation', {
+                name: 'Projetos abertos',
+            }),
+        ).toHaveCount(0);
+
+        const name = page.getByRole('textbox', { name: 'Nome do projeto' });
+        await name.fill('Caixa A');
+        await name.press('Enter');
+        await expect(
+            tabs(page).getByRole('button', { name: /^Caixa A/ }),
+        ).toBeVisible();
+    });
+
+    test('duas cores escolhidas identificam as curvas na legenda (SC-004)', async ({
+        page,
+    }) => {
+        await page.goto('/');
+        await field(page, /^Vb/).fill('40');
+        await field(page, /^Vb/).press('Tab');
+        await page.getByRole('button', { name: 'Novo' }).click();
+        await field(page, /^Vb/).fill('120');
+        await field(page, /^Vb/).press('Tab');
+
+        const colorButtons = tabs(page).getByRole('button', {
+            name: /^Cor de /,
+        });
+
+        await colorButtons.nth(0).click();
+        await pickColor(page, 5);
+        await page.keyboard.press('Escape');
+        await colorButtons.nth(1).click();
+        await pickColor(page, 6);
+        await page.keyboard.press('Escape');
+
+        const legend = page.getByRole('list', { name: 'Projetos no gráfico' });
+
+        await expect(legend.locator('.bg-series-5')).toHaveCount(1);
+        await expect(legend.locator('.bg-series-6')).toHaveCount(1);
+    });
+});

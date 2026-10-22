@@ -79,6 +79,44 @@ describe('ProjectTabs', () => {
         expect(onClose).toHaveBeenCalledWith(id);
     });
 
+    test('cada aba tem amostra de cor; o botão abre o seletor e troca a cor', async () => {
+        renderWithProviders(<ProjectTabs onClose={() => undefined} />);
+        const first = workspace().projects[0];
+        const trigger = screen.getByRole('button', {
+            name: 'Cor de Projeto sem nome',
+        });
+
+        expect(trigger.querySelector('span')).toHaveClass(
+            `bg-series-${first.color}`,
+        );
+        await userEvent.click(trigger);
+        await userEvent.click(screen.getByRole('radio', { name: 'Cor 6' }));
+
+        expect(workspace().projects[0].color).toBe(6);
+        await userEvent.keyboard('{Escape}');
+        expect(
+            screen
+                .getByRole('button', { name: 'Cor de Projeto sem nome' })
+                .querySelector('span'),
+        ).toHaveClass('bg-series-6');
+    });
+
+    test('nome vazio na edição volta ao anterior', async () => {
+        renderWithProviders(<ProjectTabs onClose={() => undefined} />);
+        const id = workspace().projects[0].id;
+        act(() => projectStore(id).getState().setName('Caixa A'));
+
+        await userEvent.dblClick(
+            screen.getByRole('button', { name: /^Caixa A/ }),
+        );
+        await userEvent.clear(
+            screen.getByRole('textbox', { name: 'Renomear Caixa A' }),
+        );
+        await userEvent.keyboard('{Escape}');
+
+        expect(projectStore(id).getState().data.name).toBe('Caixa A');
+    });
+
     test('projeto alterado mostra o aviso de não exportado', () => {
         renderWithProviders(<ProjectTabs onClose={() => undefined} />);
         act(() =>

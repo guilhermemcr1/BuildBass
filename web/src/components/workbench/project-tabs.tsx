@@ -1,7 +1,13 @@
 import { Eye, EyeOff, X } from 'lucide-react';
 import { useState } from 'react';
-import { Button as AriaButton } from 'react-aria-components';
+import {
+    Button as AriaButton,
+    Dialog,
+    DialogTrigger,
+    Popover,
+} from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
+import { ColorPicker } from '@/components/ui/color-picker';
 import { InlineTextField } from '@/components/ui/inline-text-field';
 import { ToggleButton } from '@/components/ui/toggle-button';
 import { displayName } from '@/lib/project/names';
@@ -50,6 +56,7 @@ function ProjectTab({
     const { t } = useTranslation('project');
     const active = useWorkspace((state) => state.activeId === project.id);
     const setActive = useWorkspace((state) => state.setActive);
+    const setColor = useWorkspace((state) => state.setColor);
     const togglePlotted = useWorkspace((state) => state.togglePlotted);
     const [editing, setEditing] = useState(false);
     const name = displayName(project, t);
@@ -58,14 +65,15 @@ function ProjectTab({
         setEditing(false);
         const trimmed = next.trim();
 
-        if (trimmed !== project.data.name) {
+        // Nome vazio mantém o anterior.
+        if (trimmed !== '' && trimmed !== project.data.name) {
             projectStore(project.id).getState().setName(trimmed);
         }
     };
 
     return (
         <li
-            data-project={project.slot}
+            data-project={project.color}
             className={cn(
                 'flex h-[34px] shrink-0 items-center gap-0.5 rounded-md border pr-0.5 pl-1',
                 active
@@ -73,6 +81,35 @@ function ProjectTab({
                     : 'border-transparent bg-transparent',
             )}
         >
+            <DialogTrigger>
+                <AriaButton
+                    aria-label={t('tabs.colorOf', { name })}
+                    className="flex size-7 shrink-0 cursor-default items-center justify-center rounded-md outline-none data-[focus-visible]:outline-2 data-[focus-visible]:outline-accent data-[focus-visible]:outline-solid data-[hovered]:bg-surface"
+                >
+                    <span
+                        aria-hidden="true"
+                        className={cn(
+                            'size-3 rounded-full',
+                            SWATCH[project.color],
+                        )}
+                    />
+                </AriaButton>
+                <Popover
+                    placement="bottom start"
+                    offset={4}
+                    className="rounded-md border border-border bg-raised p-2 shadow-lg"
+                >
+                    <Dialog
+                        aria-label={t('tabs.color')}
+                        className="outline-none"
+                    >
+                        <ColorPicker
+                            value={project.color}
+                            onChange={(color) => setColor(project.id, color)}
+                        />
+                    </Dialog>
+                </Popover>
+            </DialogTrigger>
             {editing ? (
                 <InlineTextField
                     label={t('tabs.rename', { name })}
@@ -97,13 +134,6 @@ function ProjectTab({
                             active ? 'font-semibold' : 'text-muted',
                         )}
                     >
-                        <span
-                            aria-hidden="true"
-                            className={cn(
-                                'size-2.5 shrink-0 rounded-full',
-                                SWATCH[project.color],
-                            )}
-                        />
                         <span className="truncate">{name}</span>
                         {project.unsaved && (
                             <>

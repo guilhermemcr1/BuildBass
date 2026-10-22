@@ -5,7 +5,10 @@
         "plot": "Show {{name}} on the chart",
         "close": "Close {{name}}",
         "rename": "Rename {{name}}",
-        "unsaved": "unexported changes"
+        "unsaved": "unexported changes",
+        "color": "Project color",
+        "colorOption": "Color {{n}}",
+        "colorOf": "Color of {{name}}"
     },
     "dialogs": {
         "close": {
@@ -38,5 +41,8 @@
     },
     "storage": {
         "unavailable": "The browser does not allow saving data: open projects will not be remembered after reloading. Export to keep your work."
+    },
+    "name": {
+        "label": "Project name"
     }
 }
