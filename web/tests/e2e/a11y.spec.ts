@@ -749,3 +749,31 @@ for (const theme of ['light', 'dark'] as const) {
         await context.close();
     });
 }
+
+// Modo Normal (feature 008, US7): seções "Mostrar mais" recolhidas e abertas à mão, nos dois temas.
+for (const theme of ['light', 'dark'] as const) {
+    test(`modo Normal com "Mostrar mais" sem violações WCAG AA no tema ${theme} (feature 008, US7)`, async ({
+        browser,
+    }) => {
+        const context = await browser.newContext({
+            colorScheme: theme,
+            viewport: { width: 1440, height: 900 },
+            storageState: { cookies: [], origins: [] },
+        });
+        const page = await context.newPage();
+        await page.goto('/');
+        await page.locator('main').waitFor();
+        await page.waitForTimeout(300);
+
+        await expect(page.getByRole('textbox', { name: /^Qes/ })).toHaveCount(
+            0,
+        );
+        expect(await axe(page)).toEqual([]);
+
+        await page.getByRole('button', { name: 'Mostrar mais' }).click();
+        await expect(page.getByRole('textbox', { name: /^Qes/ })).toBeVisible();
+        await page.waitForTimeout(300);
+        expect(await axe(page)).toEqual([]);
+        await context.close();
+    });
+}

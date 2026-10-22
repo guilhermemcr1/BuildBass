@@ -70,7 +70,9 @@
         "legend": "Projetos no gráfico",
         "nonePlotted": "Nenhum projeto ligado no gráfico. Use o olho na aba do projeto.",
         "seriesFront": "frontal",
-        "seriesRear": "traseiro"
+        "seriesRear": "traseiro",
+        "showField_one": "Mostrar campo",
+        "showField_other": "Mostrar campos"
     },
     "results": {
         "f3": "F3",

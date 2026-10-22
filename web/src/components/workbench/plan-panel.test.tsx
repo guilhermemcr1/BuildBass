@@ -10,6 +10,7 @@ import {
 } from 'vite-plus/test';
 import { activeProjectStore } from '@/hooks/use-active-project';
 import { writeField } from '@/lib/project/fields';
+import { useExpanded } from '@/stores/expanded';
 import { usePreferences } from '@/stores/preferences';
 import { initialWorkspace, useWorkspace } from '@/stores/workspace';
 import { renderWithProviders } from '@/test/render';
@@ -31,6 +32,8 @@ describe('PlanPanel', () => {
         localStorage.clear();
         useWorkspace.setState(initialWorkspace());
         usePreferences.setState({ unitSystem: 'metric' });
+        // Os campos avançados do plano ficam atrás de "Mostrar mais" no modo Normal.
+        useExpanded.getState().expandAll();
     });
 
     test('sem volume avisa o que falta, citando o símbolo do campo', () => {
@@ -305,6 +308,8 @@ describe('PlanPanel — chapa e corte total (feature 008, US5)', () => {
         localStorage.clear();
         useWorkspace.setState(initialWorkspace());
         usePreferences.setState({ unitSystem: 'metric' });
+        // Os campos avançados do plano ficam atrás de "Mostrar mais" no modo Normal.
+        useExpanded.getState().expandAll();
         setField('vb_m3', 0.06);
     });
 

@@ -130,3 +130,28 @@ test('a 360 px o plano de corte não rola na horizontal (feature 005, US7)', asy
         ),
     ).toBeLessThanOrEqual(0);
 });
+
+// SC-003 (feature 008, US7): no modo Normal o painel do Driver ocupa pelo menos 30 % menos altura
+// que no Pro (que mostra os mesmos 13 campos de antes da feature).
+test.describe('modo Normal enxuga o painel do Driver (SC-003)', () => {
+    test.use({ storageState: { cookies: [], origins: [] } });
+
+    test('altura do Driver cai 30 % ou mais', async ({ page }) => {
+        await page.setViewportSize({ width: 1440, height: 900 });
+        await page.goto('/');
+        const driver = page.locator('[data-region="driver"]');
+
+        const normal = await driver.boundingBox();
+
+        await page
+            .getByRole('radiogroup', { name: 'Modo' })
+            .getByRole('radio', { name: 'Pro' })
+            .click();
+        await expect(page.getByRole('textbox', { name: /^Qes/ })).toBeVisible();
+        const pro = await driver.boundingBox();
+
+        expect(normal).not.toBeNull();
+        expect(pro).not.toBeNull();
+        expect(normal!.height).toBeLessThanOrEqual(pro!.height * 0.7);
+    });
+});

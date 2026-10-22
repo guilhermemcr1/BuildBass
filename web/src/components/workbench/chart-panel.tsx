@@ -1,18 +1,21 @@
 import { Suspense, lazy, useState } from 'react';
 import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/ui/button';
 import { Tabs } from '@/components/ui/tabs';
 import { PORT_VELOCITY_ERROR_MS, PORT_VELOCITY_WARN_MS } from '@/engine';
 import type { CurveId, FieldKey } from '@/engine';
 import { useActiveProject } from '@/hooks/use-active-project';
 import { useSimulations } from '@/hooks/use-simulation';
 import type { ProjectSimulation } from '@/hooks/use-simulation';
-import { PARAMETERS } from '@/lib/parameters';
+import { PARAMETERS, sectionOf } from '@/lib/parameters';
+import type { SectionId } from '@/lib/parameters';
 import { displayName } from '@/lib/project/names';
 import { fromSi } from '@/lib/units/convert';
 import { formatWithUnit } from '@/lib/units/format';
 import { defaultUnitFor, findUnit } from '@/lib/units/quantities';
 import type { QuantityId, UnitId } from '@/lib/units/quantities';
+import { useExpanded } from '@/stores/expanded';
 import { usePreferences } from '@/stores/preferences';
 import { ChartLegend } from './chart-legend';
 import type { ChartLimit, ChartSeries } from './chart-frame';
@@ -68,6 +71,8 @@ export function ChartPanel({
     const { t } = useTranslation(['workbench', 'engine', 'project']);
     const { locale } = useLocale();
     const unitSystem = usePreferences((state) => state.unitSystem);
+    const open = useExpanded((state) => state.open);
+    const expand = useExpanded((state) => state.expand);
     const plotted = useSimulations();
     const xmax = useActiveProject((state) => state.data.driver.xmax_m);
     const [localSelected, setLocalSelected] = useState<ChartKind>('response');
@@ -215,22 +220,32 @@ export function ChartPanel({
         }
     };
 
-    const missingText = (first: ProjectSimulation, kind: ChartKind) => {
-        // Na 6ª ordem faltam também as medidas do duto traseiro.
-        const missing: FieldKey[] = [
-            ...new Set([
-                ...first.simulation.missing[CURVES[kind].curve],
-                ...(kind === 'portVelocity' &&
-                first.project.data.box.type === 'bandpass6'
-                    ? first.simulation.missing.port_rear_velocity_ms
-                    : []),
-            ]),
-        ];
+    const missingKeys = (
+        first: ProjectSimulation,
+        kind: ChartKind,
+    ): FieldKey[] => [
+        ...new Set([
+            ...first.simulation.missing[CURVES[kind].curve],
+            // Na 6ª ordem faltam também as medidas do duto traseiro.
+            ...(kind === 'portVelocity' &&
+            first.project.data.box.type === 'bandpass6'
+                ? first.simulation.missing.port_rear_velocity_ms
+                : []),
+        ]),
+    ];
 
-        return missing.length === 0
-            ? undefined
-            : listFormat.format(missing.map((key) => PARAMETERS[key].symbol));
-    };
+    // Seções "Mostrar mais" recolhidas que guardam algum campo que falta (FR-031a): a mensagem
+    // oferece abri-las em vez de deixar o usuário procurar.
+    const hiddenSections = (missing: FieldKey[]): SectionId[] => [
+        ...new Set(
+            missing
+                .map((key) => sectionOf(key))
+                .filter(
+                    (section): section is SectionId =>
+                        section !== undefined && !open[section],
+                ),
+        ),
+    ];
 
     return (
         <Panel region="charts" title={t('regions.charts')} className="min-h-96">
@@ -254,10 +269,17 @@ export function ChartPanel({
                     const normalized = plotted.some(
                         ({ simulation }) => simulation.spl_normalized,
                     );
+                    const missingFields =
+                        first === undefined ? [] : missingKeys(first, kind);
                     const missing =
-                        first === undefined
+                        missingFields.length === 0
                             ? undefined
-                            : missingText(first, kind);
+                            : listFormat.format(
+                                  missingFields.map(
+                                      (key) => PARAMETERS[key].symbol,
+                                  ),
+                              );
+                    const hidden = hiddenSections(missingFields);
                     const legend = plotted.map(
                         ({ project, active, simulation }) => ({
                             id: project.id,
@@ -328,6 +350,31 @@ export function ChartPanel({
                                                                 { missing },
                                                             )}
                                                         </p>
+                                                    )}
+                                                    {hidden.length > 0 && (
+                                                        <Button
+                                                            variant="secondary"
+                                                            className="pointer-events-auto mt-2"
+                                                            onPress={() =>
+                                                                hidden.forEach(
+                                                                    expand,
+                                                                )
+                                                            }
+                                                        >
+                                                            {t(
+                                                                'charts.showField',
+                                                                {
+                                                                    count: missingFields.filter(
+                                                                        (key) =>
+                                                                            hidden.includes(
+                                                                                sectionOf(
+                                                                                    key,
+                                                                                ) as SectionId,
+                                                                            ),
+                                                                    ).length,
+                                                                },
+                                                            )}
+                                                        </Button>
                                                     )}
                                                 </>
                                             )}

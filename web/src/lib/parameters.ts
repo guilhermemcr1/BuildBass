@@ -204,6 +204,34 @@ export const DRIVER_PARAMETERS: ParameterKey[] = [
     'vd_m3',
 ];
 
+// Campos do driver sempre à vista no modo Normal (specs/008, R13); os demais ficam atrás de
+// "Mostrar mais". Fonte única: mudar a lista é editar esta constante.
+export const ESSENTIAL_DRIVER_PARAMETERS: ParameterKey[] =
+    DRIVER_PARAMETERS.filter((key) =>
+        ['fs_hz', 'qts', 'vas_m3', 'sd_m2', 'xmax_m', 'pe_w'].includes(key),
+    );
+
+// Seções recolhíveis da bancada ("Mostrar mais").
+export type SectionId = 'driverAdvanced' | 'planAdvanced';
+
+export const SECTION_IDS: SectionId[] = ['driverAdvanced', 'planAdvanced'];
+
+const PLAN_ADVANCED_PARAMETERS: ParameterKey[] = ['braces_m3', 'kerf_m'];
+
+// Em que seção recolhível o campo mora; `undefined` = sempre à vista.
+export function sectionOf(parameter: ParameterKey): SectionId | undefined {
+    if (
+        DRIVER_PARAMETERS.includes(parameter) &&
+        !ESSENTIAL_DRIVER_PARAMETERS.includes(parameter)
+    ) {
+        return 'driverAdvanced';
+    }
+
+    return PLAN_ADVANCED_PARAMETERS.includes(parameter)
+        ? 'planAdvanced'
+        : undefined;
+}
+
 export function withinRange(key: ParameterKey, si: number): boolean {
     const { min, max } = PARAMETERS[key];
 

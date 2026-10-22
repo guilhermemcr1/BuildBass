@@ -2,6 +2,7 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { activeProjectStore } from '@/hooks/use-active-project';
+import { useExpanded } from '@/stores/expanded';
 import { initialWorkspace, useWorkspace } from '@/stores/workspace';
 import { renderWithProviders } from '@/test/render';
 import { ChartPanel } from './chart-panel';
@@ -215,5 +216,55 @@ describe('ChartPanel', () => {
         expect(seriesOf(await screen.findByTestId('chart-frame'))).toHaveLength(
             1,
         );
+    });
+});
+
+describe('ChartPanel — campo faltante em seção recolhida (specs/008, US7)', () => {
+    beforeEach(() => {
+        useWorkspace.setState(initialWorkspace());
+        useExpanded.getState().collapseAll();
+        const project = activeProjectStore().getState();
+        project.setDriverValue('fs_hz', 28);
+        project.setDriverValue('qts', 0.38);
+        project.setDriverValue('vas_m3', 0.085);
+        project.setBoxValue('vb_m3', 0.06);
+        project.setBoxValue('fb_hz', 32);
+    });
+
+    test('nomeia o campo recolhido e "Mostrar campo" abre só a seção dele', async () => {
+        renderWithProviders(<ChartPanel />);
+        await userEvent.click(screen.getByRole('tab', { name: 'Impedância' }));
+
+        // Faltam Re, Sd e Qms: dois deles (Re, Qms) estão recolhidos; Sd é essencial.
+        expect(screen.getByText('Preencha Re, Sd e Qms.')).toBeInTheDocument();
+        const show = screen.getByRole('button', { name: 'Mostrar campos' });
+
+        await userEvent.click(show);
+
+        expect(useExpanded.getState().open).toEqual({
+            driverAdvanced: true,
+            planAdvanced: false,
+        });
+    });
+
+    test('com a seção já aberta, o aviso não oferece a ação', async () => {
+        useExpanded.getState().expand('driverAdvanced');
+        renderWithProviders(<ChartPanel />);
+        await userEvent.click(screen.getByRole('tab', { name: 'Impedância' }));
+
+        expect(screen.getByText(/Preencha.*Re/)).toBeInTheDocument();
+        expect(
+            screen.queryByRole('button', { name: /Mostrar campo/ }),
+        ).not.toBeInTheDocument();
+    });
+
+    test('campo essencial faltando não gera o botão', () => {
+        const project = activeProjectStore().getState();
+        project.setDriverValue('qts', undefined);
+        renderWithProviders(<ChartPanel />);
+
+        expect(
+            screen.queryByRole('button', { name: /Mostrar campo/ }),
+        ).not.toBeInTheDocument();
     });
 });

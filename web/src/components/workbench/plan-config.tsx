@@ -1,6 +1,7 @@
 import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ShowMore } from '@/components/ui/show-more';
 import { ParameterField } from '@/components/ui/parameter-field';
 import { SelectField } from '@/components/ui/select-field';
 import { resolveCutPlan } from '@/cutplan';
@@ -38,6 +39,13 @@ export function PlanConfig() {
     const sheetH = useParameterField('sheet_h_m');
     const kerf = useParameterField('kerf_m');
     const sheetStarted = config?.sheet !== undefined;
+    // Avançados com valor próprio (reforços, perda de serra diferente da padrão ou rotação
+    // desligada): o botão recolhido avisa que há algo dentro.
+    const advancedFilled = [
+        config?.braces_m3 !== undefined,
+        config?.sheet?.kerf_m !== undefined,
+        config?.sheet?.rotate === false,
+    ].filter(Boolean).length;
 
     return (
         <div className="flex flex-col gap-3">
@@ -72,7 +80,6 @@ export function PlanConfig() {
                 </p>
             )}
             <p className="text-[11px] text-muted">{t('config.hint')}</p>
-            <ParameterField {...braces} />
             <ParameterField {...cutout} />
             <fieldset className="flex flex-col gap-3">
                 <legend className="mb-1.5 text-xs font-semibold text-muted">
@@ -82,6 +89,10 @@ export function PlanConfig() {
                     <ParameterField {...sheetW} />
                     <ParameterField {...sheetH} />
                 </div>
+                <p className="text-[11px] text-muted">{t('sheet.hint')}</p>
+            </fieldset>
+            <ShowMore id="planAdvanced" filled={advancedFilled}>
+                <ParameterField {...braces} />
                 <ParameterField {...kerf} />
                 <Checkbox
                     selected={
@@ -94,8 +105,7 @@ export function PlanConfig() {
                 >
                     {t('sheet.rotate')}
                 </Checkbox>
-                <p className="text-[11px] text-muted">{t('sheet.hint')}</p>
-            </fieldset>
+            </ShowMore>
         </div>
     );
 }

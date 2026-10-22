@@ -7,6 +7,7 @@ import {
 } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitch } from './language-switch';
+import { ModeSwitch } from './mode-switch';
 import { ThemeSwitch } from './theme-switch';
 import { UnitSystemSwitch } from './unit-system-switch';
 
@@ -18,6 +19,7 @@ export function PreferencesBar() {
     return (
         <>
             <div className="hidden items-center gap-2 md:flex">
+                <ModeSwitch />
                 <UnitSystemSwitch />
                 <ThemeSwitch />
                 <LanguageSwitch />
@@ -36,6 +38,7 @@ export function PreferencesBar() {
                         aria-label={t('preferences')}
                         className="flex flex-col items-start gap-3 outline-none"
                     >
+                        <ModeSwitch />
                         <UnitSystemSwitch />
                         <ThemeSwitch />
                         <LanguageSwitch />

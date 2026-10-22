@@ -7,15 +7,24 @@ import type { UnitSystem } from '@/lib/units/quantities';
 
 export type ThemeChoice = 'light' | 'dark' | 'system';
 
+// Normal esconde os campos não essenciais atrás de "Mostrar mais"; Pro abre tudo (specs/008, US7).
+export type Mode = 'normal' | 'pro';
+
+export function validMode(value: unknown): value is Mode {
+    return value === 'normal' || value === 'pro';
+}
+
 export const PREFERENCES_KEY = 'buildbass.preferences';
 
 type PreferencesState = {
     theme: ThemeChoice;
     locale: Locale;
     unitSystem: UnitSystem;
+    mode: Mode;
     setTheme: (theme: ThemeChoice) => void;
     setLocale: (locale: Locale) => void;
     setUnitSystem: (unitSystem: UnitSystem) => void;
+    setMode: (mode: Mode) => void;
 };
 
 // Janela privada ou cookies bloqueados fazem o localStorage lançar erro; nesse caso as escolhas
@@ -60,19 +69,37 @@ export const usePreferences = create<PreferencesState>()(
                     : navigator.language,
             ),
             unitSystem: 'metric',
+            mode: 'normal',
             setTheme: (theme) => set({ theme }),
             setLocale: (locale) => set({ locale }),
             setUnitSystem: (unitSystem) => set({ unitSystem }),
+            setMode: (mode) => set({ mode }),
         }),
         {
             name: PREFERENCES_KEY,
-            version: 1,
+            version: 2,
             storage: createJSONStorage(() => createSafeStorage()),
-            partialize: ({ theme, locale, unitSystem }) => ({
+            partialize: ({ theme, locale, unitSystem, mode }) => ({
                 theme,
                 locale,
                 unitSystem,
+                mode,
             }),
+            // v1 não tinha modo: quem já tinha preferências entra no Normal (specs/008, data-model §7).
+            migrate: (persisted, version) =>
+                version < 2
+                    ? { ...(persisted as object), mode: 'normal' }
+                    : persisted,
+            // Valor de modo inválido (arquivo adulterado) volta ao padrão em vez de quebrar a tela.
+            merge: (persisted, current) => {
+                const saved = (persisted ?? {}) as Partial<PreferencesState>;
+
+                return {
+                    ...current,
+                    ...saved,
+                    mode: validMode(saved.mode) ? saved.mode : current.mode,
+                };
+            },
         },
     ),
 );

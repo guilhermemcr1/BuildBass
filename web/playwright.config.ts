@@ -4,6 +4,29 @@ const API_URL = 'http://127.0.0.1:8010';
 const PREVIEW_URL = 'http://127.0.0.1:4173';
 const DEV_URL = 'http://127.0.0.1:5173';
 
+// Os cenários antigos preenchem Qes, Qms, Re etc., que o modo Normal esconde atrás de "Mostrar
+// mais" (feature 008, US7). Eles rodam em Pro por padrão; os cenários do Normal limpam isso com
+// `test.use({ storageState: NORMAL_MODE })`.
+function proMode(origin: string) {
+    return {
+        cookies: [],
+        origins: [
+            {
+                origin,
+                localStorage: [
+                    {
+                        name: 'buildbass.preferences',
+                        value: JSON.stringify({
+                            state: { mode: 'pro' },
+                            version: 2,
+                        }),
+                    },
+                ],
+            },
+        ],
+    };
+}
+
 export default defineConfig({
     testDir: 'tests/e2e',
     fullyParallel: true,
@@ -16,18 +39,28 @@ export default defineConfig({
     projects: [
         {
             name: 'chromium',
-            use: { ...devices['Desktop Chrome'] },
+            use: {
+                ...devices['Desktop Chrome'],
+                storageState: proMode(PREVIEW_URL),
+            },
             testIgnore: 'a11y.spec.ts',
         },
         {
             name: 'webkit',
-            use: { ...devices['Desktop Safari'] },
+            use: {
+                ...devices['Desktop Safari'],
+                storageState: proMode(PREVIEW_URL),
+            },
             testIgnore: 'a11y.spec.ts',
         },
         // A página de referência (/dev/ui) só existe no servidor de desenvolvimento.
         {
             name: 'dev',
-            use: { ...devices['Desktop Chrome'], baseURL: DEV_URL },
+            use: {
+                ...devices['Desktop Chrome'],
+                baseURL: DEV_URL,
+                storageState: proMode(DEV_URL),
+            },
             testMatch: 'a11y.spec.ts',
         },
     ],

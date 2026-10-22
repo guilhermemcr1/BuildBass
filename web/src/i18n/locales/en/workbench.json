@@ -70,7 +70,9 @@
         "legend": "Projects on the chart",
         "nonePlotted": "No project is shown on the chart. Use the eye on the project tab.",
         "seriesFront": "front",
-        "seriesRear": "rear"
+        "seriesRear": "rear",
+        "showField_one": "Show field",
+        "showField_other": "Show fields"
     },
     "results": {
         "f3": "F3",

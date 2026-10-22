@@ -4,6 +4,7 @@ import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { ParameterField } from '@/components/ui/parameter-field';
+import { ShowMore } from '@/components/ui/show-more';
 import { deriveDriver } from '@/engine';
 import type { DerivedDriver, DriverKey } from '@/engine';
 import {
@@ -11,7 +12,10 @@ import {
     useActiveProject,
 } from '@/hooks/use-active-project';
 import { useOnlineStatus } from '@/hooks/use-online-status';
-import { DRIVER_PARAMETERS } from '@/lib/parameters';
+import {
+    DRIVER_PARAMETERS,
+    ESSENTIAL_DRIVER_PARAMETERS,
+} from '@/lib/parameters';
 import { readField } from '@/lib/project/fields';
 import type { SavedDriverDraft } from '@/lib/saved-drivers/types';
 import { DriverOrigin } from './driver-origin';
@@ -91,6 +95,13 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
     const driver = useActiveProject((state) => state.data.driver);
     const derived = deriveDriver(driver);
     const offlineReason = t('catalog.offlineReason');
+    const essential = ESSENTIAL_DRIVER_PARAMETERS;
+    const advanced = DRIVER_PARAMETERS.filter(
+        (key) => !essential.includes(key),
+    );
+    const advancedFilled = advanced.filter(
+        (key) => driver[key as DriverKey] !== undefined,
+    ).length;
     const [saving, setSaving] = useState<SavedDriverDraft | undefined>(
         undefined,
     );
@@ -138,7 +149,7 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
         <Panel region="driver" title={t('regions.driver')} actions={actions}>
             <DriverOrigin />
             <div className="grid grid-cols-2 items-start gap-2">
-                {DRIVER_PARAMETERS.map((key) => (
+                {essential.map((key) => (
                     <DriverField
                         key={key}
                         parameter={key as DriverKey}
@@ -146,6 +157,17 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
                     />
                 ))}
             </div>
+            <ShowMore id="driverAdvanced" filled={advancedFilled}>
+                <div className="grid grid-cols-2 items-start gap-2">
+                    {advanced.map((key) => (
+                        <DriverField
+                            key={key}
+                            parameter={key as DriverKey}
+                            derived={derived}
+                        />
+                    ))}
+                </div>
+            </ShowMore>
             <DriversFields />
             <SignalFields />
             <Suspense fallback={null}>

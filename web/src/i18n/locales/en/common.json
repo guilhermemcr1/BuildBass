@@ -82,5 +82,16 @@
     },
     "help": {
         "of": "Help for {{parameter}}"
+    },
+    "mode": {
+        "label": "Mode",
+        "normal": "Normal",
+        "pro": "Pro"
+    },
+    "showMore": {
+        "more": "Show more",
+        "less": "Show less",
+        "filled_one": "({{count}} filled)",
+        "filled_other": "({{count}} filled)"
     }
 }
