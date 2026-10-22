@@ -43,6 +43,10 @@ export function useCatalogPick(): CatalogPick {
             brand: summary.brand,
             model: summary.model,
             ...(summary.variant === null ? {} : { variant: summary.variant }),
+            ...(summary.type === undefined ? {} : { type: summary.type }),
+            ...(summary.nominal_diameter_m === undefined
+                ? {}
+                : { nominal_diameter_m: summary.nominal_diameter_m }),
             fs_hz: summary.fs_hz,
             qts: summary.qts,
             vas_m3: summary.vas_m3,

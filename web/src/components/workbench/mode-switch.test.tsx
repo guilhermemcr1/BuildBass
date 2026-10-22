@@ -1,4 +1,4 @@
-import { act, screen, within } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'vite-plus/test';
 import { activeProjectStore } from '@/hooks/use-active-project';
@@ -58,11 +58,9 @@ describe('ModeSwitch e "Mostrar mais" (specs/008, US7)', () => {
 
     test('Pro expande o driver e o plano sem outro clique; Normal recolhe os dois', async () => {
         renderWithProviders(<Both />);
-        const modes = screen.getByRole('radiogroup', { name: 'Modo' });
+        const pro = screen.getByRole('switch', { name: 'Modo Pro' });
 
-        await userEvent.click(
-            within(modes).getByRole('radio', { name: 'Pro' }),
-        );
+        await userEvent.click(pro);
 
         expect(driverField('Qes')).toBeInTheDocument();
         expect(driverField('Re')).toBeInTheDocument();
@@ -74,9 +72,8 @@ describe('ModeSwitch e "Mostrar mais" (specs/008, US7)', () => {
         ).not.toBeInTheDocument();
         expect(usePreferences.getState().mode).toBe('pro');
 
-        await userEvent.click(
-            within(modes).getByRole('radio', { name: 'Normal' }),
-        );
+        await userEvent.click(pro);
+        expect(pro).not.toBeChecked();
 
         expect(driverField('Qes')).not.toBeInTheDocument();
         expect(
@@ -119,8 +116,8 @@ describe('ModeSwitch e "Mostrar mais" (specs/008, US7)', () => {
             })[0],
         ).toBeVisible();
 
-        await userEvent.click(screen.getByRole('radio', { name: 'Pro' }));
-        await userEvent.click(screen.getByRole('radio', { name: 'Normal' }));
+        await userEvent.click(screen.getByRole('switch', { name: 'Modo Pro' }));
+        await userEvent.click(screen.getByRole('switch', { name: 'Modo Pro' }));
 
         expect(activeProjectStore().getState().data.driver.re_ohm).toBe(3.6);
         expect(run()).toEqual(before);
@@ -130,7 +127,7 @@ describe('ModeSwitch e "Mostrar mais" (specs/008, US7)', () => {
         renderWithProviders(<Both />);
         const normal = symbols().length;
 
-        await userEvent.click(screen.getByRole('radio', { name: 'Pro' }));
+        await userEvent.click(screen.getByRole('switch', { name: 'Modo Pro' }));
         const pro = symbols().length;
 
         expect(normal).toBeLessThanOrEqual(pro * 0.7);

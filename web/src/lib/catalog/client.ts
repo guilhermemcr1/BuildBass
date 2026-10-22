@@ -1,7 +1,9 @@
 import { apiUrl } from '@/lib/api';
 import type {
+    BrandsResponse,
     CatalogError,
     CatalogResult,
+    DriverFilters,
     DriverResponse,
     SearchResponse,
 } from './types';
@@ -90,15 +92,38 @@ const parseDriver: Parse<DriverResponse> = async (body) => {
     return parsed.success ? parsed.data : undefined;
 };
 
+const parseBrands: Parse<BrandsResponse> = async (body) => {
+    const { brandsResponseSchema } = await import('./schema');
+    const parsed = brandsResponseSchema.safeParse(body);
+
+    return parsed.success ? parsed.data : undefined;
+};
+
+// Texto e filtros viram a query; com filtro, o texto pode faltar (a API lista o que combina).
 export function searchDrivers(
     term: string,
+    filters: DriverFilters = {},
     signal?: AbortSignal,
 ): Promise<CatalogResult<SearchResponse>> {
-    return request(
-        `/api/drivers?q=${encodeURIComponent(term)}`,
-        parseSearch,
-        signal,
-    );
+    const params: [string, string][] = term === '' ? [] : [['q', term]];
+
+    for (const [key, value] of Object.entries(filters)) {
+        if (value !== undefined) {
+            params.push([key, String(value)]);
+        }
+    }
+
+    const query = params
+        .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+        .join('&');
+
+    return request(`/api/drivers?${query}`, parseSearch, signal);
+}
+
+export function fetchBrands(
+    signal?: AbortSignal,
+): Promise<CatalogResult<BrandsResponse>> {
+    return request('/api/driver-brands', parseBrands, signal);
 }
 
 export function fetchDriver(

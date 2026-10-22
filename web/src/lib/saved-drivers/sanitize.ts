@@ -2,6 +2,7 @@ import { CUT_PLAN_LIMITS } from '@/cutplan/config';
 import { DRIVER_KEYS } from '@/engine';
 import type { DriverInput } from '@/engine';
 import { PARAMETERS } from '@/lib/parameters';
+import { isDriverType } from '@/lib/project/types';
 import { SAVED_DRIVER_LIMITS } from './types';
 import type { SavedDriver, SavedDriverDraft } from './types';
 
@@ -104,6 +105,8 @@ export function sanitizeDraft(raw: unknown): SavedDriverDraft | undefined {
         source.nominal_diameter_m,
         SAVED_DRIVER_LIMITS.nominal_diameter_m,
     );
+    // Tipo que este app não conhece (de uma versão futura) é ignorado, sem perder o item.
+    const type = isDriverType(source.type) ? source.type : undefined;
     const cutout = optional(source.cutout_m, CUT_PLAN_LIMITS.cutout_m);
     const depth = optional(source.depth_m, SAVED_DRIVER_LIMITS.depth_m);
 
@@ -123,6 +126,7 @@ export function sanitizeDraft(raw: unknown): SavedDriverDraft | undefined {
         brand,
         model,
         ...(variant === undefined ? {} : { variant }),
+        ...(type === undefined ? {} : { type }),
         driver,
         ...(diameter.value === undefined
             ? {}

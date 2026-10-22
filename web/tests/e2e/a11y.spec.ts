@@ -92,6 +92,17 @@ async function axe(
     page: import('@playwright/test').Page,
     { listOpen = false }: { listOpen?: boolean } = {},
 ) {
+    // Diálogos e popovers entram com fade: o contraste só vale com a opacidade final. Terminar as
+    // animações finitas na hora é determinístico (esperar `finished` trava em páginas em segundo
+    // plano, quando os testes rodam em paralelo); as infinitas (ícone girando) ficam como estão.
+    await page.evaluate(() => {
+        for (const animation of document.getAnimations()) {
+            if (animation.effect?.getComputedTiming().iterations !== Infinity) {
+                animation.finish();
+            }
+        }
+    });
+
     const builder = new AxeBuilder({ page }).withTags([
         'wcag2a',
         'wcag2aa',
@@ -161,6 +172,8 @@ for (const theme of ['light', 'dark'] as const) {
         ).toBeVisible();
         expect(await axe(page)).toEqual([]);
         await page.keyboard.press('Escape');
+        // O diálogo sai com fade: espera sumir antes de procurar os botões da barra.
+        await expect(page.getByRole('dialog')).toBeHidden();
 
         await page
             .getByRole('button', { name: /^Fechar Projeto sem nome 2/ })
@@ -170,6 +183,7 @@ for (const theme of ['light', 'dark'] as const) {
         ).toBeVisible();
         expect(await axe(page)).toEqual([]);
         await page.keyboard.press('Escape');
+        await expect(page.getByRole('dialog')).toBeHidden();
 
         const choosing = page.waitForEvent('filechooser');
         await page
@@ -380,11 +394,17 @@ for (const theme of ['light', 'dark'] as const) {
                 await page.getByRole('radio', { name: 'Selada' }).click();
             }
 
-            await page.getByRole('radio', { name: 'Plano de corte' }).click();
+            await page
+                .getByRole('button', { name: 'Plano de corte', exact: true })
+                .click();
             await expect(page.locator('[data-region="plan"]')).toBeVisible();
 
             if (state !== 'bloqueado') {
-                await fill(/^Ød/, '200');
+                const cutout = page
+                    .locator('[data-region="plan"]')
+                    .getByRole('textbox', { name: /^Ød/ });
+                await cutout.fill('200');
+                await cutout.press('Tab');
                 await expect(
                     page.getByRole('img', { name: 'Frente' }),
                 ).toBeVisible();
@@ -562,9 +582,14 @@ for (const theme of ['light', 'dark'] as const) {
 
             if (view === 'plano') {
                 await page
-                    .getByRole('radio', { name: 'Plano de corte' })
+                    .getByRole('button', {
+                        name: 'Plano de corte',
+                        exact: true,
+                    })
                     .click();
-                const cutout = page.getByRole('textbox', { name: /^Ød/ });
+                const cutout = page
+                    .locator('[data-region="plan"]')
+                    .getByRole('textbox', { name: /^Ød/ });
                 await cutout.fill('200');
                 await cutout.press('Tab');
                 await expect(
@@ -713,7 +738,9 @@ for (const theme of ['light', 'dark'] as const) {
         await fill(page, /^Sd/, '491');
         await page.getByRole('radio', { name: 'Selada' }).click();
         await fill(page, /^Vb/, '60');
-        await page.getByRole('radio', { name: 'Plano de corte' }).click();
+        await page
+            .getByRole('button', { name: 'Plano de corte', exact: true })
+            .click();
         await fill(page, /^Wc/, '2750');
         await fill(page, /^Hc/, '1850');
         await page.getByRole('tab', { name: 'Chapas' }).click();

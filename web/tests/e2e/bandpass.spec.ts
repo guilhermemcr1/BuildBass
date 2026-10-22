@@ -159,6 +159,11 @@ test('três projetos plotados (selada, dutada, bandpass): curvas, legenda e tabe
     await expect(legend.getByRole('listitem')).toHaveCount(3);
     await expect(page.locator('[data-region="charts"] canvas')).toBeVisible();
 
+    // Com vários projetos a tabela de comparação começa recolhida.
+    await page
+        .locator('[data-region="results"]')
+        .getByRole('button', { name: 'Resultados' })
+        .click();
     const table = page.locator('[data-region="results"] table');
     await expect(table.getByRole('columnheader')).toHaveCount(4);
     await expect(

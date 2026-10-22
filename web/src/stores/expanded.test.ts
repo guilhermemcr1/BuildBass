@@ -13,6 +13,7 @@ describe('seções "Mostrar mais" — estado de expansão', () => {
     test('começa tudo recolhido no Normal', () => {
         expect(useExpanded.getState().open).toEqual({
             driverAdvanced: false,
+            driverDims: false,
             planAdvanced: false,
         });
     });
@@ -22,6 +23,7 @@ describe('seções "Mostrar mais" — estado de expansão', () => {
 
         expect(useExpanded.getState().open).toEqual({
             driverAdvanced: true,
+            driverDims: true,
             planAdvanced: true,
         });
 
@@ -29,6 +31,7 @@ describe('seções "Mostrar mais" — estado de expansão', () => {
 
         expect(useExpanded.getState().open).toEqual({
             driverAdvanced: false,
+            driverDims: false,
             planAdvanced: false,
         });
     });
@@ -38,6 +41,7 @@ describe('seções "Mostrar mais" — estado de expansão', () => {
 
         expect(useExpanded.getState().open).toEqual({
             driverAdvanced: true,
+            driverDims: false,
             planAdvanced: false,
         });
 
@@ -46,6 +50,7 @@ describe('seções "Mostrar mais" — estado de expansão', () => {
 
         expect(useExpanded.getState().open).toEqual({
             driverAdvanced: false,
+            driverDims: false,
             planAdvanced: true,
         });
         expect(usePreferences.getState().mode).toBe('normal');
@@ -68,6 +73,7 @@ describe('seções "Mostrar mais" — estado de expansão', () => {
 
         expect(useExpanded.getState().open).toEqual({
             driverAdvanced: true,
+            driverDims: true,
             planAdvanced: false,
         });
     });
@@ -82,9 +88,22 @@ describe('sectionOf', () => {
             'le_h',
             'bl_tm',
             'mms_kg',
-            'vd_m3',
         ] as const) {
             expect(sectionOf(key)).toBe('driverAdvanced');
+        }
+    });
+
+    test('medidas físicas do alto-falante e o volume do motor ficam em driverDims', () => {
+        for (const key of [
+            'drv_a_m',
+            'drv_b_m',
+            'drv_d_m',
+            'drv_e_m',
+            'drv_f_m',
+            'drv_g_m',
+            'vd_m3',
+        ] as const) {
+            expect(sectionOf(key)).toBe('driverDims');
         }
     });
 

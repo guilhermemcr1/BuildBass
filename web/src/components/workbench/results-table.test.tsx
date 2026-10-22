@@ -1,4 +1,5 @@
 import { screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'vite-plus/test';
 import type { BoxInput } from '@/engine';
 import { activeProjectStore } from '@/hooks/use-active-project';
@@ -53,10 +54,13 @@ describe('ResultsTable — bandpass de 6ª ordem', () => {
         useWorkspace.setState(initialWorkspace());
     });
 
-    test('as linhas do duto traseiro aparecem quando algum projeto plotado é de 6ª ordem', () => {
+    test('as linhas do duto traseiro aparecem quando algum projeto plotado é de 6ª ordem', async () => {
         twoProjects({ type: 'bandpass6' }, { type: 'closed', vb_m3: 0.05 });
 
         renderWithProviders(<ResultsPanel />);
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Resultados' }),
+        );
 
         const names = rows().map((row) => row.textContent ?? '');
         expect(names.some((text) => text.startsWith('Fbr'))).toBe(true);
@@ -77,10 +81,13 @@ describe('ResultsTable — bandpass de 6ª ordem', () => {
         ).toBe(true);
     });
 
-    test('sem projeto de 6ª ordem as linhas do duto traseiro não existem e o duto mantém o rótulo', () => {
+    test('sem projeto de 6ª ordem as linhas do duto traseiro não existem e o duto mantém o rótulo', async () => {
         twoProjects({ type: 'bandpass' }, { type: 'vented', vb_m3: 0.05 });
 
         renderWithProviders(<ResultsPanel />);
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Resultados' }),
+        );
 
         const names = rows().map((row) => row.textContent ?? '');
         expect(names.some((text) => text.startsWith('Fbr'))).toBe(false);
@@ -92,10 +99,13 @@ describe('ResultsTable — bandpass de 6ª ordem', () => {
         ).toBe(true);
     });
 
-    test('o projeto sem duto traseiro mostra traço nessas linhas', () => {
+    test('o projeto sem duto traseiro mostra traço nessas linhas', async () => {
         twoProjects({ type: 'bandpass6' }, { type: 'bandpass' });
 
         renderWithProviders(<ResultsPanel />);
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Resultados' }),
+        );
 
         const row = within(screen.getByRole('table')).getByRole('row', {
             name: /^Fbr/,

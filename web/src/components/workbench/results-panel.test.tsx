@@ -1,4 +1,5 @@
 import { screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'vite-plus/test';
 import { activeProjectStore } from '@/hooks/use-active-project';
 import type { BoxInput } from '@/engine';
@@ -127,7 +128,33 @@ describe('ResultsPanel', () => {
         expect(tile('Corte superior')).toHaveTextContent('> 1000');
     });
 
-    test('comparação: a tabela lista a união das linhas e traço onde não se aplica', () => {
+    test('com vários projetos o painel começa recolhido, com o resumo, e abre à mão', async () => {
+        bandpassProject();
+        useWorkspace.getState().newProject();
+
+        renderWithProviders(<ResultsPanel />);
+
+        expect(screen.queryByRole('table')).not.toBeInTheDocument();
+        expect(screen.getByText('2 projetos no gráfico')).toBeInTheDocument();
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Resultados' }),
+        );
+
+        expect(screen.getByRole('table')).toBeInTheDocument();
+    });
+
+    test('com um projeto só o painel começa aberto', () => {
+        bandpassProject();
+
+        renderWithProviders(<ResultsPanel />);
+
+        expect(
+            screen.getByRole('button', { name: 'Resultados' }),
+        ).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    test('comparação: a tabela lista a união das linhas e traço onde não se aplica', async () => {
         bandpassProject();
         useWorkspace.getState().newProject(); // 2ª aba, ligada no gráfico
         const second = activeProjectStore().getState();
@@ -138,6 +165,9 @@ describe('ResultsPanel', () => {
         second.setBoxValue('vb_m3', 0.05);
 
         renderWithProviders(<ResultsPanel />);
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Resultados' }),
+        );
 
         const table = screen.getByRole('table');
         const row = (label: string) =>

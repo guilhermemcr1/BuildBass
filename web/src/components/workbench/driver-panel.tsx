@@ -18,7 +18,8 @@ import {
 } from '@/lib/parameters';
 import { readField } from '@/lib/project/fields';
 import type { SavedDriverDraft } from '@/lib/saved-drivers/types';
-import { DriverOrigin } from './driver-origin';
+import { DriverDimensions } from './driver-dimensions';
+import { DriverIdentity } from './driver-identity';
 import { DriverPicker } from './driver-picker';
 import { DriversFields } from './drivers-fields';
 import { Panel } from './panel';
@@ -82,8 +83,17 @@ function draftFromProject(): SavedDriverDraft {
         ...(data.driverSource?.variant === undefined
             ? {}
             : { variant: data.driverSource.variant }),
+        ...(data.driverSource?.type === undefined
+            ? {}
+            : { type: data.driverSource.type }),
         driver: data.driver,
         ...(cutout === undefined ? {} : { cutout_m: cutout }),
+        ...(data.driverDims?.a_m === undefined
+            ? {}
+            : { nominal_diameter_m: data.driverDims.a_m }),
+        ...(data.driverDims?.g_m === undefined
+            ? {}
+            : { depth_m: data.driverDims.g_m }),
     };
 }
 
@@ -98,8 +108,9 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
     const derived = deriveDriver(driver);
     const offlineReason = t('catalog.offlineReason');
     const essential = ESSENTIAL_DRIVER_PARAMETERS;
+    // O volume do motor (M-Vd) mora na seção de dimensões.
     const advanced = DRIVER_PARAMETERS.filter(
-        (key) => !essential.includes(key),
+        (key) => !essential.includes(key) && key !== 'vd_m3',
     );
     const advancedFilled = advanced.filter(
         (key) => driver[key as DriverKey] !== undefined,
@@ -171,7 +182,7 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
             actions={actions}
             flush
         >
-            <DriverOrigin />
+            <DriverIdentity />
             <div className="grid grid-cols-2 items-start gap-x-3 gap-y-2">
                 {essential.map((key) => (
                     <DriverField
@@ -192,6 +203,7 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
                     ))}
                 </div>
             </ShowMore>
+            <DriverDimensions />
             <DriversFields />
             <SignalFields />
             <Suspense fallback={null}>

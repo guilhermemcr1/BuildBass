@@ -1,5 +1,6 @@
 import { Sparkles } from 'lucide-react';
 import { useId, useState } from 'react';
+import type { ReactNode } from 'react';
 import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { Banner } from '@/components/ui/banner';
@@ -14,8 +15,15 @@ import { usePreferences } from '@/stores/preferences';
 
 const NEEDS: DriverKey[] = ['fs_hz', 'qts', 'vas_m3'];
 
-// Sugere Vb (e Fb) pelos alinhamentos clássicos numa só etapa de desfazer (FR-019).
-export function SuggestBox() {
+type SuggestBoxProps = {
+    title: string;
+    // Os campos do grupo (volume, sintonia, perdas); a sugestão preenche alguns deles.
+    children: ReactNode;
+};
+
+// Grupo "Volume e sintonia": título com o botão que sugere Vb (e Fb) pelos alinhamentos clássicos
+// numa só etapa de desfazer (FR-019), os campos logo abaixo e o motivo ou resultado depois deles.
+export function SuggestBox({ title, children }: SuggestBoxProps) {
     const { t } = useTranslation(['workbench', 'engine']);
     const { locale } = useLocale();
     const unitSystem = usePreferences((state) => state.unitSystem);
@@ -89,22 +97,28 @@ export function SuggestBox() {
     };
 
     return (
-        <div className="flex flex-col gap-2">
-            <Button
-                onPress={suggest}
-                disabled={reason !== undefined}
-                aria-describedby={reason === undefined ? undefined : reasonId}
-                className="self-start"
-            >
-                <Sparkles aria-hidden="true" className="size-4" />
-                {t('suggest.button')}
-            </Button>
+        <section aria-label={title} className="flex flex-col gap-2.5">
+            <header className="flex min-h-8 items-center justify-between gap-2">
+                <h3 className="text-section">{title}</h3>
+                <Button
+                    variant="quiet"
+                    onPress={suggest}
+                    disabled={reason !== undefined}
+                    aria-describedby={
+                        reason === undefined ? undefined : reasonId
+                    }
+                >
+                    <Sparkles aria-hidden="true" className="size-4" />
+                    {t('suggest.button')}
+                </Button>
+            </header>
+            {children}
             {reason !== undefined && (
                 <p id={reasonId} className="text-[11px] text-muted">
                     {reason}
                 </p>
             )}
             {message !== null && <Banner>{message}</Banner>}
-        </div>
+        </section>
     );
 }

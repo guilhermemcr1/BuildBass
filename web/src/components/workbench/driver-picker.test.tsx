@@ -2,7 +2,8 @@ import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { activeProjectStore } from '@/hooks/use-active-project';
-import { fetchDriver, searchDrivers } from '@/lib/catalog/client';
+import { fetchBrands, fetchDriver, searchDrivers } from '@/lib/catalog/client';
+import { resetBrandsCache } from '@/hooks/use-driver-brands';
 import type { CatalogDriver, DriverSummary } from '@/lib/catalog/types';
 import { usePreferences } from '@/stores/preferences';
 import { useRecentDrivers } from '@/stores/recent-drivers';
@@ -16,10 +17,12 @@ const DRIVER_ID = '0198a3c2-6d11-7c4e-9a52-3f1b8e0d7a10';
 vi.mock('@/lib/catalog/client', () => ({
     searchDrivers: vi.fn(),
     fetchDriver: vi.fn(),
+    fetchBrands: vi.fn(),
 }));
 
 const search = vi.mocked(searchDrivers);
 const detail = vi.mocked(fetchDriver);
+const brandsOf = vi.mocked(fetchBrands);
 
 const SUMMARY: DriverSummary = {
     id: DRIVER_ID,
@@ -77,6 +80,12 @@ beforeEach(() => {
     usePreferences.setState({ unitSystem: 'metric' });
     search.mockReset();
     detail.mockReset();
+    brandsOf.mockReset();
+    resetBrandsCache();
+    brandsOf.mockResolvedValue({
+        ok: true,
+        data: { data: ['Alfa', 'Triton'] },
+    });
     search.mockResolvedValue(listing());
     detail.mockResolvedValue({ ok: true, data: { data: DRIVER } });
 });
@@ -115,7 +124,7 @@ describe('DriverPicker — abrir e buscar', () => {
 
         expect(
             screen.getByText(
-                'Digite ao menos 2 letras do fabricante ou modelo.',
+                'Digite ao menos 2 letras ou escolha uma marca ou um diâmetro.',
             ),
         ).toBeInTheDocument();
     });
@@ -456,5 +465,116 @@ describe('DriverPicker — Meus alto-falantes (specs/008, US6)', () => {
         await waitFor(() =>
             expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
         );
+    });
+});
+
+describe('DriverPicker — filtros e detalhes (marca, diâmetro, tipo)', () => {
+    const TYPED: DriverSummary = {
+        ...SUMMARY,
+        type: 'subwoofer',
+        nominal_diameter_m: 0.3048,
+    };
+
+    // O menu do filtro não abre no jsdom dentro do Autocomplete (no navegador abre), mas o React
+    // Aria mantém um <select> nativo escondido ao lado de cada um: é por ele que o teste escolhe.
+    async function pickFilter(label: string, option: string) {
+        const field = screen
+            .getAllByText(label, { selector: 'span, label' })
+            .map((node) => node.closest('div'))
+            .find((box) => box?.querySelector('select') !== null);
+        const native = field?.querySelector('select') as HTMLSelectElement;
+
+        await userEvent.selectOptions(native, option);
+    }
+
+    test('cada resultado traz o tipo e o diâmetro, além de Fs, Qts e Vas', async () => {
+        search.mockResolvedValue(listing([TYPED]));
+        const input = await open();
+
+        const option = await typeAndWait(input);
+
+        expect(option).toHaveTextContent('Subwoofer · Ø 304,8 mm');
+        expect(option).toHaveTextContent('Fs 76,9 Hz');
+    });
+
+    test('resultado sem tipo nem diâmetro não ganha a linha extra', async () => {
+        const input = await open();
+
+        const option = await typeAndWait(input);
+
+        expect(option).not.toHaveTextContent('Ø');
+    });
+
+    test('escolher uma marca busca sem texto e lista o que combina', async () => {
+        search.mockResolvedValue(listing([TYPED]));
+        await open();
+
+        await pickFilter('Marca', 'Triton');
+
+        const option = await screen.findByRole(
+            'option',
+            { name: /Triton/ },
+            { timeout: 2000 },
+        );
+
+        expect(option).toBeVisible();
+        expect(search).toHaveBeenLastCalledWith(
+            '',
+            { brand: 'Triton' },
+            expect.any(AbortSignal),
+        );
+    });
+
+    test('a faixa de diâmetro vira os limites em metros, somada ao texto', async () => {
+        search.mockResolvedValue(listing([TYPED]));
+        const input = await open();
+
+        await pickFilter('Diâmetro', '12″');
+        await userEvent.type(input, 'tr');
+        await screen.findByRole(
+            'option',
+            { name: /Triton/ },
+            { timeout: 2000 },
+        );
+
+        const [term, filters] = search.mock.calls.at(-1) ?? [];
+
+        expect(term).toBe('tr');
+        expect(filters?.diameter_min_m).toBeCloseTo(0.2794, 4);
+        expect(filters?.diameter_max_m).toBeCloseTo(0.3429, 4);
+    });
+
+    test('sem resultado com filtro avisa e "Limpar filtros" volta ao estado inicial', async () => {
+        search.mockResolvedValue(listing([]));
+        await open();
+
+        await pickFilter('Marca', 'Alfa');
+
+        expect(
+            await screen.findByText(
+                'Nenhum driver com esses filtros.',
+                undefined,
+                {
+                    timeout: 2000,
+                },
+            ),
+        ).toBeVisible();
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Limpar filtros' }),
+        );
+
+        expect(
+            screen.queryByRole('button', { name: 'Limpar filtros' }),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.queryByText('Nenhum driver com esses filtros.'),
+        ).not.toBeInTheDocument();
+    });
+
+    test('offline os filtros somem', async () => {
+        await open({ disabled: true });
+
+        expect(screen.queryByText('Diâmetro')).not.toBeInTheDocument();
     });
 });

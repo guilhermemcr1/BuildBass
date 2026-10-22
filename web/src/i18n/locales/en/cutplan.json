@@ -9,7 +9,27 @@
         "title": "Settings",
         "proportion": "Proportion",
         "ratioLine": "Height : width : depth = {{h}} : {{w}} : {{d}}",
-        "hint": "Suggestions are starting points to avoid repeated dimensions, not a guarantee of better sound."
+        "groups": {
+            "panel": "Panel",
+            "proportion": "Proportion",
+            "cutout": "Cutout",
+            "sheet": "Sheet",
+            "shape": "Box proportion"
+        },
+        "help": {
+            "panel": "Thickness of the panel wood. It sets the part sizes: the project inner volume is kept and the outer measures grow with the thickness.",
+            "proportion": "Ratio between the box height, width and depth. Golden: 2.62 : 1.62 : 1. Louden: 1.9 : 1.4 : 1, keeps sides from being multiples of each other. Equal steps: 1.59 : 1.26 : 1. Cube: equal sides. Custom: you enter it. These are starting points, not a guarantee of better sound.",
+            "cutout": "Driver hole in the front panel. The diameter comes from the datasheet; without it the cutout shows as \"to be informed\".",
+            "sheet": "Enter the sheet you have (for example, 2.75 × 1.85 m) to see how the pieces fit and how many sheets they use. Thickness is the panel one.",
+            "dimensions": "Inner: the volume the driver \"sees\". Outer: the finished box measures, with the wood thickness added.",
+            "info": "Help: {{topic}}",
+            "totalsHelp": "How much wood the project uses: area and cut length, with and without the MDF thickness.",
+            "partsHelp": "Each piece with its final measures and cutouts. This is the list to take to the workshop.",
+            "volumeHelp": "Checks that the net box volume in the plan matches the simulation; if it does not, the sound changes.",
+            "shape": "Box height : width : depth. Pick a preset or edit the three numbers to shape it: the volume (Vb) stays the same and the measures adjust."
+        },
+        "axes": "W × H × D",
+        "needsVolume": "Enter the volume (Vb) to see the measures."
     },
     "proportions": {
         "golden": "Golden",
@@ -104,7 +124,8 @@
         "portLongerThanDepth_rear": "The rear port ({{length}}) is longer than the rear chamber depth ({{depth}}): it will need a bend or fold.",
         "portLongerThanDepth_front": "The front port ({{length}}) is longer than the front chamber depth ({{depth}}): it will need a bend or fold.",
         "portUnknown_rear": "The rear chamber port has no dimensions: provide them to get its cutout and volume.",
-        "portUnknown_front": "The front chamber port has no dimensions: provide them to get its cutout and volume."
+        "portUnknown_front": "The front chamber port has no dimensions: provide them to get its cutout and volume.",
+        "driverTooDeep": "The loudspeaker is {{length}} deep behind the baffle and the chamber has only {{depth}} of internal depth: it does not fit, increase the depth or change the proportion."
     },
     "drawings": {
         "title": "2D drawings",
@@ -165,8 +186,7 @@
     },
     "sheet": {
         "title": "Sheet you have",
-        "rotate": "Pieces may be rotated",
-        "hint": "Enter your sheet to see how the pieces fit. Thickness is the field above."
+        "rotate": "Pieces may be rotated"
     },
     "sheets": {
         "title": "Sheets",
@@ -189,5 +209,10 @@
         "rotatedMark": "rotated",
         "drawing": "Sheet {{n}} with {{count}} piece(s), {{utilization}} utilization",
         "empty": "No piece fit the sheet you entered."
+    },
+    "summary": {
+        "pieces_one": "{{count}} piece",
+        "pieces_other": "{{count}} pieces",
+        "blocked": "parameters missing"
     }
 }

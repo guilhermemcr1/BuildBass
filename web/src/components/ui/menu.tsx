@@ -53,7 +53,7 @@ export function Menu<T extends string>({
             <Popover
                 placement="bottom end"
                 offset={4}
-                className="min-w-28 rounded-md border border-border bg-raised p-1 shadow-lg"
+                className="pop min-w-28 rounded-md border border-border bg-raised p-1 shadow-lg"
             >
                 <AriaMenu
                     aria-label={label}

@@ -2,8 +2,14 @@ import { Suspense, lazy, useState } from 'react';
 import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Tabs } from '@/components/ui/tabs';
-import { PORT_VELOCITY_ERROR_MS, PORT_VELOCITY_WARN_MS } from '@/engine';
+import {
+    ANALYSIS_MAX_HZ,
+    CHART_MAX_HZ,
+    PORT_VELOCITY_ERROR_MS,
+    PORT_VELOCITY_WARN_MS,
+} from '@/engine';
 import type { CurveId, FieldKey } from '@/engine';
 import { useActiveProject } from '@/hooks/use-active-project';
 import { useSimulations } from '@/hooks/use-simulation';
@@ -46,10 +52,40 @@ const CURVES: Record<ChartKind, { curve: CurveId; quantity: QuantityId }> = {
     portVelocity: { curve: 'port_velocity_ms', quantity: 'velocity' },
 };
 
-// Faixa da resposta: 42 dB de janela com o topo logo acima do maior valor.
-function levelRange(series: ChartSeries[]): [number, number] {
+const MIN_HZ = 10;
+
+// Até onde o gráfico vai (Hz). 1 kHz é a faixa em que o modelo e os resultados valem; acima
+// disso as curvas são o mesmo modelo estendido, só para olhar.
+const RANGE_MAX_OPTIONS = [200, ANALYSIS_MAX_HZ, 5000, 10000, CHART_MAX_HZ];
+const RANGE_SHORT: Record<number, string> = {
+    200: '200',
+    1000: '1k',
+    5000: '5k',
+    10000: '10k',
+    20000: '20k',
+};
+const RANGE_NAME: Record<number, string> = {
+    200: '200 Hz',
+    1000: '1 kHz',
+    5000: '5 kHz',
+    10000: '10 kHz',
+    20000: '20 kHz',
+};
+
+// Faixa da resposta: 42 dB de janela com o topo logo acima do maior valor visível.
+function levelRange(
+    series: ChartSeries[],
+    frequencies: readonly number[],
+    [min, max]: [number, number],
+): [number, number] {
     const values = series
-        .flatMap((item) => item.values)
+        .flatMap((item) =>
+            item.values.filter((_, index) => {
+                const frequency = frequencies[index];
+
+                return frequency >= min && frequency <= max;
+            }),
+        )
         .filter((v) => v !== null);
     const top = Math.ceil((Math.max(...values, 0) + 3) / 6) * 6;
 
@@ -76,6 +112,10 @@ export function ChartPanel({
     const plotted = useSimulations();
     const xmax = useActiveProject((state) => state.data.driver.xmax_m);
     const [localSelected, setLocalSelected] = useState<ChartKind>('response');
+    // Até quantos Hz o gráfico vai, e o zoom por arrastar (sobrepõe a faixa até voltar).
+    const [maxHz, setMaxHz] = useState(ANALYSIS_MAX_HZ);
+    const [zoom, setZoom] = useState<[number, number] | null>(null);
+    const xRange: [number, number] = zoom ?? [MIN_HZ, maxHz];
     const anyPorted = plotted.some(
         ({ project }) => project.data.box.type !== 'closed',
     );
@@ -248,7 +288,40 @@ export function ChartPanel({
     ];
 
     return (
-        <Panel region="charts" title={t('regions.charts')} className="min-h-96">
+        <Panel
+            region="charts"
+            title={t('regions.charts')}
+            className="min-h-96"
+            actions={
+                <div className="flex items-center gap-2">
+                    {zoom !== null && (
+                        <Button
+                            variant="quiet"
+                            className="h-7 px-2 text-xs"
+                            onPress={() => setZoom(null)}
+                        >
+                            {t('charts.zoomReset')}
+                        </Button>
+                    )}
+                    <SegmentedControl<string>
+                        label={t('charts.rangeLabel')}
+                        size="sm"
+                        selected={String(maxHz)}
+                        onChange={(id) => {
+                            setMaxHz(Number(id));
+                            setZoom(null);
+                        }}
+                        options={RANGE_MAX_OPTIONS.map((hz) => ({
+                            id: String(hz),
+                            label: t('charts.rangeUpTo', {
+                                value: RANGE_NAME[hz],
+                            }),
+                            short: RANGE_SHORT[hz],
+                        }))}
+                    />
+                </div>
+            }
+        >
             <Tabs<ChartKind>
                 label={t('charts.label')}
                 items={CHART_KINDS.map((id) => ({
@@ -321,7 +394,13 @@ export function ChartPanel({
                                             kind === 'response'
                                                 ? normalized
                                                     ? [-36, 6]
-                                                    : levelRange(series)
+                                                    : levelRange(
+                                                          series,
+                                                          first?.simulation
+                                                              .frequencies_hz ??
+                                                              [],
+                                                          xRange,
+                                                      )
                                                 : undefined
                                         }
                                         yIncrs={
@@ -329,6 +408,10 @@ export function ChartPanel({
                                                 ? [3, 6, 12]
                                                 : undefined
                                         }
+                                        xRange={xRange}
+                                        onZoom={setZoom}
+                                        onZoomReset={() => setZoom(null)}
+                                        peakLabel={t('charts.peak')}
                                     />
                                 </Suspense>
                                 {series.length === 0 && (

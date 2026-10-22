@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCutPlan } from '@/hooks/use-cut-plan';
 import { useSheetLayout } from '@/hooks/use-sheet-layout';
@@ -17,7 +18,12 @@ const PAPER =
 
 // Folha do plano para imprimir (specs/005, FR-013): fica na página, oculta na tela, e é a única
 // coisa visível ao imprimir a visão Plano. Sem a vista 3D e sem controles.
-export function PrintSheet() {
+type PrintSheetProps = {
+    // Chamado depois que a folha está na página; a bancada abre a impressão a partir dele.
+    onReady?: () => void;
+};
+
+export function PrintSheet({ onReady }: PrintSheetProps) {
     const { t } = useTranslation(['cutplan', 'project']);
     const cutPlan = useCutPlan();
     const suggestion = useSheetLayout(
@@ -26,6 +32,19 @@ export function PrintSheet() {
     const project = useWorkspace((state) =>
         state.projects.find((p) => p.id === state.activeId),
     );
+
+    const ready = cutPlan.status === 'ready' && project !== undefined;
+
+    useEffect(() => {
+        if (!ready) {
+            return;
+        }
+
+        // Um quadro depois da montagem, para o layout da folha estar pronto.
+        const frame = requestAnimationFrame(() => onReady?.());
+
+        return () => cancelAnimationFrame(frame);
+    }, [ready]);
 
     if (cutPlan.status !== 'ready' || project === undefined) {
         return null;

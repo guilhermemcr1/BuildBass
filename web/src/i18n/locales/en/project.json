@@ -43,6 +43,8 @@
         "unavailable": "The browser does not allow saving data: open projects will not be remembered after reloading. Export to keep your work."
     },
     "name": {
-        "label": "Project name"
+        "label": "Project name",
+        "save": "Save name",
+        "cancel": "Cancel name edit"
     }
 }

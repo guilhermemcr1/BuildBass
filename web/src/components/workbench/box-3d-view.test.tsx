@@ -152,13 +152,13 @@ describe('Box3dView', () => {
         expect(container.querySelector('[data-id="divider"]')).toBeNull();
 
         await userEvent.click(
-            screen.getByRole('button', { name: 'Ver por dentro' }),
+            screen.getByRole('switch', { name: 'Ver por dentro' }),
         );
 
         expect(container.querySelector('[data-id="divider"]')).not.toBeNull();
         expect(
-            screen.getByRole('button', { name: 'Ver por dentro' }),
-        ).toHaveAttribute('aria-pressed', 'true');
+            screen.getByRole('switch', { name: 'Ver por dentro' }),
+        ).toBeChecked();
     });
 
     test('as três cotas aparecem com a medida externa na unidade ativa', () => {

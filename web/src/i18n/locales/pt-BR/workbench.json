@@ -72,9 +72,14 @@
         "seriesFront": "frontal",
         "seriesRear": "traseiro",
         "showField_one": "Mostrar campo",
-        "showField_other": "Mostrar campos"
+        "showField_other": "Mostrar campos",
+        "peak": "Pico",
+        "rangeLabel": "Faixa de frequência",
+        "rangeUpTo": "Até {{value}}",
+        "zoomReset": "Redefinir zoom"
     },
     "results": {
+        "compared": "{{count}} projetos no gráfico",
         "f3": "F3",
         "fb": "Fb",
         "portLength": "Comprimento do duto",
@@ -112,7 +117,8 @@
         "applyFailed": "Não foi possível copiar este driver. O projeto não foi alterado.",
         "notFound": "Este driver não está mais no catálogo.",
         "originLabel": "Origem",
-        "resultSupport": "Fs {{fs}} · Qts {{qts}} · Vas {{vas}}"
+        "resultSupport": "Fs {{fs}} · Qts {{qts}} · Vas {{vas}}",
+        "resultDiameter": "Ø {{diameter}}"
     },
     "offline": {
         "title": "Sem conexão.",
@@ -143,7 +149,15 @@
         "hint": "Digite ao menos 2 letras do fabricante ou modelo.",
         "offline": "Sem conexão: recentes e catálogo ficam indisponíveis.",
         "notFoundHelp": "Não achou?",
-        "submit": "Enviar driver"
+        "submit": "Enviar driver",
+        "filters": "Filtros",
+        "brand": "Marca",
+        "brandAny": "Todas as marcas",
+        "diameter": "Diâmetro",
+        "diameterAny": "Qualquer",
+        "clearFilters": "Limpar filtros",
+        "emptyFiltered": "Nenhum driver com esses filtros.",
+        "hintFilters": "Digite ao menos 2 letras ou escolha uma marca ou um diâmetro."
     },
     "boxDialog": {
         "open3d": "Ver caixa em 3D",
@@ -229,5 +243,49 @@
         "storageOff": "Este navegador não deixa guardar dados: a lista se perde ao fechar a página. Exporte para não perder.",
         "localOnly": "A lista fica só neste navegador. Exporte um arquivo para ter uma cópia ou levar para outro aparelho."
     },
-    "driverMenu": "Mais ações do driver"
+    "driverMenu": "Mais ações do driver",
+    "boxGroups": {
+        "volume": "Volume",
+        "tuning": "Volume e sintonia",
+        "losses": "Perdas"
+    },
+    "dims": {
+        "title": "Dimensões do alto-falante",
+        "shape": {
+            "label": "Formato",
+            "round": "Redondo",
+            "square": "Quadrado",
+            "rect": "Retangular"
+        },
+        "piston": {
+            "label": "Tipo de pistão",
+            "cone": "Cone",
+            "dome": "Domo",
+            "flat": "Plano"
+        },
+        "drawing": "Esquema do alto-falante em corte, com as medidas A a G",
+        "hint": "As letras seguem o esquema. O recorte (C) e o volume do motor (M-Vd) são os mesmos campos do plano de corte e da simulação.",
+        "front": "frente",
+        "back": "trás"
+    },
+    "identity": {
+        "title": "Identificação",
+        "brand": "Marca",
+        "model": "Modelo",
+        "variant": "Variação",
+        "type": "Tipo",
+        "typeNone": "Não informado",
+        "brandPlaceholder": "Ex.: Triton",
+        "modelPlaceholder": "Ex.: TR 620 12\"",
+        "variantPlaceholder": "Ex.: 4 Ω",
+        "applied": "Driver aplicado: {{name}}",
+        "fromMine": "Dos meus alto-falantes"
+    },
+    "driverType": {
+        "subwoofer": "Subwoofer",
+        "woofer": "Woofer",
+        "midbass": "Médio-grave",
+        "midrange": "Médio",
+        "fullrange": "Fullrange"
+    }
 }

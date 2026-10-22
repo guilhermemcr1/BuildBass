@@ -39,6 +39,15 @@ export type CutPlanConfig = {
     sheet?: SheetConfig;
 };
 
+// O corpo do alto-falante que o plano usa: o formato decide o recorte (redondo ou retangular) e a
+// profundidade atrás do painel (G − F) é conferida contra a câmara.
+export type DriverBody = {
+    shape?: 'round' | 'square' | 'rect';
+    // Segundo lado do recorte retangular (D).
+    d_m?: number;
+    depth_m?: number;
+};
+
 export type ResolvedCutPlanConfig = {
     thickness_m: number;
     proportion: CutPlanProportion;
@@ -55,6 +64,7 @@ export type PlanKey =
     | 'ratio'
     | 'braces_m3'
     | 'cutout_m'
+    | 'drv_d_m'
     | 'sheet_w_m'
     | 'sheet_h_m'
     | 'kerf_m';
@@ -125,6 +135,7 @@ export type PlanWarningId =
     | 'cutoutTight'
     | 'portLongerThanDepth'
     | 'driverCutoutUnknown'
+    | 'driverTooDeep'
     | 'portUnknown'
     | 'simulationUnavailable'
     | 'volumeMismatch';

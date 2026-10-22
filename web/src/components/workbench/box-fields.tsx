@@ -1,10 +1,12 @@
 import { useTranslation } from 'react-i18next';
+import { cn } from '@/lib/utils';
 import { ParameterField } from '@/components/ui/parameter-field';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { SliderField } from '@/components/ui/slider-field';
 import { useActiveProject } from '@/hooks/use-active-project';
 import { useWorkspace } from '@/stores/workspace';
 import type { BoxType } from '@/lib/project/types';
+import { BoxShape } from './box-shape';
 import { PortFields } from './port-fields';
 import { SuggestBox } from './suggest-box';
 import { useParameterField } from './use-parameter-field';
@@ -41,53 +43,90 @@ export function BoxFields() {
                         { id: 'bandpass', label: t('boxType.bandpass') },
                         { id: 'bandpass6', label: t('boxType.bandpass6') },
                     ]}
-                    size="sm"
+                    variant="tiles"
                     className="grid w-full grid-cols-2"
                 />
             </div>
-            {boxType === 'bandpass6' ? (
-                <>
-                    <fieldset className="flex flex-col gap-2.5">
-                        <legend className="mb-1.5 text-xs font-semibold text-muted">
-                            {t('chambers.rear')}
-                        </legend>
-                        <SliderField {...rear} {...VB_SLIDER} />
-                        <SliderField {...rearTuning} {...FB_SLIDER} />
-                        <PortFields duct="rear" />
-                    </fieldset>
-                    <fieldset className="flex flex-col gap-2.5">
-                        <legend className="mb-1.5 text-xs font-semibold text-muted">
-                            {t('chambers.front')}
-                        </legend>
-                        <SliderField {...front} {...VB_SLIDER} />
-                        <SliderField {...tuning} {...FB_SLIDER} />
-                        <PortFields duct="front" />
-                    </fieldset>
-                    <div className="flex flex-col gap-2.5">
-                        <ParameterField {...losses} />
-                        <SuggestBox key={activeId} />
-                    </div>
-                </>
-            ) : (
-                <>
-                    <div className="flex flex-col gap-2.5">
-                        {boxType === 'bandpass' ? (
-                            <>
-                                <SliderField {...rear} {...VB_SLIDER} />
-                                <SliderField {...front} {...VB_SLIDER} />
-                            </>
-                        ) : (
-                            <SliderField {...volume} {...VB_SLIDER} />
-                        )}
-                        {boxType !== 'closed' && (
+            <BoxShape />
+            <div key={boxType} className="flex swap flex-col gap-3">
+                {boxType === 'bandpass6' ? (
+                    <>
+                        <fieldset className="flex flex-col gap-2.5">
+                            <legend className="mb-1.5 text-xs font-semibold text-muted">
+                                {t('chambers.rear')}
+                            </legend>
+                            <SliderField {...rear} {...VB_SLIDER} />
+                            <SliderField {...rearTuning} {...FB_SLIDER} />
+                            <PortFields duct="rear" />
+                        </fieldset>
+                        <fieldset className="flex flex-col gap-2.5">
+                            <legend className="mb-1.5 text-xs font-semibold text-muted">
+                                {t('chambers.front')}
+                            </legend>
+                            <SliderField {...front} {...VB_SLIDER} />
                             <SliderField {...tuning} {...FB_SLIDER} />
-                        )}
-                        <ParameterField {...losses} />
-                        <SuggestBox key={activeId} />
-                    </div>
-                    {boxType !== 'closed' && <PortFields />}
-                </>
-            )}
+                            <PortFields duct="front" />
+                        </fieldset>
+                        <SuggestBox
+                            key={activeId}
+                            title={t('boxGroups.losses')}
+                        >
+                            <ParameterField {...losses} />
+                        </SuggestBox>
+                    </>
+                ) : (
+                    <>
+                        <SuggestBox
+                            key={activeId}
+                            title={
+                                boxType === 'closed'
+                                    ? t('boxGroups.volume')
+                                    : t('boxGroups.tuning')
+                            }
+                        >
+                            {/* Volume, sintonia e perdas lado a lado: cada campo com o símbolo em cima. */}
+                            <div
+                                className={cn(
+                                    'grid items-start gap-2',
+                                    boxType === 'vented'
+                                        ? 'grid-cols-3'
+                                        : 'grid-cols-2',
+                                )}
+                            >
+                                {boxType === 'bandpass' ? (
+                                    <>
+                                        <SliderField
+                                            {...rear}
+                                            {...VB_SLIDER}
+                                            layout="compact"
+                                        />
+                                        <SliderField
+                                            {...front}
+                                            {...VB_SLIDER}
+                                            layout="compact"
+                                        />
+                                    </>
+                                ) : (
+                                    <SliderField
+                                        {...volume}
+                                        {...VB_SLIDER}
+                                        layout="compact"
+                                    />
+                                )}
+                                {boxType !== 'closed' && (
+                                    <SliderField
+                                        {...tuning}
+                                        {...FB_SLIDER}
+                                        layout="compact"
+                                    />
+                                )}
+                                <ParameterField {...losses} layout="compact" />
+                            </div>
+                        </SuggestBox>
+                        {boxType !== 'closed' && <PortFields />}
+                    </>
+                )}
+            </div>
         </>
     );
 }

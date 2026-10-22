@@ -19,7 +19,8 @@ test('o tema escolhido continua depois de recarregar', async ({ browser }) => {
     const page = await context.newPage();
     await page.goto('/');
 
-    await page.getByRole('radio', { name: 'Claro' }).click();
+    await page.getByRole('button', { name: /^Tema:/ }).click();
+    await page.getByRole('menuitemradio', { name: 'Claro' }).click();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
 
     await page.reload();
@@ -70,7 +71,8 @@ test('com localStorage bloqueado as trocas funcionam sem erro', async ({
     });
 
     await page.goto('/');
-    await page.getByRole('radio', { name: 'Escuro' }).click();
+    await page.getByRole('button', { name: /^Tema:/ }).click();
+    await page.getByRole('menuitemradio', { name: 'Escuro' }).click();
 
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     expect(errors).toEqual([]);
@@ -85,37 +87,36 @@ test.describe('modo Normal e Pro', () => {
     const advanced = (page: Page) =>
         page.getByRole('textbox', { name: /^Qes/ });
     const kerf = (page: Page) => page.getByRole('textbox', { name: /^Ps\s?—/ });
-    const modes = (page: Page) =>
-        page.getByRole('radiogroup', { name: 'Modo' });
+    const pro = (page: Page) => page.getByRole('switch', { name: 'Modo Pro' });
+    // O input do switch fica escondido sob o desenho dele; o usuário clica no rótulo.
+    const toggle = (page: Page) => page.getByText('Modo Pro');
 
     test('Normal começa recolhido; Pro expande tudo; Normal recolhe; abrir à mão não mexe no outro', async ({
         page,
     }) => {
         await page.goto('/');
-        await expect(
-            modes(page).getByRole('radio', { name: 'Normal' }),
-        ).toBeChecked();
+        await expect(pro(page)).not.toBeChecked();
         await expect(advanced(page)).toHaveCount(0);
         await expect(page.getByRole('textbox', { name: /^Fs/ })).toBeVisible();
 
         // Abrir o do driver à mão, sem tocar no modo.
         await page.getByRole('button', { name: 'Mostrar mais' }).click();
         await expect(advanced(page)).toBeVisible();
-        await expect(
-            modes(page).getByRole('radio', { name: 'Normal' }),
-        ).toBeChecked();
+        await expect(pro(page)).not.toBeChecked();
 
         // Pro abre o plano também, sem outro clique.
-        await page.getByRole('radio', { name: 'Plano de corte' }).click();
+        await page
+            .getByRole('button', { name: 'Plano de corte', exact: true })
+            .click();
         await expect(kerf(page)).toHaveCount(0);
-        await modes(page).getByRole('radio', { name: 'Pro' }).click();
+        await toggle(page).click();
         await expect(kerf(page)).toBeVisible();
         await expect(advanced(page)).toBeVisible();
         await expect(
             page.getByRole('button', { name: /Mostrar (mais|menos)/ }),
         ).toHaveCount(2);
 
-        await modes(page).getByRole('radio', { name: 'Normal' }).click();
+        await toggle(page).click();
         await expect(kerf(page)).toHaveCount(0);
         await expect(advanced(page)).toHaveCount(0);
     });
@@ -124,20 +125,16 @@ test.describe('modo Normal e Pro', () => {
         page,
     }) => {
         await page.goto('/');
-        await modes(page).getByRole('radio', { name: 'Pro' }).click();
+        await toggle(page).click();
         await page.reload();
 
-        await expect(
-            modes(page).getByRole('radio', { name: 'Pro' }),
-        ).toBeChecked();
+        await expect(pro(page)).toBeChecked();
         await expect(advanced(page)).toBeVisible();
 
-        await modes(page).getByRole('radio', { name: 'Normal' }).click();
+        await toggle(page).click();
         await page.reload();
 
-        await expect(
-            modes(page).getByRole('radio', { name: 'Normal' }),
-        ).toBeChecked();
+        await expect(pro(page)).not.toBeChecked();
         await expect(advanced(page)).toHaveCount(0);
     });
 
@@ -145,7 +142,7 @@ test.describe('modo Normal e Pro', () => {
         page,
     }) => {
         await page.goto('/');
-        await modes(page).getByRole('radio', { name: 'Pro' }).click();
+        await toggle(page).click();
 
         for (const [name, value] of [
             [/^Fs/, '28'],
@@ -166,7 +163,7 @@ test.describe('modo Normal e Pro', () => {
         const results = page.locator('[data-region="results"]');
         const proText = await results.innerText();
 
-        await modes(page).getByRole('radio', { name: 'Normal' }).click();
+        await toggle(page).click();
         await expect(advanced(page)).toHaveCount(0);
 
         expect(await results.innerText()).toBe(proText);

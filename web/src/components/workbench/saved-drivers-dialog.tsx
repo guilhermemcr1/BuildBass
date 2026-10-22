@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { Banner } from '@/components/ui/banner';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
+import { FIELD_BOX } from '@/components/ui/field-box';
 import { useActiveProject } from '@/hooks/use-active-project';
 import {
     downloadSavedDrivers,
@@ -20,6 +21,7 @@ import { SAVED_DRIVERS_MAX, identityOf } from '@/lib/saved-drivers/types';
 import type { SavedDriver, SavedDriverDraft } from '@/lib/saved-drivers/types';
 import { formatQuantity } from '@/lib/units/format';
 import { defaultUnitFor } from '@/lib/units/quantities';
+import { cn } from '@/lib/utils';
 import { usePreferences } from '@/stores/preferences';
 import { useSavedDrivers } from '@/stores/saved-drivers';
 import { storageProbe } from '@/stores/workspace';
@@ -169,7 +171,7 @@ export default function SavedDriversDialog({
                 aria-label={t('saved.list.search')}
                 value={term}
                 onChange={setTerm}
-                className="flex h-[34px] items-center gap-2 rounded-md border border-border bg-surface px-2.5 focus-within:border-accent"
+                className={cn(FIELD_BOX, 'items-center gap-2 px-2.5')}
             >
                 <Search
                     aria-hidden="true"
@@ -202,6 +204,9 @@ export default function SavedDriversDialog({
                                     {nameOf(item)}
                                 </span>
                                 <span className="block truncate text-[11px] text-muted tabular-nums">
+                                    {item.type === undefined
+                                        ? ''
+                                        : `${t(`driverType.${item.type}`)} · `}
                                     {sizes(item)}
                                 </span>
                             </div>

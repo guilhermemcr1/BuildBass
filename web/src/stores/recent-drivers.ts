@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+import { isDriverType } from '@/lib/project/types';
+import type { DriverType } from '@/lib/project/types';
 import { createSafeStorage } from './preferences';
 
 export const RECENT_DRIVERS_KEY = 'buildbass.recentDrivers';
@@ -11,6 +13,8 @@ export type RecentDriver = {
     brand: string;
     model: string;
     variant?: string;
+    type?: DriverType;
+    nominal_diameter_m?: number;
     fs_hz: number;
     qts: number;
     vas_m3: number;
@@ -30,13 +34,25 @@ function finite(value: unknown): value is number {
 }
 
 function summary(driver: RecentDriver): RecentDriver {
-    const { id, brand, model, variant, fs_hz, qts, vas_m3 } = driver;
+    const {
+        id,
+        brand,
+        model,
+        variant,
+        type,
+        nominal_diameter_m,
+        fs_hz,
+        qts,
+        vas_m3,
+    } = driver;
 
     return {
         id,
         brand,
         model,
         ...(variant === undefined ? {} : { variant }),
+        ...(type === undefined ? {} : { type }),
+        ...(nominal_diameter_m === undefined ? {} : { nominal_diameter_m }),
         fs_hz,
         qts,
         vas_m3,
@@ -73,6 +89,10 @@ function sanitize(raw: unknown): RecentDriver[] {
                     brand: item.brand,
                     model: item.model,
                     variant: item.variant,
+                    ...(isDriverType(item.type) ? { type: item.type } : {}),
+                    ...(finite(item.nominal_diameter_m)
+                        ? { nominal_diameter_m: item.nominal_diameter_m }
+                        : {}),
                     fs_hz: item.fs_hz,
                     qts: item.qts,
                     vas_m3: item.vas_m3,

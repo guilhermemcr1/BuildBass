@@ -174,7 +174,15 @@ test('driver que saiu do catálogo avisa e não muda o projeto (US2)', async ({
     await expect(page.getByRole('textbox', { name: /^Fs/ })).toHaveValue('');
 });
 
-const ORIGIN = 'Origem: Triton TR 620 12" (4 Ω)';
+async function expectIdentity(page: Page, filled: boolean) {
+    const brand = page.getByRole('textbox', { name: /^Marca/ });
+    const model = page.getByRole('textbox', { name: /^Modelo/ });
+    const variant = page.getByRole('textbox', { name: /^Variação/ });
+
+    await expect(brand).toHaveValue(filled ? 'Triton' : '');
+    await expect(model).toHaveValue(filled ? 'TR 620 12"' : '');
+    await expect(variant).toHaveValue(filled ? '4 Ω' : '');
+}
 
 async function choose(page: Page) {
     await (await search(page)).fill('tr 6');
@@ -190,7 +198,7 @@ test('a origem vai no arquivo exportado e volta ao reabrir (US4)', async ({
     await mockCatalog(page);
     await page.goto('/');
     await choose(page);
-    await expect(page.getByText(ORIGIN)).toBeVisible();
+    await expectIdentity(page, true);
 
     const downloading = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Exportar' }).click();
@@ -203,19 +211,19 @@ test('a origem vai no arquivo exportado e volta ao reabrir (US4)', async ({
     });
 
     await page.getByRole('button', { name: 'Novo' }).click();
-    await expect(page.getByText(ORIGIN)).toBeHidden();
+    await expectIdentity(page, false);
 
     const choosing = page.waitForEvent('filechooser');
     await page.getByRole('button', { name: 'Abrir' }).click();
     await (await choosing).setFiles(path);
 
-    await expect(page.getByText(ORIGIN)).toBeVisible();
+    await expectIdentity(page, true);
     await expect(page.getByRole('textbox', { name: /^Fs/ })).toHaveValue(
         '76,9',
     );
 });
 
-test('editar um parâmetro mantém a origem; esvaziar o driver a remove (US4)', async ({
+test('editar um parâmetro ou esvaziar o driver mantém a identificação (US4)', async ({
     page,
 }) => {
     await mockCatalog(page);
@@ -225,7 +233,7 @@ test('editar um parâmetro mantém a origem; esvaziar o driver a remove (US4)', 
     const qts = page.getByRole('textbox', { name: /^Qts/ });
     await qts.fill('0,5');
     await qts.press('Tab');
-    await expect(page.getByText(ORIGIN)).toBeVisible();
+    await expectIdentity(page, true);
 
     for (const name of [
         /^Fs/,
@@ -247,7 +255,7 @@ test('editar um parâmetro mantém a origem; esvaziar o driver a remove (US4)', 
         await field.press('Tab');
     }
 
-    await expect(page.getByText(ORIGIN)).toBeHidden();
+    await expectIdentity(page, true);
 });
 
 test('arquivo da feature 002, sem origem, abre normalmente (US4)', async ({
@@ -286,5 +294,5 @@ test('arquivo da feature 002, sem origem, abre normalmente (US4)', async ({
     await expect(page.getByRole('textbox', { name: /^Fs/ })).toHaveValue(
         '28,0',
     );
-    await expect(page.getByText(/^Origem:/)).toBeHidden();
+    await expectIdentity(page, false);
 });

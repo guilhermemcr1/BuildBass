@@ -67,6 +67,87 @@ describe('ParameterField', () => {
         },
     );
 
+    test.each([
+        ['pt-BR', '28.5', 28.5],
+        ['en', '28,5', 28.5],
+    ] as [Locale, string, number][])(
+        'em %s o separador do outro idioma, digitado, é decimal e não milhar (%s)',
+        async (locale, typed, expected) => {
+            const onChangeSi = vi.fn();
+            renderWithProviders(
+                <Harness
+                    parameter="fs_hz"
+                    initialUnit="Hz"
+                    onChangeSi={onChangeSi}
+                />,
+                locale,
+            );
+
+            await typeInto(screen.getByRole('textbox'), typed);
+
+            expect(onChangeSi).toHaveBeenLastCalledWith(expected);
+        },
+    );
+
+    test.each([
+        ['28.5', 28.5],
+        ['1.000', 1000],
+        ['1e3', 1000],
+        ['28 Hz', 28],
+    ] as [string, number][])(
+        'colar %j em pt-BR resulta em %d',
+        async (pasted, expected) => {
+            const onChangeSi = vi.fn();
+            renderWithProviders(
+                <Harness
+                    parameter="fs_hz"
+                    initialSi={40}
+                    initialUnit="Hz"
+                    onChangeSi={onChangeSi}
+                />,
+            );
+            const input = screen.getByRole('textbox');
+
+            await userEvent.clear(input);
+            await userEvent.paste(pasted);
+            await userEvent.tab();
+
+            expect(onChangeSi).toHaveBeenLastCalledWith(expected);
+        },
+    );
+
+    test('colar texto sem número não altera o campo', async () => {
+        const onChangeSi = vi.fn();
+        renderWithProviders(
+            <Harness
+                parameter="fs_hz"
+                initialSi={40}
+                initialUnit="Hz"
+                onChangeSi={onChangeSi}
+            />,
+        );
+        const input = screen.getByRole('textbox');
+
+        await userEvent.click(input);
+        await userEvent.paste('abc');
+        await userEvent.tab();
+
+        expect(input).toHaveValue('40,0');
+        expect(onChangeSi).not.toHaveBeenCalled();
+    });
+
+    test('a faixa fora do limite não deixa espaço sobrando quando a unidade é vazia', async () => {
+        renderWithProviders(
+            <Harness parameter="qts" initialSi={0.38} initialUnit="none" />,
+        );
+
+        await typeInto(screen.getByRole('textbox'), '50');
+
+        expect(
+            screen.getByText('Fora da faixa aceita (0,05 a 10,00).'),
+        ).toBeInTheDocument();
+    });
+
     test('passar pelo campo sem editar não troca o valor exato pelo arredondado', async () => {
         const onChangeSi = vi.fn();
         renderWithProviders(

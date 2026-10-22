@@ -15,13 +15,20 @@ type ShowMoreProps = {
     // Quantos campos avançados já têm valor: o botão avisa com texto quando a seção está recolhida
     // (FR-031). Valores recolhidos continuam valendo nos cálculos.
     filled?: number;
+    // Título próprio no lugar de "Mostrar mais" (seção que é um assunto, como as dimensões).
+    title?: string;
     children: ReactNode;
 };
 
 // Agrupa campos não essenciais atrás de "Mostrar mais" / "Mostrar menos" (disclosure do React
 // Aria: `aria-expanded`, Enter/Espaço, conteúdo recolhido fora da árvore de acessibilidade).
 // Quem abre e fecha é o `useExpanded`, que o modo Normal/Pro comanda.
-export function ShowMore({ id, filled = 0, children }: ShowMoreProps) {
+export function ShowMore({
+    id,
+    filled = 0,
+    title,
+    children,
+}: ShowMoreProps) {
     const { t } = useTranslation('common');
     const expanded = useExpanded((state) => state.open[id]);
     const toggle = useExpanded((state) => state.toggle);
@@ -30,7 +37,7 @@ export function ShowMore({ id, filled = 0, children }: ShowMoreProps) {
         <Disclosure
             isExpanded={expanded}
             onExpandedChange={() => toggle(id)}
-            className="group/more flex flex-col gap-3"
+            className="group/more flex flex-col"
         >
             <Button
                 slot="trigger"
@@ -43,7 +50,7 @@ export function ShowMore({ id, filled = 0, children }: ShowMoreProps) {
                         expanded && 'rotate-180',
                     )}
                 />
-                {expanded ? t('showMore.less') : t('showMore.more')}
+                {title ?? (expanded ? t('showMore.less') : t('showMore.more'))}
                 {!expanded && filled > 0 && (
                     <>
                         {/* Espaço de verdade: o nome acessível não ganha o `gap` do flex. */}
@@ -54,8 +61,8 @@ export function ShowMore({ id, filled = 0, children }: ShowMoreProps) {
                     </>
                 )}
             </Button>
-            <DisclosurePanel className="flex flex-col gap-3">
-                {children}
+            <DisclosurePanel className="disclosure-motion">
+                <div className="flex flex-col gap-3 pt-3">{children}</div>
             </DisclosurePanel>
         </Disclosure>
     );

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vite-plus/test';
 import { AIR_DENSITY, SPEED_OF_SOUND } from './constants';
-import { FREQUENCIES_HZ } from './frequencies';
+import { ANALYSIS_FREQUENCIES_HZ, FREQUENCIES_HZ } from './frequencies';
 import { portLength } from './port';
 import { signalLevels } from './simulate';
 import { simulate } from './simulate';
@@ -566,5 +566,51 @@ describe('simulate — selada e dutada não mudaram com a bandpass (004, T013)',
         close(sample(result.curves.group_delay_s), BASELINE.vented.gd);
         close(sample(result.curves.port_velocity_ms), BASELINE.vented.pv);
         expect(result.results).toEqual(BASELINE.vented.results);
+    });
+});
+
+describe('simulate — curvas até 20 kHz, resultados na grade de análise', () => {
+    const ported = project(
+        { ...REFERENCE, xmax_m: 0.012 },
+        {
+            type: 'vented',
+            vb_m3: 0.08,
+            fb_hz: 32,
+            port: { shape: 'round', count: 1, diameter_m: 0.1 },
+        },
+        { signal: { mode: 'power', power_w: 100, radiation: 'half' } },
+    );
+
+    test('as curvas vão de 10 Hz a 20 kHz e têm um ponto por frequência', () => {
+        const result = simulate(ported);
+
+        expect(result.frequencies_hz.at(-1)).toBe(20000);
+        expect(result.frequencies_hz).toHaveLength(FREQUENCIES_HZ.length);
+        expect(result.curves.spl_db).toHaveLength(FREQUENCIES_HZ.length);
+        expect(result.curves.group_delay_s).toHaveLength(FREQUENCIES_HZ.length);
+        expect(result.curves.port_velocity_ms).toHaveLength(
+            FREQUENCIES_HZ.length,
+        );
+    });
+
+    test('a velocidade máxima no duto só olha a grade de análise', () => {
+        const result = simulate(ported);
+        const analysis = result.curves.port_velocity_ms?.slice(
+            0,
+            ANALYSIS_FREQUENCIES_HZ.length,
+        );
+
+        expect(result.results.port_velocity_max_ms).toBe(
+            Math.max(...(analysis ?? [])),
+        );
+    });
+
+    test('o F3 da selada não vê a queda de agudos acima de 1 kHz', () => {
+        const result = simulate(
+            project({ ...REFERENCE, le_h: 0.002 }, { vb_m3: 0.05 }),
+        );
+
+        expect(result.results.f3_hz).toBeGreaterThan(30);
+        expect(result.results.f3_hz).toBeLessThan(150);
     });
 });

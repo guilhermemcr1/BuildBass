@@ -3,7 +3,7 @@ import { simulate } from '@/engine';
 import type { BoxInput, DriverInput, ProjectInput } from '@/engine';
 import { PROPORTIONS, resolveCutPlan } from './config';
 import { buildCutPlan } from './plan';
-import type { CutPlanConfig, Plan } from './types';
+import type { CutPlanConfig, DriverBody, Plan } from './types';
 
 // Driver de exemplo da bancada. A simulação é a real (não se simula à mão).
 const DRIVER: DriverInput = {
@@ -1006,5 +1006,64 @@ describe('bandpass de 6ª ordem (feature 007, US5)', () => {
         expect(plan.warnings.every(({ duct }) => duct === undefined)).toBe(
             true,
         );
+    });
+});
+
+describe('medidas do alto-falante no plano', () => {
+    const body = (
+        b: DriverBody,
+        config: CutPlanConfig = { cutout_m: 0.25 },
+    ) => {
+        const input = project();
+        const result = buildCutPlan(
+            input,
+            simulate(input).results,
+            resolveCutPlan(config),
+            b,
+        );
+
+        if (result.status !== 'ready') {
+            throw new Error('bloqueado');
+        }
+
+        return result.plan;
+    };
+    const driverCutout = (plan: Plan) =>
+        plan.pieces
+            .find((piece) => piece.role === 'front')
+            ?.cutouts.find((cutout) => cutout.kind === 'driver');
+
+    test('redondo é o padrão: diâmetro C', () => {
+        expect(driverCutout(body({}))).toMatchObject({
+            shape: 'round',
+            diameter_m: 0.25,
+        });
+    });
+
+    test('quadrado usa C nos dois lados', () => {
+        expect(driverCutout(body({ shape: 'square' }))).toMatchObject({
+            shape: 'rect',
+            width_m: 0.25,
+            height_m: 0.25,
+        });
+    });
+
+    test('retangular usa C × D e, sem D, deixa o recorte a informar', () => {
+        expect(driverCutout(body({ shape: 'rect', d_m: 0.18 }))).toMatchObject({
+            shape: 'rect',
+            width_m: 0.25,
+            height_m: 0.18,
+        });
+        expect(driverCutout(body({ shape: 'rect' }))?.pending).toEqual([
+            'drv_d_m',
+        ]);
+    });
+
+    test('alto-falante mais fundo que a câmara gera aviso; um que cabe, não', () => {
+        const deep = body({ depth_m: 5 });
+        const fits = body({ depth_m: 0.05 });
+
+        expect(deep.warnings.map((w) => w.id)).toContain('driverTooDeep');
+        expect(fits.warnings.map((w) => w.id)).not.toContain('driverTooDeep');
     });
 });

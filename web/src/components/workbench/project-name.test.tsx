@@ -103,4 +103,68 @@ describe('ProjectName', () => {
                 .querySelector('span'),
         ).toHaveClass('bg-series-6');
     });
+
+    test('os ícones de salvar e desistir só aparecem durante a edição', async () => {
+        renderWithProviders(<ProjectName />);
+
+        expect(
+            screen.queryByRole('button', { name: 'Salvar nome' }),
+        ).toBeNull();
+
+        await userEvent.click(
+            screen.getByRole('textbox', { name: 'Nome do projeto' }),
+        );
+
+        expect(
+            screen.getByRole('button', { name: 'Salvar nome' }),
+        ).toBeVisible();
+        expect(
+            screen.getByRole('button', { name: 'Cancelar edição do nome' }),
+        ).toBeVisible();
+    });
+
+    test('o ícone de salvar confirma o nome e some', async () => {
+        renderWithProviders(<ProjectName />);
+        const input = screen.getByRole('textbox', { name: 'Nome do projeto' });
+
+        await userEvent.clear(input);
+        await userEvent.type(input, 'Caixa B');
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Salvar nome' }),
+        );
+
+        expect(activeName()).toBe('Caixa B');
+        expect(
+            screen.queryByRole('button', { name: 'Salvar nome' }),
+        ).toBeNull();
+    });
+
+    test('o ícone de desistir restaura o nome e não grava nada', async () => {
+        renderWithProviders(<ProjectName />);
+        const input = screen.getByRole('textbox', { name: 'Nome do projeto' });
+
+        await userEvent.clear(input);
+        await userEvent.type(input, 'Caixa C');
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Cancelar edição do nome' }),
+        );
+
+        // O projeto novo guarda o nome vazio e a tela mostra o padrão.
+        expect(activeName()).toBe('');
+        expect(input).toHaveValue('Projeto sem nome');
+        expect(
+            screen.queryByRole('button', { name: 'Salvar nome' }),
+        ).toBeNull();
+    });
+
+    test('nome vazio deixa o salvar desativado', async () => {
+        renderWithProviders(<ProjectName />);
+        const input = screen.getByRole('textbox', { name: 'Nome do projeto' });
+
+        await userEvent.clear(input);
+
+        expect(
+            screen.getByRole('button', { name: 'Salvar nome' }),
+        ).toBeDisabled();
+    });
 });

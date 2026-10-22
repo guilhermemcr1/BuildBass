@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { activeProjectStore } from '@/hooks/use-active-project';
@@ -12,15 +12,24 @@ vi.mock('./chart-frame', () => ({
     default: ({
         limits,
         series = [],
+        xRange,
+        onZoom,
     }: {
         limits?: unknown[];
         series?: { label: string; color: number; dashed?: boolean }[];
+        xRange?: [number, number];
+        onZoom?: (range: [number, number]) => void;
     }) => (
         <div
             data-testid="chart-frame"
             data-limits={limits?.length ?? 0}
             data-series={JSON.stringify(series)}
-        />
+            data-xrange={JSON.stringify(xRange)}
+        >
+            <button type="button" onClick={() => onZoom?.([20, 80])}>
+                zoom
+            </button>
+        </div>
     ),
 }));
 
@@ -55,6 +64,79 @@ function seriesOf(frame: HTMLElement) {
         dashed?: boolean;
     }[];
 }
+
+// O gráfico é carregado sob demanda: espera ele aparecer.
+async function xRangeOf(): Promise<[number, number]> {
+    return JSON.parse(
+        (await screen.findByTestId('chart-frame')).dataset.xrange ?? '[]',
+    ) as [number, number];
+}
+
+describe('ChartPanel — faixa de frequência', () => {
+    beforeEach(() => {
+        useWorkspace.setState(initialWorkspace());
+    });
+
+    test('começa de 10 Hz a 1 kHz e oferece até 20 kHz', async () => {
+        renderWithProviders(<ChartPanel />);
+
+        const group = screen.getByRole('radiogroup', {
+            name: 'Faixa de frequência',
+        });
+
+        expect(
+            within(group)
+                .getAllByRole('radio')
+                .map((radio) => radio.textContent),
+        ).toEqual([
+            '200Até 200 Hz',
+            '1kAté 1 kHz',
+            '5kAté 5 kHz',
+            '10kAté 10 kHz',
+            '20kAté 20 kHz',
+        ]);
+        expect(
+            within(group).getByRole('radio', { name: 'Até 1 kHz' }),
+        ).toHaveAttribute('aria-checked', 'true');
+        expect(await xRangeOf()).toEqual([10, 1000]);
+
+        await userEvent.click(
+            within(group).getByRole('radio', { name: 'Até 20 kHz' }),
+        );
+
+        expect(await xRangeOf()).toEqual([10, 20000]);
+    });
+
+    test('o zoom pedido pelo gráfico vira a faixa, e o botão volta a faixa escolhida', async () => {
+        renderWithProviders(<ChartPanel />);
+
+        expect(
+            screen.queryByRole('button', { name: 'Redefinir zoom' }),
+        ).not.toBeInTheDocument();
+
+        await userEvent.click(screen.getByRole('button', { name: 'zoom' }));
+
+        expect(await xRangeOf()).toEqual([20, 80]);
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Redefinir zoom' }),
+        );
+
+        expect(await xRangeOf()).toEqual([10, 1000]);
+    });
+
+    test('trocar a faixa desfaz o zoom', async () => {
+        renderWithProviders(<ChartPanel />);
+
+        await userEvent.click(screen.getByRole('button', { name: 'zoom' }));
+        await userEvent.click(screen.getByRole('radio', { name: 'Até 5 kHz' }));
+
+        expect(await xRangeOf()).toEqual([10, 5000]);
+        expect(
+            screen.queryByRole('button', { name: 'Redefinir zoom' }),
+        ).not.toBeInTheDocument();
+    });
+});
 
 describe('ChartPanel', () => {
     beforeEach(() => {
@@ -243,6 +325,7 @@ describe('ChartPanel — campo faltante em seção recolhida (specs/008, US7)', 
 
         expect(useExpanded.getState().open).toEqual({
             driverAdvanced: true,
+            driverDims: false,
             planAdvanced: false,
         });
     });

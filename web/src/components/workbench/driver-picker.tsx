@@ -1,5 +1,5 @@
 import { Loader2, Search, Send } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
     Autocomplete,
     Dialog,
@@ -15,10 +15,17 @@ import {
 } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+import { FIELD_BOX } from '@/components/ui/field-box';
+import { SelectField } from '@/components/ui/select-field';
+import { cn } from '@/lib/utils';
 import { useActiveProject } from '@/hooks/use-active-project';
 import { useCatalogPick } from '@/hooks/use-catalog-pick';
+import { useDriverBrands } from '@/hooks/use-driver-brands';
 import { SEARCH_MIN_LENGTH, useDriverSearch } from '@/hooks/use-driver-search';
-import type { DriverSummary } from '@/lib/catalog/types';
+import { DIAMETER_BANDS, filtersForBand } from '@/lib/catalog/diameter-bands';
+import type { DiameterBandId } from '@/lib/catalog/diameter-bands';
+import type { DriverFilters, DriverSummary } from '@/lib/catalog/types';
+import type { DriverType } from '@/lib/project/types';
 import { formatQuantity, formatWithUnit } from '@/lib/units/format';
 import { defaultUnitFor } from '@/lib/units/quantities';
 import { usePreferences } from '@/stores/preferences';
@@ -26,6 +33,8 @@ import { useRecentDrivers } from '@/stores/recent-drivers';
 import { useSavedDrivers } from '@/stores/saved-drivers';
 
 const MINE_PREVIEW = 5;
+// Valor da opção "todas" nos filtros (o Select não aceita id vazio).
+const ALL = '__all__';
 
 type DriverPickerProps = {
     disabled?: boolean;
@@ -58,16 +67,32 @@ export function DriverPicker({
     const applySaved = useActiveProject((state) => state.applySavedDriver);
     const [open, setOpen] = useState(false);
     const [term, setTerm] = useState('');
-    const search = useDriverSearch(term, { offline: disabled });
+    const [brand, setBrand] = useState<string | undefined>(undefined);
+    const [band, setBand] = useState<DiameterBandId | undefined>(undefined);
+    const brands = useDriverBrands(open && !disabled);
+    const filters = useMemo<DriverFilters>(
+        () => ({
+            ...(brand === undefined ? {} : { brand }),
+            ...filtersForBand(band),
+        }),
+        [brand, band],
+    );
+    const filtered = brand !== undefined || band !== undefined;
+    const search = useDriverSearch(term, { offline: disabled, filters });
     const pick = useCatalogPick();
-    const searching = !disabled && term.trim().length >= SEARCH_MIN_LENGTH;
+    const searching =
+        !disabled && (term.trim().length >= SEARCH_MIN_LENGTH || filtered);
     const catalog = searching ? search.items : [];
     // "Meus alto-falantes" é local: aparece offline e a partir da primeira letra. Sem texto, só os
     // mais recentes; o Autocomplete filtra o resto pelo texto digitado.
     const needle = term.trim().toLowerCase();
+    // Com filtro e sem texto só o catálogo responde: "Meus alto-falantes" não tem marca nem faixa
+    // de diâmetro para cruzar.
     const mine =
         needle === ''
-            ? saved.slice(0, MINE_PREVIEW)
+            ? filtered
+                ? []
+                : saved.slice(0, MINE_PREVIEW)
             : saved.filter((driver) =>
                   displayName(driver).toLowerCase().includes(needle),
               );
@@ -105,6 +130,28 @@ export function DriverPicker({
                       ),
         });
 
+    // "Subwoofer · Ø 12″": só o que o cadastro tem.
+    const meta = (driver: { type?: DriverType; nominal_diameter_m?: number }) =>
+        [
+            driver.type === undefined ? '' : t(`driverType.${driver.type}`),
+            driver.nominal_diameter_m === undefined
+                ? ''
+                : t('catalog.resultDiameter', {
+                      diameter: formatWithUnit(
+                          driver.nominal_diameter_m,
+                          defaultUnitFor('length', unitSystem),
+                          locale,
+                      ),
+                  }),
+        ]
+            .filter((part) => part !== '')
+            .join(' · ');
+
+    const clearFilters = () => {
+        setBrand(undefined);
+        setBand(undefined);
+    };
+
     const choose = async (summary: DriverSummary) => {
         if (await pick.choose(summary)) {
             setOpen(false);
@@ -136,6 +183,15 @@ export function DriverPicker({
                           brand: driver.brand,
                           model: driver.model,
                           variant: driver.variant ?? null,
+                          ...(driver.type === undefined
+                              ? {}
+                              : { type: driver.type }),
+                          ...(driver.nominal_diameter_m === undefined
+                              ? {}
+                              : {
+                                    nominal_diameter_m:
+                                        driver.nominal_diameter_m,
+                                }),
                           fs_hz: driver.fs_hz,
                           qts: driver.qts,
                           vas_m3: driver.vas_m3,
@@ -179,14 +235,16 @@ export function DriverPicker({
 
         if (searching && search.status === 'ready') {
             if (catalog.length === 0 && mine.length === 0) {
-                return t('catalog.empty', { term: term.trim() });
+                return term.trim().length >= SEARCH_MIN_LENGTH
+                    ? t('catalog.empty', { term: term.trim() })
+                    : t('picker.emptyFiltered');
             }
 
             return search.hasMore ? t('catalog.more') : undefined;
         }
 
         return !searching && recents.length === 0 && mine.length === 0
-            ? t('picker.hint')
+            ? t('picker.hintFilters')
             : undefined;
     })();
 
@@ -202,14 +260,17 @@ export function DriverPicker({
             <Popover
                 placement="bottom start"
                 offset={4}
-                className="w-80 max-w-[calc(100vw-1.5rem)] rounded-md border border-border bg-raised p-2 shadow-lg"
+                className="w-80 max-w-[calc(100vw-1.5rem)] pop rounded-md border border-border bg-raised p-2 shadow-lg"
             >
                 <Dialog aria-label={t('picker.label')} className="outline-none">
                     <Autocomplete inputValue={term} onInputChange={setTerm}>
                         <TextField
                             aria-label={t('picker.label')}
                             autoFocus
-                            className="mb-1 flex h-[34px] items-center gap-2 rounded-md border border-border bg-surface px-2.5 focus-within:border-accent"
+                            className={cn(
+                                FIELD_BOX,
+                                'mb-1 items-center gap-2 px-2.5',
+                            )}
                         >
                             {search.status === 'loading' && searching ? (
                                 <Loader2
@@ -228,6 +289,59 @@ export function DriverPicker({
                                 className="w-full min-w-0 bg-transparent text-sm text-foreground outline-none placeholder:text-muted disabled:cursor-not-allowed [&::-webkit-search-cancel-button]:appearance-none"
                             />
                         </TextField>
+                        {!disabled && (
+                            <div className="mb-1 flex items-end gap-2">
+                                <SelectField<string>
+                                    label={t('picker.brand')}
+                                    selected={brand ?? ALL}
+                                    onChange={(id) =>
+                                        setBrand(id === ALL ? undefined : id)
+                                    }
+                                    options={[
+                                        {
+                                            id: ALL,
+                                            label: t('picker.brandAny'),
+                                        },
+                                        ...brands.map((name) => ({
+                                            id: name,
+                                            label: name,
+                                        })),
+                                    ]}
+                                    className="min-w-0 flex-1"
+                                />
+                                <SelectField<string>
+                                    label={t('picker.diameter')}
+                                    selected={band ?? ALL}
+                                    onChange={(id) =>
+                                        setBand(
+                                            id === ALL
+                                                ? undefined
+                                                : (id as DiameterBandId),
+                                        )
+                                    }
+                                    options={[
+                                        {
+                                            id: ALL,
+                                            label: t('picker.diameterAny'),
+                                        },
+                                        ...DIAMETER_BANDS.map((item) => ({
+                                            id: item.id,
+                                            label: item.label,
+                                        })),
+                                    ]}
+                                    className="w-28 shrink-0"
+                                />
+                                {filtered && (
+                                    <Button
+                                        variant="quiet"
+                                        onPress={clearFilters}
+                                        className="shrink-0 px-2 text-xs"
+                                    >
+                                        {t('picker.clearFilters')}
+                                    </Button>
+                                )}
+                            </div>
+                        )}
                         <ListBox
                             aria-label={t('picker.label')}
                             onAction={onAction}
@@ -247,6 +361,7 @@ export function DriverPicker({
                                         >
                                             <Entry
                                                 name={displayName(driver)}
+                                                meta={meta(driver)}
                                                 support={support(driver.driver)}
                                             />
                                         </ListBoxItem>
@@ -268,6 +383,7 @@ export function DriverPicker({
                                         >
                                             <Entry
                                                 name={displayName(driver)}
+                                                meta={meta(driver)}
                                                 support={support(driver)}
                                             />
                                         </ListBoxItem>
@@ -288,6 +404,7 @@ export function DriverPicker({
                                         >
                                             <Entry
                                                 name={displayName(driver)}
+                                                meta={meta(driver)}
                                                 support={support(driver)}
                                             />
                                         </ListBoxItem>
@@ -323,10 +440,23 @@ export function DriverPicker({
     );
 }
 
-function Entry({ name, support }: { name: string; support: string }) {
+function Entry({
+    name,
+    meta,
+    support,
+}: {
+    name: string;
+    meta: string;
+    support: string;
+}) {
     return (
         <>
             <span className="block">{name}</span>
+            {meta !== '' && (
+                <span className="block text-[11px] text-foreground">
+                    {meta}
+                </span>
+            )}
             <span className="block text-[11px] text-muted tabular-nums">
                 {support}
             </span>

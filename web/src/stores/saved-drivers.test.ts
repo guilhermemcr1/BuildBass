@@ -268,4 +268,12 @@ describe('sanitizeDraft / sanitizeSavedDriver', () => {
         ).toBeUndefined();
         expect(sanitizeSavedDriver(null)).toBeUndefined();
     });
+    test('o tipo é mantido quando válido e descartado quando desconhecido', () => {
+        const typed = sanitizeDraft({ ...draft('A'), type: 'woofer' });
+        const unknown = sanitizeDraft({ ...draft('B'), type: 'tweeter' });
+
+        expect(typed).toMatchObject({ type: 'woofer' });
+        expect(unknown).toBeDefined();
+        expect(unknown).not.toHaveProperty('type');
+    });
 });

@@ -371,7 +371,13 @@ test.describe('US6 — alto-falantes salvos', () => {
         for (const [index, [name]] of PARAMS.entries()) {
             await expect(field(page, name)).toHaveValue(before[index]);
         }
-        await expect(page.getByText(/Marca X Sub 12.*· salvo/)).toBeVisible();
+        await expect(page.getByRole('textbox', { name: /^Marca/ })).toHaveValue(
+            'Marca X',
+        );
+        await expect(
+            page.getByRole('textbox', { name: /^Modelo/ }),
+        ).toHaveValue('Sub 12');
+        await expect(page.getByText('Dos meus alto-falantes')).toBeVisible();
     });
 
     test('a lista sobrevive ao recarregar e funciona offline', async ({

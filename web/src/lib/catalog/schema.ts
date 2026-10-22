@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { PARAMETERS } from '@/lib/parameters';
+import { DRIVER_TYPES } from '@/lib/project/types';
 import type { ParameterKey } from '@/lib/parameters';
 
 // Resposta da API do catálogo (contracts/catalog-api.md). A resposta é entrada não confiável
@@ -17,13 +18,14 @@ const summary = z.object({
     brand: z.string().trim().min(1).max(80),
     model: z.string().trim().min(1).max(80),
     variant: z.string().trim().min(1).max(40).nullable(),
+    type: z.enum(DRIVER_TYPES).optional(),
+    nominal_diameter_m: z.number().min(0.03).max(1.5).optional(),
     fs_hz: range('fs_hz'),
     qts: range('qts'),
     vas_m3: range('vas_m3'),
 });
 
 const driver = summary.extend({
-    nominal_diameter_m: z.number().min(0.03).max(1.5).optional(),
     qes: range('qes').optional(),
     qms: range('qms').optional(),
     re_ohm: range('re_ohm').optional(),
@@ -46,3 +48,7 @@ export const searchResponseSchema = z.object({
 });
 
 export const driverResponseSchema = z.object({ data: driver });
+
+export const brandsResponseSchema = z.object({
+    data: z.array(z.string().trim().min(1).max(80)).max(500),
+});

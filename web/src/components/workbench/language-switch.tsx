@@ -31,7 +31,7 @@ export function LanguageSwitch() {
                 icon: <Flag country={FLAGS[id].country} />,
             }))}
             trigger={
-                <span className="flex h-[34px] items-center gap-2 rounded-md border border-border bg-raised px-2.5 text-[13px] text-foreground">
+                <span className="flex h-8 items-center gap-2 rounded-md border border-border bg-raised px-2.5 text-[13px] text-foreground">
                     <Flag country={country} />
                     {code}
                 </span>

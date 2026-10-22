@@ -13,6 +13,8 @@ import type { SavedDriver, SavedDriverDraft } from '@/lib/saved-drivers/types';
 import { defaultUnitFor } from '@/lib/units/quantities';
 import { usePreferences } from '@/stores/preferences';
 import { useSavedDrivers } from '@/stores/saved-drivers';
+import type { DriverType } from '@/lib/project/types';
+import { DriverTypeSelect } from './driver-type-select';
 import { LengthInput } from './length-input';
 
 type SaveDriverDialogProps = {
@@ -58,6 +60,7 @@ export default function SaveDriverDialog({
     const [brand, setBrand] = useState(initial.brand);
     const [model, setModel] = useState(initial.model);
     const [variant, setVariant] = useState(initial.variant ?? '');
+    const [type, setType] = useState<DriverType | undefined>(initial.type);
     const [diameter, setDiameter] = useState(initial.nominal_diameter_m);
     const [cutout, setCutout] = useState(initial.cutout_m);
     const [depth, setDepth] = useState(initial.depth_m);
@@ -73,6 +76,7 @@ export default function SaveDriverDialog({
             brand: brand.trim(),
             model: model.trim(),
             ...(trimmedVariant === '' ? {} : { variant: trimmedVariant }),
+            ...(type === undefined ? {} : { type }),
             driver: initial.driver,
             ...(diameter === undefined ? {} : { nominal_diameter_m: diameter }),
             ...(cutout === undefined ? {} : { cutout_m: cutout }),
@@ -215,8 +219,8 @@ export default function SaveDriverDialog({
                         value={variant}
                         onChange={setVariant}
                         error={message('variant')}
-                        className="sm:col-span-2"
                     />
+                    <DriverTypeSelect value={type} onChange={setType} />
                 </div>
                 <fieldset className="flex flex-col gap-2">
                     <legend className="mb-1.5 text-xs font-semibold text-muted">

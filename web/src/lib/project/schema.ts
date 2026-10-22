@@ -3,7 +3,7 @@ import { PARAMETERS } from '@/lib/parameters';
 import type { ParameterKey } from '@/lib/parameters';
 import { QUANTITIES } from '@/lib/units/quantities';
 import type { UnitId } from '@/lib/units/quantities';
-import { PROJECT_NAME_MAX } from './types';
+import { DRIVER_TYPES, PROJECT_NAME_MAX } from './types';
 import type { ProjectData } from './types';
 
 // Schema do projeto na versão 1 (contracts/project-file.md). As faixas vêm de PARAMETERS, as
@@ -76,11 +76,13 @@ const fieldUnits = z.record(z.string(), z.unknown()).transform((entries) => {
     return valid;
 });
 
-// Origem do driver copiado do catálogo (opcional: arquivos anteriores à feature 003 não têm).
+// Identificação do driver (opcional: arquivos anteriores à feature 003 não têm; o tipo veio depois
+// e, sendo opcional, não muda a versão do arquivo).
 const driverSource = z.object({
-    brand: z.string().trim().min(1).max(80),
-    model: z.string().trim().min(1).max(80),
+    brand: z.string().trim().min(1).max(80).optional(),
+    model: z.string().trim().min(1).max(80).optional(),
     variant: z.string().trim().min(1).max(40).optional(),
+    type: z.enum(DRIVER_TYPES).optional(),
 });
 
 // Configuração do plano de corte (opcional: só existe depois que o usuário edita um campo do plano).
@@ -107,11 +109,24 @@ const cutPlan = z.object({
         .optional(),
 });
 
+// Medidas físicas do alto-falante (versão 6): tudo opcional, faixas de PARAMETERS.
+const driverDims = z.object({
+    shape: z.enum(['round', 'square', 'rect']).optional(),
+    piston: z.enum(['cone', 'dome', 'flat']).optional(),
+    a_m: range('drv_a_m').optional(),
+    b_m: range('drv_b_m').optional(),
+    d_m: range('drv_d_m').optional(),
+    e_m: range('drv_e_m').optional(),
+    f_m: range('drv_f_m').optional(),
+    g_m: range('drv_g_m').optional(),
+});
+
 export const projectSchema = z.object({
     // Vazio = nome padrão traduzido (lib/project/names.ts).
     name: z.string().trim().max(PROJECT_NAME_MAX),
     driver: driverSchema,
     driverSource: driverSource.optional(),
+    driverDims: driverDims.optional(),
     drivers: z.object({
         count,
         wiring: z.enum(['series', 'parallel']),

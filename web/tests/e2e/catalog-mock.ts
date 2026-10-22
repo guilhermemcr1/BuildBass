@@ -65,6 +65,9 @@ export async function mockCatalog(page: Page, handler: Handler = ok) {
 
 // Abre o popover "Buscar driver" (se ainda fechado) e devolve o campo de busca.
 export async function openPicker(page: Page) {
+    // Um popover recém-fechado ainda está visível durante o fade de saída: espera ele sair.
+    await page.locator('[data-exiting]').waitFor({ state: 'detached' });
+
     const field = page.getByRole('searchbox', { name: 'Buscar driver' });
 
     if (!(await field.isVisible())) {

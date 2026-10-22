@@ -15,7 +15,7 @@
     },
     "validation": {
         "invalidNumber": "Digite um número válido.",
-        "outOfRange": "Fora da faixa aceita ({{min}} a {{max}} {{unit}})."
+        "outOfRange": "Fora da faixa aceita ({{min}} a {{max}}{{unit}})."
     },
     "units": {
         "system": "Sistema de unidades",
@@ -25,6 +25,7 @@
         "changeFrom": "{{unit}} — trocar unidade de {{parameter}}"
     },
     "theme": {
+        "current": "Tema: {{name}}",
         "label": "Tema",
         "light": "Claro",
         "dark": "Escuro",
@@ -35,6 +36,9 @@
         "current": "{{code}} — Idioma",
         "pt-BR": "Português (Brasil)",
         "en": "English"
+    },
+    "dialog": {
+        "close": "Fechar janela"
     },
     "preferences": "Preferências",
     "comingSoon": {
@@ -93,7 +97,8 @@
     "mode": {
         "label": "Modo",
         "normal": "Normal",
-        "pro": "Pro"
+        "pro": "Pro",
+        "proSwitch": "Modo Pro"
     },
     "showMore": {
         "more": "Mostrar mais",

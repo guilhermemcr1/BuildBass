@@ -93,7 +93,7 @@ describe('arquivo de projeto', () => {
 
     test('versão mais nova', async () => {
         expect(
-            await parseProjectFile(file(envelope({}, { version: 6 }))),
+            await parseProjectFile(file(envelope({}, { version: 7 }))),
         ).toEqual({ ok: false, code: 'newerVersion' });
     });
 
@@ -444,9 +444,9 @@ describe('plano de corte no arquivo (versão 3)', () => {
         });
     });
 
-    test('versão 6 pede para atualizar o app', async () => {
+    test('versão 7 pede para atualizar o app', async () => {
         expect(
-            await parseProjectFile(file(envelope(PLAN, { version: 6 }))),
+            await parseProjectFile(file(envelope(PLAN, { version: 7 }))),
         ).toEqual({ ok: false, code: 'newerVersion' });
     });
 });
@@ -526,9 +526,9 @@ describe('bandpass de 6ª ordem e versão 4 (feature 007)', () => {
         }
     });
 
-    test('versão 6 é recusada pedindo para atualizar o app', async () => {
+    test('versão 7 é recusada pedindo para atualizar o app', async () => {
         expect(
-            await parseProjectFile(file(envelope(SIXTH, { version: 6 }))),
+            await parseProjectFile(file(envelope(SIXTH, { version: 7 }))),
         ).toEqual({ ok: false, code: 'newerVersion' });
     });
 
@@ -621,8 +621,8 @@ describe('bandpass de 6ª ordem e versão 4 (feature 007)', () => {
 describe('cor do projeto e versão 5 (feature 008)', () => {
     const versionOf = (text: string): number => JSON.parse(text).version;
 
-    test('a versão atual é 5', () => {
-        expect(CURRENT_VERSION).toBe(5);
+    test('a versão atual é 6', () => {
+        expect(CURRENT_VERSION).toBe(6);
     });
 
     test('com cor o arquivo é gravado como versão 5; sem cor, na menor versão', () => {
@@ -756,6 +756,33 @@ describe('chapa do usuário no arquivo (feature 008)', () => {
                     file(envelope(withSheet(bad), { version: 5 })),
                 ),
             ).toEqual({ ok: false, code: 'invalidContent', path });
+        }
+    });
+});
+
+describe('medidas do alto-falante e versão 6', () => {
+    const withDims = (driverDims: unknown) =>
+        ({ ...FULL, driverDims }) as ProjectData;
+
+    test('formato e medidas fazem o arquivo ir como versão 6 e voltam iguais', async () => {
+        const data = withDims({
+            shape: 'rect',
+            piston: 'dome',
+            a_m: 0.308,
+            d_m: 0.2,
+            g_m: 0.16,
+        });
+        const text = serializeProject(data);
+
+        expect(JSON.parse(text).version).toBe(6);
+        expect(await parseProjectFile(file(text))).toEqual({ ok: true, data });
+    });
+
+    test('medida fora da faixa ou formato desconhecido torna o arquivo inválido', async () => {
+        for (const bad of [{ a_m: 50 }, { shape: 'oval' }, { g_m: -1 }]) {
+            expect(
+                await parseProjectFile(file(serializeProject(withDims(bad)))),
+            ).toMatchObject({ ok: false, code: 'invalidContent' });
         }
     });
 });

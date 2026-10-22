@@ -103,7 +103,9 @@ test('a 360 px o plano de corte não rola na horizontal (feature 005, US7)', asy
         await field.press('Tab');
     }
 
-    await page.getByRole('radio', { name: 'Plano de corte' }).click();
+    await page
+        .getByRole('button', { name: 'Plano de corte', exact: true })
+        .click();
     await expect(
         page.getByRole('table', { name: /Lista de corte/ }),
     ).toBeVisible();
@@ -117,10 +119,10 @@ test('a 360 px o plano de corte não rola na horizontal (feature 005, US7)', asy
 
     expect(overflow).toBeLessThanOrEqual(0);
 
-    // As tabelas rolam dentro do próprio contêiner, não a página.
-    await page.getByRole('tab', { name: 'Vista 3D' }).click();
+    // A vista 3D abre no modal da caixa (tela cheia no celular) e a página também não rola.
+    await page.getByRole('button', { name: 'Ampliar caixa' }).click();
     await expect(
-        page.locator('[data-region="plan"] svg[data-yaw]'),
+        page.getByRole('dialog').locator('svg[data-yaw]'),
     ).toBeVisible();
     expect(
         await page.evaluate(
@@ -133,7 +135,8 @@ test('a 360 px o plano de corte não rola na horizontal (feature 005, US7)', asy
 
 // SC-003 (feature 008, US7): o painel do Driver ocupa pelo menos 30 % menos altura que antes da
 // feature, medido em 1440 px. A referência é a altura do painel no main antes da 008 (928 px, com
-// os 13 campos em cartões); o Pro mostra os mesmos campos, então também fica abaixo dela.
+// os 13 campos em cartões). Só o modo Normal é comparado com ela: o Pro passou a incluir o desenho,
+// as medidas do alto-falante e a identificação, que não existiam na referência.
 const DRIVER_HEIGHT_BEFORE = 928;
 
 test.describe('modo Normal enxuga o painel do Driver (SC-003)', () => {
@@ -143,20 +146,21 @@ test.describe('modo Normal enxuga o painel do Driver (SC-003)', () => {
         await page.setViewportSize({ width: 1440, height: 900 });
         await page.goto('/');
         const driver = page.locator('[data-region="driver"]');
+        await expect(page.getByRole('textbox', { name: /^Fs/ })).toBeVisible();
+        // Deixa as animações de entrada terminarem antes de medir.
+        await page.waitForTimeout(500);
 
         const normal = await driver.boundingBox();
 
-        await page
-            .getByRole('radiogroup', { name: 'Modo' })
-            .getByRole('radio', { name: 'Pro' })
-            .click();
+        // O input do switch fica escondido sob o desenho dele; o usuário clica no rótulo.
+        await page.getByText('Modo Pro').click();
         await expect(page.getByRole('textbox', { name: /^Qes/ })).toBeVisible();
+        await page.waitForTimeout(500);
         const pro = await driver.boundingBox();
 
         expect(normal).not.toBeNull();
         expect(pro).not.toBeNull();
         expect(normal!.height).toBeLessThanOrEqual(DRIVER_HEIGHT_BEFORE * 0.7);
         expect(normal!.height).toBeLessThan(pro!.height);
-        expect(pro!.height).toBeLessThan(DRIVER_HEIGHT_BEFORE);
     });
 });

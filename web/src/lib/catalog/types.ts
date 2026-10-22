@@ -1,4 +1,4 @@
-import type { DriverKey, DriverSource } from '@/lib/project/types';
+import type { DriverKey, DriverSource, DriverType } from '@/lib/project/types';
 
 export type { DriverSource };
 
@@ -10,6 +10,9 @@ export type DriverSummary = {
     brand: string;
     model: string;
     variant: string | null;
+    // Opcionais: o cadastro pode não ter (a chave não vem no JSON).
+    type?: DriverType;
+    nominal_diameter_m?: number;
     fs_hz: number;
     qts: number;
     vas_m3: number;
@@ -17,9 +20,18 @@ export type DriverSummary = {
 
 export type CatalogDriver = DriverSummary &
     Partial<Record<DriverKey, number>> & {
-        nominal_diameter_m?: number;
         source: string;
     };
+
+// Filtros da busca (marca exata, tipo e faixa de diâmetro com o máximo exclusivo, em metros).
+export type DriverFilters = {
+    brand?: string;
+    type?: DriverType;
+    diameter_min_m?: number;
+    diameter_max_m?: number;
+};
+
+export type BrandsResponse = { data: string[] };
 
 export type SearchResponse = {
     data: DriverSummary[];

@@ -19,7 +19,9 @@
         "emailHint": "Optional. Used only to tell you whether the driver was approved or rejected, then erased.",
         "diameter": "Nominal diameter",
         "diameterHint": "Commercial size of the loudspeaker, for example 12\".",
-        "trap": "Do not fill in this field"
+        "trap": "Do not fill in this field",
+        "sourcePlaceholder": "E.g. datasheet, rev. B, 03/2024",
+        "emailPlaceholder": "name@example.com"
     },
     "actions": {
         "submit": "Submit",

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import type { FieldStatus } from '@/components/ui/status-indicator';
@@ -93,10 +94,35 @@ export function ResultsPanel() {
     const plotted = useSimulations();
     const formatVelocity = (si: number) =>
         formatWithUnit(si, velocityUnit, locale);
+    // Com um projeto o painel começa aberto (são poucos números). Com vários vira uma tabela alta
+    // que empurra o gráfico para baixo, então começa recolhido; o título leva o resumo. Abrir ou
+    // fechar à mão vale até o número de projetos cruzar entre um e vários.
+    const multiple = plotted.length > 1;
+    const [choice, setChoice] = useState<{
+        multiple: boolean;
+        open: boolean;
+    }>();
+    const open =
+        choice !== undefined && choice.multiple === multiple
+            ? choice.open
+            : !multiple;
+    const setOpen = (next: boolean) => setChoice({ multiple, open: next });
+    const headline = twoChambers(boxType)
+        ? undefined
+        : results.f3_hz === undefined
+          ? undefined
+          : `${t('results.f3')} ${formatWithUnit(results.f3_hz, 'Hz', locale)}`;
+    const summary = multiple
+        ? t('results.compared', { count: plotted.length })
+        : headline;
 
     return (
-        <Panel region="results" title={t('regions.results')}>
-            {plotted.length > 1 ? (
+        <Panel
+            region="results"
+            title={t('regions.results')}
+            collapsible={{ open, onOpenChange: setOpen, summary }}
+        >
+            {multiple ? (
                 <ResultsTable items={plotted} />
             ) : (
                 <div className="grid grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] gap-x-5 gap-y-3">

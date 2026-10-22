@@ -12,7 +12,7 @@ type InlineTextFieldProps = {
     className?: string;
 };
 
-// Campo de texto que aparece no lugar de um rótulo enquanto ele é editado (ex.: nome da aba).
+// Campo de texto para editar um nome no lugar (ex.: nome da aba, num balão).
 export function InlineTextField({
     label,
     value,
@@ -43,7 +43,7 @@ export function InlineTextField({
         >
             <Input
                 className={cn(
-                    'h-7 w-40 rounded-sm border border-accent bg-surface px-1.5 text-sm text-foreground outline-none',
+                    'h-8 w-56 max-w-full rounded-md border border-accent bg-surface px-2 text-sm text-foreground outline-none',
                 )}
                 onFocus={(event) => event.currentTarget.select()}
             />

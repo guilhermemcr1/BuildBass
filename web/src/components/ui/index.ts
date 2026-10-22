@@ -9,6 +9,7 @@ export { ToggleButton } from './toggle-button';
 export { HelpTip, useHoverless } from './help-tip';
 export { ColorPicker } from './color-picker';
 export { Checkbox } from './checkbox';
+export { Switch } from './switch';
 export { ShowMore } from './show-more';
 export { Flag } from './flag';
 export type { FlagCountry } from './flag';

@@ -32,7 +32,7 @@ export function Button({
             {...props}
             isDisabled={disabled}
             className={cn(
-                'inline-flex h-[34px] cursor-default items-center justify-center gap-2 rounded-md border px-3.5 text-sm whitespace-nowrap outline-none motion-safe:transition-colors data-[disabled]:border-border data-[disabled]:bg-raised data-[disabled]:text-disabled data-[focus-visible]:outline-2 data-[focus-visible]:outline-solid data-[focus-visible]:outline-offset-2 data-[focus-visible]:outline-accent',
+                'inline-flex h-8 cursor-default items-center justify-center gap-2 rounded-md border px-3.5 text-sm whitespace-nowrap outline-none motion-safe:transition-colors data-[disabled]:border-border data-[disabled]:bg-raised data-[disabled]:text-disabled data-[focus-visible]:outline-2 data-[focus-visible]:outline-solid data-[focus-visible]:outline-offset-2 data-[focus-visible]:outline-accent',
                 VARIANTS[variant],
                 className,
             )}

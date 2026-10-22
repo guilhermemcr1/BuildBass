@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from 'vite-plus/test';
-import { fetchDriver, searchDrivers } from './client';
+import { fetchBrands, fetchDriver, searchDrivers } from './client';
 
 const DRIVER_ID = '0198a3c2-6d11-7c4e-9a52-3f1b8e0d7a10';
 
@@ -57,7 +57,7 @@ describe('searchDrivers', () => {
         );
         const controller = new AbortController();
 
-        await searchDrivers('tr', controller.signal);
+        await searchDrivers('tr', {}, controller.signal);
 
         expect(fetchMock.mock.calls[0][1]?.signal).toBe(controller.signal);
     });
@@ -157,5 +157,76 @@ describe('fetchDriver', () => {
             ok: false,
             error: 'invalid',
         });
+    });
+});
+
+describe('filtros e marcas', () => {
+    test('os filtros entram na query; sem texto não há q', async () => {
+        const fetchMock = mockFetch(() =>
+            respond(200, { data: [], meta: { limit: 20, has_more: false } }),
+        );
+
+        await searchDrivers('', {
+            brand: 'Alfa Áudio',
+            type: 'subwoofer',
+            diameter_min_m: 0.28,
+            diameter_max_m: 0.33,
+        });
+        await searchDrivers('12', { brand: 'Beta' });
+
+        expect(String(fetchMock.mock.calls[0][0])).toMatch(
+            /\/api\/drivers\?brand=Alfa%20%C3%81udio&type=subwoofer&diameter_min_m=0\.28&diameter_max_m=0\.33$/,
+        );
+        expect(String(fetchMock.mock.calls[1][0])).toMatch(
+            /\/api\/drivers\?q=12&brand=Beta$/,
+        );
+    });
+
+    test('devolve o tipo e o diâmetro do resumo e recusa tipo desconhecido', async () => {
+        mockFetch(() =>
+            respond(200, {
+                data: [
+                    {
+                        ...SUMMARY,
+                        type: 'subwoofer',
+                        nominal_diameter_m: 0.3048,
+                    },
+                ],
+                meta: { limit: 20, has_more: false },
+            }),
+        );
+        const ok = await searchDrivers('tr');
+
+        expect(ok.ok && ok.data.data[0].type).toBe('subwoofer');
+
+        mockFetch(() =>
+            respond(200, {
+                data: [{ ...SUMMARY, type: 'tuba' }],
+                meta: { limit: 20, has_more: false },
+            }),
+        );
+
+        expect(await searchDrivers('tr')).toEqual({
+            ok: false,
+            error: 'invalid',
+        });
+    });
+
+    test('lista as marcas e recusa resposta fora do formato', async () => {
+        const fetchMock = mockFetch(() =>
+            respond(200, { data: ['Alfa', 'Beta'] }),
+        );
+
+        expect(await fetchBrands()).toEqual({
+            ok: true,
+            data: { data: ['Alfa', 'Beta'] },
+        });
+        expect(String(fetchMock.mock.calls[0][0])).toMatch(
+            /\/api\/driver-brands$/,
+        );
+
+        mockFetch(() => respond(200, { data: [1] }));
+
+        expect(await fetchBrands()).toEqual({ ok: false, error: 'invalid' });
     });
 });

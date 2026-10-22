@@ -313,57 +313,35 @@ describe('cotas e peças do 3D (feature 008)', () => {
         }
     });
 
-    test('as três cotas saem do canto mais próximo, afastadas 6 % do raio para fora', () => {
+    test('cada cota fica fora da caixa: afastada 8 % do raio de uma aresta do contorno', () => {
         const caixa = plan();
-        const { w_m, h_m, d_m } = caixa.dimensions.external;
 
-        for (const { yaw_rad: yaw, pitch_rad: pitch, zoom } of VIEWS) {
-            const depthOf = (x: number, y: number, z: number) => {
-                const z1 = -x * Math.sin(yaw) + z * Math.cos(yaw);
+        for (const view of VIEWS) {
+            const hull = projectBox(caixa, view, { translucent: true })
+                .filter(({ kind }) => kind === 'face')
+                .flatMap(({ points }) => points);
+            const offset =
+                0.08 *
+                (Math.hypot(...Object.values(caixa.dimensions.external)) / 2) *
+                view.zoom;
 
-                return y * Math.sin(pitch) + z1 * Math.cos(pitch);
-            };
-            const screen = (
-                x: number,
-                y: number,
-                z: number,
-            ): [number, number] => {
-                const x1 = x * Math.cos(yaw) + z * Math.sin(yaw);
-                const z1 = -x * Math.sin(yaw) + z * Math.cos(yaw);
+            for (const { from, to, edge } of dimensionLines(caixa, view)) {
+                // A linha é paralela à aresta e está à distância do afastamento.
+                expect(
+                    Math.hypot(from[0] - edge[0][0], from[1] - edge[0][1]),
+                ).toBeCloseTo(offset, 9);
+                expect(
+                    Math.hypot(to[0] - edge[1][0], to[1] - edge[1][1]),
+                ).toBeCloseTo(offset, 9);
 
-                return [
-                    x1 * zoom,
-                    (y * Math.cos(pitch) - z1 * Math.sin(pitch)) * zoom,
-                ];
-            };
-            const corners = [-1, 1].flatMap((sx) =>
-                [-1, 1].flatMap((sy) =>
-                    [-1, 1].map(
-                        (sz) =>
-                            [
-                                (sx * w_m) / 2,
-                                (sy * h_m) / 2,
-                                (sz * d_m) / 2,
-                            ] as const,
-                    ),
-                ),
-            );
-            const nearest = corners.reduce((best, corner) =>
-                depthOf(...corner) > depthOf(...best) ? corner : best,
-            );
-            const origin = screen(...nearest);
-            const offset = 0.06 * (Math.hypot(w_m, h_m, d_m) / 2) * zoom;
+                // E nenhum vértice da caixa passa do lado de fora dela: nada de cota sobre faces.
+                const [nx, ny] = [from[0] - edge[0][0], from[1] - edge[0][1]];
+                const reach = (point: [number, number]) =>
+                    (point[0] - edge[0][0]) * nx + (point[1] - edge[0][1]) * ny;
 
-            for (const { from, to } of dimensionLines(caixa, {
-                yaw_rad: yaw,
-                pitch_rad: pitch,
-                zoom,
-            })) {
-                const distances = [from, to].map((point) =>
-                    Math.hypot(point[0] - origin[0], point[1] - origin[1]),
-                );
-
-                expect(Math.min(...distances)).toBeCloseTo(offset, 9);
+                for (const point of hull) {
+                    expect(reach(point)).toBeLessThanOrEqual(1e-9);
+                }
             }
         }
     });

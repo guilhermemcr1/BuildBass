@@ -7,7 +7,9 @@ import {
     useLocale,
 } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
+import { useNumberEntry } from '@/hooks/use-number-entry';
 import { Button } from '@/components/ui/button';
+import { FIELD_BOX, FIELD_INPUT, UnitAddon } from '@/components/ui/field-box';
 import { ParameterField } from '@/components/ui/parameter-field';
 import { TextInput } from '@/components/ui/text-field';
 import type { SubmitFailure } from '@/hooks/use-submit-driver';
@@ -28,10 +30,11 @@ import type {
 } from '@/lib/submission/schema';
 import { fromSi, toSi } from '@/lib/units/convert';
 import { formatOptionsFor, formatQuantity } from '@/lib/units/format';
-import { defaultUnitFor } from '@/lib/units/quantities';
+import { defaultUnitFor, findUnit } from '@/lib/units/quantities';
 import type { UnitId } from '@/lib/units/quantities';
 import { cn } from '@/lib/utils';
 import { usePreferences } from '@/stores/preferences';
+import { DriverTypeSelect } from './driver-type-select';
 
 type SubmitDriverFormProps = {
     form: SubmissionForm;
@@ -63,6 +66,7 @@ function DiameterField({
     const { t } = useTranslation('submission');
     const { locale } = useLocale();
     const [outOfRange, setOutOfRange] = useState(false);
+    const entryRef = useNumberEntry(locale);
     const { min, max } = rangeOf('nominal_diameter_m');
     const displayed =
         valueSi === undefined ? Number.NaN : fromSi(valueSi, unit);
@@ -90,12 +94,21 @@ function DiameterField({
                 setOutOfRange(false);
                 onChange(si);
             }}
-            className="group flex flex-col gap-1 rounded-md border border-border bg-raised px-2.5 py-2 focus-within:border-accent"
+            className="group flex flex-col gap-1"
         >
             <Label className="text-xs font-semibold text-muted">
                 {t('fields.diameter')}
             </Label>
-            <Input className="w-full min-w-0 bg-transparent num text-[15px] outline-none" />
+            <div
+                className={cn(
+                    FIELD_BOX,
+                    (outOfRange || error !== undefined) &&
+                        'border-status-error',
+                )}
+            >
+                <Input ref={entryRef} className={cn(FIELD_INPUT, 'num')} />
+                <UnitAddon symbol={findUnit(unit).symbol} />
+            </div>
             <FieldError className="text-[11px] text-status-error">
                 {`${t('errors.range')} (${formatQuantity(min, unit, locale)} – ${formatQuantity(max, unit, locale)})`}
             </FieldError>
@@ -173,6 +186,7 @@ export function SubmitDriverForm({
         extra: {
             required?: boolean;
             hint?: string;
+            placeholder?: string;
             type?: 'text' | 'email';
             label: string;
         },
@@ -184,6 +198,7 @@ export function SubmitDriverForm({
             maxLength={TEXT_LIMITS[field] + 20}
             required={extra.required}
             hint={extra.hint}
+            placeholder={extra.placeholder}
             type={extra.type}
             error={message(field)}
             disabled={sending}
@@ -223,6 +238,13 @@ export function SubmitDriverForm({
                         label: t('fields.variant'),
                         hint: t('fields.variantHint'),
                     })}
+                    <DriverTypeSelect
+                        value={form.type === '' ? undefined : form.type}
+                        onChange={(type) =>
+                            onChange({ ...form, type: type ?? '' })
+                        }
+                        disabled={sending}
+                    />
                 </div>,
             )}
 
@@ -254,6 +276,7 @@ export function SubmitDriverForm({
                     label: t('fields.source'),
                     required: true,
                     hint: t('fields.sourceHint'),
+                    placeholder: t('fields.sourcePlaceholder'),
                 }),
             )}
 
@@ -262,6 +285,7 @@ export function SubmitDriverForm({
                 text('contact_email', {
                     label: t('fields.email'),
                     hint: t('fields.emailHint'),
+                    placeholder: t('fields.emailPlaceholder'),
                     type: 'email',
                 }),
             )}

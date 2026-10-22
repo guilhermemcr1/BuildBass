@@ -68,8 +68,8 @@
         "help": "Frequency at which the rear chamber and its port resonate with the cone blocked."
     },
     "vd_m3": {
-        "label": "Driver displacement",
-        "help": "Volume the driver itself occupies inside the box (datasheet). Leave 0 if unknown."
+        "label": "Motor volume — M-Vd",
+        "help": "Volume the motor and basket take up inside the box (datasheet). It is subtracted from the internal volume. Leave 0 if unknown."
     },
     "ql": {
         "label": "Box losses (Ql)",
@@ -136,8 +136,8 @@
         "help": "Total volume of the internal bracing. The box gets bigger by this volume so the net volume stays the project one."
     },
     "cutout_m": {
-        "label": "Driver cutout diameter",
-        "help": "Diameter of the hole in the wood, from the driver datasheet. Without it the cutout shows as to be provided."
+        "label": "Diameter C — cutout",
+        "help": "Hole in the wood for the loudspeaker (the same field as in the cut plan). Round: diameter; square: side; rectangular: first size."
     },
     "ratio_h": {
         "label": "Ratio — height",
@@ -162,5 +162,41 @@
     "kerf_m": {
         "label": "Saw kerf",
         "help": "Width the saw removes on each cut, usually about 3 mm. The system leaves this gap between pieces."
+    },
+    "dim_h_m": {
+        "label": "Inner size — height",
+        "help": "Inner height of the box. Editing one measure adjusts the other two so the volume stays the same."
+    },
+    "dim_w_m": {
+        "label": "Inner size — width",
+        "help": "Inner width of the box. Editing one measure adjusts the other two so the volume stays the same."
+    },
+    "dim_d_m": {
+        "label": "Inner size — depth",
+        "help": "Inner depth of the box. Editing one measure adjusts the other two so the volume stays the same."
+    },
+    "drv_a_m": {
+        "label": "Diameter A — outer frame",
+        "help": "Outer diameter of the loudspeaker frame (basket), measured edge to edge. Used to check the fit in the box."
+    },
+    "drv_b_m": {
+        "label": "Diameter B — cone",
+        "help": "Cone diameter, measured at the outer edge of the surround."
+    },
+    "drv_d_m": {
+        "label": "Size D — second side",
+        "help": "Second side of the cutout when the loudspeaker is rectangular (the first is size C)."
+    },
+    "drv_e_m": {
+        "label": "Depth E — magnet",
+        "help": "Depth of the magnet (motor) assembly, from the back of the basket to the end of the magnet."
+    },
+    "drv_f_m": {
+        "label": "Depth F — flange",
+        "help": "Thickness of the flange in front of the baffle. What goes inside the box is the total depth minus this."
+    },
+    "drv_g_m": {
+        "label": "Depth G — total",
+        "help": "Total loudspeaker depth, from the front of the flange to the end of the magnet. If it exceeds the box internal depth, the cut plan warns you."
     }
 }

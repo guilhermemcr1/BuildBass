@@ -7,9 +7,13 @@ import {
     useLocale,
 } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
+import { useNumberEntry } from '@/hooks/use-number-entry';
 import { fromSi, toSi } from '@/lib/units/convert';
 import { formatOptionsFor, formatQuantity } from '@/lib/units/format';
+import { findUnit } from '@/lib/units/quantities';
 import type { UnitId } from '@/lib/units/quantities';
+import { FIELD_BOX, FIELD_INPUT, UnitAddon } from '@/components/ui/field-box';
+import { cn } from '@/lib/utils';
 
 type LengthInputProps = {
     label: string;
@@ -31,6 +35,7 @@ export function LengthInput({
     const { t } = useTranslation('workbench');
     const { locale } = useLocale();
     const [outOfRange, setOutOfRange] = useState(false);
+    const entryRef = useNumberEntry(locale);
     const displayed =
         valueSi === undefined ? Number.NaN : fromSi(valueSi, unit);
 
@@ -59,10 +64,13 @@ export function LengthInput({
                 setOutOfRange(false);
                 onChange(si);
             }}
-            className="group flex flex-col gap-1 rounded-md border border-border bg-raised px-2.5 py-2 focus-within:border-accent"
+            className="group flex flex-col gap-1"
         >
             <Label className="text-xs font-semibold text-muted">{label}</Label>
-            <Input className="w-full min-w-0 bg-transparent num text-[15px] outline-none" />
+            <div className={cn(FIELD_BOX, outOfRange && 'border-status-error')}>
+                <Input ref={entryRef} className={cn(FIELD_INPUT, 'num')} />
+                <UnitAddon symbol={findUnit(unit).symbol} />
+            </div>
             <FieldError className="text-[11px] text-status-error">
                 {t('saved.errors.range', {
                     min: formatQuantity(range.min, unit, locale),

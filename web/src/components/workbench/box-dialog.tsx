@@ -39,18 +39,21 @@ export default function BoxDialog({ open, onOpenChange }: BoxDialogProps) {
             onOpenChange={onOpenChange}
             size="xl"
         >
-            <div className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
                 <div className="flex min-w-0 flex-col gap-3">
                     <BoxFields />
                     <fieldset className="flex flex-col gap-3">
                         <legend className="mb-1.5 text-xs font-semibold text-muted">
                             {t('workbench:boxDialog.speaker')}
                         </legend>
-                        <ParameterField {...cutout} />
-                        <ParameterField {...thickness} />
+                        <div className="grid grid-cols-2 items-start gap-2">
+                            <ParameterField {...cutout} layout="compact" />
+                            <ParameterField {...thickness} layout="compact" />
+                        </div>
                     </fieldset>
                 </div>
-                <div className="flex min-w-0 flex-col gap-3">
+                {/* O desenho fica à vista enquanto os campos rolam. */}
+                <div className="flex min-w-0 flex-col gap-3 md:sticky md:top-0 md:self-start">
                     {cutPlan.status === 'blocked' ? (
                         <>
                             {cutPlan.missing.length > 0 && (

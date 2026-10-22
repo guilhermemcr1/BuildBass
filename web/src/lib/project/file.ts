@@ -22,10 +22,14 @@ export type ParseResult =
     | { ok: true; data: ProjectData; color?: SeriesColor }
     | { ok: false; code: OpenErrorCode; path?: string };
 
-// A versão gravada é a menor que descreve o arquivo: cor do projeto ou chapa = 5, bandpass de 6ª ordem = 4,
+// A versão gravada é a menor que descreve o arquivo: medidas do alto-falante = 6, cor do projeto ou chapa = 5, bandpass de 6ª ordem = 4,
 // plano de corte editado = 3, bandpass de 4ª ordem = 2 e os demais continuam v1 e abrem em apps
 // anteriores (specs/004, 005, 007 e 008, contracts/project-file.md).
 function versionOf(data: ProjectData, color?: SeriesColor): number {
+    if (data.driverDims !== undefined) {
+        return 6;
+    }
+
     if (color !== undefined || data.cutPlan?.sheet !== undefined) {
         return 5;
     }

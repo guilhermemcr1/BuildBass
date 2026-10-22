@@ -1,4 +1,4 @@
-import { Suspense, lazy, useRef, useState } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BoxPanel } from '@/components/workbench/box-panel';
 import { CHART_KINDS, ChartPanel } from '@/components/workbench/chart-panel';
@@ -18,8 +18,6 @@ import { ShortcutsDialog } from '@/components/workbench/shortcuts-dialog';
 import { TabLimitDialog } from '@/components/workbench/tab-limit-dialog';
 import { TopBar } from '@/components/workbench/top-bar';
 import type { ProjectAction } from '@/components/workbench/top-bar';
-import { ViewSwitch } from '@/components/workbench/view-switch';
-import type { WorkbenchView } from '@/components/workbench/view-switch';
 import {
     activeProjectStore,
     useActiveHistory,
@@ -61,9 +59,24 @@ export default function Workbench() {
         state.projects.find((p) => p.id === closing),
     );
     const [chart, setChart] = useState<ChartKind>('response');
-    const [view, setView] = useState<WorkbenchView>('charts');
+    const [planOpen, setPlanOpen] = useState(false);
+    // Imprimir o plano monta a folha, esconde a bancada e só então abre a impressão; `afterprint`
+    // (imprimiu ou cancelou) desfaz tudo.
+    const [printing, setPrinting] = useState(false);
     const fileInput = useRef<HTMLInputElement>(null);
     const history = useActiveHistory();
+
+    useEffect(() => {
+        if (!printing) {
+            return;
+        }
+
+        const done = () => setPrinting(false);
+
+        window.addEventListener('afterprint', done);
+
+        return () => window.removeEventListener('afterprint', done);
+    }, [printing]);
 
     const openFile = async (file: File) => {
         const result = await parseProjectFile(file);
@@ -138,11 +151,7 @@ export default function Workbench() {
     return (
         <div className="flex min-h-dvh flex-col xl:h-dvh">
             {/* Ao imprimir o plano, só a folha do plano sai; a bancada some (specs/005, FR-013). */}
-            <div
-                className={
-                    view === 'plan' ? 'contents print:hidden' : 'contents'
-                }
-            >
+            <div className={printing ? 'contents print:hidden' : 'contents'}>
                 <TopBar
                     onAction={runAction}
                     history={history}
@@ -159,7 +168,7 @@ export default function Workbench() {
                 <main className="grid flex-1 grid-cols-1 gap-3 p-3 md:grid-cols-2 xl:min-h-0 xl:grid-cols-[23rem_minmax(0,1fr)] xl:gap-0 xl:p-0">
                     {/* Em ≥ 1280 px uma lateral fixa (abas, driver e caixa) com rolagem própria; abaixo
                         disso o wrapper some e cada bloco vira item da grade. */}
-                    <div className="contents xl:relative xl:flex xl:min-h-0 xl:flex-col xl:overflow-y-auto xl:border-r xl:border-border xl:bg-surface">
+                    <div className="contents xl:relative xl:flex xl:min-h-0 xl:[scrollbar-gutter:stable] xl:flex-col xl:overflow-y-auto xl:border-r xl:border-border xl:bg-surface">
                         <div className="md:col-span-2 xl:col-span-1 xl:px-3 xl:py-2.5">
                             <ProjectTabs onClose={requestClose} />
                         </div>
@@ -169,22 +178,32 @@ export default function Workbench() {
                         <BoxPanel />
                     </div>
                     {/* Resultados numa faixa acima do gráfico, que ocupa o resto da altura. */}
-                    <div className="contents xl:relative xl:flex xl:min-h-0 xl:flex-col xl:gap-3 xl:overflow-y-auto xl:p-3">
-                        <div className="md:col-span-2">
+                    <div className="contents xl:relative xl:flex xl:min-h-0 xl:[scrollbar-gutter:stable] xl:flex-col xl:gap-3 xl:overflow-y-auto xl:p-3">
+                        <div className="rise md:col-span-2">
                             <ResultsPanel />
                         </div>
-                        <div className="flex flex-col md:col-span-2 xl:min-h-[28rem] xl:flex-1 [&>section]:flex-1">
-                            <ViewSwitch selected={view} onChange={setView} />
-                            {view === 'charts' ? (
-                                <ChartPanel
-                                    selected={chart}
-                                    onSelectedChange={setChart}
+                        <div className="flex rise flex-col [--rise-delay:60ms] md:col-span-2 xl:min-h-[28rem] xl:flex-1 [&>section]:flex-1">
+                            <ChartPanel
+                                selected={chart}
+                                onSelectedChange={setChart}
+                            />
+                        </div>
+                        {/* O plano de corte vem depois dos gráficos, recolhido até alguém abrir. */}
+                        <div className="md:col-span-2 xl:shrink-0">
+                            <Suspense
+                                fallback={
+                                    <div
+                                        className="h-16 rounded-lg border border-border bg-surface"
+                                        aria-hidden="true"
+                                    />
+                                }
+                            >
+                                <PlanPanel
+                                    open={planOpen}
+                                    onOpenChange={setPlanOpen}
+                                    onPrint={() => setPrinting(true)}
                                 />
-                            ) : (
-                                <Suspense fallback={null}>
-                                    <PlanPanel />
-                                </Suspense>
-                            )}
+                            </Suspense>
                         </div>
                     </div>
                 </main>
@@ -255,9 +274,9 @@ export default function Workbench() {
                     </Suspense>
                 )}
             </div>
-            {view === 'plan' && (
+            {printing && (
                 <Suspense fallback={null}>
-                    <PrintSheet />
+                    <PrintSheet onReady={() => window.print()} />
                 </Suspense>
             )}
         </div>

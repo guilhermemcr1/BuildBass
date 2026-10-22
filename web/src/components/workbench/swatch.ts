@@ -10,3 +10,13 @@ export const SWATCH: Record<SeriesColor, string> = {
     5: 'bg-series-5',
     6: 'bg-series-6',
 };
+
+// Só o aro, para o projeto fora do gráfico.
+export const RING_SWATCH: Record<SeriesColor, string> = {
+    1: 'border-series-1',
+    2: 'border-series-2',
+    3: 'border-series-3',
+    4: 'border-series-4',
+    5: 'border-series-5',
+    6: 'border-series-6',
+};

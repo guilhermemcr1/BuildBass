@@ -7,6 +7,14 @@ async function fill(page: Page, name: RegExp, value: string) {
     await field.press('Tab');
 }
 
+async function fillPlan(page: Page, name: RegExp, value: string) {
+    const input = page
+        .locator('[data-region="plan"]')
+        .getByRole('textbox', { name });
+    await input.fill(value);
+    await input.press('Tab');
+}
+
 function field(page: Page, name: RegExp) {
     return page.getByRole('textbox', { name });
 }
@@ -62,7 +70,7 @@ test('arquivo inválido mostra o motivo e não mexe no projeto (US3)', async ({
 
     const dialog = page.getByRole('dialog');
     await expect(dialog).toContainText('O arquivo não é um JSON válido.');
-    await dialog.getByRole('button', { name: 'Fechar' }).click();
+    await dialog.getByRole('button', { name: 'Fechar', exact: true }).click();
     await expect(field(page, /^Fs/)).toHaveValue('31,0');
 });
 
@@ -164,7 +172,7 @@ test('arquivo de versão futura mostra a mensagem de app mais novo (feature 004,
         buffer: Buffer.from(
             JSON.stringify({
                 format: 'buildbass.project',
-                version: 6,
+                version: 7,
                 project: {},
             }),
         ),
@@ -172,7 +180,7 @@ test('arquivo de versão futura mostra a mensagem de app mais novo (feature 004,
 
     const dialog = page.getByRole('dialog');
     await expect(dialog).toContainText('versão mais nova do BuildBass');
-    await dialog.getByRole('button', { name: 'Fechar' }).click();
+    await dialog.getByRole('button', { name: 'Fechar', exact: true }).click();
     await expect(field(page, /^Fs/)).toHaveValue('31,0');
 });
 
@@ -188,8 +196,17 @@ test('trocar para bandpass leva o Vb digitado às duas câmaras (feature 004, US
 });
 
 async function openPlan(page: Page) {
-    await page.getByRole('radio', { name: 'Plano de corte' }).click();
-    await expect(page.locator('[data-region="plan"]')).toBeVisible();
+    const toggle = page.getByRole('button', {
+        name: 'Plano de corte',
+        exact: true,
+    });
+
+    // Aberto uma vez, o plano segue aberto ao trocar de projeto.
+    if ((await toggle.getAttribute('aria-expanded')) !== 'true') {
+        await toggle.click();
+    }
+
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
 }
 
 async function openFile(page: Page, name: string, text: string) {
@@ -218,10 +235,10 @@ test('plano de corte: ver não muda o arquivo; editar grava a versão 3 e reabre
     expect(untouched.project).not.toHaveProperty('cutPlan');
 
     await fill(page, /Espessura/, '25');
-    await page.getByRole('button', { name: /Proporção/ }).click();
+    await page.getByRole('button', { name: /^(?!Ajuda).*Proporção/ }).click();
     await page.getByRole('option', { name: 'Louden' }).click();
     await fill(page, /Volume dos reforços/, '2');
-    await fill(page, /^Ød/, '285');
+    await fillPlan(page, /^Ød/, '285');
 
     const text = await exportedFile(page);
     const file = JSON.parse(text);
@@ -240,9 +257,14 @@ test('plano de corte: ver não muda o arquivo; editar grava a versão 3 e reabre
     await openPlan(page);
     await expect(field(page, /Espessura/)).toHaveValue('25,0');
     await expect(field(page, /Volume dos reforços/)).toHaveValue('2,0');
-    await expect(field(page, /^Ød/)).toHaveValue('285,0');
     await expect(
-        page.locator('[data-region="plan"]').getByText(/1,90 : 1,40 : 1,00/),
+        page
+            .locator('[data-region="plan"]')
+            .getByRole('textbox', { name: /^Ød/ }),
+    ).toHaveValue('285,0');
+    // A proporção reaberta é a Louden: o seletor da Caixa mostra o nome.
+    await expect(
+        page.getByRole('button', { name: /^(?!Ajuda).*Louden/ }),
     ).toBeVisible();
 });
 
@@ -257,13 +279,13 @@ test('plano de corte: arquivo de versão 5 pede atualizar e valor fora da faixa 
         'futuro.buildbass.json',
         JSON.stringify({
             format: 'buildbass.project',
-            version: 6,
+            version: 7,
             project: {},
         }),
     );
     let dialog = page.getByRole('dialog');
     await expect(dialog).toContainText('versão mais nova do BuildBass');
-    await dialog.getByRole('button', { name: 'Fechar' }).click();
+    await dialog.getByRole('button', { name: 'Fechar', exact: true }).click();
 
     await page.getByRole('radio', { name: 'Selada' }).click();
     await fill(page, /^Vb/, '60');
@@ -275,7 +297,7 @@ test('plano de corte: arquivo de versão 5 pede atualizar e valor fora da faixa 
     await openFile(page, 'ruim.buildbass.json', JSON.stringify(good));
     dialog = page.getByRole('dialog');
     await expect(dialog).toContainText('project.cutPlan.thickness_m');
-    await dialog.getByRole('button', { name: 'Fechar' }).click();
+    await dialog.getByRole('button', { name: 'Fechar', exact: true }).click();
     await expect(field(page, /^Fs/)).toHaveValue('31,0');
 });
 
@@ -425,4 +447,55 @@ test('a cor do projeto vai no arquivo e volta ao reabrir (feature 008, US2)', as
     const reopened = JSON.parse(await exportedFile(page));
 
     expect(reopened.color).toBe(4);
+});
+
+test('dimensões do alto-falante: formato e medidas valem no plano e voltam do arquivo', async ({
+    page,
+}) => {
+    await page.goto('/');
+    await fill(page, /^Fs/, '28');
+    await fill(page, /^Qts/, '0,38');
+    await fill(page, /^Vas/, '85');
+    await fill(page, /^Vb/, '60');
+
+    // No modo Pro a seção já abre sozinha.
+    const dims = page.getByRole('button', {
+        name: /Dimensões do alto-falante/,
+    });
+    if ((await dims.getAttribute('aria-expanded')) !== 'true') {
+        await dims.click();
+    }
+    await fill(page, /^A —/, '308');
+    await fill(page, /recorte/, '283');
+    await fill(page, /^G —/, '160');
+    await page.getByRole('button', { name: /Formato/ }).click();
+    await page.getByRole('option', { name: 'Retangular' }).click();
+    await fill(page, /^D —/, '200');
+
+    const downloading = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Exportar', exact: true }).click();
+    const download = await downloading;
+    const path = await download.path();
+    const saved = JSON.parse(
+        await (await import('node:fs/promises')).readFile(path, 'utf8'),
+    );
+
+    expect(saved.version).toBe(6);
+    expect(saved.project.driverDims).toEqual({
+        shape: 'rect',
+        a_m: 0.308,
+        d_m: 0.2,
+        g_m: 0.16,
+    });
+
+    await page.getByRole('button', { name: 'Novo' }).click();
+    await expect(field(page, /^Fs/)).toHaveValue('');
+
+    const choosing = page.waitForEvent('filechooser');
+    await page.getByRole('button', { name: 'Abrir' }).click();
+    await (await choosing).setFiles(path);
+
+    await expect(field(page, /^A —/)).toHaveValue('308,0');
+    await expect(field(page, /^D —/)).toHaveValue('200,0');
+    await expect(field(page, /^G —/)).toHaveValue('160,0');
 });

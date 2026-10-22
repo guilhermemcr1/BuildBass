@@ -87,7 +87,7 @@ export function SheetLayout({ layout, sheet }: SheetLayoutProps) {
                                     ),
                                 })}
                                 viewBox={`${-fontSize} ${-fontSize} ${sheet.w_m * MM + 2 * fontSize} ${sheet.h_m * MM + 2 * fontSize}`}
-                                className="h-auto w-full rounded-sm"
+                                className="h-auto w-full max-w-3xl rounded-sm"
                             >
                                 <rect
                                     x={0}

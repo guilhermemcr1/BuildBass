@@ -4,7 +4,7 @@ import type { CircuitParams } from './circuit';
 import { abs, arg, complex, mul } from './complex';
 import { AIR_DENSITY, SPEED_OF_SOUND } from './constants';
 import { deriveDriver } from './driver';
-import { FREQUENCIES_HZ } from './frequencies';
+import { ANALYSIS_FREQUENCIES_HZ, FREQUENCIES_HZ } from './frequencies';
 import { netVolume as solveNetVolume, portArea } from './port';
 import { twoChambers } from './types';
 import type {
@@ -202,6 +202,11 @@ function unwrap(phases: number[]): number[] {
 }
 
 // Atraso de grupo τ = −dφ/dω por diferenças centrais (research.md §9).
+// Os máximos e os cortes valem só na grade de análise; as curvas vão além, até 20 kHz.
+function analysisPart(values: number[]): number[] {
+    return values.slice(0, ANALYSIS_FREQUENCIES_HZ.length);
+}
+
 function groupDelay(
     phases: number[],
     frequencies: readonly number[],
@@ -233,7 +238,7 @@ function relativeLevel(model: Model, frequency: number): number {
 // F3: da frequência mais alta para a mais baixa, o primeiro ponto 3 dB abaixo da banda; o
 // cruzamento é refinado por bisseção em log f (research.md §8).
 function findF3(model: Model): { f3?: number; below: boolean } {
-    const grid = FREQUENCIES_HZ;
+    const grid = ANALYSIS_FREQUENCIES_HZ;
 
     for (let index = grid.length - 1; index >= 0; index--) {
         if (relativeLevel(model, grid[index]) >= -3) {
@@ -685,7 +690,7 @@ export function simulate(project: ProjectInput): Simulation {
 
     if (missing.port_velocity_ms.length === 0 && totalPortArea !== undefined) {
         curves.port_velocity_ms = portVelocity;
-        results.port_velocity_max_ms = Math.max(...portVelocity);
+        results.port_velocity_max_ms = Math.max(...analysisPart(portVelocity));
     }
 
     if (
@@ -693,7 +698,9 @@ export function simulate(project: ProjectInput): Simulation {
         totalRearArea !== undefined
     ) {
         curves.port_rear_velocity_ms = rearVelocity;
-        results.port_rear_velocity_max_ms = Math.max(...rearVelocity);
+        results.port_rear_velocity_max_ms = Math.max(
+            ...analysisPart(rearVelocity),
+        );
     }
 
     let lowEdge: number | undefined;
@@ -733,11 +740,11 @@ export function simulate(project: ProjectInput): Simulation {
         values.xmax_m > 0 &&
         results.power_w !== undefined
     ) {
-        const from = lowEdge ?? FREQUENCIES_HZ[0];
+        const from = lowEdge ?? ANALYSIS_FREQUENCIES_HZ[0];
         const xmax = values.xmax_m;
         const power = results.power_w;
         results.xmax_power_w = Math.min(
-            ...FREQUENCIES_HZ.flatMap((frequency, index) =>
+            ...ANALYSIS_FREQUENCIES_HZ.flatMap((frequency, index) =>
                 frequency >= from
                     ? [power * (xmax / excursion[index]) ** 2]
                     : [],

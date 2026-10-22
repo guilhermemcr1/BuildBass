@@ -1,4 +1,4 @@
-import { act, screen } from '@testing-library/react';
+import { act, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { activeProjectStore } from '@/hooks/use-active-project';
@@ -178,15 +178,20 @@ describe('DriverPanel — alto-falantes salvos (specs/008, US6)', () => {
         await userEvent.click(
             screen.getByRole('menuitem', { name: 'Salvar este alto-falante' }),
         );
+        const dialog = await screen.findByRole('dialog', {
+            name: 'Salvar alto-falante',
+        });
         expect(
-            await screen.findByRole('textbox', { name: /Marca/ }),
+            within(dialog).getByRole('textbox', { name: /Marca/ }),
         ).toHaveValue('Triton');
-        await userEvent.click(screen.getByRole('button', { name: 'Salvar' }));
+        await userEvent.click(
+            within(dialog).getByRole('button', { name: 'Salvar' }),
+        );
 
         expect(useSavedDrivers.getState().items).toMatchObject([
             { brand: 'Triton', model: 'TR 620' },
         ]);
-        expect(screen.getByText(/· salvo/)).toBeVisible();
+        expect(screen.getByText('Dos meus alto-falantes')).toBeVisible();
     });
 
     test('"Meus alto-falantes" abre o gerenciamento', async () => {
