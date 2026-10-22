@@ -1,6 +1,6 @@
 import type { TFunction } from 'i18next';
 import { cutPlanCsv } from '@/cutplan';
-import type { CsvFormat, Plan } from '@/cutplan';
+import type { CsvFormat, Plan, SheetLayout } from '@/cutplan';
 import { cutoutSummary, pieceName, piecePosition } from '@/lib/cut-plan-text';
 import { exportBaseName } from '@/lib/project/file';
 import { fromSi } from '@/lib/units/convert';
@@ -10,6 +10,31 @@ import type { UnitSystem } from '@/lib/units/quantities';
 
 const ROLES = ['front', 'back', 'top', 'bottom', 'side', 'divider'] as const;
 const CHAMBERS = ['main', 'rear', 'front'] as const;
+const TOTALS = [
+    'title',
+    'gross',
+    'net',
+    'difference',
+    'pieces',
+    'area',
+    'cutLength',
+] as const;
+const SHEETS = [
+    'title',
+    'sheet',
+    'piece',
+    'unit',
+    'x',
+    'y',
+    'length',
+    'width',
+    'rotated',
+    'yes',
+    'no',
+    'utilization',
+    'waste',
+    'oversize',
+] as const;
 
 function decimalSeparatorOf(locale: string): string {
     return (
@@ -28,6 +53,7 @@ export function csvFormatFor(
 ): CsvFormat {
     const lengthUnit = defaultUnitFor('length', unitSystem);
     const volumeUnit = defaultUnitFor('volume', unitSystem);
+    const areaUnit = defaultUnitFor('area', unitSystem);
     const numberIn = (unitId: typeof lengthUnit) => {
         const formatter = new Intl.NumberFormat(locale, {
             minimumFractionDigits: findUnit(unitId).decimals,
@@ -47,6 +73,8 @@ export function csvFormatFor(
     return {
         number: numberIn(lengthUnit),
         volume: numberIn(volumeUnit),
+        area: numberIn(areaUnit),
+        areaSymbol: findUnit(areaUnit).symbol,
         percent: (ratio) => percent.format(ratio),
         unitSymbol: findUnit(lengthUnit).symbol,
         volumeSymbol: findUnit(volumeUnit).symbol,
@@ -95,6 +123,12 @@ export function csvFormatFor(
                     CHAMBERS.map((id) => [id, text(`volume.chambers.${id}`)]),
                 ) as CsvFormat['labels']['volume']['chambers'],
             },
+            totals: Object.fromEntries(
+                TOTALS.map((key) => [key, text(`totals.${key}`)]),
+            ) as CsvFormat['labels']['totals'],
+            sheets: Object.fromEntries(
+                SHEETS.map((key) => [key, text(`sheets.${key}`)]),
+            ) as CsvFormat['labels']['sheets'],
         },
     };
 }
@@ -107,8 +141,9 @@ export function downloadCutPlanCsv(
     plan: Plan,
     projectName: string,
     format: CsvFormat,
+    layout?: SheetLayout,
 ): void {
-    const blob = new Blob([cutPlanCsv(plan, format)], {
+    const blob = new Blob([cutPlanCsv(plan, format, layout)], {
         type: 'text/csv;charset=utf-8',
     });
     const url = URL.createObjectURL(blob);

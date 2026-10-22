@@ -677,3 +677,36 @@ for (const theme of ['light', 'dark'] as const) {
         await context.close();
     });
 }
+
+// Plano com a chapa do usuário (feature 008, US5): total, grupo da chapa e visão "Chapas".
+for (const theme of ['light', 'dark'] as const) {
+    test(`plano com chapa sem violações WCAG AA no tema ${theme} (feature 008, US5)`, async ({
+        browser,
+    }) => {
+        const context = await browser.newContext({
+            colorScheme: theme,
+            viewport: { width: 1440, height: 900 },
+        });
+        const page = await context.newPage();
+        await page.goto('/');
+        await page.locator('main').waitFor();
+
+        await fill(page, /^Fs/, '28');
+        await fill(page, /^Qts/, '0,38');
+        await fill(page, /^Qes/, '0,42');
+        await fill(page, /^Qms/, '4,1');
+        await fill(page, /^Vas/, '85');
+        await fill(page, /^Re/, '3,6');
+        await fill(page, /^Sd/, '491');
+        await page.getByRole('radio', { name: 'Selada' }).click();
+        await fill(page, /^Vb/, '60');
+        await page.getByRole('radio', { name: 'Plano de corte' }).click();
+        await fill(page, /^Wc/, '2750');
+        await fill(page, /^Hc/, '1850');
+        await page.getByRole('tab', { name: 'Chapas' }).click();
+        await expect(page.locator('[data-piece]').first()).toBeVisible();
+
+        expect(await axe(page)).toEqual([]);
+        await context.close();
+    });
+}

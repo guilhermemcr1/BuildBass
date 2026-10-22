@@ -1,11 +1,12 @@
 import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ParameterField } from '@/components/ui/parameter-field';
 import { SelectField } from '@/components/ui/select-field';
 import { resolveCutPlan } from '@/cutplan';
 import type { CutPlanProportion } from '@/cutplan';
 import { useActiveProject } from '@/hooks/use-active-project';
-import { writeProportion } from '@/lib/project/fields';
+import { writeProportion, writeSheetRotate } from '@/lib/project/fields';
 import { useParameterField } from './use-parameter-field';
 
 const PROPORTION_IDS: CutPlanProportion[] = [
@@ -33,6 +34,10 @@ export function PlanConfig() {
     const ratioH = useParameterField('ratio_h');
     const ratioW = useParameterField('ratio_w');
     const ratioD = useParameterField('ratio_d');
+    const sheetW = useParameterField('sheet_w_m');
+    const sheetH = useParameterField('sheet_h_m');
+    const kerf = useParameterField('kerf_m');
+    const sheetStarted = config?.sheet !== undefined;
 
     return (
         <div className="flex flex-col gap-3">
@@ -69,6 +74,28 @@ export function PlanConfig() {
             <p className="text-[11px] text-muted">{t('config.hint')}</p>
             <ParameterField {...braces} />
             <ParameterField {...cutout} />
+            <fieldset className="flex flex-col gap-3">
+                <legend className="mb-1.5 text-xs font-semibold text-muted">
+                    {t('sheet.title')}
+                </legend>
+                <div className="grid grid-cols-2 gap-2">
+                    <ParameterField {...sheetW} />
+                    <ParameterField {...sheetH} />
+                </div>
+                <ParameterField {...kerf} />
+                <Checkbox
+                    selected={
+                        resolved.sheet?.rotate ?? config?.sheet?.rotate ?? true
+                    }
+                    disabled={!sheetStarted}
+                    onChange={(rotate) =>
+                        apply((data) => writeSheetRotate(data, rotate))
+                    }
+                >
+                    {t('sheet.rotate')}
+                </Checkbox>
+                <p className="text-[11px] text-muted">{t('sheet.hint')}</p>
+            </fieldset>
         </div>
     );
 }

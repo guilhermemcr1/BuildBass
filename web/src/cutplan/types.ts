@@ -11,6 +11,24 @@ export type CutPlanProportion =
 
 export type Ratio = { h: number; w: number; d: number };
 
+// Chapa que o usuário tem para cortar (specs/008). Enquanto só um lado foi digitado a chapa
+// está incompleta e não entra no encaixe nem no arquivo.
+export type SheetConfig = {
+    w_m?: number;
+    h_m?: number;
+    // Perda de serra por corte; padrão 0,003 m.
+    kerf_m?: number;
+    // Pode girar as peças em 90°; padrão sim.
+    rotate?: boolean;
+};
+
+export type ResolvedSheet = {
+    w_m: number;
+    h_m: number;
+    kerf_m: number;
+    rotate: boolean;
+};
+
 // O que o usuário alterou; o resto vem dos padrões em `resolveCutPlan`.
 export type CutPlanConfig = {
     thickness_m?: number;
@@ -18,6 +36,7 @@ export type CutPlanConfig = {
     custom?: Ratio;
     braces_m3?: number;
     cutout_m?: number;
+    sheet?: SheetConfig;
 };
 
 export type ResolvedCutPlanConfig = {
@@ -26,6 +45,8 @@ export type ResolvedCutPlanConfig = {
     ratio: Ratio;
     braces_m3: number;
     cutout_m?: number;
+    // Só existe com largura e altura informadas.
+    sheet?: ResolvedSheet;
 };
 
 export type PlanKey =
@@ -33,7 +54,10 @@ export type PlanKey =
     | 'thickness_m'
     | 'ratio'
     | 'braces_m3'
-    | 'cutout_m';
+    | 'cutout_m'
+    | 'sheet_w_m'
+    | 'sheet_h_m'
+    | 'kerf_m';
 
 export type PieceRole =
     | 'front'

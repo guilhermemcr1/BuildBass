@@ -150,5 +150,17 @@
     "ratio_d": {
         "label": "Ratio — depth",
         "help": "Weight of the depth in the height : width : depth ratio."
+    },
+    "sheet_w_m": {
+        "label": "Sheet width",
+        "help": "Width of the MDF sheet you have to cut (for example 2.75 m). Thickness is the panel thickness."
+    },
+    "sheet_h_m": {
+        "label": "Sheet height",
+        "help": "Height of the MDF sheet you have to cut (for example 1.85 m)."
+    },
+    "kerf_m": {
+        "label": "Saw kerf",
+        "help": "Width the saw removes on each cut, usually about 3 mm. The system leaves this gap between pieces."
     }
 }

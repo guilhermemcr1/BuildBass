@@ -157,3 +157,52 @@ describe('validateCutPlan', () => {
         ).toEqual(['thickness_m', 'ratio', 'braces_m3', 'cutout_m']);
     });
 });
+
+describe('chapa do usuário (feature 008)', () => {
+    test('sem chapa o resultado é idêntico ao de hoje', () => {
+        expect(resolveCutPlan().sheet).toBeUndefined();
+        expect(resolveCutPlan({ thickness_m: 0.015 })).toEqual(
+            resolveCutPlan({ thickness_m: 0.015, sheet: undefined }),
+        );
+        expect(validateCutPlan({})).toEqual([]);
+    });
+
+    test('com largura e altura vêm os padrões: perda de serra de 3 mm e girar', () => {
+        expect(
+            resolveCutPlan({ sheet: { w_m: 2.75, h_m: 1.85 } }).sheet,
+        ).toEqual({ w_m: 2.75, h_m: 1.85, kerf_m: 0.003, rotate: true });
+    });
+
+    test('perda de serra e rotação informadas são respeitadas', () => {
+        expect(
+            resolveCutPlan({
+                sheet: { w_m: 2.75, h_m: 1.85, kerf_m: 0, rotate: false },
+            }).sheet,
+        ).toEqual({ w_m: 2.75, h_m: 1.85, kerf_m: 0, rotate: false });
+    });
+
+    test('chapa incompleta (só um lado) não entra na configuração resolvida', () => {
+        expect(resolveCutPlan({ sheet: { w_m: 2.75 } }).sheet).toBeUndefined();
+        expect(resolveCutPlan({ sheet: { h_m: 1.85 } }).sheet).toBeUndefined();
+        expect(validateCutPlan({ sheet: { w_m: 99 } })).toEqual([]);
+    });
+
+    test('faixas: largura e altura de 0,1 a 5 m, perda de serra de 0 a 20 mm', () => {
+        expect(CUT_PLAN_LIMITS.sheet_w_m).toEqual({ min: 0.1, max: 5 });
+        expect(CUT_PLAN_LIMITS.sheet_h_m).toEqual({ min: 0.1, max: 5 });
+        expect(CUT_PLAN_LIMITS.kerf_m).toEqual({ min: 0, max: 0.02 });
+
+        const ok = { w_m: 5, h_m: 0.1, kerf_m: 0 };
+        expect(validateCutPlan({ sheet: ok })).toEqual([]);
+        expect(validateCutPlan({ sheet: { ...ok, kerf_m: 0.02 } })).toEqual([]);
+    });
+
+    test('fora das faixas devolve sheet_w_m, sheet_h_m e kerf_m', () => {
+        expect(
+            validateCutPlan({ sheet: { w_m: 5.1, h_m: 0.09, kerf_m: 0.021 } }),
+        ).toEqual(['sheet_w_m', 'sheet_h_m', 'kerf_m']);
+        expect(
+            validateCutPlan({ sheet: { w_m: Number.NaN, h_m: 1, kerf_m: -1 } }),
+        ).toEqual(['sheet_w_m', 'kerf_m']);
+    });
+});

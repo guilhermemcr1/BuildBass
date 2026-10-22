@@ -152,5 +152,42 @@
     },
     "print": {
         "title": "Plano de corte: {{name}}"
+    },
+    "totals": {
+        "title": "Corte total",
+        "gross": "Sem desconto do MDF",
+        "net": "Com desconto do MDF",
+        "difference": "Diferença do MDF",
+        "pieces": "Peças",
+        "area": "Área",
+        "cutLength": "Corte",
+        "hint": "“Sem desconto” usa as seis faces pelas medidas internas, sem a espessura. “Com desconto” usa as peças do plano, com a espessura somada. A diferença é o que o MDF acrescenta."
+    },
+    "sheet": {
+        "title": "Chapa que você tem",
+        "rotate": "Pode girar as peças",
+        "hint": "Informe a chapa para ver como encaixar as peças. A espessura é a do campo acima."
+    },
+    "sheets": {
+        "title": "Chapas",
+        "sheet": "Chapa",
+        "piece": "Peça",
+        "unit": "Unidade",
+        "x": "x",
+        "y": "y",
+        "length": "Comprimento",
+        "width": "Largura",
+        "rotated": "Girada",
+        "yes": "sim",
+        "no": "não",
+        "utilization": "Aproveitamento",
+        "waste": "Sobra",
+        "oversize": "Não cabe",
+        "sheetOf": "Chapa {{n}} de {{total}}",
+        "summary": "{{count}} chapa(s), aproveitamento de {{utilization}}, sobra de {{waste}}.",
+        "oversizeWarning": "Não cabem na chapa informada: {{pieces}}.",
+        "rotatedMark": "girada",
+        "drawing": "Chapa {{n}} com {{count}} peça(s), aproveitamento de {{utilization}}",
+        "empty": "Nenhuma peça coube na chapa informada."
     }
 }

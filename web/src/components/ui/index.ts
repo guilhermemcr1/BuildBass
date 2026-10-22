@@ -8,3 +8,4 @@ export { InlineTextField } from './inline-text-field';
 export { ToggleButton } from './toggle-button';
 export { HelpTip, useHoverless } from './help-tip';
 export { ColorPicker } from './color-picker';
+export { Checkbox } from './checkbox';

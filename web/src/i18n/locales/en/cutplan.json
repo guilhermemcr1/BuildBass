@@ -152,5 +152,42 @@
     },
     "print": {
         "title": "Cut plan: {{name}}"
+    },
+    "totals": {
+        "title": "Total cut",
+        "gross": "Without MDF allowance",
+        "net": "With MDF allowance",
+        "difference": "MDF difference",
+        "pieces": "Pieces",
+        "area": "Area",
+        "cutLength": "Cut",
+        "hint": "“Without” uses the six faces by their inner measures, ignoring thickness. “With” uses the plan pieces, thickness included. The difference is what the MDF adds."
+    },
+    "sheet": {
+        "title": "Sheet you have",
+        "rotate": "Pieces may be rotated",
+        "hint": "Enter your sheet to see how the pieces fit. Thickness is the field above."
+    },
+    "sheets": {
+        "title": "Sheets",
+        "sheet": "Sheet",
+        "piece": "Piece",
+        "unit": "Unit",
+        "x": "x",
+        "y": "y",
+        "length": "Length",
+        "width": "Width",
+        "rotated": "Rotated",
+        "yes": "yes",
+        "no": "no",
+        "utilization": "Utilization",
+        "waste": "Waste",
+        "oversize": "Does not fit",
+        "sheetOf": "Sheet {{n}} of {{total}}",
+        "summary": "{{count}} sheet(s), {{utilization}} utilization, {{waste}} waste.",
+        "oversizeWarning": "These do not fit the sheet you entered: {{pieces}}.",
+        "rotatedMark": "rotated",
+        "drawing": "Sheet {{n}} with {{count}} piece(s), {{utilization}} utilization",
+        "empty": "No piece fit the sheet you entered."
     }
 }

@@ -456,3 +456,65 @@ test('só pelo teclado: seletor de visão, campos, proporção, botões, abas e 
         ),
     ).toBe(true);
 });
+
+// Chapa do usuário e corte total (feature 008, US5).
+test('chapa 2,75 × 1,85 m: visão "Chapas", aproveitamento, total nas duas bases e CSV (US5)', async ({
+    page,
+}) => {
+    await page.goto('/');
+    await page.getByRole('radio', { name: 'Selada' }).click();
+    await fill(page, /^Vb/, '60');
+    await openPlan(page);
+
+    // Corte total com e sem o desconto do MDF, mesmo sem chapa.
+    const totals = page.getByRole('table', { name: 'Corte total' });
+    await expect(totals).toBeVisible();
+    await expect(
+        totals.getByRole('row', { name: /Sem desconto do MDF/ }),
+    ).toBeVisible();
+    await expect(
+        totals.getByRole('row', { name: /Com desconto do MDF/ }),
+    ).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Chapas' })).toHaveCount(0);
+
+    await fill(page, /^Wc/, '2750');
+    await fill(page, /^Hc/, '1850');
+    await page.getByRole('tab', { name: 'Chapas' }).click();
+
+    const region = planRegion(page);
+    await expect(region.getByText(/aproveitamento de/).first()).toBeVisible();
+    await expect(
+        region.getByRole('img', { name: /Chapa 1 com 6 peça\(s\)/ }),
+    ).toBeVisible();
+    await expect(region.locator('[data-piece]')).toHaveCount(6);
+
+    const csv = (await downloadCsv(page, 'Exportar CSV')).bytes.toString(
+        'utf8',
+    );
+    expect(csv).toContain('Corte total;Peças;Área (cm²);Corte (mm)');
+    expect(csv).toContain('Sem desconto do MDF;');
+    expect(csv).toContain('Chapas;Chapa;Peça;Unidade;x (mm);y (mm)');
+    expect(csv).toContain('Aproveitamento;');
+});
+
+test('chapa pequena avisa as peças que não cabem e a chapa sobrevive ao recarregar (US5)', async ({
+    page,
+}) => {
+    await page.goto('/');
+    await page.getByRole('radio', { name: 'Selada' }).click();
+    await fill(page, /^Vb/, '60');
+    await openPlan(page);
+    await fill(page, /^Wc/, '300');
+    await fill(page, /^Hc/, '300');
+    await page.getByRole('tab', { name: 'Chapas' }).click();
+
+    await expect(
+        planRegion(page).getByText(/Não cabem na chapa informada:/),
+    ).toBeVisible();
+
+    await page.reload();
+    await openPlan(page);
+    await expect(page.getByRole('textbox', { name: /^Wc/ })).toHaveValue(
+        '300,0',
+    );
+});

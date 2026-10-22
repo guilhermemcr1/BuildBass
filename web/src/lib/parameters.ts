@@ -43,7 +43,10 @@ export type ParameterKey =
     | 'cutout_m'
     | 'ratio_h'
     | 'ratio_w'
-    | 'ratio_d';
+    | 'ratio_d'
+    | 'sheet_w_m'
+    | 'sheet_h_m'
+    | 'kerf_m';
 
 export type ParameterGroup = 'driver' | 'box' | 'port' | 'signal' | 'plan';
 
@@ -157,6 +160,31 @@ export const PARAMETERS: Record<ParameterKey, ParameterDefinition> = {
         'plan',
         CUT_PLAN_LIMITS.ratio.min,
         CUT_PLAN_LIMITS.ratio.max,
+    ),
+    // Chapa que o usuário tem e perda de serra (specs/008).
+    sheet_w_m: parameter(
+        'sheet_w_m',
+        'Wc',
+        'length',
+        'plan',
+        CUT_PLAN_LIMITS.sheet_w_m.min,
+        CUT_PLAN_LIMITS.sheet_w_m.max,
+    ),
+    sheet_h_m: parameter(
+        'sheet_h_m',
+        'Hc',
+        'length',
+        'plan',
+        CUT_PLAN_LIMITS.sheet_h_m.min,
+        CUT_PLAN_LIMITS.sheet_h_m.max,
+    ),
+    kerf_m: parameter(
+        'kerf_m',
+        'Ps',
+        'length',
+        'plan',
+        CUT_PLAN_LIMITS.kerf_m.min,
+        CUT_PLAN_LIMITS.kerf_m.max,
     ),
 };
 

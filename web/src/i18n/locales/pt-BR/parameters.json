@@ -150,5 +150,17 @@
     "ratio_d": {
         "label": "Proporção — profundidade",
         "help": "Peso da profundidade na proporção altura : largura : profundidade."
+    },
+    "sheet_w_m": {
+        "label": "Largura da chapa",
+        "help": "Largura da chapa de MDF que você tem para cortar (por exemplo, 2,75 m). A espessura é a do painel."
+    },
+    "sheet_h_m": {
+        "label": "Altura da chapa",
+        "help": "Altura da chapa de MDF que você tem para cortar (por exemplo, 1,85 m)."
+    },
+    "kerf_m": {
+        "label": "Perda de serra",
+        "help": "Espessura que a serra consome a cada corte, em geral cerca de 3 mm. O sistema deixa essa folga entre as peças."
     }
 }

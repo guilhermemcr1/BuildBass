@@ -1,11 +1,14 @@
 import { useTranslation } from 'react-i18next';
 import { useCutPlan } from '@/hooks/use-cut-plan';
+import { useSheetLayout } from '@/hooks/use-sheet-layout';
 import { displayName } from '@/lib/project/names';
 import { useWorkspace } from '@/stores/workspace';
 import { CutDrawings } from './cut-drawings';
+import { CutTotals } from './cut-totals';
 import { PartsTable } from './parts-table';
 import { PlanDimensions } from './plan-dimensions';
 import { PlanWarnings } from './plan-warnings';
+import { SheetLayout } from './sheet-layout';
 import { VolumeCheck } from './volume-check';
 
 // Cores de papel: preto sobre branco, qualquer que seja o tema da tela.
@@ -17,6 +20,9 @@ const PAPER =
 export function PrintSheet() {
     const { t } = useTranslation(['cutplan', 'project']);
     const cutPlan = useCutPlan();
+    const suggestion = useSheetLayout(
+        cutPlan.status === 'ready' ? cutPlan.plan : undefined,
+    );
     const project = useWorkspace((state) =>
         state.projects.find((p) => p.id === state.activeId),
     );
@@ -38,12 +44,19 @@ export function PrintSheet() {
                 {t('cutplan:print.title', { name })}
             </h1>
             <PlanDimensions plan={plan} />
+            <CutTotals plan={plan} />
             <PartsTable plan={plan} name={name} />
             {plan.volume.chambers.length > 0 && (
                 <VolumeCheck volume={plan.volume} />
             )}
             <PlanWarnings plan={plan} />
             <CutDrawings plan={plan} />
+            {suggestion !== undefined && (
+                <SheetLayout
+                    layout={suggestion.layout}
+                    sheet={suggestion.sheet}
+                />
+            )}
         </section>
     );
 }

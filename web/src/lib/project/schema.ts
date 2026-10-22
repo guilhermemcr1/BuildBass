@@ -96,6 +96,15 @@ const cutPlan = z.object({
         .optional(),
     braces_m3: range('braces_m3').optional(),
     cutout_m: range('cutout_m').optional(),
+    // Chapa que o usuário tem (versão 5): largura e altura obrigatórias dentro do objeto.
+    sheet: z
+        .object({
+            w_m: range('sheet_w_m'),
+            h_m: range('sheet_h_m'),
+            kerf_m: range('kerf_m').optional(),
+            rotate: z.boolean().optional(),
+        })
+        .optional(),
 });
 
 export const projectSchema = z.object({

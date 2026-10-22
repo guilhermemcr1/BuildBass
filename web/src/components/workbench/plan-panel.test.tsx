@@ -50,7 +50,10 @@ describe('PlanPanel', () => {
         expect(
             screen.getByRole('region', { name: 'Plano de corte' }),
         ).toBeVisible();
-        expect(screen.getByRole('table')).toBeVisible();
+        expect(
+            screen.getByRole('table', { name: 'Corte total' }),
+        ).toBeVisible();
+        expect(screen.getAllByRole('table')).toHaveLength(2);
         expect(screen.getByRole('row', { name: /Frente/ })).toBeVisible();
         expect(screen.getByText(/Internas · Largura/)).toBeVisible();
         expect(screen.getByText(/Externas · Altura/)).toBeVisible();
@@ -294,5 +297,127 @@ describe('PlanPanel', () => {
             );
             expect(print).toHaveBeenCalledTimes(1);
         });
+    });
+});
+
+describe('PlanPanel — chapa e corte total (feature 008, US5)', () => {
+    beforeEach(() => {
+        localStorage.clear();
+        useWorkspace.setState(initialWorkspace());
+        usePreferences.setState({ unitSystem: 'metric' });
+        setField('vb_m3', 0.06);
+    });
+
+    test('mostra o corte total com as duas bases e a diferença', () => {
+        renderWithProviders(<PlanPanel />);
+        const table = screen.getByRole('table', { name: 'Corte total' });
+
+        expect(
+            within(table).getByRole('columnheader', { name: 'Peças' }),
+        ).toBeVisible();
+        for (const name of [
+            'Sem desconto do MDF',
+            'Com desconto do MDF',
+            'Diferença do MDF',
+        ]) {
+            expect(
+                within(table).getByRole('row', { name: new RegExp(name) }),
+            ).toBeVisible();
+        }
+    });
+
+    test('o grupo "Chapa" tem largura, altura, perda de serra e girar', () => {
+        renderWithProviders(<PlanPanel />);
+
+        expect(screen.getByRole('textbox', { name: /^Wc/ })).toBeVisible();
+        expect(screen.getByRole('textbox', { name: /^Hc/ })).toBeVisible();
+        expect(screen.getByRole('textbox', { name: /^Ps/ })).toHaveValue('3,0');
+        expect(
+            screen.getByRole('checkbox', { name: 'Pode girar as peças' }),
+        ).toBeDisabled();
+    });
+
+    test('sem chapa não existe a visão "Chapas" e o painel fica como antes', () => {
+        renderWithProviders(<PlanPanel />);
+
+        expect(screen.queryByRole('tab', { name: 'Chapas' })).toBeNull();
+        expect(activeProjectStore().getState().data.cutPlan).toBeUndefined();
+    });
+
+    test('informar a chapa abre a visão "Chapas" com o aproveitamento', async () => {
+        renderWithProviders(<PlanPanel />);
+
+        const width = screen.getByRole('textbox', { name: /^Wc/ });
+        await userEvent.type(width, '2750{Enter}');
+        const height = screen.getByRole('textbox', { name: /^Hc/ });
+        await userEvent.type(height, '1850{Enter}');
+
+        expect(
+            activeProjectStore().getState().data.cutPlan?.sheet,
+        ).toMatchObject({
+            w_m: 2.75,
+            h_m: 1.85,
+        });
+        await userEvent.click(screen.getByRole('tab', { name: 'Chapas' }));
+
+        expect(await screen.findByText(/aproveitamento de/)).toBeVisible();
+        expect(screen.getByRole('img', { name: /Chapa 1 com/ })).toBeVisible();
+        expect(
+            screen.getByRole('checkbox', { name: 'Pode girar as peças' }),
+        ).toBeEnabled();
+    });
+
+    test('desmarcar "Pode girar" grava rotate: false', async () => {
+        renderWithProviders(<PlanPanel />);
+        act(() =>
+            activeProjectStore()
+                .getState()
+                .apply((data) => ({
+                    ...data,
+                    cutPlan: { sheet: { w_m: 2.75, h_m: 1.85 } },
+                })),
+        );
+
+        await userEvent.click(
+            screen.getByRole('checkbox', { name: 'Pode girar as peças' }),
+        );
+
+        expect(
+            activeProjectStore().getState().data.cutPlan?.sheet?.rotate,
+        ).toBe(false);
+    });
+
+    test('esvaziar largura e altura remove a chapa e a visão "Chapas"', async () => {
+        renderWithProviders(<PlanPanel />);
+        setField('sheet_w_m', 2.75);
+        setField('sheet_h_m', 1.85);
+        expect(screen.getByRole('tab', { name: 'Chapas' })).toBeVisible();
+
+        setField('sheet_w_m', undefined);
+        setField('sheet_h_m', undefined);
+
+        expect(screen.queryByRole('tab', { name: 'Chapas' })).toBeNull();
+        expect(activeProjectStore().getState().data.cutPlan).toBeUndefined();
+    });
+
+    test('chapa pequena avisa as peças que não cabem', async () => {
+        renderWithProviders(<PlanPanel />);
+        setField('sheet_w_m', 0.3);
+        setField('sheet_h_m', 0.3);
+        await userEvent.click(screen.getByRole('tab', { name: 'Chapas' }));
+
+        expect(
+            await screen.findByText(/Não cabem na chapa informada:/),
+        ).toBeVisible();
+    });
+
+    test('chapa fora da faixa bloqueia o plano citando o campo', () => {
+        renderWithProviders(<PlanPanel />);
+        setField('sheet_w_m', 9);
+        setField('sheet_h_m', 1.85);
+
+        expect(
+            screen.getByText(/Valores fora da faixa no plano: .*Wc/),
+        ).toBeVisible();
     });
 });

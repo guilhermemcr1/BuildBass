@@ -8,6 +8,7 @@ import { Tabs } from '@/components/ui/tabs';
 import { ValueTile } from '@/components/ui/value-tile';
 import { useActiveProject } from '@/hooks/use-active-project';
 import { useCutPlan } from '@/hooks/use-cut-plan';
+import { useSheetLayout } from '@/hooks/use-sheet-layout';
 import { csvFormatFor, downloadCutPlanCsv } from '@/lib/cut-plan-export';
 import { planKeySymbol } from '@/lib/cut-plan-text';
 import { displayName } from '@/lib/project/names';
@@ -15,15 +16,17 @@ import { defaultUnitFor } from '@/lib/units/quantities';
 import { usePreferences } from '@/stores/preferences';
 import { useWorkspace } from '@/stores/workspace';
 import { CutDrawings } from './cut-drawings';
+import { CutTotals } from './cut-totals';
 import { Panel } from './panel';
 import { PartsTable } from './parts-table';
 import { PlanConfig } from './plan-config';
 import { PlanWarnings } from './plan-warnings';
+import { SheetLayout } from './sheet-layout';
 import { VolumeCheck } from './volume-check';
 
 const Box3dView = lazy(() => import('./box-3d-view'));
 
-type PlanView = 'drawings' | 'view3d';
+type PlanView = 'drawings' | 'view3d' | 'sheets';
 
 // Plano de corte do projeto ativo (specs/005): configuração, dimensões e lista de peças.
 export function PlanPanel() {
@@ -34,6 +37,9 @@ export function PlanPanel() {
     const unitSystem = usePreferences((state) => state.unitSystem);
     const unit = defaultUnitFor('length', unitSystem);
     const cutPlan = useCutPlan();
+    const suggestion = useSheetLayout(
+        cutPlan.status === 'ready' ? cutPlan.plan : undefined,
+    );
     const project = useWorkspace((state) =>
         state.projects.find((p) => p.id === state.activeId),
     );
@@ -59,6 +65,7 @@ export function PlanPanel() {
                             cutPlan.plan,
                             project?.data.name ?? '',
                             csvFormatFor(locale, unitSystem, t),
+                            suggestion?.layout,
                         );
                     }
                 }}
@@ -161,6 +168,15 @@ export function PlanPanel() {
                         )}
                     </section>
                     <section
+                        aria-label={t('totals.title')}
+                        className="flex flex-col gap-2"
+                    >
+                        <h3 className="text-xs font-semibold text-muted">
+                            {t('totals.title')}
+                        </h3>
+                        <CutTotals plan={cutPlan.plan} />
+                    </section>
+                    <section
                         aria-label={t('parts.title')}
                         className="flex flex-col gap-2"
                     >
@@ -190,19 +206,39 @@ export function PlanPanel() {
                         items={[
                             { id: 'drawings', label: t('drawings.title') },
                             { id: 'view3d', label: t('view3d.title') },
+                            ...(suggestion === undefined
+                                ? []
+                                : [
+                                      {
+                                          id: 'sheets' as const,
+                                          label: t('sheets.title'),
+                                      },
+                                  ]),
                         ]}
-                        selected={planView}
+                        selected={
+                            planView === 'sheets' && suggestion === undefined
+                                ? 'drawings'
+                                : planView
+                        }
                         onChange={setPlanView}
                     >
                         {(id) => (
                             <div className="pt-3">
-                                {id === 'drawings' ? (
+                                {id === 'drawings' && (
                                     <CutDrawings plan={cutPlan.plan} />
-                                ) : (
+                                )}
+                                {id === 'view3d' && (
                                     <Suspense fallback={null}>
                                         <Box3dView plan={cutPlan.plan} />
                                     </Suspense>
                                 )}
+                                {id === 'sheets' &&
+                                    suggestion !== undefined && (
+                                        <SheetLayout
+                                            layout={suggestion.layout}
+                                            sheet={suggestion.sheet}
+                                        />
+                                    )}
                             </div>
                         )}
                     </Tabs>

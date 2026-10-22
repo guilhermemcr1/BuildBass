@@ -22,11 +22,11 @@ export type ParseResult =
     | { ok: true; data: ProjectData; color?: SeriesColor }
     | { ok: false; code: OpenErrorCode; path?: string };
 
-// A versão gravada é a menor que descreve o arquivo: cor do projeto = 5, bandpass de 6ª ordem = 4,
+// A versão gravada é a menor que descreve o arquivo: cor do projeto ou chapa = 5, bandpass de 6ª ordem = 4,
 // plano de corte editado = 3, bandpass de 4ª ordem = 2 e os demais continuam v1 e abrem em apps
 // anteriores (specs/004, 005, 007 e 008, contracts/project-file.md).
 function versionOf(data: ProjectData, color?: SeriesColor): number {
-    if (color !== undefined) {
+    if (color !== undefined || data.cutPlan?.sheet !== undefined) {
         return 5;
     }
 
@@ -41,12 +41,35 @@ function versionOf(data: ProjectData, color?: SeriesColor): number {
     return data.box.type === 'bandpass' ? 2 : 1;
 }
 
+// Chapa com só um lado digitado ainda é rascunho: não vai para o arquivo (o esquema exige os dois).
+function persistable(data: ProjectData): ProjectData {
+    const { cutPlan } = data;
+    const sheet = cutPlan?.sheet;
+
+    if (
+        cutPlan === undefined ||
+        sheet === undefined ||
+        (sheet.w_m !== undefined && sheet.h_m !== undefined)
+    ) {
+        return data;
+    }
+
+    const { sheet: _draft, ...rest } = cutPlan;
+    const { cutPlan: _plan, ...others } = data;
+
+    return Object.keys(rest).length === 0
+        ? others
+        : { ...others, cutPlan: rest };
+}
+
 // A cor é do projeto aberto (aba), não do `ProjectData`: vai na raiz do arquivo (specs/008, R3).
 export function serializeProject(
-    data: ProjectData,
+    project: ProjectData,
     now = new Date(),
     color?: SeriesColor,
 ): string {
+    const data = persistable(project);
+
     return `${JSON.stringify(
         {
             format: FILE_FORMAT,

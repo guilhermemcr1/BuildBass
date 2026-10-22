@@ -1,3 +1,5 @@
+import type { SheetLayout } from './nesting';
+import { cutTotals } from './totals';
 import type { Cutout, PieceRole, Plan } from './types';
 
 // Lista de corte em CSV (specs/005, research.md §9). Função pura: os números e os textos já
@@ -36,6 +38,31 @@ export type CsvLabels = {
         difference: string;
         chambers: Record<'main' | 'rear' | 'front', string>;
     };
+    totals: {
+        title: string;
+        gross: string;
+        net: string;
+        difference: string;
+        pieces: string;
+        area: string;
+        cutLength: string;
+    };
+    sheets: {
+        title: string;
+        sheet: string;
+        piece: string;
+        unit: string;
+        x: string;
+        y: string;
+        length: string;
+        width: string;
+        rotated: string;
+        yes: string;
+        no: string;
+        utilization: string;
+        waste: string;
+        oversize: string;
+    };
 };
 
 export type CsvFormat = {
@@ -44,6 +71,9 @@ export type CsvFormat = {
     // Metros cúbicos → texto no volume ativo, sem o símbolo.
     volume: (cubicMeters: number) => string;
     percent: (ratio: number) => string;
+    // Metros quadrados → texto na área ativa, sem o símbolo.
+    area: (squareMeters: number) => string;
+    areaSymbol: string;
     unitSymbol: string;
     volumeSymbol: string;
     decimalSeparator: string;
@@ -65,7 +95,11 @@ function quote(field: string, separator: string): string {
         : field;
 }
 
-export function cutPlanCsv(plan: Plan, format: CsvFormat): string {
+export function cutPlanCsv(
+    plan: Plan,
+    format: CsvFormat,
+    layout?: SheetLayout,
+): string {
     const { labels } = format;
     // pt-BR escreve 1.234,5 e separa lista com ";"; en escreve 1,234.5 e separa com ",".
     const separator = format.decimalSeparator === ',' ? ';' : ',';
@@ -165,6 +199,84 @@ export function cutPlanCsv(plan: Plan, format: CsvFormat): string {
                     chamber.difference_ratio === undefined
                         ? ''
                         : format.percent(chamber.difference_ratio),
+                ),
+            );
+        }
+    }
+
+    const { totals: text } = labels;
+    const totals = cutTotals(plan);
+    const basis = (label: string, value: typeof totals.gross) =>
+        line(
+            label,
+            String(value.pieces),
+            format.area(value.area_m2),
+            format.number(value.cutLength_m),
+        );
+
+    rows.push(
+        '',
+        line(
+            text.title,
+            text.pieces,
+            withUnit(text.area, format.areaSymbol),
+            withUnit(text.cutLength, format.unitSymbol),
+        ),
+        basis(text.gross, totals.gross),
+        basis(text.net, totals.net),
+        basis(text.difference, totals.difference),
+    );
+
+    if (layout !== undefined) {
+        const sheets = labels.sheets;
+
+        rows.push(
+            '',
+            line(
+                sheets.title,
+                sheets.sheet,
+                sheets.piece,
+                sheets.unit,
+                withUnit('x', format.unitSymbol),
+                withUnit('y', format.unitSymbol),
+                withUnit(sheets.length, format.unitSymbol),
+                withUnit(sheets.width, format.unitSymbol),
+                sheets.rotated,
+            ),
+        );
+
+        for (const [index, sheet] of layout.sheets.entries()) {
+            for (const placement of sheet.placements) {
+                rows.push(
+                    line(
+                        '',
+                        String(index + 1),
+                        labels.pieces[placement.role],
+                        String(placement.unit),
+                        format.number(placement.x_m),
+                        format.number(placement.y_m),
+                        format.number(placement.w_m),
+                        format.number(placement.h_m),
+                        placement.rotated ? sheets.yes : sheets.no,
+                    ),
+                );
+            }
+        }
+
+        rows.push(
+            line(sheets.utilization, format.percent(layout.utilization)),
+            line(
+                withUnit(sheets.waste, format.areaSymbol),
+                format.area(layout.waste_m2),
+            ),
+        );
+
+        for (const missing of layout.oversize) {
+            rows.push(
+                line(
+                    sheets.oversize,
+                    labels.pieces[missing.role],
+                    String(missing.unit),
                 ),
             );
         }
