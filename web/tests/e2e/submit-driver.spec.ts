@@ -75,6 +75,9 @@ test('enviar o driver do projeto: pré-preenchido, protocolo e projeto intacto (
     await dialog
         .getByRole('textbox', { name: /Fonte dos dados/ })
         .fill('Ficha técnica do fabricante');
+    await dialog
+        .getByRole('textbox', { name: /E-mail/ })
+        .fill('pessoa@exemplo.com');
     await dialog.getByRole('button', { name: 'Enviar' }).click();
 
     await expect(page.getByText(PROTOCOL)).toBeVisible();
@@ -121,6 +124,9 @@ test('sem driver no projeto: preencher à mão e enviar (US4)', async ({
     await dialog
         .getByRole('textbox', { name: /Fonte dos dados/ })
         .fill('Medição própria');
+    await dialog
+        .getByRole('textbox', { name: /E-mail/ })
+        .fill('pessoa@exemplo.com');
     await dialog.getByRole('button', { name: 'Enviar' }).click();
 
     await expect(page.getByText(PROTOCOL)).toBeVisible();
@@ -161,6 +167,9 @@ test('falha do servidor: mantém o digitado e o reenvio funciona (US4)', async (
     await dialog
         .getByRole('textbox', { name: /Fonte dos dados/ })
         .fill('Ficha');
+    await dialog
+        .getByRole('textbox', { name: /E-mail/ })
+        .fill('pessoa@exemplo.com');
     await dialog.getByRole('button', { name: 'Enviar' }).click();
 
     await expect(dialog.getByRole('alert')).toContainText(
@@ -213,4 +222,71 @@ test('perder a conexão com o diálogo aberto desativa o envio sem perder o digi
     await expect(
         dialog.getByRole('textbox', { name: /Fabricante/ }),
     ).toHaveValue('Exemplo');
+});
+
+test('preencher a partir do manual: preenche os vazios, destaca o suspeito e não envia nada (specs/009)', async ({
+    page,
+}) => {
+    await mockCatalog(page);
+    const received = await mockSubmission(page);
+    let extractions = 0;
+
+    await page.route(`${API}/api/driver-submissions/extract`, async (route) => {
+        extractions += 1;
+        await route.fulfill({
+            status: 200,
+            headers: { ...CORS, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                data: {
+                    suggestion: {
+                        brand: 'Triton',
+                        model: 'TR 620',
+                        fs_hz: 76.94,
+                        qts: 0.9,
+                        qes: 0.779,
+                        qms: 8.978,
+                        vas_m3: 0.026348,
+                    },
+                    suspect: ['qts', 'qes', 'qms'],
+                    discarded: [],
+                    warnings: ['review'],
+                },
+            }),
+        });
+    });
+
+    await page.goto('/');
+    await driverAction(page, 'Enviar driver');
+
+    const dialog = page.getByRole('dialog', {
+        name: 'Enviar driver ao catálogo',
+    });
+
+    await dialog.locator('input[type="file"]').setInputFiles({
+        name: 'ficha.pdf',
+        mimeType: 'application/pdf',
+        buffer: Buffer.from('%PDF-1.4'),
+    });
+    await dialog
+        .getByRole('button', { name: 'Preencher a partir do manual' })
+        .click();
+
+    await expect(
+        dialog.getByRole('textbox', { name: /Fabricante/ }),
+    ).toHaveValue('Triton');
+    await expect(dialog.getByRole('textbox', { name: /^Fs/ })).toHaveValue(
+        /^76,9/,
+    );
+    await expect(
+        dialog.getByText(
+            'Dados lidos automaticamente. Revise antes de enviar.',
+        ),
+    ).toBeVisible();
+    await expect(
+        dialog.getByText(
+            'Confira no manual: este valor não bate com os demais.',
+        ),
+    ).toHaveCount(3);
+    expect(extractions).toBe(1);
+    expect(received).toHaveLength(0);
 });

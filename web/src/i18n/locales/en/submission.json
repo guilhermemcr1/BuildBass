@@ -6,7 +6,7 @@
         "required": "Required parameters",
         "optional": "Optional parameters",
         "origin": "Data source",
-        "contact": "Contact (optional)"
+        "contact": "Contact (required)"
     },
     "fields": {
         "brand": "Manufacturer",
@@ -16,7 +16,7 @@
         "source": "Data source",
         "sourceHint": "Manufacturer datasheet, your own measurement… Cite the revision or date.",
         "email": "Email to notify you of the decision",
-        "emailHint": "Optional. Used only to tell you whether the driver was approved or rejected, then erased.",
+        "emailHint": "Used only to tell you whether the driver was approved or rejected, then erased.",
         "diameter": "Nominal diameter",
         "diameterHint": "Commercial size of the loudspeaker, for example 12\".",
         "trap": "Do not fill in this field",
@@ -64,5 +64,38 @@
         "body": "You typed data that has not been sent. Closing now discards it.",
         "keep": "Keep editing",
         "discard": "Discard submission"
+    },
+    "manual": {
+        "title": "Fill from the manual (optional)",
+        "choose": "Choose PDF…",
+        "remove": "Remove",
+        "fill": "Fill from the manual",
+        "reading": "Reading the manual…",
+        "privacy": "The PDF text is sent to an external AI service to read the parameters. The file is not stored.",
+        "fileLabel": "Manual PDF",
+        "filled_one": "{{count}} field filled from the manual.",
+        "filled_other": "{{count}} fields filled from the manual.",
+        "filledNone": "No empty field was filled.",
+        "suspect": "Check the manual: this value does not match the others.",
+        "warnings": {
+            "review": "Data was read automatically. Review it before submitting.",
+            "multiple_drivers": "The manual seems to list more than one driver; we used the first one. Please check.",
+            "nothing_found": "We found no Thiele-Small parameters in this PDF.",
+            "discarded": "Some values in the manual were out of range and left blank: {{fields}}."
+        },
+        "failure": {
+            "unreadable": "This PDF has no readable text (it may be an image). Fill in the fields by hand.",
+            "invalidFile": "Choose a PDF up to 10 MB and 30 pages.",
+            "notPdf": "The file must be a PDF.",
+            "tooLarge": "The PDF is larger than 10 MB.",
+            "rateLimited": "You have used manual filling several times. Try again in {{minutes}} min.",
+            "rateLimitedUnknown": "You have used manual filling several times. Try again later.",
+            "unavailable": "Filling from a manual is unavailable right now. You can still fill the fields by hand.",
+            "providerFailed": "We could not read the manual right now. Try again or fill the fields by hand.",
+            "verification": "We could not confirm you are not a robot. Try again.",
+            "network": "No connection to the server. What you typed was kept; try again.",
+            "server": "The server could not read the manual. What you typed was kept; try again."
+        },
+        "offline": "Offline: reading the manual needs the server."
     }
 }

@@ -101,9 +101,11 @@ describe('SubmitDriverDialog — enviar o driver do projeto (US1)', () => {
         await paste(/Fabricante/, 'Exemplo');
         await paste(/Modelo/, 'EX-1');
         await paste(/Fonte dos dados/, 'Ficha técnica');
+        await paste(/E-mail/, 'pessoa@exemplo.com');
         await userEvent.click(screen.getByRole('button', { name: 'Enviar' }));
 
         expect(await screen.findByText(PROTOCOL)).toBeInTheDocument();
+        expect(screen.getByText(/avisar por e-mail/)).toBeInTheDocument();
         expect(
             screen.getByRole('button', { name: 'Copiar protocolo' }),
         ).toBeInTheDocument();
@@ -113,6 +115,7 @@ describe('SubmitDriverDialog — enviar o driver do projeto (US1)', () => {
             brand: 'Exemplo',
             model: 'EX-1',
             source: 'Ficha técnica',
+            contact_email: 'pessoa@exemplo.com',
             fs_hz: 34.5,
             qts: 0.41,
             vas_m3: 0.085,
@@ -120,6 +123,28 @@ describe('SubmitDriverDialog — enviar o driver do projeto (US1)', () => {
             website: '',
         });
         expect(activeProjectStore().getState().data).toEqual(before);
+    });
+
+    test('o e-mail é obrigatório: vazio ou inválido não envia e aponta o campo', async () => {
+        seedDriver();
+        renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
+
+        await paste(/Fabricante/, 'Exemplo');
+        await paste(/Modelo/, 'EX-1');
+        await paste(/Fonte dos dados/, 'Ficha técnica');
+        await userEvent.click(screen.getByRole('button', { name: 'Enviar' }));
+
+        expect(submit).not.toHaveBeenCalled();
+        expect(screen.getByText('Preencha este campo.')).toBeInTheDocument();
+        expect(screen.getByText('Contato (obrigatório)')).toBeInTheDocument();
+
+        await paste(/E-mail/, 'sem-arroba');
+        await userEvent.click(screen.getByRole('button', { name: 'Enviar' }));
+
+        expect(submit).not.toHaveBeenCalled();
+        expect(
+            screen.getByText('Informe um e-mail válido.'),
+        ).toBeInTheDocument();
     });
 
     test('fechar sem alterações não pergunta nem envia', async () => {
@@ -167,6 +192,7 @@ async function sendValidForm() {
     await paste(/Fabricante/, 'Exemplo');
     await paste(/Modelo/, 'EX-1');
     await paste(/Fonte dos dados/, 'Ficha técnica');
+    await paste(/E-mail/, 'pessoa@exemplo.com');
     await userEvent.click(screen.getByRole('button', { name: 'Enviar' }));
 }
 
@@ -257,6 +283,7 @@ describe('SubmitDriverDialog — recusas do servidor (US3)', () => {
         await paste(/Fabricante/, 'Exemplo');
         await paste(/Modelo/, 'EX-1');
         await paste(/Fonte dos dados/, 'Ficha');
+        await paste(/E-mail/, 'pessoa@exemplo.com');
         if (trap !== null) {
             await userEvent.type(trap, 'robo', { pointerEventsCheck: 0 });
         }
@@ -289,14 +316,14 @@ describe('SubmitDriverDialog — sem projeto e falhas (US4)', () => {
         });
     });
 
-    test('vazio, os três obrigatórios são apontados e nada é enviado', async () => {
+    test('vazio, os campos obrigatórios (com o e-mail) são apontados e nada é enviado', async () => {
         renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
 
         await userEvent.click(screen.getByRole('button', { name: 'Enviar' }));
 
         expect(submit).not.toHaveBeenCalled();
         expect(await screen.findByRole('alert')).toHaveTextContent(
-            'Corrija 6 campos antes de enviar.',
+            'Corrija 7 campos antes de enviar.',
         );
     });
 

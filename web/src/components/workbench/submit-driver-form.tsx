@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { FIELD_BOX, FIELD_INPUT, UnitAddon } from '@/components/ui/field-box';
 import { ParameterField } from '@/components/ui/parameter-field';
 import { TextInput } from '@/components/ui/text-field';
-import type { SubmitFailure } from '@/hooks/use-submit-driver';
+import type { ManualState, SubmitFailure } from '@/hooks/use-submit-driver';
 import { PARAMETERS } from '@/lib/parameters';
 import type { ParameterKey } from '@/lib/parameters';
 import {
@@ -35,6 +35,7 @@ import type { UnitId } from '@/lib/units/quantities';
 import { cn } from '@/lib/utils';
 import { usePreferences } from '@/stores/preferences';
 import { DriverTypeSelect } from './driver-type-select';
+import { ManualFill } from './manual-fill';
 
 type SubmitDriverFormProps = {
     form: SubmissionForm;
@@ -43,6 +44,8 @@ type SubmitDriverFormProps = {
     onTrapChange: (value: string) => void;
     errors: SubmissionErrors;
     failure: SubmitFailure | undefined;
+    manual: ManualState;
+    onFillManual: (file: File) => void;
     sending: boolean;
     offline: boolean;
     onSubmit: () => void;
@@ -123,6 +126,8 @@ export function SubmitDriverForm({
     onTrapChange,
     errors,
     failure,
+    manual,
+    onFillManual,
     sending,
     offline,
     onSubmit,
@@ -175,8 +180,19 @@ export function SubmitDriverForm({
                 onUnitChange={(next) =>
                     setUnits((current) => ({ ...current, [key]: next }))
                 }
-                status={errors[key] === undefined ? 'none' : 'error'}
-                statusMessage={message(key)}
+                status={
+                    errors[key] !== undefined
+                        ? 'error'
+                        : manual.suspect.includes(key)
+                          ? 'warn'
+                          : 'none'
+                }
+                statusMessage={
+                    message(key) ??
+                    (manual.suspect.includes(key)
+                        ? t('manual.suspect')
+                        : undefined)
+                }
             />
         );
     };
@@ -222,6 +238,13 @@ export function SubmitDriverForm({
             className="flex flex-col gap-4"
         >
             <p className="text-sm text-muted">{t('intro')}</p>
+
+            <ManualFill
+                manual={manual}
+                offline={offline}
+                sending={sending}
+                onFill={onFillManual}
+            />
 
             {section(
                 t('sections.identification'),
@@ -284,6 +307,7 @@ export function SubmitDriverForm({
                 t('sections.contact'),
                 text('contact_email', {
                     label: t('fields.email'),
+                    required: true,
                     hint: t('fields.emailHint'),
                     placeholder: t('fields.emailPlaceholder'),
                     type: 'email',
