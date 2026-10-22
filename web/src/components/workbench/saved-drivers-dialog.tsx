@@ -325,6 +325,7 @@ export default function SavedDriversDialog({
                     </div>
                 </div>
             )}
+            <p className="text-[11px] text-muted">{t('saved.localOnly')}</p>
             <div role="status" aria-live="polite" className="empty:hidden">
                 {notice !== undefined && (
                     <p

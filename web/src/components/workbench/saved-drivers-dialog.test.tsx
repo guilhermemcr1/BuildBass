@@ -61,6 +61,9 @@ describe('SavedDriversDialog', () => {
         open();
 
         expect(
+            screen.getByText(/A lista fica só neste navegador/),
+        ).toBeVisible();
+        expect(
             screen.getByText('Você ainda não salvou nenhum alto-falante.'),
         ).toBeVisible();
         expect(screen.getByRole('button', { name: /Exportar/ })).toBeDisabled();

@@ -226,6 +226,7 @@
             "result": "Importação concluída: {{added}} adicionados, {{replaced}} substituídos, {{ignored}} ignorados.",
             "tooManyTotal": "A importação deixaria a lista com {{total}} alto-falantes (máximo {{max}}). Nada foi importado."
         },
-        "storageOff": "Este navegador não deixa guardar dados: a lista se perde ao fechar a página. Exporte para não perder."
+        "storageOff": "Este navegador não deixa guardar dados: a lista se perde ao fechar a página. Exporte para não perder.",
+        "localOnly": "A lista fica só neste navegador. Exporte um arquivo para ter uma cópia ou levar para outro aparelho."
     }
 }

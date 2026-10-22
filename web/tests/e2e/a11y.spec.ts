@@ -777,3 +777,82 @@ for (const theme of ['light', 'dark'] as const) {
         await context.close();
     });
 }
+
+// A página de referência (só no servidor de desenvolvimento) mostra os componentes da feature 008.
+test('/dev/ui mostra HelpTip, status compacto, cores, bandeiras e "Mostrar mais" (feature 008)', async ({
+    page,
+}) => {
+    await page.goto('/dev/ui');
+
+    await expect(
+        page.getByRole('heading', { name: 'Refinamento da bancada' }),
+    ).toBeVisible();
+    await expect(
+        page.getByRole('radiogroup', { name: 'Cor do projeto' }),
+    ).toBeVisible();
+    await expect(
+        page.getByRole('button', { name: /Mostrar (mais|menos)/ }),
+    ).toBeVisible();
+    await expect(
+        page
+            .getByRole('heading', { name: 'Refinamento da bancada' })
+            .locator('..')
+            .locator('svg[aria-hidden="true"]')
+            .first(),
+    ).toBeVisible();
+});
+
+// A 360 px (feature 008, T092): bancada no modo Normal, modal da caixa, busca e diálogo de salvar.
+for (const theme of ['light', 'dark'] as const) {
+    test(`a 360 px a bancada e os diálogos novos não têm violações WCAG AA no tema ${theme} (feature 008)`, async ({
+        browser,
+    }) => {
+        const context = await browser.newContext({
+            colorScheme: theme,
+            viewport: { width: 360, height: 800 },
+            storageState: { cookies: [], origins: [] },
+        });
+        const page = await context.newPage();
+        await page.goto('/');
+        await page.locator('main').waitFor();
+        await page.waitForTimeout(300);
+        expect(await axe(page)).toEqual([]);
+
+        await fill(page, /^Fs/, '32');
+        await fill(page, /^Qts/, '0,42');
+        await fill(page, /^Vas/, '90');
+
+        await page.getByRole('button', { name: 'Ampliar caixa' }).click();
+        const box = page.getByRole('dialog', { name: 'Caixa' });
+        await expect(box).toBeVisible();
+        await page.waitForTimeout(300);
+        expect(await axe(page)).toEqual([]);
+        await page.keyboard.press('Escape');
+        await expect(box).toBeHidden();
+
+        await page
+            .getByRole('button', { name: 'Salvar este alto-falante' })
+            .click();
+        const save = page.getByRole('dialog', { name: 'Salvar alto-falante' });
+        await expect(save).toBeVisible();
+        await page.waitForTimeout(300);
+        expect(await axe(page)).toEqual([]);
+        await page.keyboard.press('Escape');
+        await expect(save).toBeHidden();
+
+        await page.getByRole('button', { name: 'Buscar driver' }).click();
+        await expect(
+            page.getByRole('searchbox', { name: 'Buscar driver' }),
+        ).toBeVisible();
+        await page.waitForTimeout(300);
+        expect(await axe(page, { listOpen: true })).toEqual([]);
+
+        const overflow = await page.evaluate(
+            () =>
+                document.documentElement.scrollWidth -
+                document.documentElement.clientWidth,
+        );
+        expect(overflow).toBeLessThanOrEqual(0);
+        await context.close();
+    });
+}

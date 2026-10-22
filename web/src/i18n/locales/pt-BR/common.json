@@ -78,7 +78,14 @@
         "stateUnchecked": "não verificável",
         "toggle": "Mostrar no gráfico",
         "inlineName": "Nome (duplo clique para editar)",
-        "inlineValue": "Projeto de exemplo"
+        "inlineValue": "Projeto de exemplo",
+        "refinement": "Refinamento da bancada",
+        "helpTip": "Ajuda em tooltip",
+        "helpTipBody": "Passe o mouse ou foque o símbolo; Esc fecha.",
+        "statusCompact": "Status compacto",
+        "colors": "Cor do projeto",
+        "flags": "Idioma com bandeira",
+        "showMoreBody": "Campo avançado de exemplo, dentro de “Mostrar mais”."
     },
     "help": {
         "of": "Ajuda de {{parameter}}"

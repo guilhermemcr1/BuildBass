@@ -78,7 +78,14 @@
         "stateUnchecked": "not checkable",
         "toggle": "Show on chart",
         "inlineName": "Name (double-click to edit)",
-        "inlineValue": "Sample project"
+        "inlineValue": "Sample project",
+        "refinement": "Workbench refinements",
+        "helpTip": "Tooltip help",
+        "helpTipBody": "Hover or focus the symbol; Esc closes it.",
+        "statusCompact": "Compact status",
+        "colors": "Project color",
+        "flags": "Language with flag",
+        "showMoreBody": "Sample advanced field, inside “Show more”."
     },
     "help": {
         "of": "Help for {{parameter}}"
