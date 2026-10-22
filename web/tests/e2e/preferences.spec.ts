@@ -204,3 +204,52 @@ test.describe('modo Normal e Pro', () => {
         ).toBeVisible();
     });
 });
+
+// Idioma com bandeiras (feature 008, US8).
+test.describe('idioma com bandeiras', () => {
+    test('mostra BR com a bandeira do Brasil e, no menu, as duas bandeiras com o nome por extenso', async ({
+        page,
+    }) => {
+        await page.goto('/');
+        const trigger = page.getByRole('button', { name: 'BR — Idioma' });
+
+        await expect(trigger).toHaveText('BR');
+        await expect(trigger.locator('svg')).toHaveAttribute(
+            'aria-hidden',
+            'true',
+        );
+
+        await trigger.click();
+        const brazil = page.getByRole('menuitemradio', {
+            name: 'Português (Brasil)',
+        });
+        const english = page.getByRole('menuitemradio', { name: 'English' });
+        await expect(brazil.locator('svg')).toHaveCount(1);
+        await expect(english.locator('svg')).toHaveCount(1);
+
+        await english.click();
+        const after = page.getByRole('button', { name: 'EN — Language' });
+        await expect(after).toHaveText('EN');
+        await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+    });
+
+    test('a 360 px, trocar o idioma pelo popover de preferências não perde o valor digitado', async ({
+        page,
+    }) => {
+        await page.setViewportSize({ width: 360, height: 800 });
+        await page.goto('/');
+        const fs = page.getByRole('textbox', { name: /^Fs/ });
+        await fs.fill('28,5');
+        await fs.press('Tab');
+
+        await page.getByRole('button', { name: 'Preferências' }).click();
+        await page.getByRole('button', { name: 'BR — Idioma' }).click();
+        await page.getByRole('menuitemradio', { name: 'English' }).click();
+
+        await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+        await page.keyboard.press('Escape');
+        await expect(page.getByRole('textbox', { name: /^Fs/ })).toHaveValue(
+            '28.5',
+        );
+    });
+});

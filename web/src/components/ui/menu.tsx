@@ -11,6 +11,8 @@ import { cn } from '@/lib/utils';
 export type MenuOption<T extends string> = {
     id: T;
     label: string;
+    // Enfeite antes do texto (ex.: bandeira); deve ser `aria-hidden`, o nome acessível é o `label`.
+    icon?: ReactNode;
     disabled?: boolean;
 };
 
@@ -69,7 +71,14 @@ export function Menu<T extends string>({
                             id={item.id}
                             className="flex cursor-default items-center justify-between gap-3 rounded-sm px-2.5 py-1.5 text-sm text-foreground outline-none data-[disabled]:text-disabled data-[focused]:bg-surface data-[selected]:font-semibold data-[selected]:text-accent-soft"
                         >
-                            {item.label}
+                            {item.icon === undefined ? (
+                                item.label
+                            ) : (
+                                <span className="flex items-center gap-2">
+                                    {item.icon}
+                                    {item.label}
+                                </span>
+                            )}
                         </MenuItem>
                     ))}
                 </AriaMenu>
