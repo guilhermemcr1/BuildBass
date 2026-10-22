@@ -152,5 +152,78 @@
         "thumbnailEmpty": "Fill in the project to see the box in 3D",
         "missing": "To see the box in 3D, provide: {{missing}}.",
         "invalid": "Values out of range: {{invalid}}."
+    },
+    "saved": {
+        "saveButton": "Save this speaker",
+        "manageButton": "My speakers",
+        "saveTitle": "Save speaker",
+        "editTitle": "Edit speaker",
+        "manageTitle": "My speakers",
+        "originSaved": "saved",
+        "fields": {
+            "brand": "Brand",
+            "model": "Model",
+            "variant": "Variant (optional)",
+            "diameter": "Nominal diameter",
+            "cutout": "Cutout diameter",
+            "depth": "Depth"
+        },
+        "physical": "Physical sizes (optional)",
+        "params_one": "{{count}} T/S parameter from the project will be saved with it.",
+        "params_other": "{{count}} T/S parameters from the project will be saved with it.",
+        "errors": {
+            "required": "Required field.",
+            "tooLong": "At most {{max}} characters.",
+            "range": "Out of range ({{min}} – {{max}}).",
+            "full": "The list reached {{max}} speakers. Delete one to save another.",
+            "duplicateOther": "Another speaker already has this brand, model and variant."
+        },
+        "actions": {
+            "save": "Save",
+            "cancel": "Cancel",
+            "replace": "Replace",
+            "close": "Close"
+        },
+        "duplicate": {
+            "title": "A speaker with this name already exists",
+            "body": "“{{name}}” is already in your list. Replace it with the current data?"
+        },
+        "list": {
+            "search": "Search my speakers",
+            "empty": "You haven't saved any speaker yet.",
+            "noMatch": "No results for “{{term}}”.",
+            "use": "Use {{name}} in the project",
+            "edit": "Edit {{name}}",
+            "delete": "Delete {{name}}",
+            "sizeDiameter": "Ø {{value}}",
+            "sizeCutout": "cutout {{value}}",
+            "sizeDepth": "depth {{value}}"
+        },
+        "deleteConfirm": {
+            "title": "Delete speaker?",
+            "body": "“{{name}}” leaves your list in this browser. Projects already using it don't change.",
+            "confirm": "Delete",
+            "cancel": "Cancel"
+        },
+        "file": {
+            "export": "Export",
+            "import": "Import",
+            "errors": {
+                "fileTooLarge": "The file is over 512 KB and doesn't look like a BuildBass list.",
+                "invalidJson": "The file is not valid JSON.",
+                "notBuildbass": "The file is not a BuildBass speaker list.",
+                "newerVersion": "The list was saved by a newer BuildBass version. Update the app to import it.",
+                "tooMany": "The file has more than {{max}} speakers.",
+                "invalidContent": "The file has an invalid value at “{{path}}”.",
+                "readFailed": "Could not read the file."
+            },
+            "duplicates_one": "{{count}} speaker in the file is already in your list.",
+            "duplicates_other": "{{count}} speakers in the file are already in your list.",
+            "replace": "Replace",
+            "keep": "Keep current ones",
+            "result": "Import finished: {{added}} added, {{replaced}} replaced, {{ignored}} ignored.",
+            "tooManyTotal": "The import would leave the list with {{total}} speakers (maximum {{max}}). Nothing was imported."
+        },
+        "storageOff": "This browser doesn't allow storing data: the list is lost when the page closes. Export it so you don't lose it."
     }
 }

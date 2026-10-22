@@ -6,6 +6,7 @@ import { fetchDriver, searchDrivers } from '@/lib/catalog/client';
 import type { CatalogDriver, DriverSummary } from '@/lib/catalog/types';
 import { usePreferences } from '@/stores/preferences';
 import { useRecentDrivers } from '@/stores/recent-drivers';
+import { useSavedDrivers } from '@/stores/saved-drivers';
 import { initialWorkspace, useWorkspace } from '@/stores/workspace';
 import { renderWithProviders } from '@/test/render';
 import { DriverPicker } from './driver-picker';
@@ -72,6 +73,7 @@ beforeEach(() => {
     localStorage.clear();
     useWorkspace.setState(initialWorkspace());
     useRecentDrivers.setState({ items: [] });
+    useSavedDrivers.setState({ items: [] });
     usePreferences.setState({ unitSystem: 'metric' });
     search.mockReset();
     detail.mockReset();
@@ -379,7 +381,7 @@ describe('DriverPicker — enviar e offline', () => {
         );
     });
 
-    test('offline desativa campo, catálogo e envio e mostra o motivo', async () => {
+    test('offline desativa catálogo e envio, mantém o campo e mostra o motivo', async () => {
         renderWithProviders(
             <DriverPicker
                 disabled
@@ -389,11 +391,70 @@ describe('DriverPicker — enviar e offline', () => {
         );
         await userEvent.click(trigger());
 
-        expect(screen.getByRole('searchbox')).toBeDisabled();
+        expect(screen.getByRole('searchbox')).toBeEnabled();
         expect(
             screen.getByRole('button', { name: 'Enviar driver' }),
         ).toBeDisabled();
         expect(screen.getByText('Indisponível sem conexão.')).toBeVisible();
         expect(search).not.toHaveBeenCalled();
+    });
+});
+
+describe('DriverPicker — Meus alto-falantes (specs/008, US6)', () => {
+    const MINE = {
+        brand: 'Minha',
+        model: 'Sub 15',
+        driver: { fs_hz: 30, qts: 0.4, vas_m3: 0.12 },
+        cutout_m: 0.35,
+    };
+
+    test('mostra a seção "Meus alto-falantes" antes do catálogo, sem rede', async () => {
+        useSavedDrivers.getState().save(MINE);
+        await open({ disabled: true });
+
+        const option = screen.getByRole('option', { name: /Minha Sub 15/ });
+
+        expect(option).toBeVisible();
+        expect(screen.getByText('Meus alto-falantes')).toBeVisible();
+        expect(search).not.toHaveBeenCalled();
+    });
+
+    test('o texto digitado filtra os salvos a partir da primeira letra', async () => {
+        useSavedDrivers.getState().save(MINE);
+        useSavedDrivers
+            .getState()
+            .save({ ...MINE, model: 'Outro 10', brand: 'Zeta' });
+        const input = await open({ disabled: true });
+
+        await userEvent.type(input, 'zet');
+
+        expect(
+            screen.getByRole('option', { name: /Zeta Outro 10/ }),
+        ).toBeVisible();
+        expect(
+            screen.queryByRole('option', { name: /Minha Sub 15/ }),
+        ).not.toBeInTheDocument();
+    });
+
+    test('escolher aplica driver, origem e recorte numa etapa só de desfazer', async () => {
+        useSavedDrivers.getState().save(MINE);
+        await open({ disabled: true });
+        const steps =
+            activeProjectStore().temporal.getState().pastStates.length;
+
+        await userEvent.click(
+            screen.getByRole('option', { name: /Minha Sub 15/ }),
+        );
+
+        const { data } = activeProjectStore().getState();
+        expect(data.driver).toEqual(MINE.driver);
+        expect(data.driverSource).toEqual({ brand: 'Minha', model: 'Sub 15' });
+        expect(data.cutPlan?.cutout_m).toBe(0.35);
+        expect(
+            activeProjectStore().temporal.getState().pastStates,
+        ).toHaveLength(steps + 1);
+        await waitFor(() =>
+            expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+        );
     });
 });

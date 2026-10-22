@@ -1,13 +1,19 @@
-import { Send } from 'lucide-react';
+import { BookmarkPlus, Library, Send } from 'lucide-react';
+import { Suspense, lazy, useState } from 'react';
 import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { ParameterField } from '@/components/ui/parameter-field';
 import { deriveDriver } from '@/engine';
 import type { DerivedDriver, DriverKey } from '@/engine';
-import { useActiveProject } from '@/hooks/use-active-project';
+import {
+    activeProjectStore,
+    useActiveProject,
+} from '@/hooks/use-active-project';
 import { useOnlineStatus } from '@/hooks/use-online-status';
 import { DRIVER_PARAMETERS } from '@/lib/parameters';
+import { readField } from '@/lib/project/fields';
+import type { SavedDriverDraft } from '@/lib/saved-drivers/types';
 import { DriverOrigin } from './driver-origin';
 import { DriverPicker } from './driver-picker';
 import { DriversFields } from './drivers-fields';
@@ -55,6 +61,26 @@ function DriverField({
     );
 }
 
+const SaveDriverDialog = lazy(() => import('./save-driver-dialog'));
+const SavedDriversDialog = lazy(() => import('./saved-drivers-dialog'));
+
+// O que o diálogo de salvar mostra de partida: nome da origem (se houver), os parâmetros T/S do
+// projeto e o recorte do plano, quando já informado.
+function draftFromProject(): SavedDriverDraft {
+    const { data } = activeProjectStore().getState();
+    const cutout = readField(data, 'cutout_m');
+
+    return {
+        brand: data.driverSource?.brand ?? '',
+        model: data.driverSource?.model ?? '',
+        ...(data.driverSource?.variant === undefined
+            ? {}
+            : { variant: data.driverSource.variant }),
+        driver: data.driver,
+        ...(cutout === undefined ? {} : { cutout_m: cutout }),
+    };
+}
+
 type DriverPanelProps = {
     onSubmitDriver: () => void;
 };
@@ -65,6 +91,10 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
     const driver = useActiveProject((state) => state.data.driver);
     const derived = deriveDriver(driver);
     const offlineReason = t('catalog.offlineReason');
+    const [saving, setSaving] = useState<SavedDriverDraft | undefined>(
+        undefined,
+    );
+    const [managing, setManaging] = useState(false);
 
     // Catálogo e envio dependem do servidor (constituição, Princípio V).
     const actions = (
@@ -84,6 +114,23 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
             >
                 <Send aria-hidden="true" className="size-4" />
             </Button>
+            <Button
+                variant="quiet"
+                disabled={Object.keys(driver).length === 0}
+                onPress={() => setSaving(draftFromProject())}
+                aria-label={t('saved.saveButton')}
+                className="px-2.5"
+            >
+                <BookmarkPlus aria-hidden="true" className="size-4" />
+            </Button>
+            <Button
+                variant="quiet"
+                onPress={() => setManaging(true)}
+                aria-label={t('saved.manageButton')}
+                className="px-2.5"
+            >
+                <Library aria-hidden="true" className="size-4" />
+            </Button>
         </div>
     );
 
@@ -101,6 +148,17 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
             </div>
             <DriversFields />
             <SignalFields />
+            <Suspense fallback={null}>
+                {saving !== undefined && (
+                    <SaveDriverDialog
+                        initial={saving}
+                        onClose={() => setSaving(undefined)}
+                    />
+                )}
+                {managing && (
+                    <SavedDriversDialog onClose={() => setManaging(false)} />
+                )}
+            </Suspense>
         </Panel>
     );
 }

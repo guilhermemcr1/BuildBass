@@ -17,7 +17,7 @@ function range(key: ParameterKey) {
 
 const count = z.number().int().min(1).max(8);
 
-const driver = z.object({
+export const driverSchema = z.object({
     fs_hz: range('fs_hz').optional(),
     qts: range('qts').optional(),
     qes: range('qes').optional(),
@@ -110,7 +110,7 @@ const cutPlan = z.object({
 export const projectSchema = z.object({
     // Vazio = nome padrão traduzido (lib/project/names.ts).
     name: z.string().trim().max(PROJECT_NAME_MAX),
-    driver,
+    driver: driverSchema,
     driverSource: driverSource.optional(),
     drivers: z.object({
         count,

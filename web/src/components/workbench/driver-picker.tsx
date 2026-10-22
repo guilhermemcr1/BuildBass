@@ -15,6 +15,7 @@ import {
 } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+import { useActiveProject } from '@/hooks/use-active-project';
 import { useCatalogPick } from '@/hooks/use-catalog-pick';
 import { SEARCH_MIN_LENGTH, useDriverSearch } from '@/hooks/use-driver-search';
 import type { DriverSummary } from '@/lib/catalog/types';
@@ -22,6 +23,9 @@ import { formatQuantity, formatWithUnit } from '@/lib/units/format';
 import { defaultUnitFor } from '@/lib/units/quantities';
 import { usePreferences } from '@/stores/preferences';
 import { useRecentDrivers } from '@/stores/recent-drivers';
+import { useSavedDrivers } from '@/stores/saved-drivers';
+
+const MINE_PREVIEW = 5;
 
 type DriverPickerProps = {
     disabled?: boolean;
@@ -50,30 +54,55 @@ export function DriverPicker({
     const { locale } = useLocale();
     const unitSystem = usePreferences((state) => state.unitSystem);
     const recents = useRecentDrivers((state) => state.items);
+    const saved = useSavedDrivers((state) => state.items);
+    const applySaved = useActiveProject((state) => state.applySavedDriver);
     const [open, setOpen] = useState(false);
     const [term, setTerm] = useState('');
     const search = useDriverSearch(term, { offline: disabled });
     const pick = useCatalogPick();
     const searching = !disabled && term.trim().length >= SEARCH_MIN_LENGTH;
     const catalog = searching ? search.items : [];
+    // "Meus alto-falantes" é local: aparece offline e a partir da primeira letra. Sem texto, só os
+    // mais recentes; o Autocomplete filtra o resto pelo texto digitado.
+    const needle = term.trim().toLowerCase();
+    const mine =
+        needle === ''
+            ? saved.slice(0, MINE_PREVIEW)
+            : saved.filter((driver) =>
+                  displayName(driver).toLowerCase().includes(needle),
+              );
 
-    const support = (driver: { fs_hz: number; qts: number; vas_m3: number }) =>
+    // Alto-falante salvo pode não ter os três parâmetros; o que falta aparece como "—".
+    const support = (driver: {
+        fs_hz?: number;
+        qts?: number;
+        vas_m3?: number;
+    }) =>
         t('catalog.resultSupport', {
-            fs: formatWithUnit(
-                driver.fs_hz,
-                defaultUnitFor('frequency', unitSystem),
-                locale,
-            ),
-            qts: formatQuantity(
-                driver.qts,
-                defaultUnitFor('ratio', unitSystem),
-                locale,
-            ),
-            vas: formatWithUnit(
-                driver.vas_m3,
-                defaultUnitFor('volume', unitSystem),
-                locale,
-            ),
+            fs:
+                driver.fs_hz === undefined
+                    ? '—'
+                    : formatWithUnit(
+                          driver.fs_hz,
+                          defaultUnitFor('frequency', unitSystem),
+                          locale,
+                      ),
+            qts:
+                driver.qts === undefined
+                    ? '—'
+                    : formatQuantity(
+                          driver.qts,
+                          defaultUnitFor('ratio', unitSystem),
+                          locale,
+                      ),
+            vas:
+                driver.vas_m3 === undefined
+                    ? '—'
+                    : formatWithUnit(
+                          driver.vas_m3,
+                          defaultUnitFor('volume', unitSystem),
+                          locale,
+                      ),
         });
 
     const choose = async (summary: DriverSummary) => {
@@ -85,6 +114,19 @@ export function DriverPicker({
 
     const onAction = (key: string | number) => {
         const [section, id] = String(key).split(':');
+
+        if (section === 'mine') {
+            const driver = saved.find((item) => item.id === id);
+
+            if (driver !== undefined) {
+                applySaved(driver);
+                setOpen(false);
+                setTerm('');
+            }
+
+            return;
+        }
+
         const summary =
             section === 'recent'
                 ? recents
@@ -136,14 +178,14 @@ export function DriverPicker({
         }
 
         if (searching && search.status === 'ready') {
-            if (catalog.length === 0) {
+            if (catalog.length === 0 && mine.length === 0) {
                 return t('catalog.empty', { term: term.trim() });
             }
 
             return search.hasMore ? t('catalog.more') : undefined;
         }
 
-        return !searching && recents.length === 0
+        return !searching && recents.length === 0 && mine.length === 0
             ? t('picker.hint')
             : undefined;
     })();
@@ -167,7 +209,6 @@ export function DriverPicker({
                         <TextField
                             aria-label={t('picker.label')}
                             autoFocus
-                            isDisabled={disabled}
                             className="mb-1 flex h-[34px] items-center gap-2 rounded-md border border-border bg-surface px-2.5 focus-within:border-accent"
                         >
                             {search.status === 'loading' && searching ? (
@@ -192,6 +233,26 @@ export function DriverPicker({
                             onAction={onAction}
                             className="max-h-64 overflow-auto outline-none"
                         >
+                            {mine.length > 0 && (
+                                <ListBoxSection>
+                                    <Header className="px-2.5 py-1 text-xs font-semibold text-muted">
+                                        {t('picker.mine')}
+                                    </Header>
+                                    {mine.map((driver) => (
+                                        <ListBoxItem
+                                            key={driver.id}
+                                            id={`mine:${driver.id}`}
+                                            textValue={displayName(driver)}
+                                            className={itemClass}
+                                        >
+                                            <Entry
+                                                name={displayName(driver)}
+                                                support={support(driver.driver)}
+                                            />
+                                        </ListBoxItem>
+                                    ))}
+                                </ListBoxSection>
+                            )}
                             {!searching && recents.length > 0 && (
                                 <ListBoxSection>
                                     <Header className="px-2.5 py-1 text-xs font-semibold text-muted">

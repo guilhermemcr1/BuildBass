@@ -152,5 +152,78 @@
         "thumbnailEmpty": "Preencha o projeto para ver a caixa em 3D",
         "missing": "Para ver a caixa em 3D falta informar: {{missing}}.",
         "invalid": "Valores fora da faixa: {{invalid}}."
+    },
+    "saved": {
+        "saveButton": "Salvar este alto-falante",
+        "manageButton": "Meus alto-falantes",
+        "saveTitle": "Salvar alto-falante",
+        "editTitle": "Editar alto-falante",
+        "manageTitle": "Meus alto-falantes",
+        "originSaved": "salvo",
+        "fields": {
+            "brand": "Marca",
+            "model": "Modelo",
+            "variant": "Variação (opcional)",
+            "diameter": "Diâmetro nominal",
+            "cutout": "Diâmetro do recorte",
+            "depth": "Profundidade"
+        },
+        "physical": "Medidas físicas (opcionais)",
+        "params_one": "{{count}} parâmetro T/S do projeto será salvo junto.",
+        "params_other": "{{count}} parâmetros T/S do projeto serão salvos junto.",
+        "errors": {
+            "required": "Campo obrigatório.",
+            "tooLong": "No máximo {{max}} caracteres.",
+            "range": "Fora da faixa ({{min}} – {{max}}).",
+            "full": "A lista chegou a {{max}} alto-falantes. Exclua algum para salvar outro.",
+            "duplicateOther": "Já existe outro alto-falante com essa marca, modelo e variação."
+        },
+        "actions": {
+            "save": "Salvar",
+            "cancel": "Cancelar",
+            "replace": "Substituir",
+            "close": "Fechar"
+        },
+        "duplicate": {
+            "title": "Já existe um alto-falante com esse nome",
+            "body": "“{{name}}” já está na sua lista. Substituir pelos dados atuais?"
+        },
+        "list": {
+            "search": "Buscar nos meus alto-falantes",
+            "empty": "Você ainda não salvou nenhum alto-falante.",
+            "noMatch": "Nenhum resultado para “{{term}}”.",
+            "use": "Usar {{name}} no projeto",
+            "edit": "Editar {{name}}",
+            "delete": "Excluir {{name}}",
+            "sizeDiameter": "Ø {{value}}",
+            "sizeCutout": "recorte {{value}}",
+            "sizeDepth": "prof. {{value}}"
+        },
+        "deleteConfirm": {
+            "title": "Excluir alto-falante?",
+            "body": "“{{name}}” sai da sua lista neste navegador. Projetos que já o usam não mudam.",
+            "confirm": "Excluir",
+            "cancel": "Cancelar"
+        },
+        "file": {
+            "export": "Exportar",
+            "import": "Importar",
+            "errors": {
+                "fileTooLarge": "O arquivo passa de 512 KB e não parece ser uma lista do BuildBass.",
+                "invalidJson": "O arquivo não é um JSON válido.",
+                "notBuildbass": "O arquivo não é uma lista de alto-falantes do BuildBass.",
+                "newerVersion": "A lista foi salva numa versão mais nova do BuildBass. Atualize o app para importá-la.",
+                "tooMany": "O arquivo tem mais de {{max}} alto-falantes.",
+                "invalidContent": "O arquivo tem um valor inválido em “{{path}}”.",
+                "readFailed": "Não foi possível ler o arquivo."
+            },
+            "duplicates_one": "{{count}} alto-falante do arquivo já está na sua lista.",
+            "duplicates_other": "{{count}} alto-falantes do arquivo já estão na sua lista.",
+            "replace": "Substituir",
+            "keep": "Manter os atuais",
+            "result": "Importação concluída: {{added}} adicionados, {{replaced}} substituídos, {{ignored}} ignorados.",
+            "tooManyTotal": "A importação deixaria a lista com {{total}} alto-falantes (máximo {{max}}). Nada foi importado."
+        },
+        "storageOff": "Este navegador não deixa guardar dados: a lista se perde ao fechar a página. Exporte para não perder."
     }
 }

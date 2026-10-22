@@ -24,7 +24,8 @@ test('sem conexão mostra o aviso, desativa o servidor e preserva os dados', asy
 
     await expect(banner).toBeVisible({ timeout: 5000 });
     await pick.click();
-    await expect(catalog).toBeDisabled();
+    // O campo segue ativo offline: "Meus alto-falantes" é local; só catálogo e recentes caem.
+    await expect(catalog).toBeEnabled();
     await expect(
         page.getByText('Indisponível sem conexão com o servidor.').first(),
     ).toBeVisible();

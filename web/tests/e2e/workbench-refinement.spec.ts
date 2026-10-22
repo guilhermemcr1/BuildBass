@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { mockCatalog, openPicker } from './catalog-mock';
@@ -281,5 +282,152 @@ test.describe('US4 — modal da caixa', () => {
                 document.documentElement.clientWidth,
         );
         expect(overflow).toBeLessThanOrEqual(0);
+    });
+});
+
+test.describe('US6 — alto-falantes salvos', () => {
+    const PARAMS: [RegExp, string][] = [
+        [/^Fs/, '32'],
+        [/^Qts/, '0,42'],
+        [/^Qes/, '0,45'],
+        [/^Qms/, '6,1'],
+        [/^Vas/, '90'],
+        [/^Re/, '3,6'],
+    ];
+
+    async function fillDriver(page: Page) {
+        for (const [name, value] of PARAMS) {
+            await field(page, name).fill(value);
+            await field(page, name).press('Tab');
+        }
+    }
+
+    async function saveSpeaker(page: Page, model = 'Sub 12') {
+        await page
+            .getByRole('button', { name: 'Salvar este alto-falante' })
+            .click();
+        const dialog = page.getByRole('dialog', {
+            name: 'Salvar alto-falante',
+        });
+        await dialog.getByRole('textbox', { name: /^Marca/ }).fill('Marca X');
+        await dialog.getByRole('textbox', { name: /^Modelo/ }).fill(model);
+        await dialog
+            .getByRole('textbox', { name: /^Diâmetro do recorte/ })
+            .fill('285');
+        await dialog
+            .getByRole('textbox', { name: /^Profundidade/ })
+            .fill('150');
+        await dialog.getByRole('button', { name: 'Salvar' }).click();
+        await expect(dialog).toBeHidden();
+    }
+
+    // Como o usuário: clica em Importar e escolhe o arquivo (o clique limpa a escolha anterior, então
+    // o mesmo arquivo pode ser escolhido de novo).
+    async function importFile(
+        page: Page,
+        manage: ReturnType<Page['getByRole']>,
+        file: string,
+    ) {
+        const chooser = page.waitForEvent('filechooser');
+        await manage.getByRole('button', { name: /Importar/ }).click();
+        await (await chooser).setFiles(file);
+    }
+
+    test('salvar, abrir projeto novo e escolher em "Meus" traz os mesmos parâmetros (SC-008)', async ({
+        page,
+    }) => {
+        await page.goto('/');
+        await fillDriver(page);
+        const before = await Promise.all(
+            PARAMS.map(([name]) => field(page, name).inputValue()),
+        );
+        await saveSpeaker(page);
+
+        await page.getByRole('button', { name: 'Novo', exact: true }).click();
+        await expect(field(page, /^Fs/)).toHaveValue('');
+
+        await page.getByRole('button', { name: 'Buscar driver' }).click();
+        await expect(
+            page.getByText('Meus alto-falantes').first(),
+        ).toBeVisible();
+        await page.getByRole('option', { name: /Marca X Sub 12/ }).click();
+
+        for (const [index, [name]] of PARAMS.entries()) {
+            await expect(field(page, name)).toHaveValue(before[index]);
+        }
+        await expect(page.getByText(/Marca X Sub 12.*· salvo/)).toBeVisible();
+    });
+
+    test('a lista sobrevive ao recarregar e funciona offline', async ({
+        page,
+        context,
+    }) => {
+        await page.goto('/');
+        await fillDriver(page);
+        await saveSpeaker(page);
+
+        await page.reload();
+        await page.getByRole('button', { name: 'Novo', exact: true }).click();
+        await context.setOffline(true);
+        await page.getByRole('button', { name: 'Buscar driver' }).click();
+
+        await expect(
+            page.getByRole('option', { name: /Marca X Sub 12/ }),
+        ).toBeVisible();
+        await page.getByRole('option', { name: /Marca X Sub 12/ }).click();
+        await expect(field(page, /^Fs/)).toHaveValue('32,0');
+        await context.setOffline(false);
+    });
+
+    test('exportar, excluir e importar de volta restaura a lista', async ({
+        page,
+    }, testInfo) => {
+        await page.goto('/');
+        await fillDriver(page);
+        await saveSpeaker(page);
+
+        await page.getByRole('button', { name: 'Meus alto-falantes' }).click();
+        const manage = page.getByRole('dialog', { name: 'Meus alto-falantes' });
+        const downloading = page.waitForEvent('download');
+        await manage.getByRole('button', { name: /Exportar/ }).click();
+        const download = await downloading;
+        expect(download.suggestedFilename()).toBe(
+            'meus-alto-falantes.buildbass-drivers.json',
+        );
+        const file = testInfo.outputPath('lista.buildbass-drivers.json');
+        await download.saveAs(file);
+        const exported = JSON.parse(await readFile(file, 'utf8'));
+        expect(exported.format).toBe('buildbass-drivers');
+        expect(exported.drivers[0]).not.toHaveProperty('id');
+
+        await manage
+            .getByRole('button', { name: 'Excluir Marca X Sub 12' })
+            .click();
+        await page
+            .getByRole('alertdialog')
+            .getByRole('button', { name: 'Excluir' })
+            .click();
+        await expect(
+            manage.getByText('Você ainda não salvou nenhum alto-falante.'),
+        ).toBeVisible();
+
+        await importFile(page, manage, file);
+        await expect(
+            manage.getByText(
+                'Importação concluída: 1 adicionados, 0 substituídos, 0 ignorados.',
+            ),
+        ).toBeVisible();
+        await expect(manage.getByText('Marca X Sub 12')).toBeVisible();
+
+        // Importar de novo: o item já existe, então o sistema pergunta.
+        await importFile(page, manage, file);
+        const ask = page.getByRole('alertdialog');
+        await expect(ask).toContainText('já está na sua lista');
+        await ask.getByRole('button', { name: 'Manter os atuais' }).click();
+        await expect(
+            manage.getByText(
+                'Importação concluída: 0 adicionados, 0 substituídos, 1 ignorados.',
+            ),
+        ).toBeVisible();
     });
 });

@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { activeProjectStore } from '@/hooks/use-active-project';
 import { renderWithProviders } from '@/test/render';
+import { useSavedDrivers } from '@/stores/saved-drivers';
 import { initialWorkspace, useWorkspace } from '@/stores/workspace';
 import { DriverPanel } from './driver-panel';
 
@@ -76,7 +77,7 @@ describe('DriverPanel — cabeçalho compacto (feature 008, US3)', () => {
         expect(send).toHaveTextContent('');
     });
 
-    test('offline, a busca continua abrindo mas o campo fica desativado', async () => {
+    test('offline, a busca continua abrindo e o campo segue ativo para os salvos', async () => {
         connection.status = 'offline';
         renderWithProviders(<DriverPanel onSubmitDriver={() => undefined} />);
 
@@ -84,7 +85,7 @@ describe('DriverPanel — cabeçalho compacto (feature 008, US3)', () => {
             screen.getByRole('button', { name: 'Buscar driver' }),
         );
 
-        expect(screen.getByRole('searchbox')).toBeDisabled();
+        expect(screen.getByRole('searchbox')).toBeEnabled();
     });
 });
 
@@ -116,5 +117,64 @@ describe('DriverPanel — enviar driver (specs/006, US4)', () => {
 
         await userEvent.click(button);
         expect(onSubmitDriver).not.toHaveBeenCalled();
+    });
+});
+
+describe('DriverPanel — alto-falantes salvos (specs/008, US6)', () => {
+    beforeEach(() => {
+        localStorage.clear();
+        useWorkspace.setState(initialWorkspace());
+        useSavedDrivers.setState({ items: [] });
+        connection.status = 'online';
+    });
+
+    test('salvar fica desativado sem parâmetros e funciona offline', async () => {
+        connection.status = 'offline';
+        renderWithProviders(<DriverPanel onSubmitDriver={() => undefined} />);
+        const save = screen.getByRole('button', {
+            name: 'Salvar este alto-falante',
+        });
+
+        expect(save).toBeDisabled();
+
+        act(() => activeProjectStore().getState().setDriverValue('fs_hz', 32));
+
+        expect(save).toBeEnabled();
+    });
+
+    test('abre o diálogo de salvar com a origem do driver e guarda na lista', async () => {
+        renderWithProviders(<DriverPanel onSubmitDriver={() => undefined} />);
+        act(() => {
+            const state = activeProjectStore().getState();
+            state.applyCatalogDriver(
+                { fs_hz: 32, qts: 0.4, vas_m3: 0.1 },
+                { brand: 'Triton', model: 'TR 620' },
+            );
+        });
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Salvar este alto-falante' }),
+        );
+        expect(
+            await screen.findByRole('textbox', { name: /Marca/ }),
+        ).toHaveValue('Triton');
+        await userEvent.click(screen.getByRole('button', { name: 'Salvar' }));
+
+        expect(useSavedDrivers.getState().items).toMatchObject([
+            { brand: 'Triton', model: 'TR 620' },
+        ]);
+        expect(screen.getByText(/· salvo/)).toBeVisible();
+    });
+
+    test('"Meus alto-falantes" abre o gerenciamento', async () => {
+        renderWithProviders(<DriverPanel onSubmitDriver={() => undefined} />);
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Meus alto-falantes' }),
+        );
+
+        expect(
+            await screen.findByRole('dialog', { name: 'Meus alto-falantes' }),
+        ).toBeVisible();
     });
 });

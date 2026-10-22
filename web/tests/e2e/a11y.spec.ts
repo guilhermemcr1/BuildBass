@@ -710,3 +710,42 @@ for (const theme of ['light', 'dark'] as const) {
         await context.close();
     });
 }
+
+// Diálogos de alto-falantes salvos (feature 008, US6): salvar e gerenciar, nos dois temas.
+for (const theme of ['light', 'dark'] as const) {
+    test(`diálogos de alto-falantes salvos sem violações WCAG AA no tema ${theme} (feature 008, US6)`, async ({
+        browser,
+    }) => {
+        const context = await browser.newContext({
+            colorScheme: theme,
+            viewport: { width: 1440, height: 900 },
+        });
+        const page = await context.newPage();
+        await page.goto('/');
+        await page.locator('main').waitFor();
+
+        await fill(page, /^Fs/, '32');
+        await fill(page, /^Qts/, '0,42');
+        await fill(page, /^Vas/, '90');
+
+        await page
+            .getByRole('button', { name: 'Salvar este alto-falante' })
+            .click();
+        const save = page.getByRole('dialog', { name: 'Salvar alto-falante' });
+        await expect(save).toBeVisible();
+        await save.getByRole('textbox', { name: /^Marca/ }).fill('Marca X');
+        await save.getByRole('textbox', { name: /^Modelo/ }).fill('Sub 12');
+        await page.waitForTimeout(300);
+        expect(await axe(page)).toEqual([]);
+
+        await save.getByRole('button', { name: 'Salvar' }).click();
+        await expect(save).toBeHidden();
+
+        await page.getByRole('button', { name: 'Meus alto-falantes' }).click();
+        const manage = page.getByRole('dialog', { name: 'Meus alto-falantes' });
+        await expect(manage.getByText('Marca X Sub 12')).toBeVisible();
+        await page.waitForTimeout(300);
+        expect(await axe(page)).toEqual([]);
+        await context.close();
+    });
+}
