@@ -142,5 +142,15 @@
         "offline": "Sem conexão: recentes e catálogo ficam indisponíveis.",
         "notFoundHelp": "Não achou?",
         "submit": "Enviar driver"
+    },
+    "boxDialog": {
+        "open3d": "Ver caixa em 3D",
+        "openDialog": "Ampliar caixa",
+        "title": "Caixa",
+        "close": "Fechar",
+        "speaker": "Alto-falante na caixa",
+        "thumbnailEmpty": "Preencha o projeto para ver a caixa em 3D",
+        "missing": "Para ver a caixa em 3D falta informar: {{missing}}.",
+        "invalid": "Valores fora da faixa: {{invalid}}."
     }
 }

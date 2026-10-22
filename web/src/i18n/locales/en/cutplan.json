@@ -127,7 +127,14 @@
         "zoomIn": "Zoom in",
         "zoomOut": "Zoom out",
         "reset": "Reset",
-        "controls": "3D view controls"
+        "controls": "3D view controls",
+        "driver": "Speaker",
+        "summaryDriver": "Speaker on the front.",
+        "dimension": {
+            "width": "Width",
+            "height": "Height",
+            "depth": "Depth"
+        }
     },
     "types": {
         "closed": "sealed",

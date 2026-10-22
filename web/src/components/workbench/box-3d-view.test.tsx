@@ -27,6 +27,23 @@ const BASE: Plan = {
     warnings: [],
 };
 
+const WITH_DRIVER: Plan = {
+    ...BASE,
+    pieces: [
+        {
+            ...BASE.pieces[0],
+            cutouts: [
+                {
+                    kind: 'driver',
+                    shape: 'round',
+                    diameter_m: 0.2,
+                    center: { x_m: 0.218, y_m: 0.318 },
+                },
+            ],
+        },
+    ],
+};
+
 const BANDPASS: Plan = {
     ...BASE,
     boxType: 'bandpass',
@@ -142,5 +159,89 @@ describe('Box3dView', () => {
         expect(
             screen.getByRole('button', { name: 'Ver por dentro' }),
         ).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    test('as três cotas aparecem com a medida externa na unidade ativa', () => {
+        const { container } = renderWithProviders(<Box3dView plan={BASE} />);
+        const lines = container.querySelectorAll('[data-dimension]');
+
+        expect(
+            [...lines].map((line) => line.getAttribute('data-dimension')),
+        ).toEqual(['width', 'height', 'depth']);
+        expect(
+            container.querySelector('[data-dimension="width"] text'),
+        ).toHaveTextContent('436,0 mm');
+        expect(
+            container.querySelector('[data-dimension="height"] text'),
+        ).toHaveTextContent('636,0 mm');
+        expect(
+            container.querySelector('[data-dimension="depth"] text'),
+        ).toHaveTextContent('286,0 mm');
+    });
+
+    test('no sistema imperial as cotas usam polegadas', () => {
+        usePreferences.setState({ unitSystem: 'imperial' });
+        const { container } = renderWithProviders(<Box3dView plan={BASE} />);
+
+        expect(
+            container.querySelector('[data-dimension="width"] text'),
+        ).toHaveTextContent(/in/);
+    });
+
+    test('as cotas acompanham a vista ao girar', async () => {
+        const { container } = renderWithProviders(<Box3dView plan={BASE} />);
+        const before = container
+            .querySelector('[data-dimension="width"] line')
+            ?.getAttribute('x1');
+
+        view().svg.focus();
+        await userEvent.keyboard('{ArrowRight}');
+
+        expect(
+            container
+                .querySelector('[data-dimension="width"] line')
+                ?.getAttribute('x1'),
+        ).not.toBe(before);
+    });
+
+    test('o recorte do alto-falante tem destaque e o rótulo "Alto-falante"', () => {
+        const { container } = renderWithProviders(
+            <Box3dView plan={WITH_DRIVER} />,
+        );
+        const speaker = container.querySelector('[data-part="driver"]');
+
+        // A vista padrão olha de cima e de lado: a frente aparece e o furo vem junto.
+        expect(speaker).not.toBeNull();
+        expect(speaker).toHaveClass('fill-accent-soft', 'stroke-accent');
+        expect(
+            container.querySelector('[data-driver-label]'),
+        ).toHaveTextContent('Alto-falante');
+        expect(view().svg).toHaveAccessibleName(/Alto-falante na frente\./);
+    });
+
+    test('sem medida do recorte não há polígono do driver nem rótulo inventado', () => {
+        const { container } = renderWithProviders(
+            <Box3dView
+                plan={{
+                    ...BASE,
+                    pieces: [
+                        {
+                            ...BASE.pieces[0],
+                            cutouts: [
+                                {
+                                    kind: 'driver',
+                                    shape: 'round',
+                                    pending: ['cutout_m'],
+                                },
+                            ],
+                        },
+                    ],
+                }}
+            />,
+        );
+
+        expect(container.querySelector('[data-part="driver"]')).toBeNull();
+        expect(container.querySelector('[data-driver-label]')).toBeNull();
+        expect(view().svg).not.toHaveAccessibleName(/Alto-falante na frente/);
     });
 });

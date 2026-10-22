@@ -12,8 +12,9 @@ type DialogProps = {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     children: ReactNode;
-    // `lg` para formulários longos: o conteúdo rola dentro do diálogo.
-    size?: 'md' | 'lg';
+    // `lg` para formulários longos: o conteúdo rola dentro do diálogo. `xl` é largo (campos ao lado
+    // de uma vista) e ocupa a tela toda abaixo de 768 px.
+    size?: 'md' | 'lg' | 'xl';
 };
 
 export function Dialog({
@@ -33,9 +34,11 @@ export function Dialog({
             <Modal
                 className={cn(
                     'w-full rounded-lg border border-border bg-surface text-foreground shadow-xl',
-                    size === 'lg'
-                        ? 'max-h-[calc(100dvh-2rem)] max-w-2xl overflow-y-auto'
-                        : 'max-w-md',
+                    size === 'md' && 'max-w-md',
+                    size === 'lg' &&
+                        'max-h-[calc(100dvh-2rem)] max-w-2xl overflow-y-auto',
+                    size === 'xl' &&
+                        'max-h-[calc(100dvh-2rem)] max-w-5xl overflow-y-auto max-md:h-[calc(100dvh-2rem)]',
                 )}
             >
                 <AriaDialog className="flex flex-col gap-3 p-5 outline-none">

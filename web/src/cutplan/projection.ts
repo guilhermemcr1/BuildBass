@@ -13,6 +13,18 @@ export type Polygon = {
     points: [number, number][];
     // Mais perto do observador = maior; os recortes ficam um pouco à frente da própria face.
     depth: number;
+    // Só nos recortes: de que peça da caixa é o furo.
+    part?: 'driver' | 'port';
+};
+
+// Cota de uma aresta da caixa (specs/008): linha afastada da aresta, com o ponto do texto no meio.
+export type DimensionLine = {
+    axis: 'width' | 'height' | 'depth';
+    // Medida externa, em metros.
+    value_m: number;
+    from: [number, number];
+    to: [number, number];
+    label: [number, number];
 };
 
 export const DEFAULT_VIEW: View = { yaw_rad: -0.6, pitch_rad: 0.45, zoom: 1 };
@@ -264,9 +276,75 @@ export function projectBox(
                 kind: 'cutout',
                 points: lifted.map(({ xy }) => xy),
                 depth: centre.depth + CUTOUT_LIFT_M,
+                part: cutout.kind,
             });
         }
     }
 
     return polygons.sort((a, b) => a.depth - b.depth);
+}
+
+// Afastamento das cotas em relação às arestas, como fração do raio (meia diagonal da caixa).
+const DIMENSION_OFFSET = 0.06;
+
+// As três cotas (largura, altura, profundidade externas) nas arestas do canto mais próximo do
+// observador, as únicas visíveis nas três faces que se encontram ali. Mesmas coordenadas de
+// `projectBox`; o texto formatado é de quem desenha.
+export function dimensionLines(plan: Plan, view: View): DimensionLine[] {
+    const { yaw_rad: yaw, pitch_rad: pitch, zoom } = view;
+    const { w_m, h_m, d_m } = plan.dimensions.external;
+    const project = (point: Vec) => {
+        const [x, y, z] = rotate(point, yaw, pitch);
+
+        return { xy: [x * zoom, y * zoom] as [number, number], depth: z };
+    };
+    const corners = [-1, 1].flatMap((sx) =>
+        [-1, 1].flatMap((sy) =>
+            [-1, 1].map((sz): Vec => [
+                (sx * w_m) / 2,
+                (sy * h_m) / 2,
+                (sz * d_m) / 2,
+            ]),
+        ),
+    );
+    const nearest = corners.reduce((best, corner) =>
+        project(corner).depth > project(best).depth ? corner : best,
+    );
+    const offset = DIMENSION_OFFSET * (Math.hypot(w_m, h_m, d_m) / 2) * zoom;
+    const edges: [DimensionLine['axis'], number, Vec][] = [
+        ['width', w_m, [-Math.sign(nearest[0]) * w_m, 0, 0]],
+        ['height', h_m, [0, -Math.sign(nearest[1]) * h_m, 0]],
+        ['depth', d_m, [0, 0, -Math.sign(nearest[2]) * d_m]],
+    ];
+
+    return edges.map(([axis, value_m, step]) => {
+        const start = project(nearest).xy;
+        const end = project([
+            nearest[0] + step[0],
+            nearest[1] + step[1],
+            nearest[2] + step[2],
+        ]).xy;
+        const middle: [number, number] = [
+            (start[0] + end[0]) / 2,
+            (start[1] + end[1]) / 2,
+        ];
+        const length = Math.hypot(middle[0], middle[1]);
+        // Para fora: do centro da caixa (a origem) para o meio da aresta.
+        const away: [number, number] =
+            length < 1e-12 ? [0, 1] : [middle[0] / length, middle[1] / length];
+        const shift = (point: [number, number]): [number, number] => [
+            point[0] + away[0] * offset,
+            point[1] + away[1] * offset,
+        ];
+        const from = shift(start);
+        const to = shift(end);
+
+        return {
+            axis,
+            value_m,
+            from,
+            to,
+            label: [(from[0] + to[0]) / 2, (from[1] + to[1]) / 2],
+        };
+    });
 }

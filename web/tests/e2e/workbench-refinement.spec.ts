@@ -205,3 +205,81 @@ test.describe('US3 — busca compacta do Driver', () => {
         ).toBeVisible();
     });
 });
+
+test.describe('US4 — modal da caixa', () => {
+    async function fillProject(page: Page) {
+        for (const [name, value] of [
+            [/^Fs/, '28'],
+            [/^Qts/, '0,38'],
+            [/^Qes/, '0,42'],
+            [/^Qms/, '4,1'],
+            [/^Vas/, '85'],
+            [/^Re/, '3,6'],
+            [/^Sd/, '491'],
+        ] as const) {
+            await field(page, name).fill(value);
+            await field(page, name).press('Tab');
+        }
+    }
+
+    test('abrir, mudar o volume, ver cotas e o alto-falante, e fechar com Esc devolvendo o foco (SC-006)', async ({
+        page,
+    }) => {
+        await page.goto('/');
+        await fillProject(page);
+        await page.getByRole('radio', { name: 'Selada' }).click();
+        await field(page, /^Vb/).fill('60');
+        await field(page, /^Vb/).press('Tab');
+
+        const opener = page.getByRole('button', { name: 'Ver caixa em 3D' });
+        await opener.click();
+        const dialog = page.getByRole('dialog', { name: 'Caixa' });
+        await expect(dialog).toBeVisible();
+
+        // Informar o recorte do alto-falante no modal faz o destaque aparecer.
+        await dialog.getByRole('textbox', { name: /^Ød/ }).fill('200');
+        await dialog.getByRole('textbox', { name: /^Ød/ }).press('Tab');
+        await expect(dialog.locator('[data-part="driver"]')).toHaveCount(1);
+        await expect(dialog.locator('[data-driver-label]')).toHaveText(
+            'Alto-falante',
+        );
+
+        const widthBefore = await dialog
+            .locator('[data-dimension="width"] text')
+            .textContent();
+        await dialog.getByRole('textbox', { name: /^Vb/ }).fill('90');
+        await dialog.getByRole('textbox', { name: /^Vb/ }).press('Tab');
+        await expect(
+            dialog.locator('[data-dimension="width"] text'),
+        ).not.toHaveText(widthBefore ?? '');
+        for (const axis of ['width', 'height', 'depth']) {
+            await expect(
+                dialog.locator(`[data-dimension="${axis}"] text`),
+            ).toContainText('mm');
+        }
+
+        await page.keyboard.press('Escape');
+        await expect(dialog).toBeHidden();
+        await expect(opener).toBeFocused();
+        await expect(field(page, /^Vb/)).toHaveValue('90,0');
+    });
+
+    test('a 360 px o modal ocupa a tela e não rola na horizontal', async ({
+        page,
+    }) => {
+        await page.setViewportSize({ width: 360, height: 800 });
+        await page.goto('/');
+        await page.getByRole('button', { name: 'Ampliar caixa' }).click();
+        const dialog = page.getByRole('dialog', { name: 'Caixa' });
+        await expect(dialog).toBeVisible();
+
+        const rect = await dialog.boundingBox();
+        expect(rect!.width).toBeGreaterThanOrEqual(360 - 40);
+        const overflow = await page.evaluate(
+            () =>
+                document.documentElement.scrollWidth -
+                document.documentElement.clientWidth,
+        );
+        expect(overflow).toBeLessThanOrEqual(0);
+    });
+});

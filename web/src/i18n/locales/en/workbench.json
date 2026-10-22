@@ -142,5 +142,15 @@
         "offline": "Offline: recent and catalog are unavailable.",
         "notFoundHelp": "Can't find it?",
         "submit": "Submit driver"
+    },
+    "boxDialog": {
+        "open3d": "View box in 3D",
+        "openDialog": "Expand box",
+        "title": "Box",
+        "close": "Close",
+        "speaker": "Speaker on the box",
+        "thumbnailEmpty": "Fill in the project to see the box in 3D",
+        "missing": "To see the box in 3D, provide: {{missing}}.",
+        "invalid": "Values out of range: {{invalid}}."
     }
 }

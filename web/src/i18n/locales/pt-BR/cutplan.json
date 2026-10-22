@@ -127,7 +127,14 @@
         "zoomIn": "Aproximar",
         "zoomOut": "Afastar",
         "reset": "Reiniciar",
-        "controls": "Controles da vista 3D"
+        "controls": "Controles da vista 3D",
+        "driver": "Alto-falante",
+        "summaryDriver": "Alto-falante na frente.",
+        "dimension": {
+            "width": "Largura",
+            "height": "Altura",
+            "depth": "Profundidade"
+        }
     },
     "types": {
         "closed": "selada",

@@ -13,7 +13,7 @@ import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { ToggleButton } from '@/components/ui/toggle-button';
-import { DEFAULT_VIEW, projectBox } from '@/cutplan';
+import { DEFAULT_VIEW, dimensionLines, projectBox } from '@/cutplan';
 import type { Plan, View } from '@/cutplan';
 import { formatWithUnit } from '@/lib/units/format';
 import { defaultUnitFor } from '@/lib/units/quantities';
@@ -76,10 +76,23 @@ export function Box3dView({ plan }: { plan: Plan }) {
     const drag = useRef<{ x: number; y: number } | null>(null);
     const { external } = plan.dimensions;
     // Meia diagonal da caixa com folga: com zoom 1 ela cabe no quadro em qualquer ângulo.
+    // As cotas ficam fora da caixa, então o quadro ganha folga para elas e para o texto.
     const radius =
-        (Math.hypot(external.w_m, external.h_m, external.d_m) / 2) * 1.15;
+        (Math.hypot(external.w_m, external.h_m, external.d_m) / 2) * 1.35;
     const polygons = projectBox(plan, view, { translucent: inside });
+    const lines = dimensionLines(plan, view);
     const format = (si: number) => formatWithUnit(si, unit, locale);
+    const driverShown = polygons.find((polygon) => polygon.part === 'driver');
+    const driverOnFront = projectBox(
+        plan,
+        { yaw_rad: 0, pitch_rad: 0, zoom: 1 },
+        { translucent: false },
+    ).some((polygon) => polygon.part === 'driver');
+    const centroid = (points: [number, number][]): [number, number] => [
+        points.reduce((sum, [x]) => sum + x, 0) / points.length,
+        points.reduce((sum, [, y]) => sum + y, 0) / points.length,
+    ];
+    const fontSize = radius * 0.07;
 
     const onKeyDown = (event: KeyboardEvent) => {
         const handlers: Record<string, () => void> = {
@@ -121,7 +134,7 @@ export function Box3dView({ plan }: { plan: Plan }) {
                     width: format(external.w_m),
                     height: format(external.h_m),
                     depth: format(external.d_m),
-                })}
+                }).concat(driverOnFront ? ` ${t('view3d.summaryDriver')}` : '')}
                 data-yaw={view.yaw_rad.toFixed(3)}
                 data-pitch={view.pitch_rad.toFixed(3)}
                 data-zoom={view.zoom.toFixed(3)}
@@ -145,23 +158,72 @@ export function Box3dView({ plan }: { plan: Plan }) {
                     <polygon
                         key={polygon.id}
                         data-id={polygon.id}
+                        data-part={polygon.part}
                         // O eixo y do SVG cresce para baixo.
                         points={polygon.points
                             .map(([x, y]) => `${x},${-y}`)
                             .join(' ')}
                         className={
-                            polygon.kind === 'cutout'
-                                ? 'fill-background stroke-foreground'
-                                : inside
-                                  ? 'fill-accent-soft stroke-foreground'
-                                  : 'fill-raised stroke-foreground'
+                            polygon.part === 'driver'
+                                ? 'fill-accent-soft stroke-accent'
+                                : polygon.kind === 'cutout'
+                                  ? 'fill-background stroke-foreground'
+                                  : inside
+                                    ? 'fill-accent-soft stroke-foreground'
+                                    : 'fill-raised stroke-foreground'
                         }
                         fillOpacity={
                             inside && polygon.kind === 'face' ? 0.35 : 1
                         }
-                        strokeWidth={radius * 0.006}
+                        strokeWidth={
+                            polygon.part === 'driver'
+                                ? radius * 0.012
+                                : radius * 0.006
+                        }
                         strokeLinejoin="round"
                     />
+                ))}
+                {driverShown !== undefined && (
+                    <text
+                        data-driver-label=""
+                        x={centroid(driverShown.points)[0]}
+                        y={-centroid(driverShown.points)[1]}
+                        fontSize={fontSize}
+                        textAnchor="middle"
+                        dominantBaseline="central"
+                        className="fill-foreground stroke-background font-semibold"
+                        strokeWidth={fontSize * 0.25}
+                        style={{ paintOrder: 'stroke' }}
+                    >
+                        {t('view3d.driver')}
+                    </text>
+                )}
+                {lines.map((line) => (
+                    <g
+                        key={line.axis}
+                        data-dimension={line.axis}
+                        className="stroke-muted"
+                    >
+                        <line
+                            x1={line.from[0]}
+                            y1={-line.from[1]}
+                            x2={line.to[0]}
+                            y2={-line.to[1]}
+                            strokeWidth={radius * 0.005}
+                        />
+                        <text
+                            x={line.label[0]}
+                            y={-line.label[1]}
+                            fontSize={fontSize}
+                            textAnchor="middle"
+                            dominantBaseline="central"
+                            className="fill-foreground stroke-background"
+                            strokeWidth={fontSize * 0.25}
+                            style={{ paintOrder: 'stroke' }}
+                        >
+                            {format(line.value_m)}
+                        </text>
+                    </g>
                 ))}
             </svg>
             <p className="text-[11px] text-muted">{t('view3d.hint')}</p>

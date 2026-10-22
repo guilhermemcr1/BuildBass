@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vite-plus/test';
 import { simulate } from '@/engine';
 import type { BoxInput, ProjectInput } from '@/engine';
 import { resolveCutPlan } from './config';
-import { DEFAULT_VIEW, projectBox } from './projection';
+import { DEFAULT_VIEW, dimensionLines, projectBox } from './projection';
 import { buildCutPlan } from './plan';
 import type { CutPlanConfig, Plan } from './types';
 
@@ -253,5 +253,155 @@ describe('bandpass de 6ª ordem na projeção (feature 007)', () => {
             expect(y).toBeGreaterThan(Math.min(...ys));
             expect(y).toBeLessThan(Math.max(...ys));
         }
+    });
+});
+
+describe('cotas e peças do 3D (feature 008)', () => {
+    const VIEWS = [
+        DEFAULT_VIEW,
+        { yaw_rad: 0.7, pitch_rad: -0.3, zoom: 1 },
+        { yaw_rad: 2.4, pitch_rad: 0.9, zoom: 2 },
+        { yaw_rad: -1.2, pitch_rad: 0.2, zoom: 0.5 },
+    ];
+
+    test('devolve exatamente três cotas com as medidas externas', () => {
+        const caixa = plan();
+        const { w_m, h_m, d_m } = caixa.dimensions.external;
+
+        for (const view of VIEWS) {
+            const lines = dimensionLines(caixa, view);
+
+            expect(lines.map(({ axis }) => axis)).toEqual([
+                'width',
+                'height',
+                'depth',
+            ]);
+            expect(lines.map(({ value_m }) => value_m)).toEqual([
+                w_m,
+                h_m,
+                d_m,
+            ]);
+        }
+    });
+
+    test('o comprimento projetado de cada cota é o da aresta projetada', () => {
+        const caixa = plan();
+        const { w_m, h_m, d_m } = caixa.dimensions.external;
+
+        for (const { yaw_rad: yaw, pitch_rad: pitch, zoom } of VIEWS) {
+            const [width, height, depth] = dimensionLines(caixa, {
+                yaw_rad: yaw,
+                pitch_rad: pitch,
+                zoom,
+            }).map(({ from, to }) =>
+                Math.hypot(to[0] - from[0], to[1] - from[1]),
+            );
+
+            expect(width).toBeCloseTo(
+                w_m *
+                    zoom *
+                    Math.hypot(Math.cos(yaw), Math.sin(yaw) * Math.sin(pitch)),
+                9,
+            );
+            expect(height).toBeCloseTo(h_m * zoom * Math.cos(pitch), 9);
+            expect(depth).toBeCloseTo(
+                d_m *
+                    zoom *
+                    Math.hypot(Math.sin(yaw), Math.cos(yaw) * Math.sin(pitch)),
+                9,
+            );
+        }
+    });
+
+    test('as três cotas saem do canto mais próximo, afastadas 6 % do raio para fora', () => {
+        const caixa = plan();
+        const { w_m, h_m, d_m } = caixa.dimensions.external;
+
+        for (const { yaw_rad: yaw, pitch_rad: pitch, zoom } of VIEWS) {
+            const depthOf = (x: number, y: number, z: number) => {
+                const z1 = -x * Math.sin(yaw) + z * Math.cos(yaw);
+
+                return y * Math.sin(pitch) + z1 * Math.cos(pitch);
+            };
+            const screen = (
+                x: number,
+                y: number,
+                z: number,
+            ): [number, number] => {
+                const x1 = x * Math.cos(yaw) + z * Math.sin(yaw);
+                const z1 = -x * Math.sin(yaw) + z * Math.cos(yaw);
+
+                return [
+                    x1 * zoom,
+                    (y * Math.cos(pitch) - z1 * Math.sin(pitch)) * zoom,
+                ];
+            };
+            const corners = [-1, 1].flatMap((sx) =>
+                [-1, 1].flatMap((sy) =>
+                    [-1, 1].map(
+                        (sz) =>
+                            [
+                                (sx * w_m) / 2,
+                                (sy * h_m) / 2,
+                                (sz * d_m) / 2,
+                            ] as const,
+                    ),
+                ),
+            );
+            const nearest = corners.reduce((best, corner) =>
+                depthOf(...corner) > depthOf(...best) ? corner : best,
+            );
+            const origin = screen(...nearest);
+            const offset = 0.06 * (Math.hypot(w_m, h_m, d_m) / 2) * zoom;
+
+            for (const { from, to } of dimensionLines(caixa, {
+                yaw_rad: yaw,
+                pitch_rad: pitch,
+                zoom,
+            })) {
+                const distances = [from, to].map((point) =>
+                    Math.hypot(point[0] - origin[0], point[1] - origin[1]),
+                );
+
+                expect(Math.min(...distances)).toBeCloseTo(offset, 9);
+            }
+        }
+    });
+
+    test('o texto fica no meio da linha e a função é determinística', () => {
+        const caixa = plan();
+        const first = dimensionLines(caixa, DEFAULT_VIEW);
+
+        for (const { from, to, label } of first) {
+            expect(label[0]).toBeCloseTo((from[0] + to[0]) / 2, 12);
+            expect(label[1]).toBeCloseTo((from[1] + to[1]) / 2, 12);
+        }
+        expect(dimensionLines(caixa, DEFAULT_VIEW)).toEqual(first);
+    });
+
+    test('a bandpass usa as medidas externas da caixa inteira', () => {
+        const caixa = plan({ type: 'bandpass', vr_m3: 0.04, vf_m3: 0.03 });
+        const { w_m } = caixa.dimensions.external;
+
+        expect(dimensionLines(caixa, DEFAULT_VIEW)[0].value_m).toBe(w_m);
+    });
+
+    test('os recortes saem marcados como driver ou duto, sem mudar os polígonos', () => {
+        const caixa = plan({ type: 'vented', fb_hz: 35 });
+        const polygons = projectBox(caixa, FLAT, { translucent: true });
+        const cutouts = polygons.filter(({ kind }) => kind === 'cutout');
+
+        expect(cutouts.length).toBeGreaterThan(0);
+
+        for (const cutout of cutouts) {
+            expect(cutout.part).toBe(
+                cutout.id.includes(':driver-') ? 'driver' : 'port',
+            );
+        }
+        expect(
+            polygons
+                .filter(({ kind }) => kind === 'face')
+                .every(({ part }) => part === undefined),
+        ).toBe(true);
     });
 });

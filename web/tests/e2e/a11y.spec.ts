@@ -640,3 +640,40 @@ test('bandpass de 6ª ordem: todos os campos são alcançáveis só pelo teclado
         expect(reached).toBe(true);
     }
 });
+
+// Modal da caixa (feature 008, US4): aberto, com o 3D cotado e o alto-falante destacado.
+for (const theme of ['light', 'dark'] as const) {
+    test(`modal da caixa sem violações WCAG AA no tema ${theme} (feature 008, US4)`, async ({
+        browser,
+    }) => {
+        const context = await browser.newContext({
+            colorScheme: theme,
+            viewport: { width: 1440, height: 900 },
+        });
+        const page = await context.newPage();
+        await page.goto('/');
+        await page.locator('main').waitFor();
+
+        await fill(page, /^Fs/, '28');
+        await fill(page, /^Qts/, '0,38');
+        await fill(page, /^Qes/, '0,42');
+        await fill(page, /^Qms/, '4,1');
+        await fill(page, /^Vas/, '85');
+        await fill(page, /^Re/, '3,6');
+        await fill(page, /^Sd/, '491');
+        await page.getByRole('radio', { name: 'Selada' }).click();
+        await fill(page, /^Vb/, '60');
+
+        await page.getByRole('button', { name: 'Ver caixa em 3D' }).click();
+        const dialog = page.getByRole('dialog', { name: 'Caixa' });
+        await expect(dialog).toBeVisible();
+        const cutout = dialog.getByRole('textbox', { name: /^Ød/ });
+        await cutout.fill('200');
+        await cutout.press('Tab');
+        await expect(dialog.locator('[data-part="driver"]')).toHaveCount(1);
+
+        // O modal esconde o resto da página dos leitores de tela, como pede o padrão do componente.
+        expect(await axe(page, { listOpen: true })).toEqual([]);
+        await context.close();
+    });
+}

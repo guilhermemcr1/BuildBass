@@ -357,3 +357,47 @@ describe('BoxPanel — bandpass de 6ª ordem', () => {
         ).toHaveValue('3,937');
     });
 });
+
+describe('BoxPanel — modal da caixa (feature 008, US4)', () => {
+    beforeEach(() => {
+        localStorage.clear();
+        useWorkspace.setState(initialWorkspace());
+        usePreferences.setState({ unitSystem: 'metric' });
+    });
+
+    test('a miniatura abre o modal', async () => {
+        renderWithProviders(<BoxPanel />);
+
+        await userEvent.click(
+            await screen.findByRole('button', { name: 'Ver caixa em 3D' }),
+        );
+
+        expect(
+            await screen.findByRole('dialog', { name: 'Caixa' }),
+        ).toBeVisible();
+    });
+
+    test('o botão de ícone do título também abre o modal', async () => {
+        renderWithProviders(<BoxPanel />);
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Ampliar caixa' }),
+        );
+
+        expect(
+            await screen.findByRole('dialog', { name: 'Caixa' }),
+        ).toBeVisible();
+    });
+
+    test('digitar ou clicar nos campos do painel não abre o modal', async () => {
+        boxType('vented');
+        renderWithProviders(<BoxPanel />);
+        const vb = screen.getByRole('textbox', { name: /^Vb/ });
+
+        await userEvent.click(vb);
+        await userEvent.type(vb, '50{Enter}');
+        await userEvent.click(screen.getByRole('radio', { name: 'Selada' }));
+
+        expect(screen.queryByRole('dialog')).toBeNull();
+    });
+});
