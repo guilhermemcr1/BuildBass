@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 // envio de um driver para a fila de moderação (feature 006).
 Route::middleware('throttle:catalog')->group(function () {
     Route::get('/drivers', [DriverController::class, 'index']);
+    Route::get('/driver-brands', [DriverController::class, 'brands']);
     Route::get('/drivers/{id}', [DriverController::class, 'show']);
 });
 

@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $brand
  * @property string $model
  * @property string $variant
+ * @property string|null $type
  * @property string $source
  * @property string $search_text
  */
@@ -24,6 +25,9 @@ class Driver extends Model
     use HasFactory;
 
     use HasUuids;
+
+    /** Tipos de alto-falante aceitos (opcional no cadastro); os mesmos de web/src/lib/catalog/types.ts. */
+    public const TYPES = ['subwoofer', 'woofer', 'midbass', 'midrange', 'fullrange'];
 
     /** Parâmetros Thiele-Small opcionais, na ordem em que a API os devolve. */
     public const OPTIONAL_PARAMETERS = [
@@ -69,6 +73,7 @@ class Driver extends Model
         'brand',
         'model',
         'variant',
+        'type',
         'nominal_diameter_m',
         'fs_hz',
         'qts',

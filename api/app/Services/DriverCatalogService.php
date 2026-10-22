@@ -15,15 +15,33 @@ class DriverCatalogService
 
     /**
      * Cada palavra do termo precisa aparecer em "marca modelo variação", sem acento nem caixa.
-     * Busca uma linha a mais que o limite só para saber se há mais resultados.
+     * Os filtros opcionais (marca exata, tipo e faixa de diâmetro, com o máximo exclusivo) se
+     * somam ao termo. Busca uma linha a mais que o limite só para saber se há mais resultados.
      *
+     * @param  array{brand?: ?string, type?: ?string, diameter_min_m?: mixed, diameter_max_m?: mixed}  $filters
      * @return array{drivers: Collection<int, Driver>, hasMore: bool}
      */
-    public function search(string $term): array
+    public function search(?string $term, array $filters = []): array
     {
         $query = Driver::query();
 
-        foreach (SearchText::words($term) as $word) {
+        if (($filters['brand'] ?? null) !== null && $filters['brand'] !== '') {
+            $query->where('brand', $filters['brand']);
+        }
+
+        if (($filters['type'] ?? null) !== null) {
+            $query->where('type', $filters['type']);
+        }
+
+        if (($filters['diameter_min_m'] ?? null) !== null) {
+            $query->where('nominal_diameter_m', '>=', (float) $filters['diameter_min_m']);
+        }
+
+        if (($filters['diameter_max_m'] ?? null) !== null) {
+            $query->where('nominal_diameter_m', '<', (float) $filters['diameter_max_m']);
+        }
+
+        foreach (SearchText::words($term ?? '') as $word) {
             $query->whereRaw(
                 'search_text LIKE ? ESCAPE \''.self::ESCAPE.'\'',
                 ['%'.$this->escapeLike($word).'%'],
@@ -42,6 +60,22 @@ class DriverCatalogService
             'drivers' => $found->take(self::LIMIT)->values(),
             'hasMore' => $found->count() > self::LIMIT,
         ];
+    }
+
+    /**
+     * Marcas do catálogo, em ordem alfabética, para o filtro por marca.
+     *
+     * @return list<string>
+     */
+    public function brands(): array
+    {
+        $brands = Driver::query()
+            ->distinct()
+            ->orderBy('brand')
+            ->get(['brand'])
+            ->map(fn (Driver $driver): string => $driver->brand);
+
+        return array_values($brands->all());
     }
 
     public function find(string $id): ?Driver

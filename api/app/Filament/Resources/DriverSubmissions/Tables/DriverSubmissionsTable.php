@@ -23,6 +23,7 @@ class DriverSubmissionsTable
                 TextColumn::make('brand')->label('Fabricante')->searchable(),
                 TextColumn::make('model')->label('Modelo')->searchable(),
                 TextColumn::make('variant')->label('Variante')->placeholder('—'),
+                TextColumn::make('type')->label('Tipo')->formatStateUsing(fn (?string $state): ?string => $state === null ? null : ucfirst($state))->placeholder('—'),
                 TextColumn::make('fs_hz')->label('Fs (Hz)')->numeric(decimalPlaces: 2),
                 TextColumn::make('qts')->label('Qts')->numeric(decimalPlaces: 3),
                 TextColumn::make('vas_m3')->label('Vas (m³)')->numeric(decimalPlaces: 5),

@@ -20,6 +20,7 @@ use Illuminate\Support\Carbon;
  * @property string $brand
  * @property string $model
  * @property string $variant
+ * @property string|null $type
  * @property string $source
  * @property string $dedupe_key
  * @property string $ip_hash
@@ -42,6 +43,7 @@ class DriverSubmission extends Model
         'brand',
         'model',
         'variant',
+        'type',
         'nominal_diameter_m',
         'fs_hz',
         'qts',

@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Models\Driver;
 use App\Models\DriverSubmission;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 // Mesmas regras do front (web/src/lib/submission/schema.ts): as faixas vêm de Driver::RANGES e
 // tests/Fixtures/submission-ranges.json trava a igualdade com PARAMETERS. O servidor nunca
@@ -64,6 +65,7 @@ class StoreDriverSubmissionRequest extends FormRequest
             'brand' => ['required', 'string', 'min:1', 'max:80'],
             'model' => ['required', 'string', 'min:1', 'max:80'],
             'variant' => ['nullable', 'string', 'max:40'],
+            'type' => ['nullable', 'string', Rule::in(Driver::TYPES)],
             'source' => ['required', 'string', 'min:1', 'max:255'],
             'contact_email' => ['nullable', 'string', 'email', 'max:254'],
             'locale' => ['required', 'in:'.implode(',', self::LOCALES)],
@@ -84,7 +86,7 @@ class StoreDriverSubmissionRequest extends FormRequest
     {
         $messages = [];
 
-        foreach (['required', 'string', 'numeric', 'between', 'max', 'min', 'email'] as $rule) {
+        foreach (['required', 'string', 'numeric', 'between', 'max', 'min', 'email', 'in'] as $rule) {
             $messages[$rule] = (string) __("submission.{$rule}");
         }
 
