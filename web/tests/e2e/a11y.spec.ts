@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { json, mockCatalog, ok } from './catalog-mock';
+import { json, mockCatalog, ok, openPicker } from './catalog-mock';
 
 // Roda no projeto "dev" (servidor de desenvolvimento), único lugar onde /dev/ui existe.
 for (const theme of ['light', 'dark'] as const) {
@@ -253,9 +253,7 @@ for (const theme of ['light', 'dark'] as const) {
         });
         await page.goto('/');
         await page.locator('main').waitFor();
-        const search = page.getByRole('combobox', {
-            name: 'Catálogo de drivers',
-        });
+        const search = await openPicker(page);
 
         await search.fill('tr 6');
         await expect(

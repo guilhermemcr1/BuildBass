@@ -57,6 +57,37 @@ describe('DriverPanel — consistência e calculados (US4)', () => {
     });
 });
 
+describe('DriverPanel — cabeçalho compacto (feature 008, US3)', () => {
+    beforeEach(() => {
+        localStorage.clear();
+        useWorkspace.setState(initialWorkspace());
+        connection.status = 'online';
+    });
+
+    test('sem campo de busca fixo: só o botão "Buscar driver" e o ícone de enviar', () => {
+        renderWithProviders(<DriverPanel onSubmitDriver={() => undefined} />);
+
+        expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+        expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
+        expect(
+            screen.getByRole('button', { name: 'Buscar driver' }),
+        ).toBeInTheDocument();
+        const send = screen.getByRole('button', { name: 'Enviar driver' });
+        expect(send).toHaveTextContent('');
+    });
+
+    test('offline, a busca continua abrindo mas o campo fica desativado', async () => {
+        connection.status = 'offline';
+        renderWithProviders(<DriverPanel onSubmitDriver={() => undefined} />);
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Buscar driver' }),
+        );
+
+        expect(screen.getByRole('searchbox')).toBeDisabled();
+    });
+});
+
 describe('DriverPanel — enviar driver (specs/006, US4)', () => {
     beforeEach(() => {
         localStorage.clear();

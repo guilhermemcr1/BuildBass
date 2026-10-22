@@ -130,5 +130,17 @@
     "chambers": {
         "rear": "Câmara traseira (dutada)",
         "front": "Câmara frontal (dutada)"
+    },
+    "picker": {
+        "open": "Buscar driver",
+        "label": "Buscar driver",
+        "placeholder": "Fabricante ou modelo",
+        "mine": "Meus alto-falantes",
+        "recent": "Recentes",
+        "catalog": "Catálogo",
+        "hint": "Digite ao menos 2 letras do fabricante ou modelo.",
+        "offline": "Sem conexão: recentes e catálogo ficam indisponíveis.",
+        "notFoundHelp": "Não achou?",
+        "submit": "Enviar driver"
     }
 }

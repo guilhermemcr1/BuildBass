@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
+import { mockCatalog, openPicker } from './catalog-mock';
 
 // Refinamento da bancada (feature 008): um cenário por história.
 
@@ -151,5 +152,56 @@ test.describe('US2 — abas com cor acima do Driver', () => {
 
         await expect(legend.locator('.bg-series-5')).toHaveCount(1);
         await expect(legend.locator('.bg-series-6')).toHaveCount(1);
+    });
+});
+
+test.describe('US3 — busca compacta do Driver', () => {
+    test('o painel não mostra campo de busca fixo; o botão abre a listagem e escolher preenche o driver (SC-005)', async ({
+        page,
+    }) => {
+        await mockCatalog(page);
+        await page.goto('/');
+
+        await expect(page.getByRole('searchbox')).toHaveCount(0);
+        await expect(page.getByRole('combobox')).toHaveCount(0);
+
+        const search = await openPicker(page);
+        await expect(search).toBeFocused();
+        await search.fill('tr 6');
+        await page.getByRole('option', { name: /Triton/ }).click();
+
+        await expect(field(page, /^Fs/)).toHaveValue('76,9');
+        await expect(page.getByRole('searchbox')).toHaveCount(0);
+        await expect(
+            page.getByRole('button', { name: 'Buscar driver' }),
+        ).toBeFocused();
+    });
+
+    test('Esc fecha a listagem sem mudar o driver e os recentes aparecem na próxima abertura', async ({
+        page,
+    }) => {
+        await mockCatalog(page);
+        await page.goto('/');
+
+        let search = await openPicker(page);
+        await search.fill('tr 6');
+        await expect(
+            page.getByRole('option', { name: /Triton/ }),
+        ).toBeVisible();
+        await page.keyboard.press('Escape');
+
+        await expect(page.getByRole('searchbox')).toHaveCount(0);
+        await expect(field(page, /^Fs/)).toHaveValue('');
+
+        search = await openPicker(page);
+        await search.fill('tr 6');
+        await page.getByRole('option', { name: /Triton/ }).click();
+        await expect(field(page, /^Fs/)).toHaveValue('76,9');
+
+        await openPicker(page);
+        await expect(page.getByText('Recentes')).toBeVisible();
+        await expect(
+            page.getByRole('option', { name: /Triton/ }),
+        ).toBeVisible();
     });
 });

@@ -5,6 +5,7 @@ import { CHART_KINDS, ChartPanel } from '@/components/workbench/chart-panel';
 import type { ChartKind } from '@/components/workbench/chart-panel';
 import { Banner } from '@/components/ui/banner';
 import { CloseProjectDialog } from '@/components/workbench/close-project-dialog';
+import { cn } from '@/lib/utils';
 import { DriverPanel } from '@/components/workbench/driver-panel';
 import { FileDrop } from '@/components/workbench/file-drop';
 import { OpenErrorDialog } from '@/components/workbench/open-error-dialog';
@@ -156,16 +157,26 @@ export default function Workbench() {
                         {t('project:storage.unavailable')}
                     </Banner>
                 )}
-                <main className="grid flex-1 grid-cols-1 gap-3 p-3 md:grid-cols-2 xl:grid-cols-[minmax(300px,360px)_minmax(260px,320px)_minmax(0,1fr)] xl:grid-rows-[auto_1fr]">
-                    {/* Em ≥ 1280 px o driver ocupa as duas linhas: a altura dele não empurra os resultados. */}
-                    <div className="flex flex-col gap-3 xl:row-span-2">
-                        <ProjectTabs onClose={requestClose} />
+                <main className="grid flex-1 grid-cols-1 gap-3 p-3 md:grid-cols-2 xl:grid-cols-[minmax(300px,360px)_minmax(260px,320px)_minmax(0,1fr)] xl:items-start">
+                    {/* Em ≥ 1280 px a coluna 1 empilha abas, driver e caixa; abaixo disso o wrapper some
+                        e cada bloco vira item da grade (abas em linha inteira, driver e caixa lado a lado). */}
+                    <div className="contents xl:flex xl:flex-col xl:gap-3">
+                        <div className="md:col-span-2 xl:col-span-1">
+                            <ProjectTabs onClose={requestClose} />
+                        </div>
                         <DriverPanel
                             onSubmitDriver={() => setSubmitting(true)}
                         />
+                        <BoxPanel />
                     </div>
-                    <BoxPanel />
-                    <div className="md:col-span-2 xl:col-span-1 xl:col-start-3 xl:row-span-2 xl:row-start-1 xl:flex xl:flex-col [&>section]:flex-1">
+                    <div
+                        className={cn(
+                            'md:col-span-2 xl:col-span-1 xl:col-start-3 xl:row-start-1 xl:flex xl:flex-col [&>section]:flex-1',
+                            // Com a coluna 1 comprida, o gráfico acompanha a rolagem e ocupa a altura da janela.
+                            view === 'charts' &&
+                                'xl:sticky xl:top-3 xl:h-[calc(100dvh-1.5rem)] xl:min-h-[28rem]',
+                        )}
+                    >
                         <ViewSwitch selected={view} onChange={setView} />
                         {view === 'charts' ? (
                             <ChartPanel
@@ -178,7 +189,7 @@ export default function Workbench() {
                             </Suspense>
                         )}
                     </div>
-                    <div className="md:col-span-2 xl:col-span-1 xl:col-start-2 xl:row-start-2">
+                    <div className="md:col-span-2 xl:col-span-1 xl:col-start-2 xl:row-start-1">
                         <ResultsPanel />
                     </div>
                 </main>

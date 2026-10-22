@@ -8,8 +8,8 @@ import type { DerivedDriver, DriverKey } from '@/engine';
 import { useActiveProject } from '@/hooks/use-active-project';
 import { useOnlineStatus } from '@/hooks/use-online-status';
 import { DRIVER_PARAMETERS } from '@/lib/parameters';
-import { CatalogSearch } from './catalog-search';
 import { DriverOrigin } from './driver-origin';
+import { DriverPicker } from './driver-picker';
 import { DriversFields } from './drivers-fields';
 import { Panel } from './panel';
 import { SignalFields } from './signal-fields';
@@ -67,29 +67,28 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
     const offlineReason = t('catalog.offlineReason');
 
     // Catálogo e envio dependem do servidor (constituição, Princípio V).
-    const submit = (
-        <Button
-            variant="secondary"
-            disabled={offline}
-            onPress={onSubmitDriver}
-            aria-description={offline ? offlineReason : undefined}
-            className="shrink-0"
-        >
-            <Send aria-hidden="true" className="size-4" />
-            {t('catalog.submit')}
-        </Button>
+    const actions = (
+        <div className="flex items-center gap-1">
+            <DriverPicker
+                disabled={offline}
+                disabledReason={offlineReason}
+                onSubmitDriver={onSubmitDriver}
+            />
+            <Button
+                variant="quiet"
+                disabled={offline}
+                onPress={onSubmitDriver}
+                aria-label={t('catalog.submit')}
+                aria-description={offline ? offlineReason : undefined}
+                className="px-2.5"
+            >
+                <Send aria-hidden="true" className="size-4" />
+            </Button>
+        </div>
     );
 
     return (
-        <Panel region="driver" title={t('regions.driver')}>
-            <div className="flex flex-wrap items-end gap-2">
-                <CatalogSearch
-                    disabled={offline}
-                    disabledReason={offlineReason}
-                    className="min-w-48 flex-1"
-                />
-                {submit}
-            </div>
+        <Panel region="driver" title={t('regions.driver')} actions={actions}>
             <DriverOrigin />
             <div className="grid grid-cols-2 items-start gap-2">
                 {DRIVER_PARAMETERS.map((key) => (

@@ -130,5 +130,17 @@
     "chambers": {
         "rear": "Rear chamber (ported)",
         "front": "Front chamber (ported)"
+    },
+    "picker": {
+        "open": "Find driver",
+        "label": "Find driver",
+        "placeholder": "Brand or model",
+        "mine": "My speakers",
+        "recent": "Recent",
+        "catalog": "Catalog",
+        "hint": "Type at least 2 letters of the brand or model.",
+        "offline": "Offline: recent and catalog are unavailable.",
+        "notFoundHelp": "Can't find it?",
+        "submit": "Submit driver"
     }
 }

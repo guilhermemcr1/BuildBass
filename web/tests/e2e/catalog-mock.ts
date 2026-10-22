@@ -62,3 +62,14 @@ export async function mockCatalog(page: Page, handler: Handler = ok) {
         handler(route, new URL(route.request().url())),
     );
 }
+
+// Abre o popover "Buscar driver" (se ainda fechado) e devolve o campo de busca.
+export async function openPicker(page: Page) {
+    const field = page.getByRole('searchbox', { name: 'Buscar driver' });
+
+    if (!(await field.isVisible())) {
+        await page.getByRole('button', { name: 'Buscar driver' }).click();
+    }
+
+    return field;
+}

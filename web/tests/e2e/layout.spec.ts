@@ -2,15 +2,26 @@ import { expect, test } from '@playwright/test';
 
 const REGIONS = ['driver', 'box', 'charts', 'results'] as const;
 
-test('a 1440 px as quatro regiões aparecem sem rolar', async ({ page }) => {
+test('a 1440 px driver, gráficos e resultados aparecem sem rolar e a caixa fica logo abaixo do driver', async ({
+    page,
+}) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/');
 
-    for (const region of REGIONS) {
+    for (const region of ['driver', 'charts', 'results'] as const) {
         await expect(
             page.locator(`[data-region="${region}"]`),
         ).toBeInViewport();
     }
+
+    const driver = await page.locator('[data-region="driver"]').boundingBox();
+    const box = await page.locator('[data-region="box"]').boundingBox();
+
+    expect(driver).not.toBeNull();
+    expect(box).not.toBeNull();
+    expect(box!.x).toBe(driver!.x);
+    expect(box!.y).toBeGreaterThanOrEqual(driver!.y + driver!.height);
+    expect(box!.y - (driver!.y + driver!.height)).toBeLessThanOrEqual(24);
 });
 
 for (const width of [360, 768, 1024, 1280, 1440, 2560]) {
