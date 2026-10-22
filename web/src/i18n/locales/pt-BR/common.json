@@ -5,7 +5,13 @@
         "ok": "Consistente",
         "warn": "Atenção",
         "error": "Erro",
-        "unchecked": "Sem verificação"
+        "unchecked": "Sem verificação",
+        "short": {
+            "ok": "OK",
+            "warn": "Atenção",
+            "error": "Erro",
+            "unchecked": "Sem verif."
+        }
     },
     "validation": {
         "invalidNumber": "Digite um número válido.",
@@ -73,5 +79,8 @@
         "toggle": "Mostrar no gráfico",
         "inlineName": "Nome (duplo clique para editar)",
         "inlineValue": "Projeto de exemplo"
+    },
+    "help": {
+        "of": "Ajuda de {{parameter}}"
     }
 }

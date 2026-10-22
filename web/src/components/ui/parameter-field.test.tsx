@@ -157,4 +157,60 @@ describe('ParameterField', () => {
             'Frequência em que o cone ressoa livre no ar, sem caixa.',
         );
     });
+
+    test('focar o campo não faz a ajuda aparecer no fluxo (não expande o campo)', async () => {
+        const { container } = renderWithProviders(
+            <Harness parameter="fs_hz" initialUnit="Hz" />,
+        );
+        const description = container.querySelector('[slot="description"]');
+
+        expect(description).toHaveClass('sr-only');
+
+        await userEvent.click(screen.getByRole('textbox'));
+
+        expect(screen.getByRole('textbox')).toHaveFocus();
+        expect(container.querySelector('[slot="description"]')).toHaveClass(
+            'sr-only',
+        );
+        expect(container.querySelector('[slot="description"]')?.className)
+            .not.toMatch(/not-sr-only/);
+    });
+
+    test('a explicação aparece como tooltip ao focar o campo numérico', async () => {
+        renderWithProviders(<Harness parameter="fs_hz" initialUnit="Hz" />);
+
+        await userEvent.tab();
+
+        expect(screen.getByRole('textbox')).toHaveFocus();
+        expect(await screen.findByRole('tooltip')).toHaveTextContent(
+            'Frequência em que o cone ressoa livre no ar, sem caixa.',
+        );
+    });
+
+    test('a explicação aparece no tooltip do símbolo ao pairar o mouse', async () => {
+        renderWithProviders(<Harness parameter="fs_hz" initialUnit="Hz" />);
+        const user = userEvent.setup();
+
+        await user.pointer({ target: document.body });
+        await user.pointer({ target: screen.getByText('Fs') });
+
+        expect(await screen.findByRole('tooltip')).toHaveTextContent(
+            'Frequência em que o cone ressoa livre no ar, sem caixa.',
+        );
+    });
+
+    test('o status usa a versão compacta (ícone e texto curto)', () => {
+        renderWithProviders(
+            <ParameterField
+                parameter="fs_hz"
+                valueSi={28}
+                unit="Hz"
+                onChangeSi={() => undefined}
+                status="unchecked"
+            />,
+        );
+
+        expect(screen.getByText('Sem verif.')).toBeVisible();
+        expect(screen.getByText('Sem verificação')).toHaveClass('sr-only');
+    });
 });

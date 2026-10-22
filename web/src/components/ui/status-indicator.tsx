@@ -19,6 +19,9 @@ type StatusIndicatorProps = {
     status: FieldStatus;
     label?: string;
     className?: string;
+    // `compact` (specs/008, FR-004): texto curto e menor para os campos de parâmetro; o rótulo
+    // completo continua disponível ao leitor de tela.
+    size?: 'default' | 'compact';
 };
 
 // Status sempre com ícone + texto, nunca só por cor (constituição, Padrões de Interface).
@@ -26,6 +29,7 @@ export function StatusIndicator({
     status,
     label,
     className,
+    size = 'default',
 }: StatusIndicatorProps) {
     const { t } = useTranslation('common');
 
@@ -34,17 +38,31 @@ export function StatusIndicator({
     }
 
     const { icon: Icon, color } = APPEARANCE[status];
+    const compact = size === 'compact';
+    const full = label ?? t(`status.${status}`);
 
     return (
         <span
             className={cn(
-                'inline-flex items-center gap-1 text-xs',
+                'inline-flex items-center gap-1',
+                compact ? 'text-[11px] leading-4' : 'text-xs',
                 color,
                 className,
             )}
         >
-            <Icon aria-hidden="true" className="size-3.5 shrink-0" strokeWidth={2.5} />
-            <span>{label ?? t(`status.${status}`)}</span>
+            <Icon
+                aria-hidden="true"
+                className={cn('shrink-0', compact ? 'size-3' : 'size-3.5')}
+                strokeWidth={2.5}
+            />
+            {compact ? (
+                <>
+                    <span aria-hidden="true">{t(`status.short.${status}`)}</span>
+                    <span className="sr-only">{full}</span>
+                </>
+            ) : (
+                <span>{full}</span>
+            )}
         </span>
     );
 }

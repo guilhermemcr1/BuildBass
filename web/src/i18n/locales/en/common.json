@@ -5,7 +5,13 @@
         "ok": "Consistent",
         "warn": "Warning",
         "error": "Error",
-        "unchecked": "Not checked"
+        "unchecked": "Not checked",
+        "short": {
+            "ok": "OK",
+            "warn": "Warning",
+            "error": "Error",
+            "unchecked": "Unchecked"
+        }
     },
     "validation": {
         "invalidNumber": "Enter a valid number.",
@@ -73,5 +79,8 @@
         "toggle": "Show on chart",
         "inlineName": "Name (double-click to edit)",
         "inlineValue": "Sample project"
+    },
+    "help": {
+        "of": "Help for {{parameter}}"
     }
 }

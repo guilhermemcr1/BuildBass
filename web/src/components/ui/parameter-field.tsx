@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { Menu } from './menu';
 import { StatusIndicator } from './status-indicator';
 import type { FieldStatus } from './status-indicator';
+import { HelpTip, useHoverless } from './help-tip';
 import { Tooltip } from './tooltip';
 
 type ParameterFieldProps = {
@@ -59,12 +60,24 @@ export function ParameterField({
     const { t } = useTranslation(['parameters', 'common']);
     const { locale } = useLocale();
     const [outOfRange, setOutOfRange] = useState(false);
+    const hoverless = useHoverless();
     const definition = PARAMETERS[parameter];
     const units = QUANTITIES[definition.quantity].units;
     const symbol = findUnit(unit).symbol;
     const derived = valueSi === undefined && derivedSi !== undefined;
     const shownSi = valueSi ?? derivedSi;
     const displayed = shownSi === undefined ? Number.NaN : fromSi(shownSi, unit);
+
+    // A ajuda abre também pelo campo numérico (hover ou foco); a descrição abaixo continua
+    // `sr-only` para o leitor de tela, então o campo nunca muda de tamanho ao receber foco.
+    const input = (
+        <Input
+            className={cn(
+                'num w-full min-w-0 bg-transparent text-[15px] outline-none',
+                derived ? 'text-muted' : 'text-foreground',
+            )}
+        />
+    );
 
     return (
         <NumberField
@@ -111,13 +124,16 @@ export function ParameterField({
         >
             <div className="flex items-center justify-between gap-2">
                 <Label className="text-xs font-semibold text-muted">
-                    <Tooltip content={t(`${parameter}.help`)}>
-                        <Focusable>
-                            <span tabIndex={-1} className="cursor-help">
-                                {definition.symbol}
-                            </span>
-                        </Focusable>
-                    </Tooltip>
+                    <HelpTip
+                        content={t(`${parameter}.help`)}
+                        label={t('common:help.of', {
+                            parameter: definition.symbol,
+                        })}
+                    >
+                        <span tabIndex={-1} className="cursor-help">
+                            {definition.symbol}
+                        </span>
+                    </HelpTip>
                     <span className="sr-only">
                         {' '}
                         — {t(`${parameter}.label`)}
@@ -128,16 +144,17 @@ export function ParameterField({
                         {derivedLabel}
                     </span>
                 ) : (
-                    <StatusIndicator status={status} />
+                    <StatusIndicator status={status} size="compact" />
                 )}
             </div>
             <div className="flex items-baseline gap-1.5">
-                <Input
-                    className={cn(
-                        'num w-full min-w-0 bg-transparent text-[15px] outline-none',
-                        derived ? 'text-muted' : 'text-foreground',
-                    )}
-                />
+                {hoverless ? (
+                    input
+                ) : (
+                    <Tooltip content={t(`${parameter}.help`)}>
+                        <Focusable>{input}</Focusable>
+                    </Tooltip>
+                )}
                 {units.length > 1 && onUnitChange !== undefined ? (
                     <Menu<UnitId>
                         label={t('common:units.change', {
@@ -164,7 +181,7 @@ export function ParameterField({
             </div>
             <Text
                 slot="description"
-                className="sr-only text-[11px] leading-snug text-muted group-focus-within:not-sr-only"
+                className="sr-only"
             >
                 {t(`${parameter}.help`)}
             </Text>
