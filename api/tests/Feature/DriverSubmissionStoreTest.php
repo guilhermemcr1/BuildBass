@@ -29,6 +29,7 @@ function validSubmission(array $overrides = []): array
         'mms_kg' => 0.09,
         'vd_m3' => 0.000414,
         'source' => 'Ficha técnica do fabricante, rev. 2024',
+        'contact_email' => 'pessoa@exemplo.com',
         'locale' => 'pt-BR',
     ], $overrides);
 }
@@ -68,6 +69,7 @@ it('aceita só os três parâmetros obrigatórios e deixa a variante vazia', fun
         'brand' => 'Mínimo',
         'model' => 'M-1',
         'source' => 'Medição própria',
+        'contact_email' => 'pessoa@exemplo.com',
         'fs_hz' => 40,
         'qts' => 0.4,
         'vas_m3' => 0.05,

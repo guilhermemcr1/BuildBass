@@ -67,7 +67,7 @@ class StoreDriverSubmissionRequest extends FormRequest
             'variant' => ['nullable', 'string', 'max:40'],
             'type' => ['nullable', 'string', Rule::in(Driver::TYPES)],
             'source' => ['required', 'string', 'min:1', 'max:255'],
-            'contact_email' => ['nullable', 'string', 'email', 'max:254'],
+            'contact_email' => ['required', 'string', 'email', 'max:254'],
             'locale' => ['required', 'in:'.implode(',', self::LOCALES)],
         ];
 

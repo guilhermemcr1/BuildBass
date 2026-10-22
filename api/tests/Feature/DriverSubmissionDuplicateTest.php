@@ -13,6 +13,7 @@ function sample(array $overrides = []): array
         'model' => 'EX-12',
         'variant' => '4 Ω',
         'source' => 'Ficha',
+        'contact_email' => 'pessoa@exemplo.com',
         'fs_hz' => 40,
         'qts' => 0.4,
         'vas_m3' => 0.05,
