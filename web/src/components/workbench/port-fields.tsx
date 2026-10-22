@@ -54,7 +54,7 @@ export function PortFields({ duct = 'front' }: Props) {
           : 'port.title';
 
     return (
-        <fieldset className="flex flex-col gap-3">
+        <fieldset className="flex flex-col gap-2">
             <legend className="mb-1.5 text-xs font-semibold text-muted">
                 {t(title)}
             </legend>
@@ -71,22 +71,25 @@ export function PortFields({ duct = 'front' }: Props) {
                     { id: 'rect', label: t('port.rect') },
                     { id: 'triangle', label: t('port.triangle') },
                 ]}
+                size="sm"
                 className="w-full"
             />
-            {port.shape === 'round' && <ParameterField {...diameter} />}
-            {port.shape === 'rect' && (
-                <>
-                    <ParameterField {...width} />
-                    <ParameterField {...height} />
-                </>
-            )}
-            {port.shape === 'triangle' && (
-                <>
-                    <ParameterField {...base} />
-                    <ParameterField {...height} />
-                </>
-            )}
-            <ParameterField {...count} />
+            <div className="grid grid-cols-2 items-start gap-x-3 gap-y-2">
+                {port.shape === 'round' && <ParameterField {...diameter} />}
+                {port.shape === 'rect' && (
+                    <>
+                        <ParameterField {...width} />
+                        <ParameterField {...height} />
+                    </>
+                )}
+                {port.shape === 'triangle' && (
+                    <>
+                        <ParameterField {...base} />
+                        <ParameterField {...height} />
+                    </>
+                )}
+                <ParameterField {...count} />
+            </div>
         </fieldset>
     );
 }

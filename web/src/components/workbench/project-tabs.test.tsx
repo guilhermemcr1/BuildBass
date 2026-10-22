@@ -79,26 +79,16 @@ describe('ProjectTabs', () => {
         expect(onClose).toHaveBeenCalledWith(id);
     });
 
-    test('cada aba tem amostra de cor; o botão abre o seletor e troca a cor', async () => {
+    test('cada aba mostra a cor do projeto, sem botão de cor (a cor fica na barra superior)', () => {
         renderWithProviders(<ProjectTabs onClose={() => undefined} />);
         const first = workspace().projects[0];
-        const trigger = screen.getByRole('button', {
-            name: 'Cor de Projeto sem nome',
-        });
 
-        expect(trigger.querySelector('span')).toHaveClass(
-            `bg-series-${first.color}`,
-        );
-        await userEvent.click(trigger);
-        await userEvent.click(screen.getByRole('radio', { name: 'Cor 6' }));
-
-        expect(workspace().projects[0].color).toBe(6);
-        await userEvent.keyboard('{Escape}');
         expect(
-            screen
-                .getByRole('button', { name: 'Cor de Projeto sem nome' })
-                .querySelector('span'),
-        ).toHaveClass('bg-series-6');
+            screen.queryByRole('button', { name: /^Cor de / }),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.getByRole('listitem').querySelector('[aria-hidden="true"]'),
+        ).toHaveClass(`bg-series-${first.color}`);
     });
 
     test('nome vazio na edição volta ao anterior', async () => {

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Page, Route } from '@playwright/test';
-import { API, mockCatalog } from './catalog-mock';
+import { API, driverAction, mockCatalog } from './catalog-mock';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -58,7 +58,7 @@ test('enviar o driver do projeto: pré-preenchido, protocolo e projeto intacto (
     await page.goto('/');
     await fillProjectDriver(page);
 
-    await page.getByRole('button', { name: 'Enviar driver' }).click();
+    await driverAction(page, 'Enviar driver');
 
     const dialog = page.getByRole('dialog', {
         name: 'Enviar driver ao catálogo',
@@ -107,7 +107,7 @@ test('sem driver no projeto: preencher à mão e enviar (US4)', async ({
     const received = await mockSubmission(page);
     await page.goto('/');
 
-    await page.getByRole('button', { name: 'Enviar driver' }).click();
+    await driverAction(page, 'Enviar driver');
     const dialog = page.getByRole('dialog', {
         name: 'Enviar driver ao catálogo',
     });
@@ -152,7 +152,7 @@ test('falha do servidor: mantém o digitado e o reenvio funciona (US4)', async (
     await page.goto('/');
     await fillProjectDriver(page);
 
-    await page.getByRole('button', { name: 'Enviar driver' }).click();
+    await driverAction(page, 'Enviar driver');
     const dialog = page.getByRole('dialog', {
         name: 'Enviar driver ao catálogo',
     });
@@ -187,7 +187,7 @@ test('perder a conexão com o diálogo aberto desativa o envio sem perder o digi
     await mockSubmission(page);
     await page.goto('/');
 
-    await page.getByRole('button', { name: 'Enviar driver' }).click();
+    await driverAction(page, 'Enviar driver');
     const dialog = page.getByRole('dialog', {
         name: 'Enviar driver ao catálogo',
     });

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-const REGIONS = ['driver', 'box', 'charts', 'results'] as const;
+const REGIONS = ['driver', 'box', 'results', 'charts'] as const;
 
 test('a 1440 px driver, gráficos e resultados aparecem sem rolar e a caixa fica logo abaixo do driver', async ({
     page,
@@ -40,7 +40,7 @@ for (const width of [360, 768, 1024, 1280, 1440, 2560]) {
     });
 }
 
-test('a 360 px as regiões empilham na ordem driver → caixa → gráficos → resultados', async ({
+test('a 360 px as regiões empilham na ordem driver → caixa → resultados → gráficos', async ({
     page,
 }) => {
     await page.setViewportSize({ width: 360, height: 800 });
@@ -131,8 +131,11 @@ test('a 360 px o plano de corte não rola na horizontal (feature 005, US7)', asy
     ).toBeLessThanOrEqual(0);
 });
 
-// SC-003 (feature 008, US7): no modo Normal o painel do Driver ocupa pelo menos 30 % menos altura
-// que no Pro (que mostra os mesmos 13 campos de antes da feature).
+// SC-003 (feature 008, US7): o painel do Driver ocupa pelo menos 30 % menos altura que antes da
+// feature, medido em 1440 px. A referência é a altura do painel no main antes da 008 (928 px, com
+// os 13 campos em cartões); o Pro mostra os mesmos campos, então também fica abaixo dela.
+const DRIVER_HEIGHT_BEFORE = 928;
+
 test.describe('modo Normal enxuga o painel do Driver (SC-003)', () => {
     test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -152,6 +155,8 @@ test.describe('modo Normal enxuga o painel do Driver (SC-003)', () => {
 
         expect(normal).not.toBeNull();
         expect(pro).not.toBeNull();
-        expect(normal!.height).toBeLessThanOrEqual(pro!.height * 0.7);
+        expect(normal!.height).toBeLessThanOrEqual(DRIVER_HEIGHT_BEFORE * 0.7);
+        expect(normal!.height).toBeLessThan(pro!.height);
+        expect(pro!.height).toBeLessThan(DRIVER_HEIGHT_BEFORE);
     });
 });

@@ -206,11 +206,27 @@ describe('ParameterField', () => {
                 valueSi={28}
                 unit="Hz"
                 onChangeSi={() => undefined}
+                status="warn"
+            />,
+        );
+
+        expect(
+            screen.getByText('Atenção', { selector: ':not(.sr-only)' }),
+        ).toBeVisible();
+    });
+
+    test('sem verificação não ocupa linha: só OK, atenção e erro aparecem', () => {
+        renderWithProviders(
+            <ParameterField
+                parameter="fs_hz"
+                valueSi={28}
+                unit="Hz"
+                onChangeSi={() => undefined}
                 status="unchecked"
             />,
         );
 
-        expect(screen.getByText('Sem verif.')).toBeVisible();
-        expect(screen.getByText('Sem verificação')).toHaveClass('sr-only');
+        expect(screen.queryByText('Sem verif.')).toBeNull();
+        expect(screen.queryByText('Sem verificação')).toBeNull();
     });
 });

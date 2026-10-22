@@ -73,3 +73,9 @@ export async function openPicker(page: Page) {
 
     return field;
 }
+
+// Salvar, "Meus alto-falantes" e enviar ficam no menu "⋯" do painel do Driver.
+export async function driverAction(page: Page, name: string): Promise<void> {
+    await page.getByRole('button', { name: 'Mais ações do driver' }).click();
+    await page.getByRole('menuitem', { name }).click();
+}

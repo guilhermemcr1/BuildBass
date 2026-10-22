@@ -1,8 +1,8 @@
-import { BookmarkPlus, Library, Send } from 'lucide-react';
+import { BookmarkPlus, Ellipsis, Library, Send } from 'lucide-react';
 import { Suspense, lazy, useState } from 'react';
 import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/components/ui/button';
+import { Menu } from '@/components/ui/menu';
 import { ParameterField } from '@/components/ui/parameter-field';
 import { ShowMore } from '@/components/ui/show-more';
 import { deriveDriver } from '@/engine';
@@ -65,6 +65,8 @@ function DriverField({
     );
 }
 
+type DriverAction = 'save' | 'mine' | 'submit';
+
 const SaveDriverDialog = lazy(() => import('./save-driver-dialog'));
 const SavedDriversDialog = lazy(() => import('./saved-drivers-dialog'));
 
@@ -107,7 +109,8 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
     );
     const [managing, setManaging] = useState(false);
 
-    // Catálogo e envio dependem do servidor (constituição, Princípio V).
+    // Uma ação à vista (buscar) e as demais num menu: enviar ao catálogo (depende do servidor,
+    // Princípio V), salvar e abrir a lista pessoal.
     const actions = (
         <div className="flex items-center gap-1">
             <DriverPicker
@@ -115,40 +118,61 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
                 disabledReason={offlineReason}
                 onSubmitDriver={onSubmitDriver}
             />
-            <Button
-                variant="quiet"
-                disabled={offline}
-                onPress={onSubmitDriver}
-                aria-label={t('catalog.submit')}
-                aria-description={offline ? offlineReason : undefined}
-                className="px-2.5"
-            >
-                <Send aria-hidden="true" className="size-4" />
-            </Button>
-            <Button
-                variant="quiet"
-                disabled={Object.keys(driver).length === 0}
-                onPress={() => setSaving(draftFromProject())}
-                aria-label={t('saved.saveButton')}
-                className="px-2.5"
-            >
-                <BookmarkPlus aria-hidden="true" className="size-4" />
-            </Button>
-            <Button
-                variant="quiet"
-                onPress={() => setManaging(true)}
-                aria-label={t('saved.manageButton')}
-                className="px-2.5"
-            >
-                <Library aria-hidden="true" className="size-4" />
-            </Button>
+            <Menu<DriverAction>
+                label={t('driverMenu')}
+                triggerLabel={t('driverMenu')}
+                trigger={
+                    <span className="flex size-[34px] items-center justify-center rounded-md text-foreground data-[hovered]:bg-raised">
+                        <Ellipsis aria-hidden="true" className="size-4" />
+                    </span>
+                }
+                triggerClassName="rounded-md hover:bg-raised"
+                items={[
+                    {
+                        id: 'save',
+                        label: t('saved.saveButton'),
+                        icon: (
+                            <BookmarkPlus
+                                aria-hidden="true"
+                                className="size-4"
+                            />
+                        ),
+                        disabled: Object.keys(driver).length === 0,
+                    },
+                    {
+                        id: 'mine',
+                        label: t('saved.manageButton'),
+                        icon: <Library aria-hidden="true" className="size-4" />,
+                    },
+                    {
+                        id: 'submit',
+                        label: t('catalog.submit'),
+                        icon: <Send aria-hidden="true" className="size-4" />,
+                        disabled: offline,
+                    },
+                ]}
+                onAction={(action) => {
+                    if (action === 'save') {
+                        setSaving(draftFromProject());
+                    } else if (action === 'mine') {
+                        setManaging(true);
+                    } else {
+                        onSubmitDriver();
+                    }
+                }}
+            />
         </div>
     );
 
     return (
-        <Panel region="driver" title={t('regions.driver')} actions={actions}>
+        <Panel
+            region="driver"
+            title={t('regions.driver')}
+            actions={actions}
+            flush
+        >
             <DriverOrigin />
-            <div className="grid grid-cols-2 items-start gap-2">
+            <div className="grid grid-cols-2 items-start gap-x-3 gap-y-2">
                 {essential.map((key) => (
                     <DriverField
                         key={key}
@@ -158,7 +182,7 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
                 ))}
             </div>
             <ShowMore id="driverAdvanced" filled={advancedFilled}>
-                <div className="grid grid-cols-2 items-start gap-2">
+                <div className="grid grid-cols-2 items-start gap-x-3 gap-y-2">
                     {advanced.map((key) => (
                         <DriverField
                             key={key}

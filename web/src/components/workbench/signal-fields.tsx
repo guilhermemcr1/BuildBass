@@ -53,7 +53,7 @@ export function SignalFields() {
               : formatWithUnit(levels.power_w, 'W', locale);
 
     return (
-        <fieldset className="flex flex-col gap-3">
+        <fieldset className="grid grid-cols-2 items-start gap-x-3 gap-y-2">
             <legend className="mb-1.5 text-xs font-semibold text-muted">
                 {t('signal.title')}
             </legend>
@@ -65,6 +65,7 @@ export function SignalFields() {
                     { id: 'power', label: t('signal.power') },
                     { id: 'voltage', label: t('signal.voltage') },
                 ]}
+                size="sm"
                 className="w-full"
             />
             <ParameterField
@@ -104,7 +105,8 @@ export function SignalFields() {
                     { id: 'half', label: t('signal.half') },
                     { id: 'full', label: t('signal.full') },
                 ]}
-                className="w-full"
+                size="sm"
+                className="col-span-2 w-full"
             />
         </fieldset>
     );

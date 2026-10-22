@@ -41,12 +41,13 @@ export function BoxFields() {
                         { id: 'bandpass', label: t('boxType.bandpass') },
                         { id: 'bandpass6', label: t('boxType.bandpass6') },
                     ]}
-                    className="w-full"
+                    size="sm"
+                    className="grid w-full grid-cols-2"
                 />
             </div>
             {boxType === 'bandpass6' ? (
                 <>
-                    <fieldset className="flex flex-col gap-3">
+                    <fieldset className="flex flex-col gap-2.5">
                         <legend className="mb-1.5 text-xs font-semibold text-muted">
                             {t('chambers.rear')}
                         </legend>
@@ -54,7 +55,7 @@ export function BoxFields() {
                         <SliderField {...rearTuning} {...FB_SLIDER} />
                         <PortFields duct="rear" />
                     </fieldset>
-                    <fieldset className="flex flex-col gap-3">
+                    <fieldset className="flex flex-col gap-2.5">
                         <legend className="mb-1.5 text-xs font-semibold text-muted">
                             {t('chambers.front')}
                         </legend>
@@ -62,14 +63,14 @@ export function BoxFields() {
                         <SliderField {...tuning} {...FB_SLIDER} />
                         <PortFields duct="front" />
                     </fieldset>
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-2.5">
                         <ParameterField {...losses} />
                         <SuggestBox key={activeId} />
                     </div>
                 </>
             ) : (
                 <>
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-2.5">
                         {boxType === 'bandpass' ? (
                             <>
                                 <SliderField {...rear} {...VB_SLIDER} />

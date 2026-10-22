@@ -29,22 +29,19 @@ export function ValueTile({
     const { locale } = useLocale();
 
     return (
-        <div
-            className={cn(
-                'flex flex-col gap-1 rounded-md border border-border bg-raised px-3 py-2.5',
-                className,
-            )}
-        >
-            <span className="text-xs text-muted">{label}</span>
-            <span className="flex items-baseline gap-1">
-                <span className="num text-lg font-semibold">
+        <div className={cn('flex min-w-0 flex-col gap-0.5', className)}>
+            <span className="truncate text-[11px] leading-4 text-muted">
+                {label}
+            </span>
+            <span className="flex items-baseline gap-1 whitespace-nowrap">
+                <span className="num text-base leading-6 font-semibold">
                     {display ?? formatQuantity(valueSi, unit, locale)}
                 </span>
                 <span className="text-xs text-muted">
                     {findUnit(unit).symbol}
                 </span>
             </span>
-            <StatusIndicator status={status} label={statusLabel} />
+            <StatusIndicator status={status} label={statusLabel} size="compact" />
         </div>
     );
 }

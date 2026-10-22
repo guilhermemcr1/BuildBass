@@ -13,11 +13,11 @@ export function DriversFields() {
     const count = useParameterField('driver_count');
 
     return (
-        <fieldset className="flex flex-col gap-2">
+        <fieldset className="flex flex-col">
             <legend className="mb-1.5 text-xs font-semibold text-muted">
                 {t('drivers.title')}
             </legend>
-            <div className="grid grid-cols-2 items-start gap-2">
+            <div className="grid grid-cols-2 items-start gap-x-3 gap-y-2">
                 <ParameterField {...count} />
                 <SegmentedControl<Wiring>
                     label={t('drivers.wiring')}
@@ -27,7 +27,8 @@ export function DriversFields() {
                         { id: 'parallel', label: t('drivers.parallel') },
                         { id: 'series', label: t('drivers.series') },
                     ]}
-                    className="w-full self-center"
+                    size="sm"
+                    className="w-full"
                 />
             </div>
         </fieldset>

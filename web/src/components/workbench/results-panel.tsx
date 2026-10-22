@@ -99,7 +99,7 @@ export function ResultsPanel() {
             {plotted.length > 1 ? (
                 <ResultsTable items={plotted} />
             ) : (
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] gap-x-5 gap-y-3">
                     {twoChambers(boxType) ? (
                         <>
                             <ValueTile

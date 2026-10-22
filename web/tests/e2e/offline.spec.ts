@@ -14,7 +14,6 @@ test('sem conexão mostra o aviso, desativa o servidor e preserva os dados', asy
     const banner = page.getByRole('status').filter({ hasText: 'Sem conexão.' });
     const pick = page.getByRole('button', { name: 'Buscar driver' });
     const catalog = page.getByRole('searchbox', { name: 'Buscar driver' });
-    const submit = page.getByRole('button', { name: /Enviar driver/ });
 
     await pick.click();
     await expect(catalog).toBeEnabled();
@@ -30,7 +29,11 @@ test('sem conexão mostra o aviso, desativa o servidor e preserva os dados', asy
         page.getByText('Indisponível sem conexão com o servidor.').first(),
     ).toBeVisible();
     await page.keyboard.press('Escape');
-    await expect(submit).toBeDisabled();
+    await page.getByRole('button', { name: 'Mais ações do driver' }).click();
+    await expect(
+        page.getByRole('menuitem', { name: /Enviar driver/ }),
+    ).toHaveAttribute('aria-disabled', 'true');
+    await page.keyboard.press('Escape');
     await expect(fs).toHaveValue('28,5');
 
     await context.setOffline(false);

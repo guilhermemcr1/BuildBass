@@ -23,6 +23,7 @@ export function BoxPanel() {
         <Panel
             region="box"
             title={t('regions.box')}
+            flush
             actions={
                 <Button
                     variant="quiet"
@@ -34,8 +35,8 @@ export function BoxPanel() {
                 </Button>
             }
         >
-            <Suspense fallback={<div className="h-28" aria-hidden="true" />}>
-                <BoxThumbnail onPress={show} />
+            <Suspense fallback={<div className="h-20" aria-hidden="true" />}>
+                <BoxThumbnail onPress={show} className="h-20" />
             </Suspense>
             <BoxFields />
             {loaded && (

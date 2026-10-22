@@ -73,7 +73,7 @@ export function ParameterField({
     const input = (
         <Input
             className={cn(
-                'num w-full min-w-0 bg-transparent text-[15px] outline-none',
+                'num w-full min-w-0 bg-transparent text-right text-sm outline-none',
                 derived ? 'text-muted' : 'text-foreground',
             )}
         />
@@ -116,14 +116,11 @@ export function ParameterField({
             formatOptions={formatOptionsFor(unit)}
             isInvalid={outOfRange}
             validationBehavior="aria"
-            className={cn(
-                'group flex flex-col gap-1 rounded-md border bg-raised px-2.5 py-2 focus-within:border-accent',
-                outOfRange ? 'border-status-error' : BORDER[status],
-                className,
-            )}
+            className={cn('group flex min-w-0 flex-col gap-0.5', className)}
         >
-            <div className="flex items-center justify-between gap-2">
-                <Label className="text-xs font-semibold text-muted">
+            {/* Linha compacta: símbolo à esquerda, valor e unidade à direita, numa caixa só. */}
+            <div className="flex items-center gap-2">
+                <Label className="w-11 shrink-0 truncate text-[13px] font-semibold text-muted">
                     <HelpTip
                         content={t(`${parameter}.help`)}
                         label={t('common:help.of', {
@@ -139,53 +136,63 @@ export function ParameterField({
                         — {t(`${parameter}.label`)}
                     </span>
                 </Label>
-                {derived ? (
-                    <span className="rounded-sm border border-border px-1 text-[10px] leading-4 text-muted">
-                        {derivedLabel}
-                    </span>
-                ) : (
-                    <StatusIndicator status={status} size="compact" />
-                )}
+                <div
+                    className={cn(
+                        'flex h-8 min-w-0 flex-1 items-center gap-1.5 rounded-md border bg-raised px-2 group-focus-within:border-accent',
+                        outOfRange ? 'border-status-error' : BORDER[status],
+                    )}
+                >
+                    {hoverless ? (
+                        input
+                    ) : (
+                        <Tooltip content={t(`${parameter}.help`)}>
+                            <Focusable>{input}</Focusable>
+                        </Tooltip>
+                    )}
+                    {units.length > 1 && onUnitChange !== undefined ? (
+                        <Menu<UnitId>
+                            label={t('common:units.change', {
+                                parameter: definition.symbol,
+                            })}
+                            triggerLabel={t('common:units.changeFrom', {
+                                unit: symbol,
+                                parameter: definition.symbol,
+                            })}
+                            trigger={symbol}
+                            items={units.map((item) => ({
+                                id: item.id,
+                                label: item.symbol,
+                            }))}
+                            selected={unit}
+                            onAction={onUnitChange}
+                            triggerClassName="shrink-0 text-xs text-muted underline decoration-dotted underline-offset-2 data-[hovered]:text-foreground"
+                        />
+                    ) : (
+                        symbol !== '' && (
+                            <span className="shrink-0 text-xs text-muted">
+                                {symbol}
+                            </span>
+                        )
+                    )}
+                </div>
             </div>
-            <div className="flex items-baseline gap-1.5">
-                {hoverless ? (
-                    input
-                ) : (
-                    <Tooltip content={t(`${parameter}.help`)}>
-                        <Focusable>{input}</Focusable>
-                    </Tooltip>
-                )}
-                {units.length > 1 && onUnitChange !== undefined ? (
-                    <Menu<UnitId>
-                        label={t('common:units.change', {
-                            parameter: definition.symbol,
-                        })}
-                        triggerLabel={t('common:units.changeFrom', {
-                            unit: symbol,
-                            parameter: definition.symbol,
-                        })}
-                        trigger={symbol}
-                        items={units.map((item) => ({
-                            id: item.id,
-                            label: item.symbol,
-                        }))}
-                        selected={unit}
-                        onAction={onUnitChange}
-                        triggerClassName="shrink-0 text-xs text-accent-soft underline decoration-dotted underline-offset-2"
-                    />
-                ) : (
-                    <span className="shrink-0 text-xs text-accent-soft">
-                        {symbol}
-                    </span>
-                )}
-            </div>
-            <Text
-                slot="description"
-                className="sr-only"
-            >
+            {/* Status e "calculado" ficam numa linha curta sob o valor, só quando dizem algo: o estado
+                neutro "sem verificação" não aparece (repaginação da bancada). */}
+            {(derived || (status !== 'none' && status !== 'unchecked')) && (
+                <div className="pl-13">
+                    {derived ? (
+                        <span className="text-[11px] leading-4 text-muted">
+                            {derivedLabel}
+                        </span>
+                    ) : (
+                        <StatusIndicator status={status} size="compact" />
+                    )}
+                </div>
+            )}
+            <Text slot="description" className="sr-only">
                 {t(`${parameter}.help`)}
             </Text>
-            <FieldError className="text-[11px] text-status-error">
+            <FieldError className="pl-13 text-[11px] text-status-error">
                 {t('common:validation.outOfRange', {
                     min: formatQuantity(definition.min, unit, locale),
                     max: formatQuantity(definition.max, unit, locale),
@@ -193,7 +200,9 @@ export function ParameterField({
                 })}
             </FieldError>
             {statusMessage !== undefined && (
-                <p className="text-[11px] text-muted">{statusMessage}</p>
+                <p className="pl-13 text-[11px] leading-4 text-muted">
+                    {statusMessage}
+                </p>
             )}
         </NumberField>
     );

@@ -43,8 +43,8 @@
     "signal": {
         "title": "Signal",
         "mode": "Signal in",
-        "power": "Power (W)",
-        "voltage": "Voltage (V)",
+        "power": "Power",
+        "voltage": "Voltage",
         "equivalent": "≈ {{value}} into the total Re ({{re}})",
         "radiation": "Radiation",
         "half": "Half space",
@@ -228,5 +228,6 @@
         },
         "storageOff": "This browser doesn't allow storing data: the list is lost when the page closes. Export it so you don't lose it.",
         "localOnly": "The list stays only in this browser. Export a file to keep a backup or move it to another device."
-    }
+    },
+    "driverMenu": "More driver actions"
 }

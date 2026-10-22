@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { mockCatalog, openPicker } from './catalog-mock';
+import { driverAction, mockCatalog, openPicker } from './catalog-mock';
 
 // Refinamento da bancada (feature 008): um cenário por história.
 
@@ -79,16 +79,29 @@ test.describe('US1 — campos que não expandem', () => {
         await expect(tip).toBeVisible();
     });
 
-    test('o status mostra ícone e texto curto', async ({ page }) => {
+    test('o status mostra ícone e texto curto; "sem verificação" não ocupa linha', async ({
+        page,
+    }) => {
         await page.goto('/');
         await field(page, /^Fs/).fill('28');
         await field(page, /^Fs/).press('Tab');
 
+        const driver = page.locator('[data-region="driver"]');
+
+        await expect(driver.getByText(/^Sem verif/)).toHaveCount(0);
+
+        // Qts digitado diferente de Qes·Qms/(Qes+Qms) vira atenção ou erro, com texto curto.
+        for (const [name, value] of [
+            [/^Qes/, '0,42'],
+            [/^Qms/, '4,1'],
+            [/^Qts/, '0,6'],
+        ] as const) {
+            await field(page, name).fill(value);
+            await field(page, name).press('Tab');
+        }
+
         await expect(
-            page
-                .locator('[data-region="driver"]')
-                .getByText(/^(OK|Atenção|Erro|Sem verif\.)$/)
-                .first(),
+            driver.getByText(/^(Atenção|Erro)$/).first(),
         ).toBeVisible();
     });
 });
@@ -138,15 +151,20 @@ test.describe('US2 — abas com cor acima do Driver', () => {
         await field(page, /^Vb/).fill('120');
         await field(page, /^Vb/).press('Tab');
 
-        const colorButtons = tabs(page).getByRole('button', {
-            name: /^Cor de /,
-        });
+        // A cor do projeto ativo é escolhida na barra superior, ao lado do nome.
+        const colorButton = page
+            .locator('header')
+            .getByRole('button', { name: /^Cor de / });
 
-        await colorButtons.nth(0).click();
-        await pickColor(page, 5);
-        await page.keyboard.press('Escape');
-        await colorButtons.nth(1).click();
+        await colorButton.click();
         await pickColor(page, 6);
+        await page.keyboard.press('Escape');
+        await tabs(page)
+            .getByRole('button', { name: /^Projeto sem nome/ })
+            .first()
+            .click();
+        await colorButton.click();
+        await pickColor(page, 5);
         await page.keyboard.press('Escape');
 
         const legend = page.getByRole('list', { name: 'Projetos no gráfico' });
@@ -303,9 +321,7 @@ test.describe('US6 — alto-falantes salvos', () => {
     }
 
     async function saveSpeaker(page: Page, model = 'Sub 12') {
-        await page
-            .getByRole('button', { name: 'Salvar este alto-falante' })
-            .click();
+        await driverAction(page, 'Salvar este alto-falante');
         const dialog = page.getByRole('dialog', {
             name: 'Salvar alto-falante',
         });
@@ -386,7 +402,7 @@ test.describe('US6 — alto-falantes salvos', () => {
         await fillDriver(page);
         await saveSpeaker(page);
 
-        await page.getByRole('button', { name: 'Meus alto-falantes' }).click();
+        await driverAction(page, 'Meus alto-falantes');
         const manage = page.getByRole('dialog', { name: 'Meus alto-falantes' });
         const downloading = page.waitForEvent('download');
         await manage.getByRole('button', { name: /Exportar/ }).click();

@@ -85,4 +85,22 @@ describe('ProjectName', () => {
             screen.getByRole('textbox', { name: 'Nome do projeto' }),
         ).toHaveValue('Projeto sem nome');
     });
+
+    test('o botão de cor ao lado do nome abre o seletor e troca a cor', async () => {
+        renderWithProviders(<ProjectName />);
+        const trigger = screen.getByRole('button', {
+            name: 'Cor de Projeto sem nome',
+        });
+
+        await userEvent.click(trigger);
+        await userEvent.click(screen.getByRole('radio', { name: 'Cor 6' }));
+
+        expect(workspace().projects[0].color).toBe(6);
+        await userEvent.keyboard('{Escape}');
+        expect(
+            screen
+                .getByRole('button', { name: 'Cor de Projeto sem nome' })
+                .querySelector('span'),
+        ).toHaveClass('bg-series-6');
+    });
 });

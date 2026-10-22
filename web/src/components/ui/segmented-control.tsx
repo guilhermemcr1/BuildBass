@@ -13,6 +13,8 @@ type SegmentedControlProps<T extends string> = {
     options: SegmentOption<T>[];
     selected: T;
     onChange: (id: T) => void;
+    // `sm` para os grupos dentro dos painéis (ligação, sinal, duto): mais baixo e com texto menor.
+    size?: 'md' | 'sm';
     className?: string;
 };
 
@@ -21,6 +23,7 @@ export function SegmentedControl<T extends string>({
     options,
     selected,
     onChange,
+    size = 'md',
     className,
 }: SegmentedControlProps<T>) {
     return (
@@ -46,7 +49,12 @@ export function SegmentedControl<T extends string>({
                     key={option.id}
                     id={option.id}
                     isDisabled={option.disabled}
-                    className="h-7 flex-1 cursor-default rounded-sm px-2.5 text-[13px] whitespace-nowrap text-muted outline-none data-[disabled]:text-disabled data-[focus-visible]:outline-2 data-[focus-visible]:outline-solid data-[focus-visible]:outline-accent data-[hovered]:text-foreground data-[selected]:bg-surface data-[selected]:text-foreground data-[selected]:shadow-sm"
+                    className={cn(
+                        'flex-1 cursor-default rounded-sm whitespace-nowrap text-muted outline-none data-[disabled]:text-disabled data-[focus-visible]:outline-2 data-[focus-visible]:outline-solid data-[focus-visible]:outline-accent data-[hovered]:text-foreground data-[selected]:bg-surface data-[selected]:text-foreground data-[selected]:shadow-sm',
+                        size === 'sm'
+                            ? 'h-6 px-2 text-xs'
+                            : 'h-7 px-2.5 text-[13px]',
+                    )}
                 >
                     {option.label}
                 </ToggleButton>

@@ -43,8 +43,8 @@
     "signal": {
         "title": "Sinal",
         "mode": "Sinal em",
-        "power": "Potência (W)",
-        "voltage": "Tensão (V)",
+        "power": "Potência",
+        "voltage": "Tensão",
         "equivalent": "≈ {{value}} sobre Re do conjunto ({{re}})",
         "radiation": "Radiação",
         "half": "Meio espaço",
@@ -228,5 +228,6 @@
         },
         "storageOff": "Este navegador não deixa guardar dados: a lista se perde ao fechar a página. Exporte para não perder.",
         "localOnly": "A lista fica só neste navegador. Exporte um arquivo para ter uma cópia ou levar para outro aparelho."
-    }
+    },
+    "driverMenu": "Mais ações do driver"
 }

@@ -1,7 +1,13 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { json, mockCatalog, ok, openPicker } from './catalog-mock';
+import {
+    driverAction,
+    json,
+    mockCatalog,
+    ok,
+    openPicker,
+} from './catalog-mock';
 
 // Roda no projeto "dev" (servidor de desenvolvimento), único lugar onde /dev/ui existe.
 for (const theme of ['light', 'dark'] as const) {
@@ -58,8 +64,11 @@ test('todo controle da bancada recebe foco visível só com Tab (SC-003)', async
                     style.outlineStyle !== 'none' &&
                     style.outlineWidth !== '0px',
                 ring: style.boxShadow !== 'none',
+                // A caixa do campo acende a borda com o foco dentro dela.
                 border:
-                    element.closest('.focus-within\\:border-accent') !== null,
+                    element.closest(
+                        '.focus-within\\:border-accent, .group-focus-within\\:border-accent',
+                    ) !== null,
                 visible: rect.width > 0 && rect.height > 0,
             };
         });
@@ -412,7 +421,7 @@ for (const theme of ['light', 'dark'] as const) {
             const page = await context.newPage();
             await mockCatalog(page);
             await page.goto('/');
-            await page.getByRole('button', { name: 'Enviar driver' }).click();
+            await driverAction(page, 'Enviar driver');
             const dialog = page.getByRole('dialog', {
                 name: 'Enviar driver ao catálogo',
             });
@@ -453,8 +462,12 @@ test('o formulário de envio é operável só pelo teclado e devolve o foco ao b
     await page.setViewportSize({ width: 1440, height: 900 });
     await mockCatalog(page);
     await page.goto('/');
-    const trigger = page.getByRole('button', { name: 'Enviar driver' });
+    // O envio fica no menu "⋯" do Driver: abrir pelo teclado, ir ao último item e confirmar.
+    const trigger = page.getByRole('button', { name: 'Mais ações do driver' });
     await trigger.focus();
+    await page.keyboard.press('Enter');
+    await page.getByRole('menu').waitFor();
+    await page.keyboard.press('End');
     await page.keyboard.press('Enter');
 
     const dialog = page.getByRole('dialog', {
@@ -728,9 +741,7 @@ for (const theme of ['light', 'dark'] as const) {
         await fill(page, /^Qts/, '0,42');
         await fill(page, /^Vas/, '90');
 
-        await page
-            .getByRole('button', { name: 'Salvar este alto-falante' })
-            .click();
+        await driverAction(page, 'Salvar este alto-falante');
         const save = page.getByRole('dialog', { name: 'Salvar alto-falante' });
         await expect(save).toBeVisible();
         await save.getByRole('textbox', { name: /^Marca/ }).fill('Marca X');
@@ -741,7 +752,7 @@ for (const theme of ['light', 'dark'] as const) {
         await save.getByRole('button', { name: 'Salvar' }).click();
         await expect(save).toBeHidden();
 
-        await page.getByRole('button', { name: 'Meus alto-falantes' }).click();
+        await driverAction(page, 'Meus alto-falantes');
         const manage = page.getByRole('dialog', { name: 'Meus alto-falantes' });
         await expect(manage.getByText('Marca X Sub 12')).toBeVisible();
         await page.waitForTimeout(300);
@@ -830,9 +841,7 @@ for (const theme of ['light', 'dark'] as const) {
         await page.keyboard.press('Escape');
         await expect(box).toBeHidden();
 
-        await page
-            .getByRole('button', { name: 'Salvar este alto-falante' })
-            .click();
+        await driverAction(page, 'Salvar este alto-falante');
         const save = page.getByRole('dialog', { name: 'Salvar alto-falante' });
         await expect(save).toBeVisible();
         await page.waitForTimeout(300);

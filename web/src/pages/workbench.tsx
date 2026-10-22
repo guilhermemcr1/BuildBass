@@ -5,7 +5,6 @@ import { CHART_KINDS, ChartPanel } from '@/components/workbench/chart-panel';
 import type { ChartKind } from '@/components/workbench/chart-panel';
 import { Banner } from '@/components/ui/banner';
 import { CloseProjectDialog } from '@/components/workbench/close-project-dialog';
-import { cn } from '@/lib/utils';
 import { DriverPanel } from '@/components/workbench/driver-panel';
 import { FileDrop } from '@/components/workbench/file-drop';
 import { OpenErrorDialog } from '@/components/workbench/open-error-dialog';
@@ -46,9 +45,9 @@ const PlanPanel = lazy(() =>
     })),
 );
 
-// Layout da bancada (FR-007): ≥ 1280 px três colunas (driver | caixa + resultados | gráficos),
-// 768–1279 px duas colunas com gráficos e resultados em largura total, < 768 px uma coluna na
-// ordem do DOM: driver → caixa → gráficos → resultados.
+// Layout da bancada (FR-007): ≥ 1280 px lateral fixa (abas, driver, caixa) e, à direita, resultados
+// numa faixa acima do gráfico; 768–1279 px driver e caixa lado a lado com resultados e gráficos em
+// largura total; < 768 px uma coluna na ordem do DOM: driver → caixa → resultados → gráficos.
 export default function Workbench() {
     const { t } = useTranslation(['workbench', 'project']);
     const [submitting, setSubmitting] = useState(false);
@@ -137,7 +136,7 @@ export default function Workbench() {
     });
 
     return (
-        <div className="flex min-h-dvh flex-col">
+        <div className="flex min-h-dvh flex-col xl:h-dvh">
             {/* Ao imprimir o plano, só a folha do plano sai; a bancada some (specs/005, FR-013). */}
             <div
                 className={
@@ -157,11 +156,11 @@ export default function Workbench() {
                         {t('project:storage.unavailable')}
                     </Banner>
                 )}
-                <main className="grid flex-1 grid-cols-1 gap-3 p-3 md:grid-cols-2 xl:grid-cols-[minmax(300px,360px)_minmax(260px,320px)_minmax(0,1fr)] xl:items-start">
-                    {/* Em ≥ 1280 px a coluna 1 empilha abas, driver e caixa; abaixo disso o wrapper some
-                        e cada bloco vira item da grade (abas em linha inteira, driver e caixa lado a lado). */}
-                    <div className="contents xl:flex xl:flex-col xl:gap-3">
-                        <div className="md:col-span-2 xl:col-span-1">
+                <main className="grid flex-1 grid-cols-1 gap-3 p-3 md:grid-cols-2 xl:min-h-0 xl:grid-cols-[23rem_minmax(0,1fr)] xl:gap-0 xl:p-0">
+                    {/* Em ≥ 1280 px uma lateral fixa (abas, driver e caixa) com rolagem própria; abaixo
+                        disso o wrapper some e cada bloco vira item da grade. */}
+                    <div className="contents xl:relative xl:flex xl:min-h-0 xl:flex-col xl:overflow-y-auto xl:border-r xl:border-border xl:bg-surface">
+                        <div className="md:col-span-2 xl:col-span-1 xl:px-3 xl:py-2.5">
                             <ProjectTabs onClose={requestClose} />
                         </div>
                         <DriverPanel
@@ -169,28 +168,24 @@ export default function Workbench() {
                         />
                         <BoxPanel />
                     </div>
-                    <div
-                        className={cn(
-                            'md:col-span-2 xl:col-span-1 xl:col-start-3 xl:row-start-1 xl:flex xl:flex-col [&>section]:flex-1',
-                            // Com a coluna 1 comprida, o gráfico acompanha a rolagem e ocupa a altura da janela.
-                            view === 'charts' &&
-                                'xl:sticky xl:top-3 xl:h-[calc(100dvh-1.5rem)] xl:min-h-[28rem]',
-                        )}
-                    >
-                        <ViewSwitch selected={view} onChange={setView} />
-                        {view === 'charts' ? (
-                            <ChartPanel
-                                selected={chart}
-                                onSelectedChange={setChart}
-                            />
-                        ) : (
-                            <Suspense fallback={null}>
-                                <PlanPanel />
-                            </Suspense>
-                        )}
-                    </div>
-                    <div className="md:col-span-2 xl:col-span-1 xl:col-start-2 xl:row-start-1">
-                        <ResultsPanel />
+                    {/* Resultados numa faixa acima do gráfico, que ocupa o resto da altura. */}
+                    <div className="contents xl:relative xl:flex xl:min-h-0 xl:flex-col xl:gap-3 xl:overflow-y-auto xl:p-3">
+                        <div className="md:col-span-2">
+                            <ResultsPanel />
+                        </div>
+                        <div className="flex flex-col md:col-span-2 xl:min-h-[28rem] xl:flex-1 [&>section]:flex-1">
+                            <ViewSwitch selected={view} onChange={setView} />
+                            {view === 'charts' ? (
+                                <ChartPanel
+                                    selected={chart}
+                                    onSelectedChange={setChart}
+                                />
+                            ) : (
+                                <Suspense fallback={null}>
+                                    <PlanPanel />
+                                </Suspense>
+                            )}
+                        </div>
                     </div>
                 </main>
                 <input

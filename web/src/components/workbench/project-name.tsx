@@ -1,12 +1,23 @@
 import { useState } from 'react';
-import { Input, TextField } from 'react-aria-components';
+import {
+    Button as AriaButton,
+    Dialog,
+    DialogTrigger,
+    Input,
+    Popover,
+    TextField,
+} from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
+import { ColorPicker } from '@/components/ui/color-picker';
 import { displayName } from '@/lib/project/names';
 import { PROJECT_NAME_MAX } from '@/lib/project/types';
+import type { SeriesColor } from '@/lib/project/types';
+import { cn } from '@/lib/utils';
 import { projectStore, useWorkspace } from '@/stores/workspace';
+import { SWATCH } from './swatch';
 
-// Nome do projeto ativo, editável direto na barra superior. Enter ou sair do campo confirma,
-// Esc cancela e nome vazio volta ao anterior.
+// Cor e nome do projeto ativo, editáveis direto na barra superior. No nome, Enter ou sair do
+// campo confirma, Esc cancela e nome vazio volta ao anterior.
 export function ProjectName() {
     const { t } = useTranslation('project');
     const project = useWorkspace((state) =>
@@ -17,13 +28,63 @@ export function ProjectName() {
         return null;
     }
 
+    const name = displayName(project, t);
+
     return (
-        <NameField
-            key={project.id}
-            id={project.id}
-            shown={displayName(project, t)}
-            label={t('name.label')}
-        />
+        <div className="flex max-w-72 min-w-0 flex-1 items-center gap-0.5">
+            <ColorField
+                id={project.id}
+                color={project.color}
+                label={t('tabs.colorOf', { name })}
+                dialogLabel={t('tabs.color')}
+            />
+            <NameField
+                key={project.id}
+                id={project.id}
+                shown={name}
+                label={t('name.label')}
+            />
+        </div>
+    );
+}
+
+function ColorField({
+    id,
+    color,
+    label,
+    dialogLabel,
+}: {
+    id: string;
+    color: SeriesColor;
+    label: string;
+    dialogLabel: string;
+}) {
+    const setColor = useWorkspace((state) => state.setColor);
+
+    return (
+        <DialogTrigger>
+            <AriaButton
+                aria-label={label}
+                className="flex size-8 shrink-0 cursor-default items-center justify-center rounded-md outline-none data-[focus-visible]:outline-2 data-[focus-visible]:outline-accent data-[focus-visible]:outline-solid data-[hovered]:bg-raised"
+            >
+                <span
+                    aria-hidden="true"
+                    className={cn('size-3.5 rounded-full', SWATCH[color])}
+                />
+            </AriaButton>
+            <Popover
+                placement="bottom start"
+                offset={4}
+                className="rounded-md border border-border bg-raised p-2 shadow-lg"
+            >
+                <Dialog aria-label={dialogLabel} className="outline-none">
+                    <ColorPicker
+                        value={color}
+                        onChange={(next) => setColor(id, next)}
+                    />
+                </Dialog>
+            </Popover>
+        </DialogTrigger>
     );
 }
 
@@ -72,7 +133,7 @@ function NameField({
                 }
             }}
             onBlur={commit}
-            className="max-w-64 min-w-0 flex-1"
+            className="min-w-0 flex-1"
         >
             <Input
                 onFocus={(event) => event.currentTarget.select()}
