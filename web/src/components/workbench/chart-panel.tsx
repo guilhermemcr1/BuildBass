@@ -1,4 +1,5 @@
-import { Suspense, lazy, useState } from 'react';
+import { Download } from 'lucide-react';
+import { Suspense, lazy, useId, useState } from 'react';
 import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -9,11 +10,13 @@ import {
     CHART_MAX_HZ,
     PORT_VELOCITY_ERROR_MS,
     PORT_VELOCITY_WARN_MS,
+    twoChambers,
 } from '@/engine';
 import type { CurveId, FieldKey } from '@/engine';
 import { useActiveProject } from '@/hooks/use-active-project';
 import { useSimulations } from '@/hooks/use-simulation';
 import type { ProjectSimulation } from '@/hooks/use-simulation';
+import type { ExportInput, ExportProject } from '@/lib/chart-export/types';
 import { PARAMETERS, sectionOf } from '@/lib/parameters';
 import type { SectionId } from '@/lib/parameters';
 import { displayName } from '@/lib/project/names';
@@ -28,6 +31,7 @@ import type { ChartLimit, ChartSeries } from './chart-frame';
 import { Panel } from './panel';
 
 const ChartFrame = lazy(() => import('./chart-frame'));
+const ChartExportDialog = lazy(() => import('./chart-export-dialog'));
 
 export type ChartKind =
     | 'response'
@@ -43,6 +47,22 @@ export const CHART_KINDS: ChartKind[] = [
     'groupDelay',
     'portVelocity',
 ];
+
+// O que desenha um gráfico: serve ao `ChartFrame` na tela e à exportação em imagem.
+export type ChartView = {
+    kind: ChartKind;
+    title: string;
+    xLabel: string;
+    yLabel: string;
+    frequencies: readonly number[];
+    series: ChartSeries[];
+    limits: ChartLimit[];
+    yRange?: [number, number];
+    yIncrs?: number[];
+    xRange: [number, number];
+    formatValue: (value: number) => string;
+    formatFrequency: (hz: number) => string;
+};
 
 const CURVES: Record<ChartKind, { curve: CurveId; quantity: QuantityId }> = {
     response: { curve: 'spl_db', quantity: 'level' },
@@ -114,7 +134,10 @@ export function ChartPanel({
     const [localSelected, setLocalSelected] = useState<ChartKind>('response');
     // Até quantos Hz o gráfico vai, e o zoom por arrastar (sobrepõe a faixa até voltar).
     const [maxHz, setMaxHz] = useState(ANALYSIS_MAX_HZ);
+    const exportHintId = useId();
     const [zoom, setZoom] = useState<[number, number] | null>(null);
+    // Gráfico congelado quando o diálogo de exportação abre; fechado = nulo.
+    const [exporting, setExporting] = useState<ExportInput | null>(null);
     const xRange: [number, number] = zoom ?? [MIN_HZ, maxHz];
     const anyPorted = plotted.some(
         ({ project }) => project.data.box.type !== 'closed',
@@ -260,6 +283,142 @@ export function ChartPanel({
         }
     };
 
+    // O gráfico da aba `kind` como a tela e a exportação o desenham (specs/011): uma montagem só,
+    // para a imagem exportada nunca divergir do que está na bancada.
+    const viewFor = (kind: ChartKind): ChartView => {
+        const series = seriesFor(kind);
+        const frequencies = plotted[0]?.simulation.frequencies_hz ?? [];
+        const normalized = plotted.some(
+            ({ simulation }) => simulation.spl_normalized,
+        );
+
+        return {
+            kind,
+            title: t(`charts.${kind}`),
+            xLabel: t('charts.frequency'),
+            yLabel: yLabel(kind, normalized),
+            frequencies,
+            series,
+            limits: series.length > 0 ? limitsFor(kind) : [],
+            yRange:
+                kind === 'response'
+                    ? normalized
+                        ? [-36, 6]
+                        : levelRange(series, frequencies, xRange)
+                    : undefined,
+            yIncrs: kind === 'response' ? [3, 6, 12] : undefined,
+            xRange,
+            formatValue: valueFormatter(kind),
+            formatFrequency: (hz) => formatWithUnit(hz, 'Hz', locale),
+        };
+    };
+
+    // Dados do projeto que a legenda da imagem mostra (specs/011): tudo já na locale e nas unidades
+    // da bancada.
+    const exportProject = (
+        { project, simulation }: ProjectSimulation,
+        kind: ChartKind,
+    ): ExportProject => {
+        const { data } = project;
+        const { results } = simulation;
+        const volumeUnit = unitFor('volume');
+        const hertz = (value?: number) =>
+            value === undefined
+                ? undefined
+                : formatWithUnit(value, 'Hz', locale);
+        const liters = (value?: number) =>
+            value === undefined
+                ? undefined
+                : formatWithUnit(value, volumeUnit, locale);
+        const bandpass = twoChambers(data.box.type);
+        const source = data.driverSource;
+        const signal =
+            data.signal.mode === 'voltage'
+                ? results.voltage_v === undefined
+                    ? undefined
+                    : formatWithUnit(results.voltage_v, 'V', locale)
+                : results.power_w === undefined
+                  ? undefined
+                  : formatWithUnit(results.power_w, 'W', locale);
+        const rear =
+            kind === 'portVelocity' &&
+            simulation.curves.port_rear_velocity_ms !== undefined;
+
+        return {
+            id: project.id,
+            name: displayName(project, t),
+            color: project.color,
+            seriesIds: rear ? [project.id, `${project.id}-rear`] : [project.id],
+            box: {
+                type: t(`boxType.${data.box.type}`),
+                volume: bandpass
+                    ? [
+                          liters(results.net_rear_m3) === undefined
+                              ? undefined
+                              : `${t('charts.seriesRear')} ${liters(results.net_rear_m3)}`,
+                          liters(results.net_front_m3) === undefined
+                              ? undefined
+                              : `${t('charts.seriesFront')} ${liters(results.net_front_m3)}`,
+                      ]
+                          .filter((part) => part !== undefined)
+                          .join(' / ')
+                    : (liters(results.net_volume_m3) ?? ''),
+                tuning: [hertz(results.fb_hz), hertz(results.fb_rear_hz)]
+                    .filter((part) => part !== undefined)
+                    .join(' / '),
+            },
+            driver: [source?.brand, source?.model, source?.variant]
+                .filter((part) => part !== undefined && part !== '')
+                .join(' '),
+            signal: signal ?? '',
+            bandpass,
+            cutoffs: {
+                f3_hz: results.f3_hz,
+                f3_below_range: results.f3_below_range,
+                f10_hz: results.f10_hz,
+                f10_below_range: results.f10_below_range,
+                f_low_hz: results.f_low_hz,
+                f_high_hz: results.f_high_hz,
+                f_low_below_range: results.f_low_below_range,
+                f_high_above_range: results.f_high_above_range,
+                f_low10_hz: results.f_low10_hz,
+                f_high10_hz: results.f_high10_hz,
+                f_low10_below_range: results.f_low10_below_range,
+                f_high10_above_range: results.f_high10_above_range,
+            },
+        };
+    };
+
+    // Congela o gráfico aberto, com o zoom e a faixa de agora, para a exportação.
+    const openExport = () => {
+        const view = viewFor(current);
+
+        setExporting({
+            ...view,
+            projects: plotted.map((item) => exportProject(item, current)),
+            locale,
+            date: new Date(),
+            labels: {
+                peak: t('charts.peak'),
+                f3: t('charts.export.labels.f3'),
+                f10: t('charts.export.labels.f10'),
+                tuning: t('charts.export.labels.fb'),
+                belowRange: t('charts.export.labels.belowRange', {
+                    value: formatWithUnit(MIN_HZ, 'Hz', locale),
+                }),
+                aboveRange: t('charts.export.labels.aboveRange', {
+                    value: formatWithUnit(ANALYSIS_MAX_HZ, 'Hz', locale),
+                }),
+                none: '—',
+                exceeded: t('charts.export.labels.exceeded'),
+                within: t('charts.export.labels.within'),
+                front: t('charts.seriesFront'),
+                rear: t('charts.seriesRear'),
+                more: (count) => t('charts.export.labels.more', { count }),
+            },
+        });
+    };
+
     const missingKeys = (
         first: ProjectSimulation,
         kind: ChartKind,
@@ -287,13 +446,32 @@ export function ChartPanel({
         ),
     ];
 
+    const noCurve = seriesFor(current).length === 0;
+
     return (
         <Panel
             region="charts"
             title={t('regions.charts')}
             className="min-h-96"
             actions={
-                <div className="flex items-center gap-2">
+                <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+                    <Button
+                        variant="secondary"
+                        className="h-7 px-2 text-xs"
+                        disabled={noCurve}
+                        // O nome completo separa este botão do "Exportar" do projeto na barra.
+                        aria-label={t('charts.export.title')}
+                        aria-describedby={noCurve ? exportHintId : undefined}
+                        onPress={openExport}
+                    >
+                        <Download aria-hidden="true" className="size-3.5" />
+                        <span>{t('charts.export.button')}</span>
+                    </Button>
+                    {noCurve && (
+                        <span id={exportHintId} className="sr-only">
+                            {t('charts.export.disabled')}
+                        </span>
+                    )}
                     {zoom !== null && (
                         <Button
                             variant="quiet"
@@ -337,11 +515,9 @@ export function ChartPanel({
                 className="flex-1"
             >
                 {(kind) => {
-                    const series = seriesFor(kind);
+                    const view = viewFor(kind);
+                    const series = view.series;
                     const first = plotted[0];
-                    const normalized = plotted.some(
-                        ({ simulation }) => simulation.spl_normalized,
-                    );
                     const missingFields =
                         first === undefined ? [] : missingKeys(first, kind);
                     const missing =
@@ -373,42 +549,17 @@ export function ChartPanel({
                             <div className="relative h-80 pt-3 xl:h-auto xl:min-h-72 xl:flex-1">
                                 <Suspense>
                                     <ChartFrame
-                                        xLabel={t('charts.frequency')}
-                                        yLabel={yLabel(kind, normalized)}
-                                        label={t(`charts.${kind}`)}
-                                        formatValue={valueFormatter(kind)}
-                                        formatFrequency={(hz) =>
-                                            formatWithUnit(hz, 'Hz', locale)
-                                        }
-                                        frequencies={
-                                            first?.simulation.frequencies_hz ??
-                                            []
-                                        }
-                                        series={series}
-                                        limits={
-                                            series.length > 0
-                                                ? limitsFor(kind)
-                                                : []
-                                        }
-                                        yRange={
-                                            kind === 'response'
-                                                ? normalized
-                                                    ? [-36, 6]
-                                                    : levelRange(
-                                                          series,
-                                                          first?.simulation
-                                                              .frequencies_hz ??
-                                                              [],
-                                                          xRange,
-                                                      )
-                                                : undefined
-                                        }
-                                        yIncrs={
-                                            kind === 'response'
-                                                ? [3, 6, 12]
-                                                : undefined
-                                        }
-                                        xRange={xRange}
+                                        xLabel={view.xLabel}
+                                        yLabel={view.yLabel}
+                                        label={view.title}
+                                        formatValue={view.formatValue}
+                                        formatFrequency={view.formatFrequency}
+                                        frequencies={view.frequencies}
+                                        series={view.series}
+                                        limits={view.limits}
+                                        yRange={view.yRange}
+                                        yIncrs={view.yIncrs}
+                                        xRange={view.xRange}
                                         onZoom={setZoom}
                                         onZoomReset={() => setZoom(null)}
                                         peakLabel={t('charts.peak')}
@@ -469,6 +620,15 @@ export function ChartPanel({
                     );
                 }}
             </Tabs>
+            {exporting !== null && (
+                <Suspense>
+                    <ChartExportDialog
+                        open
+                        onOpenChange={(open) => !open && setExporting(null)}
+                        input={exporting}
+                    />
+                </Suspense>
+            )}
             {!anyPorted && (
                 <p className="text-[11px] text-muted">
                     {t('charts.portVelocity')}: {t('engine:charts.noPort')}

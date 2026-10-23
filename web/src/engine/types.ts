@@ -149,6 +149,9 @@ export type SimulationResults = {
     f3_hz?: number;
     // F3 abaixo da grade (10 Hz).
     f3_below_range?: boolean;
+    // F-10: a resposta cai 10 dB sob a banda de passagem (selada e dutada). Mesma regra do F3.
+    f10_hz?: number;
+    f10_below_range?: boolean;
     qtc?: number;
     fc_hz?: number;
     // Bandpass: cortes de −3 dB em relação ao pico, frequência central, largura e pico.
@@ -160,6 +163,11 @@ export type SimulationResults = {
     // Corte inferior abaixo da grade (10 Hz) / superior acima dela (1000 Hz).
     f_low_below_range?: boolean;
     f_high_above_range?: boolean;
+    // Bandpass: bordas de −10 dB em relação ao pico (legenda da exportação do gráfico).
+    f_low10_hz?: number;
+    f_high10_hz?: number;
+    f_low10_below_range?: boolean;
+    f_high10_above_range?: boolean;
     fb_hz?: number;
     net_volume_m3?: number;
     // Bandpass: volumes líquidos das duas câmaras.

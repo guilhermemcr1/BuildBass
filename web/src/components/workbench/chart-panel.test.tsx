@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { activeProjectStore } from '@/hooks/use-active-project';
 import { useExpanded } from '@/stores/expanded';
+import { usePreferences } from '@/stores/preferences';
 import { initialWorkspace, useWorkspace } from '@/stores/workspace';
 import { renderWithProviders } from '@/test/render';
 import { ChartPanel } from './chart-panel';
@@ -349,5 +350,146 @@ describe('ChartPanel — campo faltante em seção recolhida (specs/008, US7)', 
         expect(
             screen.queryByRole('button', { name: /Mostrar campo/ }),
         ).not.toBeInTheDocument();
+    });
+});
+
+describe('ChartPanel — exportar (specs/011)', () => {
+    beforeEach(() => {
+        useWorkspace.setState(initialWorkspace());
+    });
+
+    test('sem curva o botão fica desabilitado e diz por quê', () => {
+        renderWithProviders(<ChartPanel />);
+
+        const button = screen.getByRole('button', { name: 'Exportar gráfico' });
+
+        expect(button).toBeDisabled();
+        expect(button).toHaveAccessibleDescription(
+            'Não há curva para exportar.',
+        );
+    });
+
+    test('com curva o botão abre o diálogo com a prévia do gráfico aberto', async () => {
+        const project = activeProjectStore().getState();
+        project.setDriverValue('fs_hz', 28);
+        project.setDriverValue('qts', 0.38);
+        project.setDriverValue('vas_m3', 0.085);
+        project.setBoxValue('vb_m3', 0.06);
+        project.setBoxValue('fb_hz', 32);
+
+        renderWithProviders(<ChartPanel />);
+
+        const button = screen.getByRole('button', { name: 'Exportar gráfico' });
+
+        expect(button).toBeEnabled();
+
+        await userEvent.click(button);
+
+        expect(
+            await screen.findByRole('heading', { name: 'Exportar gráfico' }),
+        ).toBeInTheDocument();
+
+        const src =
+            screen
+                .getByRole('img', { name: /^Prévia de Resposta/ })
+                .getAttribute('src') ?? '';
+        const svg = decodeURIComponent(src.slice(src.indexOf(',') + 1));
+
+        expect(svg).toContain('Projeto sem nome');
+        expect(svg).toContain('Pico ');
+        expect(svg).toContain('Frequência (Hz)');
+    });
+
+    test('a imagem leva o zoom que estava na tela', async () => {
+        const project = activeProjectStore().getState();
+        project.setDriverValue('fs_hz', 28);
+        project.setDriverValue('qts', 0.38);
+        project.setDriverValue('vas_m3', 0.085);
+        project.setBoxValue('vb_m3', 0.06);
+        project.setBoxValue('fb_hz', 32);
+
+        renderWithProviders(<ChartPanel />);
+
+        await userEvent.click(
+            await screen.findByRole('button', { name: 'zoom' }),
+        );
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Exportar gráfico' }),
+        );
+
+        const src =
+            (await screen.findByRole('img', { name: /^Prévia/ })).getAttribute(
+                'src',
+            ) ?? '';
+        const svg = decodeURIComponent(src.slice(src.indexOf(',') + 1));
+
+        // Zoom de 20 a 80 Hz: o rótulo de 500 Hz não existe e o de 50 Hz sim.
+        expect(svg).toContain('>50<');
+        expect(svg).not.toContain('>500<');
+    });
+});
+
+describe('ChartPanel — exportar no idioma e nas unidades da bancada (specs/011, US4)', () => {
+    beforeEach(() => {
+        useWorkspace.setState(initialWorkspace());
+        usePreferences.setState({ unitSystem: 'metric' });
+    });
+
+    function preview(): string {
+        const src =
+            screen
+                .getByRole('img', { name: /^Preview of/ })
+                .getAttribute('src') ?? '';
+
+        return decodeURIComponent(src.slice(src.indexOf(',') + 1));
+    }
+
+    test('em inglês e imperial os rótulos e as unidades acompanham a bancada', async () => {
+        usePreferences.setState({ unitSystem: 'imperial' });
+        const project = activeProjectStore().getState();
+        project.setDriverValue('fs_hz', 28);
+        project.setDriverValue('qts', 0.38);
+        project.setDriverValue('vas_m3', 0.085);
+        project.setBoxValue('vb_m3', 0.06);
+        project.setBoxValue('fb_hz', 32);
+
+        renderWithProviders(<ChartPanel />, 'en');
+
+        await userEvent.click(
+            await screen.findByRole('button', { name: 'Export chart' }),
+        );
+        await screen.findByRole('heading', { name: 'Export chart' });
+
+        const svg = preview();
+
+        expect(svg).toContain('>Response<');
+        expect(svg).toContain('>Frequency (Hz)<');
+        expect(svg).toContain('Peak ');
+        expect(svg).toContain('Vented');
+        expect(svg).toMatch(/ft³/);
+        expect(svg).not.toMatch(/Resposta|Pico|Dutada/);
+    });
+
+    test('em português e métrico: vírgula decimal e litros', async () => {
+        const project = activeProjectStore().getState();
+        project.setDriverValue('fs_hz', 28);
+        project.setDriverValue('qts', 0.38);
+        project.setDriverValue('vas_m3', 0.085);
+        project.setBoxValue('vb_m3', 0.06);
+        project.setBoxValue('fb_hz', 32);
+
+        renderWithProviders(<ChartPanel />);
+
+        await userEvent.click(
+            await screen.findByRole('button', { name: 'Exportar gráfico' }),
+        );
+        const src =
+            (await screen.findByRole('img', { name: /^Prévia/ })).getAttribute(
+                'src',
+            ) ?? '';
+        const svg = decodeURIComponent(src.slice(src.indexOf(',') + 1));
+
+        expect(svg).toMatch(/Pico \d+,\d dB/);
+        expect(svg).toMatch(/\d+,\d{1,2} L/);
     });
 });
