@@ -76,7 +76,42 @@
         "peak": "Peak",
         "rangeLabel": "Frequency range",
         "rangeUpTo": "Up to {{value}}",
-        "zoomReset": "Reset zoom"
+        "zoomReset": "Reset zoom",
+        "export": {
+            "button": "Export",
+            "disabled": "There is no curve to export.",
+            "title": "Export chart",
+            "format": "Format",
+            "formatPng": "PNG",
+            "formatPdf": "PDF",
+            "legend": "Legend",
+            "preview": "Preview",
+            "previewAlt": "Preview of {{title}}: {{projects}}",
+            "download": "Download",
+            "downloading": "Generating…",
+            "error": "Could not generate the file. Try again.",
+            "groups": {
+                "peak": "Peak per series",
+                "cutoffs": "F-3 / F-10",
+                "box": "Enclosure parameters",
+                "limits": "Limits and warnings"
+            },
+            "unavailable": {
+                "cutoffs": "Only applies to the Response chart.",
+                "limits": "This chart has no limits."
+            },
+            "labels": {
+                "f3": "F-3",
+                "f10": "F-10",
+                "fb": "Fb",
+                "belowRange": "below {{value}}",
+                "aboveRange": "above {{value}}",
+                "exceeded": "exceeded",
+                "within": "within limit",
+                "more_one": "+{{count}} project",
+                "more_other": "+{{count}} projects"
+            }
+        }
     },
     "results": {
         "compared": "{{count}} projects plotted",

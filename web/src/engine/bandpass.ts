@@ -33,17 +33,18 @@ export type BandEdges = {
     above_range: boolean;
 };
 
-const DROP_DB = 3;
-
-// Bordas de −3 dB em relação ao pico da curva. O corte inferior é o cruzamento mais externo
-// buscado do início da grade para dentro, o superior do fim para dentro (como o F3 da selada);
-// cada cruzamento é refinado por bisseção em log f. A frequência central é a média geométrica e a
-// largura vem em oitavas.
-export function bandEdges(level: (frequency: number) => number): BandEdges {
+// Bordas de −3 dB (ou de `dropDb`) em relação ao pico da curva. O corte inferior é o cruzamento
+// mais externo buscado do início da grade para dentro, o superior do fim para dentro (como o F3 da
+// selada); cada cruzamento é refinado por bisseção em log f. A frequência central é a média
+// geométrica e a largura vem em oitavas.
+export function bandEdges(
+    level: (frequency: number) => number,
+    dropDb = 3,
+): BandEdges {
     const grid = ANALYSIS_FREQUENCIES_HZ;
     const levels = grid.map(level);
     const peak = Math.max(...levels);
-    const threshold = peak - DROP_DB;
+    const threshold = peak - dropDb;
 
     // Cruzamento entre `inside` (nível ≥ limiar) e `outside` (nível < limiar).
     const refine = (inside: number, outside: number): number => {

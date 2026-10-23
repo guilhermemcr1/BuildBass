@@ -481,6 +481,7 @@ describe('simulate — selada e dutada não mudaram com a bandpass (004, T013)',
                 qtc: 0.6341615608418979,
                 fc_hz: 46.60829682935575,
                 f3_hz: 55.86457305357066,
+                f10_hz: 29.977113381595476,
                 xmax_power_w: 854.4407726932226,
             },
         },
@@ -517,6 +518,7 @@ describe('simulate — selada e dutada não mudaram com a bandpass (004, T013)',
                 net_volume_m3: 0.07621639706644028,
                 port_velocity_max_ms: 22.06272756469322,
                 f3_hz: 29.902528867274228,
+                f10_hz: 23.778682656048492,
                 xmax_power_w: 664.3582855081249,
             },
         },
@@ -612,5 +614,65 @@ describe('simulate — curvas até 20 kHz, resultados na grade de análise', () 
 
         expect(result.results.f3_hz).toBeGreaterThan(30);
         expect(result.results.f3_hz).toBeLessThan(150);
+    });
+});
+
+// F-10 (specs/011): mesma busca do F3, com a queda de 10 dB sob a banda de passagem.
+describe('simulate — F-10 (specs/011)', () => {
+    test('selada Butterworth: F-10 = fc·(1/9)^(1/4) = 0,5774·fc (0,5 %)', () => {
+        // |H|² = x⁴/(1 + x⁴) = 0,1 → x⁴ = 1/9.
+        const fs = 30;
+        const fc = Math.SQRT2 * fs;
+        const { results } = simulate(
+            project({ fs_hz: fs, qts: 0.5, vas_m3: 0.05 }, { vb_m3: 0.05 }),
+        );
+        const expected = fc * (1 / 9) ** (1 / 4);
+
+        expect(
+            Math.abs((results.f10_hz ?? 0) - expected) / expected,
+        ).toBeLessThan(0.005);
+        expect(results.f10_hz ?? 0).toBeLessThan(results.f3_hz ?? 0);
+    });
+
+    test('dutada B4: F-10 = Fs·(1/9)^(1/8) (0,5 %)', () => {
+        // |H|² = x⁸/(1 + x⁸) = 0,1 → x⁸ = 1/9.
+        const fs = 30;
+        const a1 = Math.sqrt(4 + 2 * Math.SQRT2);
+        const { results } = simulate(
+            project(
+                { fs_hz: fs, qts: 1 / a1, vas_m3: Math.SQRT2 * 0.05 },
+                { type: 'vented', vb_m3: 0.05, fb_hz: fs },
+            ),
+        );
+        const expected = fs * (1 / 9) ** (1 / 8);
+
+        expect(
+            Math.abs((results.f10_hz ?? 0) - expected) / expected,
+        ).toBeLessThan(0.005);
+    });
+
+    test('corte abaixo da grade: sem número inventado', () => {
+        const { results } = simulate(
+            project({ fs_hz: 4, qts: 0.5, vas_m3: 0.05 }, { vb_m3: 0.05 }),
+        );
+
+        expect(results.f10_below_range).toBe(true);
+        expect(results.f10_hz).toBeUndefined();
+    });
+
+    test('bandpass: as bordas de −10 dB ficam fora das de −3 dB', () => {
+        const { results } = simulate(
+            project(REFERENCE, {
+                type: 'bandpass',
+                vr_m3: 0.04,
+                vf_m3: 0.06,
+                fb_hz: 45,
+            }),
+        );
+
+        expect(results.f_low10_hz ?? 0).toBeLessThan(results.f_low_hz ?? 0);
+        expect(results.f_high10_hz ?? Infinity).toBeGreaterThan(
+            results.f_high_hz ?? 0,
+        );
     });
 });

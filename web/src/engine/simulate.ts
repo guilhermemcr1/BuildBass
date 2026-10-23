@@ -249,13 +249,17 @@ function relativeLevel(model: Model, frequency: number): number {
     );
 }
 
-// F3: da frequência mais alta para a mais baixa, o primeiro ponto 3 dB abaixo da banda; o
-// cruzamento é refinado por bisseção em log f (research.md §8).
-function findF3(model: Model): { f3?: number; below: boolean } {
+// Corte de `dropDb` dB: da frequência mais alta para a mais baixa, o primeiro ponto `dropDb` dB
+// abaixo da banda; o cruzamento é refinado por bisseção em log f (research.md §8). Com 3 dB é o
+// F3; com 10 dB, o F-10 que a exportação do gráfico mostra (specs/011).
+function findCutoff(
+    model: Model,
+    dropDb: number,
+): { frequency?: number; below: boolean } {
     const grid = ANALYSIS_FREQUENCIES_HZ;
 
     for (let index = grid.length - 1; index >= 0; index--) {
-        if (relativeLevel(model, grid[index]) >= -3) {
+        if (relativeLevel(model, grid[index]) >= -dropDb) {
             continue;
         }
 
@@ -269,14 +273,14 @@ function findF3(model: Model): { f3?: number; below: boolean } {
         for (let step = 0; step < 50; step++) {
             const middle = (low + high) / 2;
 
-            if (relativeLevel(model, Math.exp(middle)) < -3) {
+            if (relativeLevel(model, Math.exp(middle)) < -dropDb) {
                 low = middle;
             } else {
                 high = middle;
             }
         }
 
-        return { f3: Math.exp((low + high) / 2), below: false };
+        return { frequency: Math.exp((low + high) / 2), below: false };
     }
 
     return { below: true };
@@ -703,15 +707,30 @@ export function simulate(project: ProjectInput): Simulation {
 
     if (band) {
         // Bordas de −3 dB sobre a curva que o usuário vê (com Le, quando informada).
-        const edges = bandEdges((frequency) => {
+        // Os pontos da grade se repetem entre as buscas de −3 e de −10 dB: guardados, o circuito
+        // é resolvido uma vez por frequência.
+        const solved = new Map<number, number>();
+        const bandLevel = (frequency: number) => {
+            const known = solved.get(frequency);
+
+            if (known !== undefined) {
+                return known;
+            }
+
             const point = solveCircuit(perDriver, frequency);
             const radiated = abs(point.radiated) * perDriverVoltage * count;
             const level = levelDb(
                 pressure(radiated, 2 * Math.PI * frequency, solidAngle),
             );
+            const result = absolute
+                ? level
+                : level - levelDb(model.passbandPressure);
 
-            return absolute ? level : level - levelDb(model.passbandPressure);
-        });
+            solved.set(frequency, result);
+
+            return result;
+        };
+        const edges = bandEdges(bandLevel);
 
         results.peak_db = edges.peak_db;
         results.f_low_hz = edges.f_low_hz;
@@ -721,11 +740,22 @@ export function simulate(project: ProjectInput): Simulation {
         results.f_low_below_range = edges.below_range || undefined;
         results.f_high_above_range = edges.above_range || undefined;
         lowEdge = edges.f_low_hz;
+
+        // Bordas de −10 dB sobre a mesma curva, para a legenda da exportação.
+        const wide = bandEdges(bandLevel, 10);
+
+        results.f_low10_hz = wide.f_low_hz;
+        results.f_high10_hz = wide.f_high_hz;
+        results.f_low10_below_range = wide.below_range || undefined;
+        results.f_high10_above_range = wide.above_range || undefined;
     } else {
-        const f3 = findF3(model);
-        results.f3_hz = f3.f3;
+        const f3 = findCutoff(model, 3);
+        const f10 = findCutoff(model, 10);
+        results.f3_hz = f3.frequency;
         results.f3_below_range = f3.below || undefined;
-        lowEdge = f3.f3;
+        results.f10_hz = f10.frequency;
+        results.f10_below_range = f10.below || undefined;
+        lowEdge = f3.frequency;
     }
 
     // Potência que leva o cone ao Xmax: x ∝ V, então P·(Xmax/x)², a menor entre F3 (na bandpass,

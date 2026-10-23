@@ -271,6 +271,15 @@ describe('bandpass 6ª ordem — contra a função de transferência analítica 
         expect(low ?? 0).toBeLessThan(high ?? 0);
     });
 
+    test('as bordas de −10 dB ficam fora das de −3 dB (specs/011)', () => {
+        const { results } = simulate(sixth());
+
+        expect(results.f_low10_hz ?? 0).toBeLessThan(results.f_low_hz ?? 0);
+        expect(results.f_high10_hz ?? Infinity).toBeGreaterThan(
+            results.f_high_hz ?? 0,
+        );
+    });
+
     test('sintonia da frontal maior desloca o corte superior para cima', () => {
         const at = (fb: number) =>
             simulate(sixth({ fb_hz: fb, fb_rear_hz: 30 })).results.f_high_hz;

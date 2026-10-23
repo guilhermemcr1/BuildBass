@@ -892,3 +892,45 @@ for (const theme of ['light', 'dark'] as const) {
         await context.close();
     });
 }
+
+for (const theme of ['light', 'dark'] as const) {
+    test(`o diálogo de exportação do gráfico não tem violações WCAG AA no tema ${theme}`, async ({
+        browser,
+    }) => {
+        const context = await browser.newContext({
+            colorScheme: theme,
+            viewport: { width: 1440, height: 900 },
+        });
+        const page = await context.newPage();
+        await page.goto('/');
+
+        for (const [name, value] of [
+            [/^Fs/, '28'],
+            [/^Qts/, '0,38'],
+            [/^Vas/, '85'],
+            [/^Vb/, '50'],
+        ] as const) {
+            const field = page.getByRole('textbox', { name });
+            await field.fill(value);
+            await field.press('Tab');
+        }
+
+        await page.getByRole('radio', { name: 'Selada' }).click();
+        await page.getByRole('button', { name: 'Exportar gráfico' }).click();
+        await page.getByRole('dialog').waitFor();
+        await page.waitForTimeout(300);
+
+        const results = await new AxeBuilder({ page })
+            .include('[role="dialog"]')
+            .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+            .analyze();
+
+        expect(
+            results.violations.map((violation) => ({
+                id: violation.id,
+                nodes: violation.nodes.map((node) => node.target.join(' ')),
+            })),
+        ).toEqual([]);
+        await context.close();
+    });
+}

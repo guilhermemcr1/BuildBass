@@ -86,6 +86,22 @@ describe('bandpass — funções puras', () => {
             expect(edges.above_range).toBe(false);
         });
 
+        test('com a queda de 10 dB acha as bordas de −10 dB; sem argumento segue em 3 dB', () => {
+            // −3·(ln(f/c)/span)² = −10 → ln(f/c) = ±span·√(10/3).
+            const wide = bandEdges(parabola, 10);
+            const reach = span * Math.sqrt(10 / 3);
+
+            expect(
+                Math.abs((wide.f_low_hz ?? 0) - center * Math.exp(-reach)) /
+                    (center * Math.exp(-reach)),
+            ).toBeLessThan(5e-4);
+            expect(
+                Math.abs((wide.f_high_hz ?? 0) - center * Math.exp(reach)) /
+                    (center * Math.exp(reach)),
+            ).toBeLessThan(5e-4);
+            expect(bandEdges(parabola)).toEqual(bandEdges(parabola, 3));
+        });
+
         test('corte inferior fora da grade: indefinido, sem número inventado', () => {
             // Sem queda abaixo de 100 Hz; −20 dB/década acima.
             const edges = bandEdges((frequency) =>
