@@ -144,3 +144,104 @@ describe('driverResponseSchema', () => {
         expect(result.success).toBe(false);
     });
 });
+
+const IMG = {
+    url: 'https://api.exemplo.com/storage/driver-images/4f1c0a52-7b3e-4c1d-9f0a-1a2b3c4d5e6f.webp',
+    thumb_url:
+        'https://api.exemplo.com/storage/driver-images/4f1c0a52-7b3e-4c1d-9f0a-1a2b3c4d5e6f_thumb.webp',
+};
+
+describe('imagens do driver (feature 010)', () => {
+    test('o resumo aceita cover_thumb_url http(s) e continua válido sem ela', () => {
+        expect(
+            searchResponseSchema.safeParse(
+                search([{ ...SUMMARY, cover_thumb_url: IMG.thumb_url }]),
+            ).success,
+        ).toBe(true);
+        expect(searchResponseSchema.safeParse(search([SUMMARY])).success).toBe(
+            true,
+        );
+    });
+
+    test('o detalhe aceita até 5 imagens e assume lista vazia quando a chave falta', () => {
+        const withFive = driverResponseSchema.safeParse({
+            data: { ...DRIVER, images: Array(5).fill(IMG) },
+        });
+        const without = driverResponseSchema.safeParse({ data: DRIVER });
+
+        expect(withFive.success).toBe(true);
+        expect(without.success && without.data.data.images).toEqual([]);
+    });
+
+    test('mais de 5 imagens reprova', () => {
+        const result = driverResponseSchema.safeParse({
+            data: { ...DRIVER, images: Array(6).fill(IMG) },
+        });
+
+        expect(result.success).toBe(false);
+    });
+
+    test.each([
+        'javascript:alert(1)',
+        'data:image/webp;base64,AAAA',
+        'ftp://exemplo.com/a.webp',
+        'não é url',
+        '/storage/a.webp',
+    ])('URL %s reprova', (url) => {
+        expect(
+            driverResponseSchema.safeParse({
+                data: {
+                    ...DRIVER,
+                    images: [{ url, thumb_url: IMG.thumb_url }],
+                },
+            }).success,
+        ).toBe(false);
+        expect(
+            searchResponseSchema.safeParse(
+                search([{ ...SUMMARY, cover_thumb_url: url }]),
+            ).success,
+        ).toBe(false);
+    });
+});
+
+describe('medidas físicas do driver', () => {
+    const DIMS = {
+        drv_shape: 'rect',
+        drv_piston: 'dome',
+        drv_a_m: 0.32,
+        drv_b_m: 0.26,
+        cutout_m: 0.28,
+        drv_d_m: 0.2,
+        drv_e_m: 0.06,
+        drv_f_m: 0.012,
+        drv_g_m: 0.14,
+    };
+
+    test('aceita formato, pistão e as cotas dentro da faixa', () => {
+        const result = driverResponseSchema.safeParse({
+            data: { ...DRIVER, ...DIMS },
+        });
+
+        expect(result.success).toBe(true);
+    });
+
+    test('são opcionais', () => {
+        expect(driverResponseSchema.safeParse({ data: DRIVER }).success).toBe(
+            true,
+        );
+    });
+
+    test.each([
+        ['drv_a_m', 5],
+        ['cutout_m', 2],
+        ['drv_f_m', 0.5],
+        ['drv_shape', 'oval'],
+        ['drv_piston', 'cone-duplo'],
+    ])('recusa %s inválido', (key, value) => {
+        const result = driverResponseSchema.safeParse({
+            data: { ...DRIVER, [key]: value },
+        });
+
+        expect(result.success).toBe(false);
+    });
+});

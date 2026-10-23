@@ -292,6 +292,62 @@ describe('createProjectStore', () => {
     });
 });
 
+describe('applyCatalogDriver com medidas físicas', () => {
+    const SOURCE = { brand: 'Triton', model: 'TR 620 12"' };
+    const CATALOG = { fs_hz: 76.94, qts: 0.717, vas_m3: 0.026348 };
+    const DIMS = {
+        shape: 'round' as const,
+        piston: 'cone' as const,
+        measures: { drv_a_m: 0.32, drv_g_m: 0.14, cutout_m: 0.28 },
+    };
+
+    test('grava formato, pistão e cotas, com o recorte no plano de corte', () => {
+        const project = store();
+
+        project.getState().applyCatalogDriver(CATALOG, SOURCE, DIMS);
+
+        const { data } = project.getState();
+        expect(data.driverDims).toEqual({
+            shape: 'round',
+            piston: 'cone',
+            a_m: 0.32,
+            g_m: 0.14,
+        });
+        expect(data.cutPlan?.cutout_m).toBe(0.28);
+    });
+
+    test('substitui as cotas de outro alto-falante em vez de misturar', () => {
+        const project = store();
+        project.getState().applyCatalogDriver(CATALOG, SOURCE, {
+            shape: 'square',
+            measures: { drv_a_m: 0.5, drv_e_m: 0.09 },
+        });
+
+        project.getState().applyCatalogDriver(CATALOG, SOURCE, DIMS);
+
+        expect(project.getState().data.driverDims).not.toHaveProperty('e_m');
+        expect(project.getState().data.driverDims?.shape).toBe('round');
+    });
+
+    test('sem medidas no cadastro, as do projeto ficam como estão', () => {
+        const project = store();
+        project.getState().applyCatalogDriver(CATALOG, SOURCE, DIMS);
+
+        project.getState().applyCatalogDriver(CATALOG, SOURCE);
+
+        expect(project.getState().data.driverDims?.a_m).toBe(0.32);
+    });
+
+    test('é uma etapa só de desfazer', () => {
+        const project = store();
+        const steps = project.temporal.getState().pastStates.length;
+
+        project.getState().applyCatalogDriver(CATALOG, SOURCE, DIMS);
+
+        expect(project.temporal.getState().pastStates).toHaveLength(steps + 1);
+    });
+});
+
 describe('applyCatalogDriver', () => {
     const SOURCE = { brand: 'Triton', model: 'TR 620 12"', variant: '4 Ω' };
     const CATALOG = { fs_hz: 76.94, qts: 0.717, vas_m3: 0.026348 };

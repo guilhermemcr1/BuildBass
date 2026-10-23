@@ -97,7 +97,6 @@ describe('validateSubmission', () => {
     test.each([
         ['brand', 80],
         ['model', 80],
-        ['variant', 40],
         ['source', 255],
     ] as const)('%s: %i caracteres passam, mais um não', (field, max) => {
         expect(validateSubmission(form({ [field]: 'a'.repeat(max) })).ok).toBe(
@@ -106,6 +105,25 @@ describe('validateSubmission', () => {
         expect(errorsOf(form({ [field]: 'a'.repeat(max + 1) }))[field]).toBe(
             'tooLong',
         );
+    });
+
+    test.each([
+        ['4 Ω', true],
+        ['4', true],
+        ['3,2', true],
+        ['  ', true],
+        ['', true],
+        ['Dual 4', false],
+        ['abc', false],
+        ['0', false],
+        ['900', false],
+        ['4 ohms ruins', false],
+    ])('a variante é a impedância em ohms: %j passa? %s', (variant, ok) => {
+        expect(validateSubmission(form({ variant })).ok).toBe(ok);
+
+        if (!ok) {
+            expect(errorsOf(form({ variant })).variant).toBe('impedance');
+        }
     });
 
     test('e-mail é obrigatório: vazio e só espaços não passam, válido passa, inválido não', () => {

@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react';
 import { useOnlineStatus } from '@/hooks/use-online-status';
 import { applySuggestion } from '@/lib/submission/apply-suggestion';
+import { syncDerived, withoutAuto } from '@/lib/submission/auto-derive';
+import type { AutoKeys } from '@/lib/submission/auto-derive';
 import { submitDriver } from '@/lib/submission/client';
 import type { SubmitError } from '@/lib/submission/client';
 import { hasChanges } from '@/lib/submission/from-project';
@@ -50,10 +52,17 @@ const MANUAL_IDLE: ManualState = {
 export function useSubmitDriver(initial: SubmissionForm) {
     const locale = usePreferences((state) => state.locale);
     const offline = useOnlineStatus() === 'offline';
-    const [form, setFormState] = useState(initial);
+    // O que parte do projeto já chega com os campos calculados inseridos; o "inicial" para saber se
+    // há alterações é esse mesmo, para o cálculo sozinho não contar como edição.
+    const [start] = useState(() => syncDerived(initial, new Set()));
+    const [form, setFormState] = useState(start.form);
+    // Campos cujo valor foi calculado dos outros (e não digitado): recalculam sozinhos.
+    const [auto, setAuto] = useState<AutoKeys>(start.auto);
     // O formulário mais recente, para a leitura do manual não aplicar sobre um valor já velho.
     const formRef = useRef(form);
     formRef.current = form;
+    const autoRef = useRef(auto);
+    autoRef.current = auto;
     const [manual, setManual] = useState<ManualState>(MANUAL_IDLE);
     const manualController = useRef<AbortController | undefined>(undefined);
     // Campo-armadilha (FR-011): visível só para robôs.
@@ -66,14 +75,25 @@ export function useSubmitDriver(initial: SubmissionForm) {
 
     // Editar um campo destacado como suspeito tira o destaque daquele campo.
     function setForm(next: SubmissionForm): void {
-        setFormState(next);
+        // O que a pessoa mexeu deixa de ser "calculado": passa a valer o que ela digitou.
+        const edited = new Set(
+            [...auto].filter((key) => next.numbers[key] !== form.numbers[key]),
+        );
+        const synced = syncDerived(
+            next,
+            new Set([...auto].filter((key) => !edited.has(key))),
+        );
+
+        setFormState(synced.form);
+        setAuto(synced.auto);
         setManual((current) =>
             current.suspect.length === 0
                 ? current
                 : {
                       ...current,
                       suspect: current.suspect.filter(
-                          (key) => next.numbers[key] === form.numbers[key],
+                          (key) =>
+                              synced.form.numbers[key] === form.numbers[key],
                       ),
                   },
         );
@@ -121,12 +141,15 @@ export function useSubmitDriver(initial: SubmissionForm) {
             return;
         }
 
+        // Valor calculado não segura o lugar do que o manual traz: parte do que foi digitado.
         const applied = applySuggestion(
-            formRef.current,
+            withoutAuto(formRef.current, autoRef.current),
             result.result.suggestion,
         );
+        const synced = syncDerived(applied.form, new Set());
 
-        setFormState(applied.form);
+        setFormState(synced.form);
+        setAuto(synced.auto);
         setManual({
             status: 'done',
             filled: applied.filled.length,
@@ -214,7 +237,8 @@ export function useSubmitDriver(initial: SubmissionForm) {
         manual,
         fillFromManual,
         offline,
-        dirty: hasChanges(form, initial),
+        auto,
+        dirty: hasChanges(form, start.form),
         submit,
         abort: () => {
             controller.current?.abort();

@@ -1,6 +1,13 @@
-import { FileText, X } from 'lucide-react';
+import {
+    CheckCircle2,
+    FileText,
+    FileUp,
+    Loader2,
+    Sparkles,
+    X,
+} from 'lucide-react';
 import { useState } from 'react';
-import { FileTrigger } from 'react-aria-components';
+import { DropZone, FileTrigger, Text } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import type { ManualState } from '@/hooks/use-submit-driver';
@@ -9,6 +16,7 @@ import type { ManualError } from '@/lib/submission/manual-client';
 import { PARAMETERS } from '@/lib/parameters';
 import type { ParameterKey } from '@/lib/parameters';
 import type { NumericKey } from '@/lib/submission/schema';
+import { cn } from '@/lib/utils';
 
 type ManualFillProps = {
     manual: ManualState;
@@ -51,8 +59,9 @@ function failureMessage(
     return t(`manual.failure.${failure.error}`);
 }
 
-// Leitura de manual (specs/009, contracts/ui.md): anexa o PDF e pede ao servidor a sugestão, que o
-// hook aplica só nos campos vazios. Falhas e limites nunca bloqueiam o resto do formulário.
+// Leitura de manual (specs/009, contracts/ui.md): anexa o PDF (arrastando ou escolhendo) e pede ao
+// servidor a sugestão, que o hook aplica só nos campos vazios. Falhas e limites nunca bloqueiam o
+// resto do formulário.
 export function ManualFill({
     manual,
     offline,
@@ -65,9 +74,7 @@ export function ManualFill({
     const reading = manual.status === 'reading';
     const locked = offline || sending || manual.unavailable;
 
-    function select(files: FileList | null): void {
-        const chosen = files?.item(0);
-
+    function accept(chosen: File | null | undefined): void {
         if (chosen === null || chosen === undefined) {
             return;
         }
@@ -109,31 +116,87 @@ export function ManualFill({
     return (
         <section
             aria-labelledby="manual-fill-title"
-            className="flex flex-col gap-2 rounded-md border border-border p-3"
+            className="flex flex-col gap-3 rounded-lg border border-border bg-background/40 p-4"
         >
-            <h3
-                id="manual-fill-title"
-                className="text-xs font-semibold text-muted"
-            >
-                {t('manual.title')}
-            </h3>
-
-            <div className="flex flex-wrap items-center gap-2">
-                <FileTrigger
-                    acceptedFileTypes={['application/pdf']}
-                    onSelect={select}
+            <header className="flex items-start gap-3">
+                <span
+                    aria-hidden="true"
+                    className="grid size-8 shrink-0 place-items-center rounded-md bg-accent/15 text-accent-soft"
                 >
-                    <Button variant="secondary" disabled={locked || reading}>
-                        {t('manual.choose')}
-                    </Button>
-                </FileTrigger>
-                {file !== undefined && (
-                    <>
-                        <span className="inline-flex items-center gap-1 text-sm">
-                            <FileText aria-hidden="true" size={14} />
-                            <span>{file.name}</span>
-                            <span className="num text-muted">
-                                ({sizeLabel(file.size)})
+                    <Sparkles className="size-4" />
+                </span>
+                <div className="min-w-0 flex-1">
+                    <h3
+                        id="manual-fill-title"
+                        className="flex flex-wrap items-center gap-2 text-sm font-semibold"
+                    >
+                        {t('manual.title')}
+                        <span className="rounded-full border border-border px-2 py-px text-[11px] font-normal text-muted">
+                            {t('manual.badge')}
+                        </span>
+                    </h3>
+                    <p className="text-xs text-muted">{t('manual.subtitle')}</p>
+                </div>
+            </header>
+
+            {file === undefined ? (
+                <DropZone
+                    isDisabled={locked || reading}
+                    onDrop={(event) => {
+                        const item = event.items.find(
+                            (entry) => entry.kind === 'file',
+                        );
+
+                        if (item?.kind === 'file') {
+                            void item.getFile().then(accept);
+                        }
+                    }}
+                    className={({ isDropTarget, isFocusVisible }) =>
+                        cn(
+                            'flex flex-col items-center gap-2 rounded-lg border-2 border-dashed border-border px-4 py-5 text-center outline-none motion-safe:transition-colors',
+                            isDropTarget && 'border-accent bg-accent/10',
+                            isFocusVisible && 'outline-2 outline-accent',
+                            (locked || reading) && 'opacity-60',
+                        )
+                    }
+                >
+                    <FileUp aria-hidden="true" className="size-6 text-muted" />
+                    <Text slot="label" className="text-sm font-medium">
+                        {t('manual.dropTitle')}
+                    </Text>
+                    <div className="flex items-center gap-2 text-xs text-muted">
+                        <span>{t('manual.dropOr')}</span>
+                        <FileTrigger
+                            acceptedFileTypes={['application/pdf']}
+                            onSelect={(files) => accept(files?.item(0))}
+                        >
+                            <Button
+                                variant="secondary"
+                                disabled={locked || reading}
+                            >
+                                {t('manual.choose')}
+                            </Button>
+                        </FileTrigger>
+                    </div>
+                    <p className="text-[11px] text-muted">
+                        {t('manual.dropHint')}
+                    </p>
+                </DropZone>
+            ) : (
+                <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-3">
+                    <div className="flex items-center gap-3">
+                        <span
+                            aria-hidden="true"
+                            className="grid size-10 shrink-0 place-items-center rounded-md bg-status-error/10 text-status-error"
+                        >
+                            <FileText className="size-5" />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                            <span className="block truncate text-sm font-medium">
+                                {file.name}
+                            </span>
+                            <span className="block num text-xs text-muted">
+                                {sizeLabel(file.size)}
                             </span>
                         </span>
                         <Button
@@ -145,26 +208,33 @@ export function ManualFill({
                             <X aria-hidden="true" size={14} />
                             {t('manual.remove')}
                         </Button>
-                    </>
+                    </div>
+                </div>
+            )}
+
+            <Button
+                variant="primary"
+                disabled={file === undefined || locked || reading}
+                aria-busy={reading}
+                className="h-9 w-full"
+                onPress={() => {
+                    if (file !== undefined) {
+                        onFill(file);
+                    }
+                }}
+            >
+                {reading ? (
+                    <Loader2
+                        aria-hidden="true"
+                        className="size-4 animate-spin"
+                    />
+                ) : (
+                    <Sparkles aria-hidden="true" className="size-4" />
                 )}
-            </div>
+                {reading ? t('manual.reading') : t('manual.fill')}
+            </Button>
 
-            <div>
-                <Button
-                    variant="primary"
-                    disabled={file === undefined || locked || reading}
-                    aria-busy={reading}
-                    onPress={() => {
-                        if (file !== undefined) {
-                            onFill(file);
-                        }
-                    }}
-                >
-                    {reading ? t('manual.reading') : t('manual.fill')}
-                </Button>
-            </div>
-
-            <p className="text-xs text-muted">{t('manual.privacy')}</p>
+            <p className="text-[11px] text-muted">{t('manual.privacy')}</p>
 
             <div
                 aria-live="polite"
@@ -183,7 +253,11 @@ export function ManualFill({
                 )}
                 {manual.status === 'done' && (
                     <>
-                        <p>
+                        <p className="flex items-center gap-1.5 text-status-ok">
+                            <CheckCircle2
+                                aria-hidden="true"
+                                className="size-4 shrink-0"
+                            />
                             {manual.filled > 0
                                 ? t('manual.filled', { count: manual.filled })
                                 : t('manual.filledNone')}

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { activeProjectStore } from '@/hooks/use-active-project';
 import { fetchDriver } from '@/lib/catalog/client';
 import type { CatalogDriver, DriverSummary } from '@/lib/catalog/types';
+import { useCatalogGallery } from '@/stores/catalog-gallery';
 import { useRecentDrivers } from '@/stores/recent-drivers';
 import { initialWorkspace, useWorkspace } from '@/stores/workspace';
 import { useCatalogPick } from './use-catalog-pick';
@@ -30,12 +31,14 @@ const DRIVER: CatalogDriver = {
     qms: 8.978,
     re_ohm: 3,
     source: 'ficha',
+    images: [],
 };
 
 beforeEach(() => {
     localStorage.clear();
     useWorkspace.setState(initialWorkspace());
     useRecentDrivers.setState({ items: [] });
+    useCatalogGallery.getState().clear();
     detail.mockReset();
     detail.mockResolvedValue({ ok: true, data: { data: DRIVER } });
 });
@@ -69,6 +72,89 @@ describe('useCatalogPick', () => {
                 vas_m3: 0.026348,
             },
         ]);
+    });
+
+    test('aplica as medidas físicas do cadastro ao projeto, para montar o modelo', async () => {
+        detail.mockResolvedValue({
+            ok: true,
+            data: {
+                data: {
+                    ...DRIVER,
+                    drv_shape: 'round',
+                    drv_a_m: 0.32,
+                    cutout_m: 0.28,
+                },
+            },
+        });
+        const { result } = renderHook(() => useCatalogPick());
+
+        await act(async () => {
+            await result.current.choose(SUMMARY);
+        });
+
+        const { data } = activeProjectStore().getState();
+        expect(data.driverDims).toEqual({ shape: 'round', a_m: 0.32 });
+        expect(data.cutPlan?.cutout_m).toBe(0.28);
+        expect(data.driver).not.toHaveProperty('drv_a_m');
+    });
+
+    test('guarda as imagens só na galeria da sessão, não no projeto nem nos recentes', async () => {
+        const images = [
+            {
+                url: 'https://x.test/a.webp',
+                thumb_url: 'https://x.test/a_thumb.webp',
+            },
+        ];
+        detail.mockResolvedValue({
+            ok: true,
+            data: { data: { ...DRIVER, images } },
+        });
+        const { result } = renderHook(() => useCatalogPick());
+
+        await act(async () => {
+            await result.current.choose(SUMMARY);
+        });
+
+        expect(useCatalogGallery.getState().current?.images).toEqual(images);
+        expect(
+            JSON.stringify(activeProjectStore().getState().data),
+        ).not.toContain('x.test');
+        expect(JSON.stringify(useRecentDrivers.getState().items)).not.toContain(
+            'x.test',
+        );
+    });
+
+    test('driver sem imagens deixa a galeria vazia', async () => {
+        useCatalogGallery.getState().set('antiga', [
+            {
+                url: 'https://x.test/a.webp',
+                thumb_url: 'https://x.test/a_thumb.webp',
+            },
+        ]);
+        const { result } = renderHook(() => useCatalogPick());
+
+        await act(async () => {
+            await result.current.choose(SUMMARY);
+        });
+
+        expect(useCatalogGallery.getState().current).toBeUndefined();
+    });
+
+    test('falha ao buscar o detalhe não mexe na galeria', async () => {
+        useCatalogGallery.getState().set('antiga', [
+            {
+                url: 'https://x.test/a.webp',
+                thumb_url: 'https://x.test/a_thumb.webp',
+            },
+        ]);
+        detail.mockResolvedValue({ ok: false, error: 'server' });
+        const { result } = renderHook(() => useCatalogPick());
+
+        await act(async () => {
+            await result.current.choose(SUMMARY);
+        });
+
+        expect(useCatalogGallery.getState().current?.identity).toBe('antiga');
     });
 
     test('mostra "applying" enquanto o detalhe não chega', async () => {

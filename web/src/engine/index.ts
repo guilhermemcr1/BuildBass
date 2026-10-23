@@ -10,7 +10,13 @@ export {
 export { suggestBox } from './alignments';
 export type { Alignment, Suggestion } from './alignments';
 export { portArea } from './port';
-export { signalLevels, simulate } from './simulate';
+export {
+    ABSOLUTE_NEEDS,
+    RESPONSE_NEEDS,
+    requiredBoxFields,
+    signalLevels,
+    simulate,
+} from './simulate';
 export type { SignalLevels } from './simulate';
 export { twoChambers } from './types';
 export type * from './types';

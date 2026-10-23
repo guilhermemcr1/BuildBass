@@ -105,5 +105,15 @@
         "less": "Mostrar menos",
         "filled_one": "({{count}} preenchido)",
         "filled_other": "({{count}} preenchidos)"
+    },
+    "required": {
+        "response": "Obrigatório para calcular a resposta (SPL e atraso de grupo).",
+        "absolute": "Obrigatório para calcular a impedância e a excursão.",
+        "box": "Obrigatório para calcular a resposta deste tipo de caixa.",
+        "signal": "Obrigatório para calcular a excursão.",
+        "legend": "* Obrigatório para algum cálculo. Passe o mouse no campo para ver qual."
+    },
+    "impedance": {
+        "invalid": "Informe só a impedância em ohms, de {{min}} a {{max}} (ex.: 4 ou 3,2). Sem texto nem o símbolo Ω."
     }
 }

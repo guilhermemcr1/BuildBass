@@ -40,6 +40,7 @@ const DRIVER: CatalogDriver = {
     qms: 8.978,
     re_ohm: 3,
     source: 'ficha',
+    images: [],
 };
 
 function listing(items: DriverSummary[] = [SUMMARY], hasMore = false) {
@@ -91,7 +92,42 @@ beforeEach(() => {
 });
 
 describe('DriverPicker — abrir e buscar', () => {
-    test('o botão abre o popover com o campo focado', async () => {
+    test('a tecla "/" abre a busca, menos de dentro de um campo', async () => {
+        renderWithProviders(
+            <>
+                <input aria-label="Outro campo" />
+                <DriverPicker onSubmitDriver={() => undefined} />
+            </>,
+        );
+
+        await userEvent.type(screen.getByLabelText('Outro campo'), '/');
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+        await userEvent.click(document.body);
+        await userEvent.keyboard('/');
+        expect(await screen.findByRole('dialog')).toBeVisible();
+    });
+
+    test('o termo digitado fica destacado no nome do resultado', async () => {
+        const input = await open();
+
+        const option = await typeAndWait(input, 'trit');
+
+        expect(within(option).getByText('Trit').tagName).toBe('MARK');
+    });
+
+    test('o botão de limpar esvazia a busca', async () => {
+        const input = await open();
+
+        await userEvent.type(input, 'tr');
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Limpar busca' }),
+        );
+
+        expect(input).toHaveValue('');
+    });
+
+    test('o botão abre a busca com o campo focado', async () => {
         const input = await open();
 
         expect(input).toHaveFocus();
@@ -136,7 +172,9 @@ describe('DriverPicker — abrir e buscar', () => {
 
         expect(screen.getByText('Catálogo')).toBeInTheDocument();
         expect(option).toHaveTextContent('Triton TR 620 12" (4 Ω)');
-        expect(option).toHaveTextContent('Fs 76,9 Hz · Qts 0,72 · Vas 26,3 L');
+        expect(option).toHaveTextContent('Fs 76,9 Hz');
+        expect(option).toHaveTextContent('Qts 0,72');
+        expect(option).toHaveTextContent('Vas 26,3 L');
         expect(search.mock.calls[0][0]).toBe('tr 6');
     });
 
@@ -180,7 +218,7 @@ describe('DriverPicker — escolher', () => {
         const input = await open();
 
         const option = await typeAndWait(input);
-        await userEvent.click(within(option).getByText(/Triton/));
+        await userEvent.click(option);
 
         await waitFor(() =>
             expect(
@@ -576,5 +614,102 @@ describe('DriverPicker — filtros e detalhes (marca, diâmetro, tipo)', () => {
         await open({ disabled: true });
 
         expect(screen.queryByText('Diâmetro')).not.toBeInTheDocument();
+    });
+
+    test('mostra a miniatura da capa no resultado do catálogo, decorativa', async () => {
+        search.mockResolvedValue(
+            listing([
+                {
+                    ...SUMMARY,
+                    cover_thumb_url:
+                        'https://x.test/storage/driver-images/a_thumb.webp',
+                },
+            ]),
+        );
+        const input = await open();
+
+        const option = await typeAndWait(input);
+
+        const image = option.querySelector('img');
+        expect(image).toHaveAttribute(
+            'src',
+            'https://x.test/storage/driver-images/a_thumb.webp',
+        );
+        expect(image).toHaveAttribute('alt', '');
+        expect(option).toHaveAccessibleName(/^Triton TR 620 12" \(4 Ω\)/);
+    });
+
+    test('os recentes também mostram a miniatura da capa', async () => {
+        useRecentDrivers.setState({
+            items: [
+                {
+                    id: SUMMARY.id,
+                    brand: 'Triton',
+                    model: 'TR 620',
+                    fs_hz: 40,
+                    qts: 0.4,
+                    vas_m3: 0.05,
+                    cover_thumb_url: 'https://x.test/recente_thumb.webp',
+                },
+            ],
+        });
+        await open();
+
+        const option = screen.getByRole('option', { name: /Triton TR 620/ });
+
+        expect(option.querySelector('img')).toHaveAttribute(
+            'src',
+            'https://x.test/recente_thumb.webp',
+        );
+    });
+
+    test('escolher um driver com capa guarda a miniatura nos recentes', async () => {
+        search.mockResolvedValue(
+            listing([
+                { ...SUMMARY, cover_thumb_url: 'https://x.test/c_thumb.webp' },
+            ]),
+        );
+        const input = await open();
+
+        await userEvent.click(await typeAndWait(input));
+
+        await waitFor(() =>
+            expect(useRecentDrivers.getState().items[0]).toMatchObject({
+                cover_thumb_url: 'https://x.test/c_thumb.webp',
+            }),
+        );
+    });
+
+    test('sem imagem mostra o espaço reservado, sem <img>', async () => {
+        const input = await open();
+
+        const option = await typeAndWait(input);
+
+        expect(option.querySelector('img')).toBeNull();
+        expect(
+            within(option).getByTestId('driver-thumb-placeholder'),
+        ).toBeInTheDocument();
+    });
+
+    test('imagem que não carrega vira o espaço reservado e a lista segue funcionando', async () => {
+        search.mockResolvedValue(
+            listing([
+                { ...SUMMARY, cover_thumb_url: 'https://x.test/quebrada.webp' },
+            ]),
+        );
+        const input = await open();
+        const option = await typeAndWait(input);
+
+        const image = option.querySelector('img');
+        expect(image).not.toBeNull();
+        act(() => {
+            image?.dispatchEvent(new Event('error'));
+        });
+
+        expect(option.querySelector('img')).toBeNull();
+        expect(
+            within(option).getByTestId('driver-thumb-placeholder'),
+        ).toBeInTheDocument();
+        expect(option).toHaveTextContent('Triton TR 620 12"');
     });
 });

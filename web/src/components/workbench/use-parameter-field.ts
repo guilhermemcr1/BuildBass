@@ -2,6 +2,7 @@ import { useActiveProject } from '@/hooks/use-active-project';
 import { PARAMETERS } from '@/lib/parameters';
 import type { ParameterKey } from '@/lib/parameters';
 import { readField, writeField } from '@/lib/project/fields';
+import { requirementOf } from '@/lib/requirements';
 import { defaultUnitFor } from '@/lib/units/quantities';
 import type { UnitId } from '@/lib/units/quantities';
 import { usePreferences } from '@/stores/preferences';
@@ -14,12 +15,16 @@ export function useParameterField(key: ParameterKey) {
     const apply = useActiveProject((state) => state.apply);
     const setFieldUnit = useActiveProject((state) => state.setFieldUnit);
     const unitSystem = usePreferences((state) => state.unitSystem);
+    const boxType = useActiveProject((state) => state.data.box.type);
+    const signalMode = useActiveProject((state) => state.data.signal.mode);
 
     const unit: UnitId =
         fieldUnit ?? defaultUnitFor(PARAMETERS[key].quantity, unitSystem);
 
     return {
         parameter: key,
+        // Asterisco: o campo é indispensável para alguma curva do tipo de caixa escolhido.
+        requirement: requirementOf(key, boxType, signalMode),
         valueSi,
         unit,
         onChangeSi: (si: number | undefined) =>

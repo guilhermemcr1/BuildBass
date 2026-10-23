@@ -103,6 +103,7 @@ type DriverPanelProps = {
 
 export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
     const { t } = useTranslation('workbench');
+    const { t: tCommon } = useTranslation('common');
     const offline = useOnlineStatus() === 'offline';
     const driver = useActiveProject((state) => state.data.driver);
     const derived = deriveDriver(driver);
@@ -192,6 +193,7 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
                     />
                 ))}
             </div>
+            <p className="text-xs text-muted">{tCommon('required.legend')}</p>
             <ShowMore id="driverAdvanced" filled={advancedFilled}>
                 <div className="grid grid-cols-2 items-start gap-x-3 gap-y-2">
                     {advanced.map((key) => (

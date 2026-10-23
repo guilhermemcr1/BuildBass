@@ -11,6 +11,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useNumberEntry } from '@/hooks/use-number-entry';
 import { PARAMETERS, withinRange } from '@/lib/parameters';
+import type { Requirement } from '@/lib/requirements';
 import type { ParameterKey } from '@/lib/parameters';
 import { fromSi, toSi } from '@/lib/units/convert';
 import { formatOptionsFor, formatQuantity } from '@/lib/units/format';
@@ -35,11 +36,15 @@ type ParameterFieldProps = {
     // Valor calculado dos outros parâmetros, mostrado apagado enquanto nada for digitado.
     derivedSi?: number;
     derivedLabel?: string;
+    // Valor já inserido no campo por cálculo dos outros: aparece o texto, o valor segue editável.
+    calculatedLabel?: string;
     // `row`: nome por extenso à esquerda e caixa de largura fixa à direita (formulários de
     // configuração); `stacked`: nome curto em cima e caixa embaixo, para três campos lado a lado;
     // `compact`: o mesmo, com o símbolo (Vb, Fb, Ql) no lugar do nome;
     // `symbol` (padrão): símbolo curto, para as grades do driver e da caixa.
     layout?: 'symbol' | 'row' | 'stacked' | 'compact';
+    // Campo indispensável para algum cálculo: ganha um asterisco e a explicação na ajuda.
+    requirement?: Requirement;
     disabled?: boolean;
     className?: string;
 };
@@ -62,7 +67,9 @@ export function ParameterField({
     statusMessage,
     derivedSi,
     derivedLabel,
+    calculatedLabel,
     layout = 'symbol',
+    requirement,
     disabled = false,
     className,
 }: ParameterFieldProps) {
@@ -82,6 +89,12 @@ export function ParameterField({
     const cut = fullLabel.lastIndexOf('—');
     const shortLabel = cut < 0 ? fullLabel : fullLabel.slice(cut + 1).trim();
     const labelPrefix = cut < 0 ? '' : fullLabel.slice(0, cut + 1) + ' ';
+    const help = [
+        t(`${parameter}.help`),
+        requirement === undefined ? '' : t(`common:required.${requirement}`),
+    ]
+        .filter((part) => part !== '')
+        .join(' ');
     const derived = valueSi === undefined && derivedSi !== undefined;
     const shownSi = valueSi ?? derivedSi;
     const displayed = shownSi === undefined ? Number.NaN : fromSi(shownSi, unit);
@@ -136,6 +149,7 @@ export function ParameterField({
             formatOptions={formatOptionsFor(unit)}
             isInvalid={outOfRange}
             isDisabled={disabled}
+            isRequired={requirement !== undefined}
             validationBehavior="aria"
             className={cn('group flex min-w-0 flex-col gap-0.5', className)}
         >
@@ -158,7 +172,7 @@ export function ParameterField({
                     )}
                 >
                     <HelpTip
-                        content={t(`${parameter}.help`)}
+                        content={help}
                         label={t('common:help.of', {
                             parameter: definition.symbol,
                         })}
@@ -177,6 +191,15 @@ export function ParameterField({
                             )}
                         </span>
                     </HelpTip>
+                    {requirement !== undefined && (
+                        // Só visual: o leitor de tela recebe "obrigatório" pelo próprio campo.
+                        <span
+                            aria-hidden="true"
+                            className="ml-0.5 font-bold text-status-warn"
+                        >
+                            *
+                        </span>
+                    )}
                     {(compact || (!row && !stacked)) && (
                         <span className="sr-only">
                             {' '}
@@ -194,7 +217,7 @@ export function ParameterField({
                     {hoverless ? (
                         input
                     ) : (
-                        <Tooltip content={t(`${parameter}.help`)}>
+                        <Tooltip content={help}>
                             <Focusable>{input}</Focusable>
                         </Tooltip>
                     )}
@@ -237,11 +260,13 @@ export function ParameterField({
             </div>
             {/* Status e "calculado" ficam numa linha curta sob o valor, só quando dizem algo: o estado
                 neutro "sem verificação" não aparece (repaginação da bancada). */}
-            {(derived || (status !== 'none' && status !== 'unchecked')) && (
+            {(derived ||
+                calculatedLabel !== undefined ||
+                (status !== 'none' && status !== 'unchecked')) && (
                 <div className={row || stacked ? '' : 'pl-13'}>
-                    {derived ? (
+                    {derived || calculatedLabel !== undefined ? (
                         <span className="text-[11px] leading-4 text-muted">
-                            {derivedLabel}
+                            {derived ? derivedLabel : calculatedLabel}
                         </span>
                     ) : (
                         <StatusIndicator status={status} size="compact" />
@@ -249,7 +274,7 @@ export function ParameterField({
                 </div>
             )}
             <Text slot="description" className="sr-only">
-                {t(`${parameter}.help`)}
+                {help}
             </Text>
             <FieldError
                 className={cn(

@@ -3,16 +3,20 @@
     "intro": "Os parâmetros abaixo seguem para a revisão de um moderador. O driver só aparece na busca depois de aprovado; seu projeto não muda.",
     "sections": {
         "identification": "Identificação",
-        "required": "Parâmetros obrigatórios",
-        "optional": "Parâmetros opcionais",
+        "required": "Obrigatórios",
+        "optional": "Opcionais",
         "origin": "Origem dos dados",
-        "contact": "Contato (obrigatório)"
+        "contact": "Contato (obrigatório)",
+        "parameters": "Parâmetros Thiele-Small",
+        "optionalFilled_one": "· {{count}} preenchido",
+        "optionalFilled_other": "· {{count}} preenchidos",
+        "originContact": "Origem e contato"
     },
     "fields": {
         "brand": "Fabricante",
         "model": "Modelo",
-        "variant": "Variante (opcional)",
-        "variantHint": "Impedância ou versão, por exemplo 4 Ω.",
+        "variant": "Variante · impedância (opcional)",
+        "variantHint": "Impedância da bobina, em ohms (ex.: 4).",
         "source": "Fonte dos dados",
         "sourceHint": "Ficha técnica do fabricante, medição própria… Cite a revisão ou a data.",
         "email": "E-mail para avisar da decisão",
@@ -21,7 +25,8 @@
         "diameterHint": "Tamanho comercial do alto-falante, por exemplo 12\".",
         "trap": "Não preencha este campo",
         "sourcePlaceholder": "Ex.: ficha técnica, rev. B, 03/2024",
-        "emailPlaceholder": "nome@exemplo.com"
+        "emailPlaceholder": "nome@exemplo.com",
+        "calculated": "calculado"
     },
     "actions": {
         "submit": "Enviar",
@@ -39,7 +44,8 @@
         "tooLong": "Use no máximo {{max}} caracteres.",
         "email": "Informe um e-mail válido.",
         "number": "Informe um número válido.",
-        "range": "Valor fora da faixa permitida."
+        "range": "Valor fora da faixa permitida.",
+        "impedance": "Informe só a impedância em ohms, de 0,5 a 64 (ex.: 4 ou 3,2)."
     },
     "failure": {
         "alreadyInCatalog": "Este driver já está no catálogo (mesmo fabricante, modelo e variante). Procure-o na busca.",
@@ -66,7 +72,7 @@
         "discard": "Descartar envio"
     },
     "manual": {
-        "title": "Preencher a partir do manual (opcional)",
+        "title": "Preencher a partir do manual",
         "choose": "Escolher PDF…",
         "remove": "Remover",
         "fill": "Preencher a partir do manual",
@@ -96,6 +102,11 @@
             "network": "Sem conexão com o servidor. O que você digitou foi mantido; tente de novo.",
             "server": "O servidor não conseguiu ler o manual. O que você digitou foi mantido; tente de novo."
         },
-        "offline": "Sem conexão: a leitura do manual precisa do servidor."
+        "offline": "Sem conexão: a leitura do manual precisa do servidor.",
+        "badge": "Opcional",
+        "subtitle": "A IA lê a ficha técnica e preenche os campos vazios. Você revisa tudo antes de enviar.",
+        "dropTitle": "Arraste o PDF do manual até aqui",
+        "dropOr": "ou",
+        "dropHint": "PDF de até 10 MB e 30 páginas"
     }
 }

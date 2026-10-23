@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { DRIVER_KEYS } from '@/engine';
 import type { DriverKey } from '@/engine';
+import { isImpedance } from '@/lib/impedance';
 import { PARAMETERS } from '@/lib/parameters';
 import { DRIVER_TYPES } from '@/lib/project/types';
 import type { DriverType } from '@/lib/project/types';
@@ -62,6 +63,7 @@ export type SubmissionErrorCode =
     | 'required'
     | 'tooLong'
     | 'email'
+    | 'impedance'
     | 'number'
     | 'range';
 
@@ -91,7 +93,10 @@ function numberShape(): z.ZodObject {
 export const submissionSchema = z.object({
     brand: text(TEXT_LIMITS.brand, true),
     model: text(TEXT_LIMITS.model, true),
-    variant: text(TEXT_LIMITS.variant, false),
+    // A variante é a impedância em ohms ("4 Ω"), nunca texto livre.
+    variant: text(TEXT_LIMITS.variant, false).refine(isImpedance, {
+        message: 'impedance',
+    }),
     type: z.union([z.literal(''), z.enum(DRIVER_TYPES)]),
     source: text(TEXT_LIMITS.source, true),
     // Obrigatório (specs/009): vazio é 'required'; preenchido precisa ser e-mail.
@@ -120,7 +125,7 @@ function codeFor(issue: z.core.$ZodIssue): SubmissionErrorCode {
     }
 
     if (issue.code === 'custom') {
-        return 'email';
+        return issue.message === 'impedance' ? 'impedance' : 'email';
     }
 
     return 'number';

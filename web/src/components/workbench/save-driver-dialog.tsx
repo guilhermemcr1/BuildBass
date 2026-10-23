@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
+import { ImpedanceField } from '@/components/ui/impedance-field';
+import { isImpedance } from '@/lib/impedance';
 import { TextInput } from '@/components/ui/text-field';
 import { CUT_PLAN_LIMITS } from '@/cutplan/config';
 import {
@@ -26,7 +28,7 @@ type SaveDriverDialogProps = {
 };
 
 type TextField = 'brand' | 'model' | 'variant';
-type Problem = 'required' | 'tooLong' | 'duplicateOther' | 'full';
+type Problem = 'required' | 'tooLong' | 'impedance' | 'duplicateOther' | 'full';
 
 const TEXT_LIMITS: Record<TextField, { min: number; max: number }> = {
     brand: SAVED_DRIVER_LIMITS.brand,
@@ -39,6 +41,10 @@ function textProblem(field: TextField, value: string): Problem | undefined {
 
     if (trimmed.length === 0) {
         return field === 'variant' ? undefined : 'required';
+    }
+
+    if (field === 'variant' && !isImpedance(trimmed)) {
+        return 'impedance';
     }
 
     return trimmed.length > TEXT_LIMITS[field].max ? 'tooLong' : undefined;
@@ -214,7 +220,7 @@ export default function SaveDriverDialog({
                         required
                         error={message('model')}
                     />
-                    <TextInput
+                    <ImpedanceField
                         label={t('saved.fields.variant')}
                         value={variant}
                         onChange={setVariant}

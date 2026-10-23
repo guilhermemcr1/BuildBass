@@ -16,6 +16,7 @@ const DRIVER: CatalogDriver = {
     vas_m3: 0.026348,
     sd_m2: 0.05309,
     source: 'ficha',
+    images: [],
 };
 
 describe('toDriverInput', () => {
@@ -59,5 +60,28 @@ describe('toDriverInput', () => {
 
         expect(source).toEqual({ brand: 'Triton', model: 'TR 620 12"' });
         expect(source).not.toHaveProperty('variant');
+    });
+
+    test('sem medidas físicas no cadastro, não devolve dims', () => {
+        expect(toDriverInput(DRIVER).dims).toBeUndefined();
+    });
+
+    test('devolve formato, pistão e cotas A–G, e as medidas não vazam para o driver', () => {
+        const { driver, dims } = toDriverInput({
+            ...DRIVER,
+            drv_shape: 'round',
+            drv_piston: 'cone',
+            drv_a_m: 0.32,
+            cutout_m: 0.28,
+            drv_g_m: 0.14,
+        });
+
+        expect(dims).toEqual({
+            shape: 'round',
+            piston: 'cone',
+            measures: { drv_a_m: 0.32, cutout_m: 0.28, drv_g_m: 0.14 },
+        });
+        expect(driver).not.toHaveProperty('drv_a_m');
+        expect(driver).not.toHaveProperty('cutout_m');
     });
 });

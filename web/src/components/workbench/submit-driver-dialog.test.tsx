@@ -76,7 +76,7 @@ describe('SubmitDriverDialog — enviar o driver do projeto (US1)', () => {
 
         expect(fill(/Fabricante/)).toHaveValue('Triton');
         expect(fill(/Modelo/)).toHaveValue('TR 620');
-        expect(fill(/Variante/)).toHaveValue('4 Ω');
+        expect(fill(/Variante/)).toHaveValue('4');
     });
 
     test('campo obrigatório vazio mostra o erro, não chama a API e mantém o digitado', async () => {
@@ -136,7 +136,9 @@ describe('SubmitDriverDialog — enviar o driver do projeto (US1)', () => {
 
         expect(submit).not.toHaveBeenCalled();
         expect(screen.getByText('Preencha este campo.')).toBeInTheDocument();
-        expect(screen.getByText('Contato (obrigatório)')).toBeInTheDocument();
+        expect(
+            screen.getByRole('heading', { name: 'Origem e contato' }),
+        ).toBeInTheDocument();
 
         await paste(/E-mail/, 'sem-arroba');
         await userEvent.click(screen.getByRole('button', { name: 'Enviar' }));
@@ -291,6 +293,62 @@ describe('SubmitDriverDialog — recusas do servidor (US3)', () => {
 
         await screen.findByText(PROTOCOL);
         expect(submit.mock.calls[0][0].website).toBe('robo');
+    });
+});
+
+describe('SubmitDriverDialog — campos calculados dos outros', () => {
+    test('Qes e Qms inserem o Qts no campo, marcado como calculado e editável', async () => {
+        renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
+
+        await userEvent.click(
+            screen.getByRole('button', { name: /Opcionais/ }),
+        );
+        await paste(/^Qes/, '0,44');
+        await paste(/^Qms/, '8,37');
+        await userEvent.tab();
+
+        expect(fill(/^Qts/)).toHaveValue('0,42');
+        expect(screen.getByText('calculado')).toBeInTheDocument();
+
+        await userEvent.tripleClick(fill(/^Qts/));
+        await userEvent.keyboard('0,5');
+        await userEvent.tab();
+
+        expect(fill(/^Qts/)).toHaveValue('0,50');
+        expect(screen.queryByText('calculado')).not.toBeInTheDocument();
+    });
+
+    test('o valor calculado vai no envio, como se tivesse sido digitado', async () => {
+        renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
+
+        await userEvent.click(
+            screen.getByRole('button', { name: /Opcionais/ }),
+        );
+        await paste(/^Fs/, '40');
+        await paste(/^Vas/, '50');
+        await paste(/^Qes/, '0,44');
+        await paste(/^Qms/, '8,37');
+        await userEvent.tab();
+        await sendValidForm();
+
+        expect(await screen.findByText(PROTOCOL)).toBeInTheDocument();
+        expect(submit.mock.calls[0][0]).toMatchObject({ qts: 0.418 });
+    });
+
+    test('um driver do projeto que já permite o cálculo abre com o campo preenchido, sem contar como edição', async () => {
+        const store = activeProjectStore().getState();
+        store.setDriverValue('fs_hz', 34.5);
+        store.setDriverValue('vas_m3', 0.085);
+        store.setDriverValue('qes', 0.44);
+        store.setDriverValue('qms', 8.37);
+        const onClose = vi.fn();
+        renderWithProviders(<SubmitDriverDialog onClose={onClose} />);
+
+        expect(fill(/^Qts/)).toHaveValue('0,42');
+
+        await userEvent.keyboard('{Escape}');
+
+        expect(onClose).toHaveBeenCalled();
     });
 });
 

@@ -1,6 +1,7 @@
 import { CUT_PLAN_LIMITS, DEFAULT_KERF_M, resolveCutPlan } from '@/cutplan';
 import type { CutPlanConfig, CutPlanProportion, SheetConfig } from '@/cutplan';
 import { DRIVER_KEYS } from '@/engine';
+import type { CatalogDims } from '@/lib/catalog/to-driver-input';
 import type { ParameterKey } from '@/lib/parameters';
 import type {
     DriverDims,
@@ -300,6 +301,29 @@ export function writeDriverChoice(
     value: DriverDims['shape'] | DriverDims['piston'] | undefined,
 ): ProjectData {
     return withDriverDims(data, withField(data.driverDims ?? {}, key, value));
+}
+
+// Medidas físicas vindas do catálogo: substituem as do projeto por inteiro (formato, pistão e
+// cotas A–G; o recorte C mora no plano de corte), para não sobrar cota de outro alto-falante.
+export function applyCatalogDims(
+    data: ProjectData,
+    dims: CatalogDims,
+): ProjectData {
+    let next = withDriverDims(data, {});
+
+    if (dims.shape !== undefined) {
+        next = writeDriverChoice(next, 'shape', dims.shape);
+    }
+
+    if (dims.piston !== undefined) {
+        next = writeDriverChoice(next, 'piston', dims.piston);
+    }
+
+    for (const [key, si] of Object.entries(dims.measures)) {
+        next = writeField(next, key as ParameterKey, si);
+    }
+
+    return next;
 }
 
 // A identificação (marca, modelo, tipo) é um dado do projeto, editável à mão: ela fica mesmo com o

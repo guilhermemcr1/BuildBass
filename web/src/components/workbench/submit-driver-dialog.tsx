@@ -63,6 +63,7 @@ export default function SubmitDriverDialog({
                         errors={submission.errors}
                         failure={submission.failure}
                         manual={submission.manual}
+                        auto={submission.auto}
                         onFillManual={(file) =>
                             void submission.fillFromManual(file)
                         }
