@@ -95,9 +95,21 @@ it('limpa e trunca os textos de identificação', function () {
 
     expect($result['suggestion']['brand'])->toBe('Marca Grande')
         ->and(mb_strlen($result['suggestion']['model']))->toBe(80)
-        ->and(mb_strlen($result['suggestion']['variant']))->toBe(40)
+        ->and($result['suggestion']['variant'])->toBeNull()
         ->and($result['suggestion']['type'])->toBeNull();
 });
+
+it('a variante só entra como impedância em ohms', function (?string $read, ?string $expected) {
+    $result = (new ManualSuggestionBuilder)->build([aiRead(['fs_hz' => [40, 'Hz']], ['variant' => $read])]);
+
+    expect($result['suggestion']['variant'])->toBe($expected);
+})->with([
+    'número' => ['4', '4 Ω'],
+    'com unidade' => ['4 Ohms', '4 Ω'],
+    'decimal com vírgula' => ['3,2 Ω', '3.2 Ω'],
+    'texto livre' => ['Dual voice coil', null],
+    'fora da faixa' => ['900', null],
+]);
 
 it('texto vazio vira nulo', function () {
     $result = (new ManualSuggestionBuilder)->build([aiRead(['fs_hz' => [40, 'Hz']], ['brand' => '   ', 'variant' => ''])]);

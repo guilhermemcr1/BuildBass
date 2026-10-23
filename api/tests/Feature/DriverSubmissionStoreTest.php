@@ -127,3 +127,23 @@ it('aceita envio sem tipo e recusa tipo fora da lista', function () {
         ->assertUnprocessable()
         ->assertJsonValidationErrors('type');
 });
+
+it('a variante é a impedância em ohms: normaliza para "N Ω" e recusa texto livre', function (string $sent, ?string $stored) {
+    $response = $this->postJson('/api/driver-submissions', validSubmission(['variant' => $sent]));
+
+    if ($stored === null) {
+        $response->assertUnprocessable()->assertJsonValidationErrors('variant');
+
+        return;
+    }
+
+    $response->assertCreated();
+    expect(DriverSubmission::query()->sole()->variant)->toBe($stored);
+})->with([
+    'só o número' => ['4', '4 Ω'],
+    'com símbolo' => ['4 Ω', '4 Ω'],
+    'em palavras' => ['8 ohms', '8 Ω'],
+    'decimal com vírgula' => ['3,20', '3.2 Ω'],
+    'texto livre' => ['Dual voice coil', null],
+    'fora da faixa' => ['900', null],
+]);

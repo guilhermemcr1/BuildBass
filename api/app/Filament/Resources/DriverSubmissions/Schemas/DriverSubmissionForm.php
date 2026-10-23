@@ -3,78 +3,51 @@
 namespace App\Filament\Resources\DriverSubmissions\Schemas;
 
 use App\Enums\SubmissionStatus;
+use App\Filament\Schemas\DriverParameterFields;
+use App\Filament\Schemas\IdentityFields;
 use App\Models\Driver;
 use App\Models\DriverSubmission;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 
 class DriverSubmissionForm
 {
-    /** Rótulos dos parâmetros, na ordem em que o moderador confere. */
-    private const PARAMETER_LABELS = [
-        'fs_hz' => 'Fs (Hz)',
-        'qts' => 'Qts',
-        'vas_m3' => 'Vas (m³)',
-        'qes' => 'Qes',
-        'qms' => 'Qms',
-        're_ohm' => 'Re (Ω)',
-        'le_h' => 'Le (H)',
-        'xmax_m' => 'Xmax (m)',
-        'sd_m2' => 'Sd (m²)',
-        'pe_w' => 'Pe (W)',
-        'bl_tm' => 'BL (T·m)',
-        'mms_kg' => 'Mms (kg)',
-        'vd_m3' => 'Vd (m³)',
-        'nominal_diameter_m' => 'Diâmetro nominal (m)',
-    ];
-
     public static function configure(Schema $schema): Schema
     {
         $editable = fn (?DriverSubmission $record): bool => $record?->status === SubmissionStatus::Pending;
 
-        $parameters = [];
+        $locked = fn (?DriverSubmission $record): bool => ! $editable($record);
 
-        foreach (self::PARAMETER_LABELS as $key => $label) {
-            [$min, $max] = Driver::RANGES[$key];
+        $parameters = DriverParameterFields::groups($locked);
 
-            $parameters[] = TextInput::make($key)
-                ->label($label)
-                ->numeric()
-                ->step('any')
-                ->minValue($min)
-                ->maxValue($max)
-                ->required(in_array($key, Driver::REQUIRED_PARAMETERS, true))
-                ->disabled(fn (?DriverSubmission $record): bool => ! $editable($record));
-        }
-
-        return $schema->components([
+        return $schema->columns(1)->components([
             Section::make('Identificação')
-                ->columns(4)
+                ->icon(Heroicon::OutlinedIdentification)
+                ->columns(['default' => 1, 'md' => 2, 'xl' => 4])
                 ->schema([
-                    TextInput::make('brand')->label('Fabricante')->required()->maxLength(80)
-                        ->disabled(fn (?DriverSubmission $record): bool => ! $editable($record)),
-                    TextInput::make('model')->label('Modelo')->required()->maxLength(80)
-                        ->disabled(fn (?DriverSubmission $record): bool => ! $editable($record)),
-                    TextInput::make('variant')->label('Variante')->maxLength(40)
-                        ->disabled(fn (?DriverSubmission $record): bool => ! $editable($record)),
+                    IdentityFields::brand()->disabled($locked),
+                    IdentityFields::model()->disabled($locked),
+                    IdentityFields::variant($locked),
                     Select::make('type')->label('Tipo')
                         ->options(array_combine(Driver::TYPES, array_map('ucfirst', Driver::TYPES)))
                         ->placeholder('Não informado')
                         ->disabled(fn (?DriverSubmission $record): bool => ! $editable($record)),
                 ]),
-            Section::make('Parâmetros (SI)')
-                ->columns(4)
+            Section::make('Parâmetros Thiele-Small')
+                ->description('Unidades do SI, ponto nos decimais. Confira com a fonte informada.')
+                ->icon(Heroicon::OutlinedAdjustmentsHorizontal)
                 ->schema($parameters),
             Section::make('Origem dos dados')
+                ->icon(Heroicon::OutlinedDocumentText)
                 ->schema([
-                    TextInput::make('source')->label('Fonte')->required()->maxLength(255)
-                        ->disabled(fn (?DriverSubmission $record): bool => ! $editable($record)),
+                    IdentityFields::source()->disabled($locked),
                 ]),
             Section::make('Remetente e decisão')
-                ->columns(3)
+                ->icon(Heroicon::OutlinedUserCircle)
+                ->columns(['default' => 1, 'md' => 2, 'xl' => 3])
                 ->schema([
                     TextEntry::make('locale')->label('Idioma do envio'),
                     TextEntry::make('sender')

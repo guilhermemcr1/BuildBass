@@ -2,23 +2,31 @@
 
 namespace App\Filament\Resources\DriverSubmissions\Pages;
 
+use App\Enums\AuditType;
 use App\Enums\SubmissionStatus;
 use App\Exceptions\AlreadyDecidedException;
 use App\Exceptions\DuplicateDriverException;
+use App\Filament\Concerns\CancelsWithLink;
 use App\Filament\Resources\DriverSubmissions\DriverSubmissionResource;
 use App\Models\DriverSubmission;
 use App\Models\Moderator;
+use App\Services\Audit\AuditDiff;
+use App\Services\Audit\AuditLogger;
 use App\Services\DriverSubmissionService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use LogicException;
 
 class EditDriverSubmission extends EditRecord
 {
+    use CancelsWithLink;
+
     protected static string $resource = DriverSubmissionResource::class;
 
     protected static ?string $title = 'Revisar envio';
@@ -45,6 +53,29 @@ class EditDriverSubmission extends EditRecord
         $moderator = Auth::guard('moderator')->user();
 
         return $moderator;
+    }
+
+    // Salvar a revisão grava um evento com o que mudou, na mesma transação (feature 010, FR-016).
+    protected function handleRecordUpdate(Model $record, array $data): Model
+    {
+        return DB::transaction(function () use ($record, $data): Model {
+            $before = $record->only(DriverSubmission::DRIVER_FIELDS);
+
+            $record->update($data);
+
+            $changes = AuditDiff::between($before, $record->only(DriverSubmission::DRIVER_FIELDS), DriverSubmission::DRIVER_FIELDS);
+
+            if ($changes !== []) {
+                app(AuditLogger::class)->record(AuditType::SubmissionEdited, [
+                    'subject_type' => 'submission',
+                    'subject_id' => $record->getKey(),
+                    'subject_label' => trim("{$record->getAttribute('brand')} {$record->getAttribute('model')} {$record->getAttribute('variant')}"),
+                    'changes' => $changes,
+                ], $this->moderator());
+            }
+
+            return $record;
+        });
     }
 
     protected function getHeaderActions(): array

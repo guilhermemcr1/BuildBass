@@ -51,3 +51,11 @@ it('expõe as unidades canônicas de cada parâmetro para o schema da IA', funct
         ->and(ManualUnits::parameters())->toHaveKey('vas')
         ->and(ManualUnits::parameters()['vas'])->toBe('vas_m3');
 });
+
+it('converte sem deixar resto de ponto flutuante', function () {
+    expect(ManualUnits::toSi('xmax_m', 9, 'mm'))->toBe(0.009)
+        ->and(ManualUnits::toSi('le_h', 3.89, 'mH'))->toBe(0.00389)
+        ->and(ManualUnits::toSi('nominal_diameter_m', 12, 'in'))->toBe(0.3048)
+        ->and(ManualUnits::toSi('mms_kg', 154.76, 'g'))->toBe(0.15476)
+        ->and(ManualUnits::toSi('vas_m3', 66.15, 'L'))->toBe(0.06615);
+});

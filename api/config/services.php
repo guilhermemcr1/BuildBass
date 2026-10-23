@@ -39,6 +39,9 @@ return [
         'key' => env('OPENROUTER_API_KEY'),
         'model' => env('OPENROUTER_MODEL'),
         'base_url' => env('OPENROUTER_BASE_URL', 'https://openrouter.ai/api/v1'),
+        // `deny` só roteia para provedores que não guardam nem treinam com o texto enviado. Modelos
+        // gratuitos quase sempre guardam: com eles, só `allow` acha provedor (404 "No endpoints").
+        'data_collection' => env('OPENROUTER_DATA_COLLECTION', 'deny'),
     ],
 
     'slack' => [

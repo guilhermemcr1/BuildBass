@@ -62,7 +62,6 @@ it('recusa texto acima do tamanho', function (string $field, int $max) {
 })->with([
     ['brand', 80],
     ['model', 80],
-    ['variant', 40],
     ['source', 255],
 ]);
 

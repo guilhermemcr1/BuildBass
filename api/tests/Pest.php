@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Moderator;
 use Illuminate\Http\Testing\File;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
@@ -70,4 +71,14 @@ function postManual(array $extra = [], string $ip = '203.0.113.7'): TestResponse
 {
     return test()->withServerVariables(['REMOTE_ADDR' => $ip])
         ->post('/api/driver-submissions/extract', array_merge(['manual' => manualPdf()], $extra), ['Accept' => 'application/json']);
+}
+
+// Painel de moderação (feature 010): entra como moderador no guard do painel.
+function signInModerator(?Moderator $moderator = null): Moderator
+{
+    $moderator ??= Moderator::factory()->create();
+    test()->actingAs($moderator, 'moderator');
+    Filament\Facades\Filament::setCurrentPanel('moderation');
+
+    return $moderator;
 }

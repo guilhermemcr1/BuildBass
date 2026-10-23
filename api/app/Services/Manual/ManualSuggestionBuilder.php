@@ -5,6 +5,7 @@ namespace App\Services\Manual;
 use App\Http\Requests\StoreDriverSubmissionRequest;
 use App\Models\Driver;
 use App\Models\DriverSubmission;
+use App\Support\DriverVariant;
 
 // Da leitura bruta da IA para a sugestão do formulário (feature 009, research.md §3 e §4): converte
 // para SI, descarta o que sai de Driver::RANGES e marca como suspeito o que não fecha entre si.
@@ -66,6 +67,10 @@ class ManualSuggestionBuilder
             }
 
             $suggestion[$field] = match (true) {
+                // A variante é a impedância em ohms; texto livre da IA não entra.
+                $field === 'variant' => ($ohms = DriverVariant::parse($first['variant'] ?? null)) === null
+                    ? null
+                    : DriverVariant::format((string) $ohms),
                 isset(self::TEXT_LIMITS[$field]) => $this->text($first[$field] ?? null, self::TEXT_LIMITS[$field]),
                 $field === 'type' => in_array($type, Driver::TYPES, true) ? $type : null,
                 default => $numbers[$field] ?? null,

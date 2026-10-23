@@ -21,6 +21,9 @@ return [
         'pdfinfo' => env('PDFINFO_BIN', 'pdfinfo'),
     ],
 
+    // Teto de tokens da resposta da IA (a lista de drivers é curta; o resto é folga para raciocínio).
+    'max_output_tokens' => (int) env('MANUAL_EXTRACTION_MAX_OUTPUT_TOKENS', 8000),
+
     // Segundos.
     'process_timeout' => 20,
     'provider_timeout' => 45,

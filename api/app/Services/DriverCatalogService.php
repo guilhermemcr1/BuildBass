@@ -78,6 +78,30 @@ class DriverCatalogService
         return array_values($brands->all());
     }
 
+    /**
+     * Driver do catálogo que colide com a identificação dada: mesmo "marca modelo variação"
+     * normalizado ou a mesma tripla exata. `$ignoreId` deixa um driver em edição fora da conta.
+     */
+    public function findDuplicate(string $brand, string $model, string $variant, ?string $ignoreId = null): ?Driver
+    {
+        $key = SearchText::normalize("{$brand} {$model} {$variant}");
+
+        return Driver::query()
+            ->when($ignoreId !== null, fn ($query) => $query->whereKeyNot($ignoreId))
+            ->where(fn ($query) => $query
+                ->where('search_text', $key)
+                ->orWhere(fn ($same) => $same
+                    ->where('brand', $brand)
+                    ->where('model', $model)
+                    ->where('variant', $variant)))
+            ->first();
+    }
+
+    public function existsDuplicate(string $brand, string $model, string $variant, ?string $ignoreId = null): bool
+    {
+        return $this->findDuplicate($brand, $model, $variant, $ignoreId) !== null;
+    }
+
     public function find(string $id): ?Driver
     {
         return Driver::query()->find($id);

@@ -11,6 +11,7 @@ return [
     'min' => 'Fill in this field.',
     'email' => 'Enter a valid email.',
     'in' => 'Choose one of the available types.',
+    'impedance' => 'Enter only the impedance in ohms, from :min to :max (e.g. 4 or 3.2).',
     'honeypot' => 'Request refused.',
     'duplicate_in_catalog' => 'This driver is already in the catalog.',
     'duplicate_pending' => 'This driver is already under review.',

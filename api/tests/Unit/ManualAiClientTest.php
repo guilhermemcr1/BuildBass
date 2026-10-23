@@ -33,6 +33,8 @@ function aiDriver(array $overrides = []): array
 }
 
 it('chama o OpenRouter com saída estruturada estrita e sem retenção de dados', function () {
+    // O .env local pode liberar a coleta (modelos gratuitos); o padrão do sistema é negar.
+    config(['services.openrouter.data_collection' => 'deny']);
     Http::fake(['openrouter.test/*' => Http::response(aiBody(['drivers' => [aiDriver()]]))]);
 
     $drivers = (new ManualAiClient)->read("Qts 0,717 | Fs 76,94 Hz\n");
@@ -114,4 +116,13 @@ it('aceita lista vazia de drivers', function () {
     Http::fake(['openrouter.test/*' => Http::response(aiBody(['drivers' => []]))]);
 
     expect((new ManualAiClient)->read('texto'))->toBe([]);
+});
+
+it('permite coleta de dados só quando a configuração pede (modelos gratuitos)', function () {
+    fakeManualPipeline();
+    config(['services.openrouter.data_collection' => 'allow']);
+
+    (new ManualAiClient)->read('Fs 40 Hz');
+
+    Http::assertSent(fn ($request) => $request['provider'] === ['require_parameters' => true, 'data_collection' => 'allow']);
 });

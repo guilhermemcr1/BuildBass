@@ -6,6 +6,8 @@ use App\Exceptions\Manual\ManualProviderException;
 use App\Models\Driver;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 // Consulta ao OpenRouter (feature 009, research.md §2): só o texto do manual vai, com saída JSON
 // estrita, sem retry e só para provedores que não retêm os dados. Devolve os drivers lidos, ainda
@@ -25,8 +27,13 @@ class ManualAiClient
       "." a thousands separator ("1.240 W" is 1240), but "." is also used as decimal ("530.9 cm2"):
       decide by plausibility.
     - nominal_diameter: nominal size of the driver (for example 12 in). fs: resonance frequency.
-      pe: rated continuous/RMS power in W, not peak. sd: effective piston area. xmax: one-way linear
-      excursion; ignore Xmech. mms: moving mass. vd: peak displacement volume.
+      pe: rated continuous/RMS power, always in W ("Potência nominal Rms 650W"), never peak power and
+      never a mass: a value in grams or kg belongs to mms, not to pe. sd: effective piston area.
+      xmax: one-way linear excursion ("Xmax linear +-9mm" is 9 mm); ignore peak-to-peak values and
+      Xmech. mms: moving mass in g or kg ("M(ms) 154.76 grams"). vd: peak displacement volume.
+      le: voice-coil inductance, preferably the value at 1 kHz.
+    - variant: only the nominal impedance of the voice coil when the manual states it (for example
+      "4 Ohms" or "R(e) 3.5 (4 Ohms)" gives variant "4"); otherwise null. Digits only, no unit.
     - Ignore enclosure, port, Cms, Rms, Fb and F3 data.
     - type only if clearly stated: subwoofer, woofer, midbass, midrange or fullrange; otherwise null.
     TXT;
@@ -45,16 +52,36 @@ class ManualAiClient
                 ->withHeaders(['X-Title' => (string) config('app.name')])
                 ->timeout((int) config('manual_extraction.provider_timeout'))
                 ->post(rtrim((string) config('services.openrouter.base_url'), '/').'/chat/completions', $this->body($text));
-        } catch (ConnectionException) {
+        } catch (ConnectionException $exception) {
+            // Sem a mensagem completa: ela pode citar a URL. Basta saber que foi rede ou tempo.
+            Log::warning('manual_provider_error', ['kind' => 'connection', 'curl_error' => Str::before($exception->getMessage(), ' for ')]);
+
             throw new ManualProviderException;
         }
 
         if (! $response->successful()) {
+            // Só o que o provedor diz sobre a falha (código e mensagem); nunca o texto do manual.
+            Log::warning('manual_provider_error', [
+                'kind' => 'http',
+                'status' => $response->status(),
+                'code' => $response->json('error.code'),
+                'message' => Str::limit((string) $response->json('error.message'), 300),
+            ]);
+
             throw new ManualProviderException;
         }
 
         $content = $response->json('choices.0.message.content');
         $payload = is_string($content) ? json_decode($content, true) : null;
+
+        if (! is_array($payload)) {
+            Log::warning('manual_provider_error', [
+                'kind' => 'invalid_json',
+                'finish_reason' => $response->json('choices.0.finish_reason'),
+                'content_length' => is_string($content) ? strlen($content) : null,
+                'model_used' => $response->json('model'),
+            ]);
+        }
 
         return $this->validated($payload);
     }
@@ -67,7 +94,9 @@ class ManualAiClient
         return [
             'model' => (string) config('services.openrouter.model'),
             'temperature' => 0,
-            'max_tokens' => 2500,
+            // Folga para modelos que "pensam" antes de responder: com pouco limite eles gastam tudo
+            // no raciocínio e devolvem conteúdo vazio (finish_reason "length").
+            'max_tokens' => (int) config('manual_extraction.max_output_tokens'),
             'messages' => [
                 ['role' => 'system', 'content' => self::INSTRUCTIONS],
                 ['role' => 'user', 'content' => "<manual>\n{$text}\n</manual>"],
@@ -76,7 +105,7 @@ class ManualAiClient
                 'type' => 'json_schema',
                 'json_schema' => ['name' => 'drivers', 'strict' => true, 'schema' => $this->schema()],
             ],
-            'provider' => ['require_parameters' => true, 'data_collection' => 'deny'],
+            'provider' => ['require_parameters' => true, 'data_collection' => config('services.openrouter.data_collection') === 'allow' ? 'allow' : 'deny'],
         ];
     }
 

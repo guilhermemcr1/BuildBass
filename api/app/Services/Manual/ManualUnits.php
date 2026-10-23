@@ -101,7 +101,9 @@ class ManualUnits
             return null;
         }
 
-        return $value * $factors[$canonical];
+        // 9 algarismos significativos: tiram o resto de ponto flutuante (9 mm × 0.001 daria
+        // 0.009000000000000001) sem perder nada que a ficha informe.
+        return (float) sprintf('%.9G', $value * $factors[$canonical]);
     }
 
     private static function normalize(string $unit): ?string
