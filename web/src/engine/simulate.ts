@@ -8,6 +8,7 @@ import { ANALYSIS_FREQUENCIES_HZ, FREQUENCIES_HZ } from './frequencies';
 import { netVolume as solveNetVolume, portArea } from './port';
 import { twoChambers } from './types';
 import type {
+    BoxType,
     CurveId,
     DriverKey,
     EngineWarning,
@@ -31,9 +32,22 @@ const DISTANCE_M = 1;
 // Área usada só no modo normalizado, em que o nível absoluto não importa.
 const NORMALIZED_SD = 0.05;
 
-const RESPONSE_NEEDS: DriverKey[] = ['fs_hz', 'qts', 'vas_m3'];
+export const RESPONSE_NEEDS: DriverKey[] = ['fs_hz', 'qts', 'vas_m3'];
 // Para nível absoluto, excursão e impedância: escala elétrica e mecânica do driver.
-const ABSOLUTE_NEEDS: DriverKey[] = ['re_ohm', 'sd_m2', 'qms'];
+export const ABSOLUTE_NEEDS: DriverKey[] = ['re_ohm', 'sd_m2', 'qms'];
+
+// Medidas da caixa sem as quais não há resposta, por tipo: o volume (ou os das duas câmaras no
+// bandpass), a sintonia do duto nos tipos dutados e a da câmara traseira na 6ª ordem. A interface
+// marca esses campos como obrigatórios com a mesma regra que `simulate` usa para dizer o que falta.
+export function requiredBoxFields(type: BoxType): FieldKey[] {
+    return [
+        ...(twoChambers(type)
+            ? (['vr_m3', 'vf_m3'] as const)
+            : (['vb_m3'] as const)),
+        ...(type === 'closed' ? [] : (['fb_hz'] as const)),
+        ...(type === 'bandpass6' ? (['fb_rear_hz'] as const) : []),
+    ];
+}
 
 type Model = {
     perDriver: CircuitParams;
@@ -339,27 +353,9 @@ export function simulate(project: ProjectInput): Simulation {
     const warnings: EngineWarning[] = [];
     const results: SimulationResults = {};
 
-    const boxMissing: FieldKey[] = [];
-
-    if (band) {
-        if (box.vr_m3 === undefined) {
-            boxMissing.push('vr_m3');
-        }
-
-        if (box.vf_m3 === undefined) {
-            boxMissing.push('vf_m3');
-        }
-    } else if (box.vb_m3 === undefined) {
-        boxMissing.push('vb_m3');
-    }
-
-    if (ported && box.fb_hz === undefined) {
-        boxMissing.push('fb_hz');
-    }
-
-    if (band6 && box.fb_rear_hz === undefined) {
-        boxMissing.push('fb_rear_hz');
-    }
+    const boxMissing = requiredBoxFields(box.type).filter(
+        (key) => box[key as keyof typeof box] === undefined,
+    );
 
     const responseMissing = [
         ...missingFrom(values, RESPONSE_NEEDS),

@@ -11,6 +11,7 @@ function attempt(int $n, string $ip = '203.0.113.7')
         'brand' => 'Marca',
         'model' => "M-{$n}",
         'source' => 'Ficha',
+        'contact_email' => 'pessoa@exemplo.com',
         'fs_hz' => 40,
         'qts' => 0.4,
         'vas_m3' => 0.05,

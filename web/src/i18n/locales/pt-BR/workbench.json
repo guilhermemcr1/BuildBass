@@ -157,7 +157,9 @@
         "diameterAny": "Qualquer",
         "clearFilters": "Limpar filtros",
         "emptyFiltered": "Nenhum driver com esses filtros.",
-        "hintFilters": "Digite ao menos 2 letras ou escolha uma marca ou um diâmetro."
+        "hintFilters": "Digite ao menos 2 letras ou escolha uma marca ou um diâmetro.",
+        "triggerHint": "Buscar por fabricante ou modelo…",
+        "clearSearch": "Limpar busca"
     },
     "boxDialog": {
         "open3d": "Ver caixa em 3D",
@@ -179,7 +181,7 @@
         "fields": {
             "brand": "Marca",
             "model": "Modelo",
-            "variant": "Variação (opcional)",
+            "variant": "Variação · impedância (opcional)",
             "diameter": "Diâmetro nominal",
             "cutout": "Diâmetro do recorte",
             "depth": "Profundidade"
@@ -192,7 +194,8 @@
             "tooLong": "No máximo {{max}} caracteres.",
             "range": "Fora da faixa ({{min}} – {{max}}).",
             "full": "A lista chegou a {{max}} alto-falantes. Exclua algum para salvar outro.",
-            "duplicateOther": "Já existe outro alto-falante com essa marca, modelo e variação."
+            "duplicateOther": "Já existe outro alto-falante com essa marca, modelo e variação.",
+            "impedance": "Informe só a impedância em ohms, de 0,5 a 64 (ex.: 4 ou 3,2). Sem texto nem o símbolo Ω."
         },
         "actions": {
             "save": "Salvar",
@@ -272,12 +275,12 @@
         "title": "Identificação",
         "brand": "Marca",
         "model": "Modelo",
-        "variant": "Variação",
+        "variant": "Variação · impedância",
         "type": "Tipo",
         "typeNone": "Não informado",
         "brandPlaceholder": "Ex.: Triton",
         "modelPlaceholder": "Ex.: TR 620 12\"",
-        "variantPlaceholder": "Ex.: 4 Ω",
+        "variantPlaceholder": "Ex.: 4",
         "applied": "Driver aplicado: {{name}}",
         "fromMine": "Dos meus alto-falantes"
     },
@@ -287,5 +290,14 @@
         "midbass": "Médio-grave",
         "midrange": "Médio",
         "fullrange": "Fullrange"
+    },
+    "gallery": {
+        "title": "Fotos do driver",
+        "open": "Ampliar foto {{current}} de {{total}}",
+        "alt": "{{name}}, foto {{current}} de {{total}}",
+        "counter": "Foto {{current}} de {{total}}",
+        "previous": "Foto anterior",
+        "next": "Próxima foto",
+        "noImage": "Sem imagem"
     }
 }

@@ -12,6 +12,7 @@ function baseSubmission(): array
         'brand' => 'Exemplo',
         'model' => 'EX-1',
         'source' => 'Ficha',
+        'contact_email' => 'pessoa@exemplo.com',
         'fs_hz' => 40,
         'qts' => 0.4,
         'vas_m3' => 0.05,
@@ -61,7 +62,6 @@ it('recusa texto acima do tamanho', function (string $field, int $max) {
 })->with([
     ['brand', 80],
     ['model', 80],
-    ['variant', 40],
     ['source', 255],
 ]);
 
@@ -107,4 +107,25 @@ it('responde os erros no idioma do envio', function () {
     $this->postJson('/api/driver-submissions', [...$payload, 'locale' => 'xx'])
         ->assertUnprocessable()
         ->assertJsonPath('errors.brand.0', 'Preencha este campo.');
+});
+
+it('exige o e-mail de contato, também direto no servidor', function () {
+    $withoutEmail = baseSubmission();
+    unset($withoutEmail['contact_email']);
+
+    $this->postJson('/api/driver-submissions', $withoutEmail)
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('contact_email');
+
+    foreach (['', '   ', null] as $empty) {
+        $this->postJson('/api/driver-submissions', [...baseSubmission(), 'contact_email' => $empty])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('contact_email');
+    }
+
+    expect(DriverSubmission::count())->toBe(0);
+});
+
+it('aceita o envio com e-mail válido', function () {
+    $this->postJson('/api/driver-submissions', baseSubmission())->assertCreated();
 });

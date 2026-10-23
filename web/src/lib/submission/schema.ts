@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { DRIVER_KEYS } from '@/engine';
 import type { DriverKey } from '@/engine';
+import { isImpedance } from '@/lib/impedance';
 import { PARAMETERS } from '@/lib/parameters';
 import { DRIVER_TYPES } from '@/lib/project/types';
 import type { DriverType } from '@/lib/project/types';
@@ -62,6 +63,7 @@ export type SubmissionErrorCode =
     | 'required'
     | 'tooLong'
     | 'email'
+    | 'impedance'
     | 'number'
     | 'range';
 
@@ -91,15 +93,19 @@ function numberShape(): z.ZodObject {
 export const submissionSchema = z.object({
     brand: text(TEXT_LIMITS.brand, true),
     model: text(TEXT_LIMITS.model, true),
-    variant: text(TEXT_LIMITS.variant, false),
+    // A variante é a impedância em ohms ("4 Ω"), nunca texto livre.
+    variant: text(TEXT_LIMITS.variant, false).refine(isImpedance, {
+        message: 'impedance',
+    }),
     type: z.union([z.literal(''), z.enum(DRIVER_TYPES)]),
     source: text(TEXT_LIMITS.source, true),
-    // Vazio é permitido (e-mail é opcional); preenchido precisa ser e-mail.
+    // Obrigatório (specs/009): vazio é 'required'; preenchido precisa ser e-mail.
     contact_email: z
         .string()
         .trim()
+        .min(1)
         .max(TEXT_LIMITS.contact_email)
-        .refine((value) => value === '' || z.email().safeParse(value).success, {
+        .refine((value) => z.email().safeParse(value).success, {
             message: 'email',
         }),
     numbers: numberShape(),
@@ -119,7 +125,7 @@ function codeFor(issue: z.core.$ZodIssue): SubmissionErrorCode {
     }
 
     if (issue.code === 'custom') {
-        return 'email';
+        return issue.message === 'impedance' ? 'impedance' : 'email';
     }
 
     return 'number';
@@ -161,7 +167,7 @@ export type SubmissionPayload = Partial<Record<NumericKey, number>> & {
     variant?: string;
     type?: DriverType;
     source: string;
-    contact_email?: string;
+    contact_email: string;
     locale: 'pt-BR' | 'en';
     // Campo-armadilha (FR-011): o usuário nunca o preenche.
     website: string;
@@ -177,11 +183,11 @@ export function toPayload(
         brand: form.brand.trim(),
         model: form.model.trim(),
         source: form.source.trim(),
+        contact_email: form.contact_email.trim(),
         locale: extra.locale,
         website: '',
     };
     const variant = form.variant.trim();
-    const email = form.contact_email.trim();
 
     if (variant !== '') {
         payload.variant = variant;
@@ -189,10 +195,6 @@ export function toPayload(
 
     if (form.type !== '') {
         payload.type = form.type;
-    }
-
-    if (email !== '') {
-        payload.contact_email = email;
     }
 
     for (const key of NUMERIC_KEYS) {

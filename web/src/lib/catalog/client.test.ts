@@ -135,7 +135,11 @@ describe('fetchDriver', () => {
         expect(String(fetchMock.mock.calls[0][0])).toMatch(
             new RegExp(`/api/drivers/${DRIVER_ID}$`),
         );
-        expect(result).toEqual({ ok: true, data: body });
+        // A chave `images` pode faltar na resposta: o schema assume lista vazia.
+        expect(result).toEqual({
+            ok: true,
+            data: { data: { ...body.data, images: [] } },
+        });
     });
 
     test('404 vira notFound', async () => {

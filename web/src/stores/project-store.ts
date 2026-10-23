@@ -1,8 +1,14 @@
 import { temporal } from 'zundo';
 import { createStore } from 'zustand/vanilla';
 import { twoChambers } from '@/engine';
+import type { CatalogDims } from '@/lib/catalog/to-driver-input';
 import type { ParameterKey } from '@/lib/parameters';
-import { withDriver, withIdentity, writeField } from '@/lib/project/fields';
+import {
+    applyCatalogDims,
+    withDriver,
+    withIdentity,
+    writeField,
+} from '@/lib/project/fields';
 import type {
     BoxType,
     DriverInput,
@@ -32,7 +38,13 @@ export type ProjectState = {
     clearFieldUnits: () => void;
     // Copia um driver do catálogo: substitui o driver por inteiro e registra a origem, numa etapa
     // só de desfazer (specs/003, FR-006–008).
-    applyCatalogDriver: (driver: DriverInput, source: DriverSource) => void;
+    // Quando o cadastro traz medidas físicas, elas substituem as do projeto (formato, pistão e
+    // cotas A–G, com o recorte no plano de corte); sem medidas, as do projeto ficam como estão.
+    applyCatalogDriver: (
+        driver: DriverInput,
+        source: DriverSource,
+        dims?: CatalogDims,
+    ) => void;
     // Edita a identificação do driver (marca, modelo, variação, tipo); parte vazia é apagada.
     setDriverIdentity: (patch: Partial<DriverSource>) => void;
     // Aplica um alto-falante salvo pelo usuário: driver, origem e, quando o salvo traz, o recorte
@@ -149,12 +161,18 @@ export function createProjectStore(
                         update((data) => ({ ...data, fieldUnits: {} })),
                     setDriverIdentity: (patch) =>
                         update((data) => withIdentity(data, patch)),
-                    applyCatalogDriver: (driver, source) =>
-                        update((data) => ({
-                            ...data,
-                            driver,
-                            driverSource: source,
-                        })),
+                    applyCatalogDriver: (driver, source, dims) =>
+                        update((data) => {
+                            const applied = {
+                                ...data,
+                                driver,
+                                driverSource: source,
+                            };
+
+                            return dims === undefined
+                                ? applied
+                                : applyCatalogDims(applied, dims);
+                        }),
                     applySavedDriver: (saved) =>
                         update((data) => {
                             const applied = {

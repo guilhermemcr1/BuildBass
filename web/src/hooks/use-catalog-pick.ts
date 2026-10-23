@@ -3,6 +3,8 @@ import { activeProjectStore } from '@/hooks/use-active-project';
 import { fetchDriver } from '@/lib/catalog/client';
 import { toDriverInput } from '@/lib/catalog/to-driver-input';
 import type { CatalogError, DriverSummary } from '@/lib/catalog/types';
+import { identityOf } from '@/lib/saved-drivers/types';
+import { useCatalogGallery } from '@/stores/catalog-gallery';
 import { useRecentDrivers } from '@/stores/recent-drivers';
 
 export type CatalogPick = {
@@ -36,8 +38,19 @@ export function useCatalogPick(): CatalogPick {
             return false;
         }
 
-        const { driver, source } = toDriverInput(result.data.data);
-        activeProjectStore().getState().applyCatalogDriver(driver, source);
+        const { driver, source, dims } = toDriverInput(result.data.data);
+        activeProjectStore()
+            .getState()
+            .applyCatalogDriver(driver, source, dims);
+        // As imagens não vão para o projeto nem para os recentes: ficam só na galeria da sessão.
+        useCatalogGallery.getState().set(
+            identityOf({
+                brand: result.data.data.brand,
+                model: result.data.data.model,
+                variant: result.data.data.variant ?? undefined,
+            }),
+            result.data.data.images,
+        );
         addRecent({
             id: summary.id,
             brand: summary.brand,
@@ -47,6 +60,9 @@ export function useCatalogPick(): CatalogPick {
             ...(summary.nominal_diameter_m === undefined
                 ? {}
                 : { nominal_diameter_m: summary.nominal_diameter_m }),
+            ...(summary.cover_thumb_url === undefined
+                ? {}
+                : { cover_thumb_url: summary.cover_thumb_url }),
             fs_hz: summary.fs_hz,
             qts: summary.qts,
             vas_m3: summary.vas_m3,

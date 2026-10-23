@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ImpedanceField } from '@/components/ui/impedance-field';
 import { TextInput } from '@/components/ui/text-field';
 import { useActiveProject } from '@/hooks/use-active-project';
 import { identityOf } from '@/lib/saved-drivers/types';
+import { useCatalogGallery } from '@/stores/catalog-gallery';
 import { useSavedDrivers } from '@/stores/saved-drivers';
+import { DriverGallery } from './driver-gallery';
 import { DriverTypeSelect } from './driver-type-select';
 
 // Quem é o driver do projeto: marca, modelo, variação e tipo (contracts/ui.md). Preenchido ao
@@ -29,6 +32,15 @@ export function DriverIdentity() {
                     }),
             ),
     );
+    // A galeria do catálogo só vale enquanto a identificação do projeto for a do driver copiado.
+    const gallery = useCatalogGallery((state) => state.current);
+    const showGallery =
+        gallery !== undefined &&
+        identityOf({
+            brand: source?.brand ?? '',
+            model: source?.model ?? '',
+            variant: source?.variant,
+        }) === gallery.identity;
     const name = [source?.brand, source?.model, source?.variant]
         .filter((part) => part !== undefined && part !== '')
         .join(' ');
@@ -63,11 +75,10 @@ export function DriverIdentity() {
                     maxLength={80}
                     placeholder={t('identity.modelPlaceholder')}
                 />
-                <TextInput
+                <ImpedanceField
                     label={t('identity.variant')}
                     value={source?.variant ?? ''}
                     onChange={(variant) => setIdentity({ variant })}
-                    maxLength={40}
                     placeholder={t('identity.variantPlaceholder')}
                 />
                 <DriverTypeSelect
@@ -75,6 +86,14 @@ export function DriverIdentity() {
                     onChange={(type) => setIdentity({ type })}
                 />
             </div>
+            {showGallery && (
+                <DriverGallery
+                    name={[source?.brand, source?.model]
+                        .filter((part) => part !== undefined && part !== '')
+                        .join(' ')}
+                    images={gallery.images}
+                />
+            )}
             {fromMine && (
                 <p className="text-[11px] text-muted">
                     {t('identity.fromMine')}

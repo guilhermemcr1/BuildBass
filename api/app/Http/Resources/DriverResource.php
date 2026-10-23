@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Driver;
+use App\Services\DriverImageStore;
 use Illuminate\Http\Request;
 
 /**
@@ -26,10 +27,26 @@ class DriverResource extends DriverSummaryResource
             }
         }
 
+        // Medidas físicas: só as preenchidas (formato e pistão como texto, cotas em metros).
+        $dimensions = [];
+        foreach (Driver::DIMENSION_FIELDS as $key) {
+            if ($this->{$key} !== null) {
+                $dimensions[$key] = $this->{$key};
+            }
+        }
+
+        $store = app(DriverImageStore::class);
+
         return [
             ...parent::toArray($request),
             ...$optional,
+            ...$dimensions,
             'source' => $this->source,
+            // Galeria na ordem definida; o primeiro item é a capa. Sem imagem, lista vazia.
+            'images' => array_map(
+                fn (string $path): array => ['url' => $store->url($path), 'thumb_url' => $store->thumbUrl($path)],
+                (array) $this->images,
+            ),
         ];
     }
 }

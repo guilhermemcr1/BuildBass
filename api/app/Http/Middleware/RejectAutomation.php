@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\AuditType;
+use App\Services\Audit\AuditLogger;
 use App\Services\TurnstileVerifier;
 use Closure;
 use Illuminate\Http\JsonResponse;
@@ -14,13 +16,18 @@ use Symfony\Component\HttpFoundation\Response;
 // 2. verificação anti-robô reprovada → 422 genérico, sem revelar o motivo.
 class RejectAutomation
 {
-    public function __construct(private readonly TurnstileVerifier $turnstile) {}
+    public function __construct(
+        private readonly TurnstileVerifier $turnstile,
+        private readonly AuditLogger $audit,
+    ) {}
 
     public function handle(Request $request, Closure $next): Response
     {
         $trap = $request->input('website');
 
         if ($trap !== null && $trap !== '') {
+            $this->audit->recordDeferred(AuditType::BotBlocked, ['outcome' => 'blocked', 'reason' => 'honeypot'], $request->ip());
+
             return response()->json(
                 ['data' => ['protocol' => (string) Str::uuid(), 'status' => 'pending']],
                 201,
@@ -30,6 +37,8 @@ class RejectAutomation
         $token = $request->input('turnstile_token');
 
         if (! $this->turnstile->verify(is_string($token) ? $token : null)) {
+            $this->audit->recordDeferred(AuditType::BotBlocked, ['outcome' => 'blocked', 'reason' => 'verification'], $request->ip());
+
             return $this->verificationFailed();
         }
 

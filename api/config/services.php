@@ -34,6 +34,16 @@ return [
         'secret' => env('TURNSTILE_SECRET'),
     ],
 
+    // Leitura de manual por IA (feature 009). Sem chave ou modelo, o recurso fica indisponível.
+    'openrouter' => [
+        'key' => env('OPENROUTER_API_KEY'),
+        'model' => env('OPENROUTER_MODEL'),
+        'base_url' => env('OPENROUTER_BASE_URL', 'https://openrouter.ai/api/v1'),
+        // `deny` só roteia para provedores que não guardam nem treinam com o texto enviado. Modelos
+        // gratuitos quase sempre guardam: com eles, só `allow` acha provedor (404 "No endpoints").
+        'data_collection' => env('OPENROUTER_DATA_COLLECTION', 'deny'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

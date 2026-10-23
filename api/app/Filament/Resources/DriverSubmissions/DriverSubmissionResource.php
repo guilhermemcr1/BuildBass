@@ -20,6 +20,8 @@ class DriverSubmissionResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedInboxArrowDown;
 
+    protected static ?int $navigationSort = 10;
+
     protected static ?string $slug = 'envios';
 
     protected static ?string $modelLabel = 'envio de driver';

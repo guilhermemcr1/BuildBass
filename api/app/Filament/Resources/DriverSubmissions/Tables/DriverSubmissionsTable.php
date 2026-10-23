@@ -6,6 +6,7 @@ use App\Enums\SubmissionStatus;
 use App\Models\DriverSubmission;
 use App\Services\DriverSubmissionService;
 use Filament\Actions\EditAction;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -18,6 +19,10 @@ class DriverSubmissionsTable
             ->defaultSort('created_at', 'asc')
             ->paginated([25])
             ->defaultPaginationPageOption(25)
+            ->striped()
+            ->emptyStateIcon(Heroicon::OutlinedInbox)
+            ->emptyStateHeading('Nenhum envio nesta situação')
+            ->emptyStateDescription('Quando alguém enviar um driver pelo site, ele aparece aqui para revisão. Troque o filtro de situação para ver os já decididos.')
             ->columns([
                 TextColumn::make('status')->label('Situação')->badge(),
                 TextColumn::make('brand')->label('Fabricante')->searchable(),

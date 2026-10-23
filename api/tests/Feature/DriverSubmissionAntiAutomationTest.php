@@ -12,6 +12,7 @@ function human(array $overrides = []): array
         'brand' => 'Marca',
         'model' => 'M-1',
         'source' => 'Ficha',
+        'contact_email' => 'pessoa@exemplo.com',
         'fs_hz' => 40,
         'qts' => 0.4,
         'vas_m3' => 0.05,

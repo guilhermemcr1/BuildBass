@@ -143,4 +143,34 @@ describe('drivers recentes', () => {
             nominal_diameter_m: 0.2,
         });
     });
+
+    test('guarda a miniatura da capa e descarta URL que não é http(s) ao reidratar', async () => {
+        useRecentDrivers
+            .getState()
+            .add(recent(1, { cover_thumb_url: 'https://x.test/a.webp' }));
+
+        window.localStorage.setItem(
+            RECENT_DRIVERS_KEY,
+            JSON.stringify({
+                version: 1,
+                state: {
+                    items: [
+                        {
+                            ...recent(2),
+                            cover_thumb_url: 'javascript:alert(1)',
+                        },
+                        {
+                            ...recent(3),
+                            cover_thumb_url: 'https://x.test/b.webp',
+                        },
+                    ],
+                },
+            }),
+        );
+        await useRecentDrivers.persist.rehydrate();
+
+        const [bad, good] = useRecentDrivers.getState().items;
+        expect(bad).not.toHaveProperty('cover_thumb_url');
+        expect(good?.cover_thumb_url).toBe('https://x.test/b.webp');
+    });
 });

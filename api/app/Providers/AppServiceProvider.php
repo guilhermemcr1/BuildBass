@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Carbon\CarbonImmutable;
+use Filament\Actions\Action;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
@@ -28,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->configureRateLimiting();
+        $this->configureFilament();
     }
 
     /**
@@ -38,6 +40,15 @@ class AppServiceProvider extends ServiceProvider
     {
         RateLimiter::for('catalog', fn (Request $request) => Limit::perMinute(60)->by((string) $request->ip()));
         RateLimiter::for('submission', fn (Request $request) => Limit::perHour(5)->by((string) $request->ip()));
+    }
+
+    /**
+     * Dialogs do painel: clicar fora não fecha (um motivo de rejeição digitado não se perde sem
+     * querer); fechar é pelo botão, pelo X ou pela tecla Esc.
+     */
+    protected function configureFilament(): void
+    {
+        Action::configureUsing(fn (Action $action) => $action->closeModalByClickingAway(false));
     }
 
     /**

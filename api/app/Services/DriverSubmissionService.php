@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Enums\AuditType;
+use App\Enums\DriverOrigin;
 use App\Enums\SubmissionStatus;
 use App\Exceptions\AlreadyDecidedException;
 use App\Exceptions\DuplicateDriverException;
@@ -11,6 +13,7 @@ use App\Mail\SubmissionDecided;
 use App\Models\Driver;
 use App\Models\DriverSubmission;
 use App\Models\Moderator;
+use App\Services\Audit\AuditLogger;
 use App\Support\IpHash;
 use App\Support\SearchText;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -76,7 +79,18 @@ class DriverSubmissionService
                     throw new DuplicateDriverException;
                 }
 
-                $driver = Driver::create($locked->only(DriverSubmission::DRIVER_FIELDS));
+                $driver = Driver::create([
+                    ...$locked->only(DriverSubmission::DRIVER_FIELDS),
+                    'origin' => DriverOrigin::ApprovedSubmission,
+                ]);
+
+                $audit = app(AuditLogger::class);
+                $audit->record(AuditType::DriverCreated, [
+                    'subject_type' => 'driver',
+                    'subject_id' => $driver->id,
+                    'subject_label' => $audit->driverLabel($driver),
+                    'snapshot' => DriverService::snapshot($driver),
+                ], $moderator);
 
                 $locked->forceFill([
                     'status' => SubmissionStatus::Approved,
@@ -84,6 +98,14 @@ class DriverSubmissionService
                     'decided_at' => now(),
                     'driver_id' => $driver->id,
                 ])->save();
+
+                $audit->record(AuditType::SubmissionApproved, [
+                    'outcome' => 'ok',
+                    'subject_type' => 'submission',
+                    'subject_id' => $locked->id,
+                    'subject_label' => $audit->driverLabel($driver),
+                    'snapshot' => ['driver_id' => $driver->id],
+                ], $moderator);
 
                 return $driver;
             });
@@ -121,6 +143,15 @@ class DriverSubmissionService
                 'decided_at' => now(),
                 'rejection_reason' => $reason,
             ])->save();
+
+            app(AuditLogger::class)->record(AuditType::SubmissionRejected, [
+                'outcome' => 'ok',
+                'reason' => 'rejected',
+                'subject_type' => 'submission',
+                'subject_id' => $locked->id,
+                'subject_label' => trim("{$locked->brand} {$locked->model} {$locked->variant}"),
+                'changes' => ['rejection_reason' => [null, $reason]],
+            ], $moderator);
         });
 
         $this->sendNotice($submission->refresh());
@@ -215,12 +246,10 @@ class DriverSubmissionService
 
     public function existsInCatalog(DriverSubmission $submission): bool
     {
-        return Driver::query()
-            ->where('search_text', $submission->dedupe_key)
-            ->orWhere(fn ($query) => $query
-                ->where('brand', $submission->brand)
-                ->where('model', $submission->model)
-                ->where('variant', $submission->variant))
-            ->exists();
+        return app(DriverCatalogService::class)->existsDuplicate(
+            $submission->brand,
+            $submission->model,
+            $submission->variant,
+        );
     }
 }

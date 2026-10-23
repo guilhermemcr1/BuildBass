@@ -3,25 +3,30 @@
     "intro": "Os parâmetros abaixo seguem para a revisão de um moderador. O driver só aparece na busca depois de aprovado; seu projeto não muda.",
     "sections": {
         "identification": "Identificação",
-        "required": "Parâmetros obrigatórios",
-        "optional": "Parâmetros opcionais",
+        "required": "Obrigatórios",
+        "optional": "Opcionais",
         "origin": "Origem dos dados",
-        "contact": "Contato (opcional)"
+        "contact": "Contato (obrigatório)",
+        "parameters": "Parâmetros Thiele-Small",
+        "optionalFilled_one": "· {{count}} preenchido",
+        "optionalFilled_other": "· {{count}} preenchidos",
+        "originContact": "Origem e contato"
     },
     "fields": {
         "brand": "Fabricante",
         "model": "Modelo",
-        "variant": "Variante (opcional)",
-        "variantHint": "Impedância ou versão, por exemplo 4 Ω.",
+        "variant": "Variante · impedância (opcional)",
+        "variantHint": "Impedância da bobina, em ohms (ex.: 4).",
         "source": "Fonte dos dados",
         "sourceHint": "Ficha técnica do fabricante, medição própria… Cite a revisão ou a data.",
         "email": "E-mail para avisar da decisão",
-        "emailHint": "Opcional. Usado só para avisar se o driver foi aprovado ou rejeitado e apagado em seguida.",
+        "emailHint": "Usado só para avisar se o driver foi aprovado ou rejeitado e apagado em seguida.",
         "diameter": "Diâmetro nominal",
         "diameterHint": "Tamanho comercial do alto-falante, por exemplo 12\".",
         "trap": "Não preencha este campo",
         "sourcePlaceholder": "Ex.: ficha técnica, rev. B, 03/2024",
-        "emailPlaceholder": "nome@exemplo.com"
+        "emailPlaceholder": "nome@exemplo.com",
+        "calculated": "calculado"
     },
     "actions": {
         "submit": "Enviar",
@@ -39,7 +44,8 @@
         "tooLong": "Use no máximo {{max}} caracteres.",
         "email": "Informe um e-mail válido.",
         "number": "Informe um número válido.",
-        "range": "Valor fora da faixa permitida."
+        "range": "Valor fora da faixa permitida.",
+        "impedance": "Informe só a impedância em ohms, de 0,5 a 64 (ex.: 4 ou 3,2)."
     },
     "failure": {
         "alreadyInCatalog": "Este driver já está no catálogo (mesmo fabricante, modelo e variante). Procure-o na busca.",
@@ -64,5 +70,43 @@
         "body": "Você digitou dados que ainda não foram enviados. Fechar agora os descarta.",
         "keep": "Continuar editando",
         "discard": "Descartar envio"
+    },
+    "manual": {
+        "title": "Preencher a partir do manual",
+        "choose": "Escolher PDF…",
+        "remove": "Remover",
+        "fill": "Preencher a partir do manual",
+        "reading": "Lendo o manual…",
+        "privacy": "O texto do PDF é enviado a um serviço de IA externo para ler os parâmetros. O arquivo não é guardado.",
+        "fileLabel": "Manual em PDF",
+        "filled_one": "{{count}} campo preenchido a partir do manual.",
+        "filled_other": "{{count}} campos preenchidos a partir do manual.",
+        "filledNone": "Nenhum campo vazio foi preenchido.",
+        "suspect": "Confira no manual: este valor não bate com os demais.",
+        "warnings": {
+            "review": "Dados lidos automaticamente. Revise antes de enviar.",
+            "multiple_drivers": "O manual parece trazer mais de um driver; usamos o primeiro. Confira.",
+            "nothing_found": "Não encontramos parâmetros Thiele-Small neste PDF.",
+            "discarded": "Alguns valores do manual estavam fora da faixa e foram deixados em branco: {{fields}}."
+        },
+        "failure": {
+            "unreadable": "Este PDF não tem texto que possa ser lido (pode ser uma imagem). Preencha os campos à mão.",
+            "invalidFile": "Escolha um PDF de até 10 MB e 30 páginas.",
+            "notPdf": "O arquivo precisa ser um PDF.",
+            "tooLarge": "O PDF passa de 10 MB.",
+            "rateLimited": "Você já usou o preenchimento por manual várias vezes. Tente de novo em {{minutes}} min.",
+            "rateLimitedUnknown": "Você já usou o preenchimento por manual várias vezes. Tente mais tarde.",
+            "unavailable": "O preenchimento por manual está indisponível agora. Você ainda pode preencher à mão.",
+            "providerFailed": "Não conseguimos ler o manual agora. Tente de novo ou preencha à mão.",
+            "verification": "Não foi possível confirmar que você não é um robô. Tente de novo.",
+            "network": "Sem conexão com o servidor. O que você digitou foi mantido; tente de novo.",
+            "server": "O servidor não conseguiu ler o manual. O que você digitou foi mantido; tente de novo."
+        },
+        "offline": "Sem conexão: a leitura do manual precisa do servidor.",
+        "badge": "Opcional",
+        "subtitle": "A IA lê a ficha técnica e preenche os campos vazios. Você revisa tudo antes de enviar.",
+        "dropTitle": "Arraste o PDF do manual até aqui",
+        "dropOr": "ou",
+        "dropHint": "PDF de até 10 MB e 30 páginas"
     }
 }

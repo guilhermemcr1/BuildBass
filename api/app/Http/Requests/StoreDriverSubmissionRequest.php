@@ -4,6 +4,8 @@ namespace App\Http\Requests;
 
 use App\Models\Driver;
 use App\Models\DriverSubmission;
+use App\Support\DriverVariant;
+use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -29,6 +31,11 @@ class StoreDriverSubmissionRequest extends FormRequest
             if (is_string($value)) {
                 $clean[$field] = self::plainText($value);
             }
+        }
+
+        // A variante é a impedância em ohms: "4", "4 ohms" e "4 Ω" chegam ao banco como "4 Ω".
+        if (isset($clean['variant'])) {
+            $clean['variant'] = DriverVariant::format($clean['variant']);
         }
 
         $email = $this->input('contact_email');
@@ -57,17 +64,21 @@ class StoreDriverSubmissionRequest extends FormRequest
     }
 
     /**
-     * @return array<string, list<string>>
+     * @return array<string, list<string|Closure|Rule>>
      */
     public function rules(): array
     {
         $rules = [
             'brand' => ['required', 'string', 'min:1', 'max:80'],
             'model' => ['required', 'string', 'min:1', 'max:80'],
-            'variant' => ['nullable', 'string', 'max:40'],
+            'variant' => ['nullable', 'string', 'max:40', function (string $attribute, mixed $value, Closure $fail): void {
+                if (trim((string) $value) !== '' && DriverVariant::parse((string) $value) === null) {
+                    $fail((string) __('submission.impedance', ['min' => DriverVariant::MIN_OHM, 'max' => DriverVariant::MAX_OHM]));
+                }
+            }],
             'type' => ['nullable', 'string', Rule::in(Driver::TYPES)],
             'source' => ['required', 'string', 'min:1', 'max:255'],
-            'contact_email' => ['nullable', 'string', 'email', 'max:254'],
+            'contact_email' => ['required', 'string', 'email', 'max:254'],
             'locale' => ['required', 'in:'.implode(',', self::LOCALES)],
         ];
 

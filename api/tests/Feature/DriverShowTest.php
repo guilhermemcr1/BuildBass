@@ -44,8 +44,9 @@ it('omite os campos sem valor e os internos', function () {
 
     $data = $this->getJson("/api/drivers/{$driver->id}")->assertOk()->json('data');
 
-    expect(array_keys($data))->toBe(['id', 'brand', 'model', 'variant', 'fs_hz', 'qts', 'vas_m3', 'source'])
+    expect(array_keys($data))->toBe(['id', 'brand', 'model', 'variant', 'fs_hz', 'qts', 'vas_m3', 'source', 'images'])
         ->and($data['variant'])->toBeNull()
+        ->and($data['images'])->toBe([])
         ->and($data)->not->toHaveKeys(['search_text', 'created_at', 'updated_at']);
 });
 

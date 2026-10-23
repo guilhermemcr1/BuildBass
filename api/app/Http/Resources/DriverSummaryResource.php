@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Driver;
+use App\Services\DriverImageStore;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -29,6 +30,10 @@ class DriverSummaryResource extends JsonResource
             'fs_hz' => $this->fs_hz,
             'qts' => $this->qts,
             'vas_m3' => $this->vas_m3,
+            // Miniatura da capa (a primeira imagem); sem imagem, a chave não vai no JSON.
+            ...(($cover = $this->images[0] ?? null) === null
+                ? []
+                : ['cover_thumb_url' => app(DriverImageStore::class)->thumbUrl($cover)]),
         ];
     }
 }

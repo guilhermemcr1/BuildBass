@@ -50,7 +50,7 @@ export default function SubmitDriverDialog({
             {done && submission.protocol !== undefined ? (
                 <SubmitConfirmation
                     protocol={submission.protocol}
-                    emailNotice={submission.sentEmail}
+                    emailNotice
                     onClose={onClose}
                 />
             ) : (
@@ -62,6 +62,11 @@ export default function SubmitDriverDialog({
                         onTrapChange={submission.setTrap}
                         errors={submission.errors}
                         failure={submission.failure}
+                        manual={submission.manual}
+                        auto={submission.auto}
+                        onFillManual={(file) =>
+                            void submission.fillFromManual(file)
+                        }
                         sending={submission.status === 'sending'}
                         offline={submission.offline}
                         onSubmit={() => void submission.submit()}

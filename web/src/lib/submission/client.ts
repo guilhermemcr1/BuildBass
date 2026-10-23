@@ -25,11 +25,13 @@ export type SubmitResult =
       }
     | { ok: false; aborted: true };
 
-function aborted(error: unknown): boolean {
+export function aborted(error: unknown): boolean {
     return error instanceof DOMException && error.name === 'AbortError';
 }
 
-async function readBody(response: Response): Promise<Record<string, unknown>> {
+export async function readBody(
+    response: Response,
+): Promise<Record<string, unknown>> {
     try {
         const body: unknown = await response.json();
 
@@ -41,7 +43,7 @@ async function readBody(response: Response): Promise<Record<string, unknown>> {
     }
 }
 
-function retryAfter(response: Response): number | undefined {
+export function retryAfter(response: Response): number | undefined {
     const seconds = Number(response.headers.get('Retry-After'));
 
     return Number.isFinite(seconds) && seconds > 0 ? seconds : undefined;

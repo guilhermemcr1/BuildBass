@@ -23,7 +23,7 @@ function form(overrides: Partial<SubmissionForm> = {}): SubmissionForm {
         variant: '',
         type: '',
         source: 'Ficha técnica',
-        contact_email: '',
+        contact_email: 'pessoa@exemplo.com',
         numbers: { fs_hz: 40, qts: 0.4, vas_m3: 0.05 },
         ...overrides,
     };
@@ -97,7 +97,6 @@ describe('validateSubmission', () => {
     test.each([
         ['brand', 80],
         ['model', 80],
-        ['variant', 40],
         ['source', 255],
     ] as const)('%s: %i caracteres passam, mais um não', (field, max) => {
         expect(validateSubmission(form({ [field]: 'a'.repeat(max) })).ok).toBe(
@@ -108,8 +107,32 @@ describe('validateSubmission', () => {
         );
     });
 
-    test('e-mail: vazio passa, válido passa, inválido não', () => {
-        expect(validateSubmission(form({ contact_email: '' })).ok).toBe(true);
+    test.each([
+        ['4 Ω', true],
+        ['4', true],
+        ['3,2', true],
+        ['  ', true],
+        ['', true],
+        ['Dual 4', false],
+        ['abc', false],
+        ['0', false],
+        ['900', false],
+        ['4 ohms ruins', false],
+    ])('a variante é a impedância em ohms: %j passa? %s', (variant, ok) => {
+        expect(validateSubmission(form({ variant })).ok).toBe(ok);
+
+        if (!ok) {
+            expect(errorsOf(form({ variant })).variant).toBe('impedance');
+        }
+    });
+
+    test('e-mail é obrigatório: vazio e só espaços não passam, válido passa, inválido não', () => {
+        expect(errorsOf(form({ contact_email: '' })).contact_email).toBe(
+            'required',
+        );
+        expect(errorsOf(form({ contact_email: '   ' })).contact_email).toBe(
+            'required',
+        );
         expect(validateSubmission(form({ contact_email: 'a@b.com' })).ok).toBe(
             true,
         );
@@ -131,7 +154,6 @@ describe('toPayload', () => {
             form({
                 brand: '  Exemplo ',
                 variant: '  ',
-                contact_email: '',
                 numbers: { fs_hz: 40, qts: 0.4, vas_m3: 0.05, qes: undefined },
             }),
             { locale: 'en' },
@@ -141,6 +163,7 @@ describe('toPayload', () => {
             brand: 'Exemplo',
             model: 'EX-1',
             source: 'Ficha técnica',
+            contact_email: 'pessoa@exemplo.com',
             fs_hz: 40,
             qts: 0.4,
             vas_m3: 0.05,

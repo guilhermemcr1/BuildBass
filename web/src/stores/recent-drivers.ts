@@ -15,6 +15,8 @@ export type RecentDriver = {
     variant?: string;
     type?: DriverType;
     nominal_diameter_m?: number;
+    // Miniatura da capa, para a lista de recentes mostrar a foto como o catálogo.
+    cover_thumb_url?: string;
     fs_hz: number;
     qts: number;
     vas_m3: number;
@@ -33,6 +35,11 @@ function finite(value: unknown): value is number {
     return typeof value === 'number' && Number.isFinite(value);
 }
 
+// Só http(s): o valor vem do navegador, terreno do usuário.
+function imageUrl(value: unknown): value is string {
+    return typeof value === 'string' && /^https?:\/\//i.test(value);
+}
+
 function summary(driver: RecentDriver): RecentDriver {
     const {
         id,
@@ -41,6 +48,7 @@ function summary(driver: RecentDriver): RecentDriver {
         variant,
         type,
         nominal_diameter_m,
+        cover_thumb_url,
         fs_hz,
         qts,
         vas_m3,
@@ -53,6 +61,7 @@ function summary(driver: RecentDriver): RecentDriver {
         ...(variant === undefined ? {} : { variant }),
         ...(type === undefined ? {} : { type }),
         ...(nominal_diameter_m === undefined ? {} : { nominal_diameter_m }),
+        ...(cover_thumb_url === undefined ? {} : { cover_thumb_url }),
         fs_hz,
         qts,
         vas_m3,
@@ -92,6 +101,9 @@ function sanitize(raw: unknown): RecentDriver[] {
                     ...(isDriverType(item.type) ? { type: item.type } : {}),
                     ...(finite(item.nominal_diameter_m)
                         ? { nominal_diameter_m: item.nominal_diameter_m }
+                        : {}),
+                    ...(imageUrl(item.cover_thumb_url)
+                        ? { cover_thumb_url: item.cover_thumb_url }
                         : {}),
                     fs_hz: item.fs_hz,
                     qts: item.qts,

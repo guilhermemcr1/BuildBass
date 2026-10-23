@@ -1,8 +1,11 @@
 <?php
 
+use App\Enums\AuditType;
+use App\Enums\DriverOrigin;
 use App\Enums\SubmissionStatus;
 use App\Exceptions\AlreadyDecidedException;
 use App\Exceptions\DuplicateDriverException;
+use App\Models\AuditEvent;
 use App\Models\Driver;
 use App\Models\DriverSubmission;
 use App\Models\Moderator;
@@ -114,4 +117,17 @@ it('não deixa driver órfão nem envio aprovado se a criação falhar no meio',
     expect($submission->fresh()->status)->toBe(SubmissionStatus::Pending)
         ->and($submission->fresh()->driver_id)->toBeNull()
         ->and(Driver::count())->toBe(0);
+});
+
+it('o driver criado pela aprovação tem origem de envio aprovado e gera driver_created', function () {
+    $moderator = Moderator::factory()->create();
+    $submission = DriverSubmission::factory()->create();
+
+    $driver = app(DriverSubmissionService::class)->approve($submission, $moderator);
+
+    $event = AuditEvent::query()->where('type', AuditType::DriverCreated)->sole();
+    expect($driver->fresh()->origin)->toBe(DriverOrigin::ApprovedSubmission)
+        ->and($event->type)->toBe(AuditType::DriverCreated)
+        ->and($event->actor_id)->toBe($moderator->id)
+        ->and($event->subject_id)->toBe($driver->id);
 });

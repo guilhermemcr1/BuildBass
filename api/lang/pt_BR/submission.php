@@ -11,6 +11,7 @@ return [
     'min' => 'Preencha este campo.',
     'email' => 'Informe um e-mail válido.',
     'in' => 'Escolha um dos tipos disponíveis.',
+    'impedance' => 'Informe só a impedância em ohms, de :min a :max (ex.: 4 ou 3,2).',
     'honeypot' => 'Requisição recusada.',
     'duplicate_in_catalog' => 'Este driver já está no catálogo.',
     'duplicate_pending' => 'Este driver já está em análise.',

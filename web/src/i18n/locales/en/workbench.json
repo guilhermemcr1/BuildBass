@@ -157,7 +157,9 @@
         "diameterAny": "Any",
         "clearFilters": "Clear filters",
         "emptyFiltered": "No drivers match these filters.",
-        "hintFilters": "Type at least 2 letters or pick a brand or a diameter."
+        "hintFilters": "Type at least 2 letters or pick a brand or a diameter.",
+        "triggerHint": "Search by brand or model…",
+        "clearSearch": "Clear search"
     },
     "boxDialog": {
         "open3d": "View box in 3D",
@@ -179,7 +181,7 @@
         "fields": {
             "brand": "Brand",
             "model": "Model",
-            "variant": "Variant (optional)",
+            "variant": "Variant · impedance (optional)",
             "diameter": "Nominal diameter",
             "cutout": "Cutout diameter",
             "depth": "Depth"
@@ -192,7 +194,8 @@
             "tooLong": "At most {{max}} characters.",
             "range": "Out of range ({{min}} – {{max}}).",
             "full": "The list reached {{max}} speakers. Delete one to save another.",
-            "duplicateOther": "Another speaker already has this brand, model and variant."
+            "duplicateOther": "Another speaker already has this brand, model and variant.",
+            "impedance": "Enter only the impedance in ohms, from 0.5 to 64 (e.g. 4 or 3.2). No text or Ω symbol."
         },
         "actions": {
             "save": "Save",
@@ -272,12 +275,12 @@
         "title": "Identification",
         "brand": "Brand",
         "model": "Model",
-        "variant": "Variant",
+        "variant": "Variant · impedance",
         "type": "Type",
         "typeNone": "Not specified",
         "brandPlaceholder": "E.g. Triton",
         "modelPlaceholder": "E.g. TR 620 12\"",
-        "variantPlaceholder": "E.g. 4 Ω",
+        "variantPlaceholder": "E.g. 4",
         "applied": "Driver applied: {{name}}",
         "fromMine": "From my speakers"
     },
@@ -287,5 +290,14 @@
         "midbass": "Midbass",
         "midrange": "Midrange",
         "fullrange": "Full-range"
+    },
+    "gallery": {
+        "title": "Driver photos",
+        "open": "Enlarge photo {{current}} of {{total}}",
+        "alt": "{{name}}, photo {{current}} of {{total}}",
+        "counter": "Photo {{current}} of {{total}}",
+        "previous": "Previous photo",
+        "next": "Next photo",
+        "noImage": "No image"
     }
 }

@@ -29,6 +29,7 @@ function validSubmission(array $overrides = []): array
         'mms_kg' => 0.09,
         'vd_m3' => 0.000414,
         'source' => 'Ficha técnica do fabricante, rev. 2024',
+        'contact_email' => 'pessoa@exemplo.com',
         'locale' => 'pt-BR',
     ], $overrides);
 }
@@ -68,6 +69,7 @@ it('aceita só os três parâmetros obrigatórios e deixa a variante vazia', fun
         'brand' => 'Mínimo',
         'model' => 'M-1',
         'source' => 'Medição própria',
+        'contact_email' => 'pessoa@exemplo.com',
         'fs_hz' => 40,
         'qts' => 0.4,
         'vas_m3' => 0.05,
@@ -125,3 +127,23 @@ it('aceita envio sem tipo e recusa tipo fora da lista', function () {
         ->assertUnprocessable()
         ->assertJsonValidationErrors('type');
 });
+
+it('a variante é a impedância em ohms: normaliza para "N Ω" e recusa texto livre', function (string $sent, ?string $stored) {
+    $response = $this->postJson('/api/driver-submissions', validSubmission(['variant' => $sent]));
+
+    if ($stored === null) {
+        $response->assertUnprocessable()->assertJsonValidationErrors('variant');
+
+        return;
+    }
+
+    $response->assertCreated();
+    expect(DriverSubmission::query()->sole()->variant)->toBe($stored);
+})->with([
+    'só o número' => ['4', '4 Ω'],
+    'com símbolo' => ['4 Ω', '4 Ω'],
+    'em palavras' => ['8 ohms', '8 Ω'],
+    'decimal com vírgula' => ['3,20', '3.2 Ω'],
+    'texto livre' => ['Dual voice coil', null],
+    'fora da faixa' => ['900', null],
+]);

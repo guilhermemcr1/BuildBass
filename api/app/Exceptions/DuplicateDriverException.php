@@ -7,8 +7,10 @@ use RuntimeException;
 /** Já existe no catálogo um driver com o mesmo fabricante, modelo e variante. */
 class DuplicateDriverException extends RuntimeException
 {
-    public function __construct()
+    public function __construct(?string $existing = null)
     {
-        parent::__construct('Já existe no catálogo um driver com o mesmo fabricante, modelo e variante.');
+        $message = 'Já existe no catálogo um driver com o mesmo fabricante, modelo e variante';
+
+        parent::__construct($existing === null ? $message.'.' : "{$message}: {$existing}.");
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\DriverOrigin;
 use App\Models\Driver;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -37,5 +38,43 @@ class DriverFactory extends Factory
             'vd_m3' => 0.0003,
             'source' => 'Dados de teste',
         ];
+    }
+
+    /** Driver com formato, pistão e cotas A–G preenchidos (alto-falante redondo de 10"). */
+    public function withDimensions(): static
+    {
+        return $this->state(fn () => [
+            'drv_shape' => 'round',
+            'drv_piston' => 'cone',
+            'drv_a_m' => 0.27,
+            'drv_b_m' => 0.22,
+            'cutout_m' => 0.24,
+            'drv_e_m' => 0.06,
+            'drv_f_m' => 0.01,
+            'drv_g_m' => 0.12,
+        ]);
+    }
+
+    public function direct(): static
+    {
+        return $this->state(fn () => ['origin' => DriverOrigin::Direct]);
+    }
+
+    public function approved(): static
+    {
+        return $this->state(fn () => ['origin' => DriverOrigin::ApprovedSubmission]);
+    }
+
+    /**
+     * Driver com imagens já registradas (caminhos no disco público; os arquivos não são criados).
+     */
+    public function withImages(int $count = 2): static
+    {
+        return $this->state(fn () => [
+            'images' => array_map(
+                fn (): string => 'driver-images/'.fake()->uuid().'.webp',
+                range(1, $count),
+            ),
+        ]);
     }
 }

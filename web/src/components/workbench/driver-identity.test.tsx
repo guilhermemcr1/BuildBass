@@ -19,7 +19,7 @@ describe('DriverIdentity', () => {
     test('mostra marca, modelo, variação e tipo sempre, mesmo sem driver escolhido', () => {
         renderWithProviders(<DriverIdentity />);
 
-        for (const name of ['Marca', 'Modelo', 'Variação']) {
+        for (const name of ['Marca', 'Modelo', /^Variação/]) {
             expect(screen.getByRole('textbox', { name })).toHaveValue('');
         }
         expect(screen.getByRole('button', { name: /Tipo/ })).toHaveTextContent(
@@ -86,8 +86,8 @@ describe('DriverIdentity', () => {
         expect(screen.getByRole('textbox', { name: 'Marca' })).toHaveValue(
             'Triton',
         );
-        expect(screen.getByRole('textbox', { name: 'Variação' })).toHaveValue(
-            '4 Ω',
+        expect(screen.getByRole('textbox', { name: /^Variação/ })).toHaveValue(
+            '4',
         );
         expect(screen.getByRole('button', { name: /Tipo/ })).toHaveTextContent(
             'Woofer',
