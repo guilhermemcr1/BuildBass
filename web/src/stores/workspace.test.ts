@@ -117,6 +117,12 @@ describe('workspace', () => {
         ]);
     });
 
+    test('abrir um projeto sem nome com outro sem nome aberto mantém o nome vazio', () => {
+        workspace().openProject(createProjectData(''));
+
+        expect(workspace().projects.map((p) => p.data.name)).toEqual(['', '']);
+    });
+
     test('fechar move o ativo para a aba à esquerda e libera o slot', () => {
         workspace().newProject();
         workspace().newProject();

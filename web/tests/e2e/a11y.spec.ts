@@ -138,6 +138,8 @@ for (const theme of ['light', 'dark'] as const) {
     test(`bancada com 2 projetos e diálogos sem violações no tema ${theme}`, async ({
         browser,
     }) => {
+        // Várias passadas do axe com dois projetos: ~22 s sozinho, passa de 30 s em paralelo.
+        test.slow();
         const context = await browser.newContext({ colorScheme: theme });
         const page = await context.newPage();
         await page.goto('/');
@@ -516,6 +518,8 @@ test('o formulário de envio é operável só pelo teclado e devolve o foco ao b
     }
     expect(reached.size).toBeGreaterThan(15);
 
+    // O foco para num campo com ajuda: o 1º Esc fecha o tooltip, o 2º fecha o diálogo.
+    await page.keyboard.press('Escape');
     await page.keyboard.press('Escape');
     await expect(dialog).toHaveCount(0);
     await expect(trigger).toBeFocused();

@@ -124,7 +124,7 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
     // Uma ação à vista (buscar) e as demais num menu: enviar ao catálogo (depende do servidor,
     // Princípio V), salvar e abrir a lista pessoal.
     const actions = (
-        <div className="flex items-center gap-1">
+        <div className="flex min-w-0 items-center gap-1">
             <DriverPicker
                 disabled={offline}
                 disabledReason={offlineReason}

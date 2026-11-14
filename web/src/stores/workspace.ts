@@ -74,11 +74,12 @@ function openEntry(
     };
 }
 
-// Nome vazio significa "Projeto sem nome" no idioma ativo (a tradução fica na interface).
+// Nome vazio significa "Projeto sem nome" no idioma ativo (a tradução fica na interface) e pode
+// repetir, como nos projetos novos: numerá-lo daria " (2)".
 function uniqueName(projects: OpenProject[], name: string): string {
     const taken = new Set(projects.map((p) => p.data.name));
 
-    if (!taken.has(name)) {
+    if (name === '' || !taken.has(name)) {
         return name;
     }
 
