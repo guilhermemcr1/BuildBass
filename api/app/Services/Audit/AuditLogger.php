@@ -59,7 +59,9 @@ class AuditLogger
                     'exception' => $exception::class,
                 ]);
             }
-        });
+            // Sem `always()` o Laravel descarta o callback em resposta 4xx/5xx, e bloqueios e
+            // falhas de leitura (429, 422, 502, 503) nunca chegariam à trilha.
+        })->always();
     }
 
     /** "Fabricante Modelo (Variante)", como a lista do painel mostra o driver. */
