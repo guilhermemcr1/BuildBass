@@ -1,4 +1,4 @@
-import type { Page, Route } from '@playwright/test';
+import { expect, type Page, type Route } from '@playwright/test';
 
 // A API do catálogo simulada nos testes de ponta a ponta: provam o front pelo contrato
 // (specs/003-catalogo-de-drivers/contracts/catalog-api.md), sem precisar de banco. O servidor real
@@ -65,13 +65,14 @@ export async function mockCatalog(page: Page, handler: Handler = ok) {
 
 // Abre o popover "Buscar driver" (se ainda fechado) e devolve o campo de busca.
 export async function openPicker(page: Page) {
-    // Um popover recém-fechado ainda está visível durante o fade de saída: espera ele sair.
-    await page.locator('[data-exiting]').waitFor({ state: 'detached' });
+    // Um diálogo recém-fechado (fundo e janela) ainda está visível durante o fade de saída:
+    // espera os dois saírem.
+    await expect(page.locator('[data-exiting]')).toHaveCount(0);
 
     const field = page.getByRole('searchbox', { name: 'Buscar driver' });
 
     if (!(await field.isVisible())) {
-        await page.getByRole('button', { name: 'Buscar driver' }).click();
+        await page.getByRole('button', { name: /^Buscar driver/ }).click();
     }
 
     return field;

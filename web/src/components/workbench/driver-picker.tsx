@@ -303,9 +303,8 @@ export function DriverPicker({
         <DialogTrigger isOpen={open} onOpenChange={setOpen}>
             <Button
                 variant="secondary"
-                aria-label={t('picker.open')}
                 aria-keyshortcuts="/"
-                className="h-9 w-full justify-start gap-2 px-3 font-normal text-muted"
+                className="h-9 w-full min-w-0 justify-start gap-2 px-3 font-normal text-muted"
             >
                 <Search aria-hidden="true" className="size-4 shrink-0" />
                 <span className="min-w-0 flex-1 truncate text-left">

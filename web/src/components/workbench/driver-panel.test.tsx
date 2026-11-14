@@ -78,7 +78,7 @@ describe('DriverPanel — cabeçalho compacto (feature 008, US3)', () => {
         expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
         expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
         expect(
-            screen.getByRole('button', { name: 'Buscar driver' }),
+            screen.getByRole('button', { name: /^Buscar driver/ }),
         ).toBeInTheDocument();
         expect(
             screen.queryByRole('button', { name: /Enviar driver/ }),
@@ -100,7 +100,7 @@ describe('DriverPanel — cabeçalho compacto (feature 008, US3)', () => {
         renderWithProviders(<DriverPanel onSubmitDriver={() => undefined} />);
 
         await userEvent.click(
-            screen.getByRole('button', { name: 'Buscar driver' }),
+            screen.getByRole('button', { name: /^Buscar driver/ }),
         );
 
         expect(screen.getByRole('searchbox')).toBeEnabled();

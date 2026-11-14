@@ -84,6 +84,10 @@ it('duplicata aparece no campo, não só em aviso', function () {
 });
 
 it('erro do service em chave crua vai para o campo do formulário', function () {
+    if (! function_exists('imagewebp')) {
+        $this->markTestSkipped('GD sem suporte a WebP: o campo de imagens fica desativado.');
+    }
+
     $driver = Driver::factory()->create();
 
     Livewire::test(EditDriver::class, ['record' => $driver->getRouteKey()])

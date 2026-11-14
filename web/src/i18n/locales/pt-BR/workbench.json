@@ -175,7 +175,6 @@
         "front": "Câmara frontal (dutada)"
     },
     "picker": {
-        "open": "Buscar driver",
         "label": "Buscar driver",
         "placeholder": "Fabricante ou modelo",
         "mine": "Meus alto-falantes",
@@ -193,7 +192,7 @@
         "clearFilters": "Limpar filtros",
         "emptyFiltered": "Nenhum driver com esses filtros.",
         "hintFilters": "Digite ao menos 2 letras ou escolha uma marca ou um diâmetro.",
-        "triggerHint": "Buscar por fabricante ou modelo…",
+        "triggerHint": "Buscar driver por fabricante ou modelo…",
         "clearSearch": "Limpar busca"
     },
     "boxDialog": {

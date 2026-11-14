@@ -51,7 +51,8 @@ it('nenhum evento guarda senha, e-mail de contato, IP em claro, nome de PDF, tex
 
     $dump = AuditEvent::all()->map(fn (AuditEvent $event) => json_encode($event->getAttributes()))->implode("\n");
 
-    expect(AuditEvent::count())->toBeGreaterThan(5);
+    // Sem GD o passo 5 não roda e a trilha tem só os 5 eventos dos passos 1–4.
+    expect(AuditEvent::count())->toBeGreaterThan(function_exists('imagewebp') ? 5 : 4);
 
     foreach ([
         'senha-errada-999', 'senha-certa-123', 'visitante-secreto@exemplo.com', '198.51.100.23',

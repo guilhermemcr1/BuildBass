@@ -51,7 +51,7 @@ function listing(items: DriverSummary[] = [SUMMARY], hasMore = false) {
 }
 
 function trigger() {
-    return screen.getByRole('button', { name: 'Buscar driver' });
+    return screen.getByRole('button', { name: /^Buscar driver/ });
 }
 
 async function open(props: { disabled?: boolean; onSubmit?: () => void } = {}) {

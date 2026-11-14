@@ -23,7 +23,9 @@ test('buscar, escolher e preencher o driver do projeto (US1)', async ({
     await (await search(page)).fill('tr 6');
     const option = page.getByRole('option', { name: /Triton/ });
     await expect(option).toContainText('Triton TR 620 12" (4 Ω)');
-    await expect(option).toContainText('Fs 76,9 Hz · Qts 0,72 · Vas 26,3 L');
+    await expect(option).toContainText('Fs 76,9 Hz');
+    await expect(option).toContainText('Qts 0,72');
+    await expect(option).toContainText('Vas 26,3 L');
 
     await option.click();
 
@@ -181,7 +183,8 @@ async function expectIdentity(page: Page, filled: boolean) {
 
     await expect(brand).toHaveValue(filled ? 'Triton' : '');
     await expect(model).toHaveValue(filled ? 'TR 620 12"' : '');
-    await expect(variant).toHaveValue(filled ? '4 Ω' : '');
+    // A variação virou campo de impedância: "4 Ω" do catálogo entra como 4.
+    await expect(variant).toHaveValue(filled ? '4' : '');
 }
 
 async function choose(page: Page) {
@@ -201,7 +204,7 @@ test('a origem vai no arquivo exportado e volta ao reabrir (US4)', async ({
     await expectIdentity(page, true);
 
     const downloading = page.waitForEvent('download');
-    await page.getByRole('button', { name: 'Exportar' }).click();
+    await page.getByRole('button', { name: 'Exportar', exact: true }).click();
     const path = await (await downloading).path();
     const saved = JSON.parse(await readFile(path, 'utf-8'));
     expect(saved.project.driverSource).toEqual({

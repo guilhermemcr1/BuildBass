@@ -30,6 +30,8 @@ export default defineConfig({
         environment: 'jsdom',
         include: ['src/**/*.test.{ts,tsx}'],
         setupFiles: ['src/test/setup.ts'],
+        // Node 25+ traz um `localStorage` próprio que esconde o do jsdom; o CI usa Node 22.
+        execArgv: ['--no-experimental-webstorage'],
     },
     lint: {
         ignorePatterns: ['node_modules/**', 'dist/**', 'src/components/ui/*'],

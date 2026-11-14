@@ -175,7 +175,6 @@
         "front": "Front chamber (ported)"
     },
     "picker": {
-        "open": "Find driver",
         "label": "Find driver",
         "placeholder": "Brand or model",
         "mine": "My speakers",
@@ -193,7 +192,7 @@
         "clearFilters": "Clear filters",
         "emptyFiltered": "No drivers match these filters.",
         "hintFilters": "Type at least 2 letters or pick a brand or a diameter.",
-        "triggerHint": "Search by brand or model…",
+        "triggerHint": "Find driver by brand or model…",
         "clearSearch": "Clear search"
     },
     "boxDialog": {
