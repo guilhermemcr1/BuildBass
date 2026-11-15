@@ -2,6 +2,7 @@ import {
     Download,
     FilePlus,
     FolderOpen,
+    GraduationCap,
     Keyboard,
     Redo2,
     Undo2,
@@ -18,6 +19,7 @@ type TopBarProps = {
     // Nome do projeto ativo (editável), entre as ações e as preferências.
     projectName?: ReactNode;
     onHelp: () => void;
+    onTutorial: () => void;
     preferences?: ReactNode;
 };
 
@@ -26,6 +28,7 @@ export function TopBar({
     history,
     projectName,
     onHelp,
+    onTutorial,
     preferences,
 }: TopBarProps) {
     const { t } = useTranslation(['common', 'workbench']);
@@ -37,6 +40,7 @@ export function TopBar({
             </span>
             <nav
                 aria-label={t('common:appName')}
+                data-tour="actions"
                 className="flex flex-wrap items-center gap-1"
             >
                 <Button variant="quiet" onPress={() => onAction('new')}>
@@ -72,7 +76,21 @@ export function TopBar({
             </nav>
             {projectName}
             <div className="ml-auto flex flex-wrap items-center gap-2">
-                {preferences}
+                <div
+                    data-tour="preferences"
+                    className="flex flex-wrap items-center gap-2"
+                >
+                    {preferences}
+                </div>
+                <Button variant="quiet" onPress={onTutorial}>
+                    <GraduationCap aria-hidden="true" className="size-4" />
+                    <span className="hidden sm:inline">
+                        {t('workbench:actions.tutorial')}
+                    </span>
+                    <span className="sr-only sm:hidden">
+                        {t('workbench:actions.tutorial')}
+                    </span>
+                </Button>
                 <Button
                     variant="quiet"
                     onPress={onHelp}

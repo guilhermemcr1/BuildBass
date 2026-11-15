@@ -1,0 +1,56 @@
+{
+    "label": "Tutorial",
+    "progress": "Passo {{current}} de {{total}}",
+    "stepsLabel": "Passos do tutorial",
+    "goTo": "Ir ao passo {{n}}",
+    "back": "Voltar",
+    "next": "Próximo",
+    "finish": "Concluir",
+    "skip": "Fechar tutorial",
+    "steps": {
+        "welcome": {
+            "title": "Bem-vindo ao BuildBass",
+            "body": "Em poucos passos você vê como simular um alto-falante numa caixa: do driver ao gráfico e ao plano de corte. Use os botões ou as setas do teclado; Esc encerra."
+        },
+        "tabs": {
+            "title": "Seus projetos",
+            "body": "Cada projeto é uma aba, com nome e cor próprios. Abra até três para comparar caixas no mesmo gráfico. Tudo fica salvo neste navegador."
+        },
+        "driver": {
+            "title": "1. Escolha o driver",
+            "body": "Busque o alto-falante no catálogo ou digite os parâmetros Thiele-Small (Fs, Qts, Vas…). Os campos com * são indispensáveis; os demais ficam em “Mostrar mais” e valem mesmo recolhidos."
+        },
+        "driverExpand": {
+            "title": "Todos os campos à vista",
+            "body": "Este botão abre o driver num modal grande, com identificação, parâmetros, dimensões, ligação e sinal, sem nada recolhido. O que você edita lá muda o projeto na hora."
+        },
+        "box": {
+            "title": "2. Monte a caixa",
+            "body": "Escolha o tipo (selada, dutada ou bandpass), o volume e, se houver, o duto. “Sugerir caixa” preenche volume e sintonia pelos alinhamentos clássicos. A miniatura abre a caixa em 3D."
+        },
+        "results": {
+            "title": "3. Veja os resultados",
+            "body": "F3, sensibilidade, Qtc, velocidade no duto e os avisos do motor aparecem aqui e se atualizam enquanto você preenche. Com vários projetos abertos eles ficam lado a lado."
+        },
+        "charts": {
+            "title": "4. Compare nos gráficos",
+            "body": "Resposta em frequência, impedância, excursão, atraso de grupo e velocidade no duto. As teclas 1 a 5 trocam de gráfico, e dá para exportar a imagem."
+        },
+        "plan": {
+            "title": "5. Gere o plano de corte",
+            "body": "Com driver e caixa preenchidos, o plano calcula as peças, o encaixe nas chapas que você tem e a posição dos recortes. Dá para ajustar à mão e imprimir."
+        },
+        "actions": {
+            "title": "Guarde seu trabalho",
+            "body": "Exporte o projeto para um arquivo e abra de novo quando quiser. Desfazer e refazer ficam ao lado. O projeto só fica neste navegador, então exporte para não perdê-lo."
+        },
+        "preferences": {
+            "title": "Ajuste a bancada",
+            "body": "Modo Normal ou Pro (o Pro abre todos os campos), unidades métricas ou imperiais, tema claro ou escuro e idioma."
+        },
+        "done": {
+            "title": "Pronto para simular",
+            "body": "Comece escolhendo o driver. Você pode rever este tutorial quando quiser, pelo botão “Tutorial” na barra superior."
+        }
+    }
+}

@@ -11,6 +11,7 @@
         "export": "Exportar",
         "undo": "Desfazer",
         "redo": "Refazer",
+        "tutorial": "Tutorial",
         "help": "Atalhos de teclado"
     },
     "boxType": {

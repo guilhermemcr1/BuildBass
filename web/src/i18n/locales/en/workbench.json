@@ -11,6 +11,7 @@
         "export": "Export",
         "undo": "Undo",
         "redo": "Redo",
+        "tutorial": "Tutorial",
         "help": "Keyboard shortcuts"
     },
     "boxType": {

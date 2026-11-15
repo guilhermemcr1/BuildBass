@@ -262,6 +262,58 @@
     }
 }
 
+/* Tutorial guiado: o foco desliza de um elemento ao outro e o cartão o acompanha. */
+@keyframes tour-pulse {
+    from {
+        opacity: 0.7;
+        transform: scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: scale(1.06, 1.12);
+    }
+}
+
+@utility tour-in {
+    @media (prefers-reduced-motion: no-preference) {
+        animation: fade-in 260ms ease-out both;
+    }
+}
+
+@utility tour-spot {
+    @media (prefers-reduced-motion: no-preference) {
+        transition:
+            left 520ms cubic-bezier(0.22, 1, 0.36, 1),
+            top 520ms cubic-bezier(0.22, 1, 0.36, 1),
+            width 520ms cubic-bezier(0.22, 1, 0.36, 1),
+            height 520ms cubic-bezier(0.22, 1, 0.36, 1),
+            opacity 240ms ease;
+    }
+}
+
+@utility tour-card {
+    @media (prefers-reduced-motion: no-preference) {
+        transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+}
+
+/* Anel que pulsa em volta do elemento destacado, para ele ser impossível de não ver. */
+@utility tour-ring {
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent) 28%, transparent);
+
+    @media (prefers-reduced-motion: no-preference) {
+        &::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: inherit;
+            border: 2px solid var(--accent);
+            animation: tour-pulse 1500ms ease-out infinite;
+        }
+    }
+}
+
 @layer base {
     html {
         background-color: var(--background);

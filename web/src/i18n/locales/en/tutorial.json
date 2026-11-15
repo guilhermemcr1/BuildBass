@@ -1,0 +1,56 @@
+{
+    "label": "Tutorial",
+    "progress": "Step {{current}} of {{total}}",
+    "stepsLabel": "Tutorial steps",
+    "goTo": "Go to step {{n}}",
+    "back": "Back",
+    "next": "Next",
+    "finish": "Finish",
+    "skip": "Close tutorial",
+    "steps": {
+        "welcome": {
+            "title": "Welcome to BuildBass",
+            "body": "In a few steps you will see how to simulate a speaker in an enclosure: from the driver to the charts and the cut plan. Use the buttons or the arrow keys; Esc closes."
+        },
+        "tabs": {
+            "title": "Your projects",
+            "body": "Each project is a tab with its own name and color. Open up to three to compare enclosures on the same chart. Everything is saved in this browser."
+        },
+        "driver": {
+            "title": "1. Pick the driver",
+            "body": "Search the catalog for the speaker or type the Thiele-Small parameters (Fs, Qts, Vas…). Fields with * are required; the rest sit under “Show more” and still count while collapsed."
+        },
+        "driverExpand": {
+            "title": "Every field in view",
+            "body": "This button opens the driver in a large dialog with identification, parameters, dimensions, wiring and signal, nothing collapsed. What you edit there changes the project right away."
+        },
+        "box": {
+            "title": "2. Build the enclosure",
+            "body": "Choose the type (sealed, vented or bandpass), the volume and, if any, the port. “Suggest box” fills volume and tuning from the classic alignments. The thumbnail opens the box in 3D."
+        },
+        "results": {
+            "title": "3. Read the results",
+            "body": "F3, sensitivity, Qtc, port velocity and the engine warnings show up here and update as you fill in. With several projects open they sit side by side."
+        },
+        "charts": {
+            "title": "4. Compare on the charts",
+            "body": "Frequency response, impedance, excursion, group delay and port velocity. Keys 1 to 5 switch charts, and you can export the image."
+        },
+        "plan": {
+            "title": "5. Build the cut plan",
+            "body": "With the driver and box filled in, the plan works out the parts, how they fit on the sheets you have and where the cutouts go. You can adjust by hand and print."
+        },
+        "actions": {
+            "title": "Keep your work",
+            "body": "Export the project to a file and open it again any time. Undo and redo sit next to it. The project only lives in this browser, so export to avoid losing it."
+        },
+        "preferences": {
+            "title": "Tune the workbench",
+            "body": "Normal or Pro mode (Pro opens every field), metric or imperial units, light or dark theme and language."
+        },
+        "done": {
+            "title": "Ready to simulate",
+            "body": "Start by picking the driver. You can replay this tutorial any time from the “Tutorial” button in the top bar."
+        }
+    }
+}

@@ -35,6 +35,8 @@ const SubmitDriverDialog = lazy(
     () => import('@/components/workbench/submit-driver-dialog'),
 );
 
+const Tutorial = lazy(() => import('@/components/tutorial/tutorial'));
+
 const PrintSheet = lazy(() => import('@/components/workbench/print-sheet'));
 
 const PlanPanel = lazy(() =>
@@ -50,6 +52,7 @@ export default function Workbench() {
     const { t } = useTranslation(['workbench', 'project']);
     const [submitting, setSubmitting] = useState(false);
     const [helpOpen, setHelpOpen] = useState(false);
+    const [tutorialOpen, setTutorialOpen] = useState(false);
     const [limitOpen, setLimitOpen] = useState(false);
     const [openError, setOpenError] = useState<OpenError | null>(null);
     const [closing, setClosing] = useState<string | null>(null);
@@ -157,6 +160,7 @@ export default function Workbench() {
                     history={history}
                     projectName={<ProjectName />}
                     onHelp={() => setHelpOpen(true)}
+                    onTutorial={() => setTutorialOpen(true)}
                     preferences={<PreferencesBar />}
                 />
                 <OfflineBanner />
@@ -169,7 +173,10 @@ export default function Workbench() {
                     {/* Em ≥ 1280 px uma lateral fixa (abas, driver e caixa) com rolagem própria; abaixo
                         disso o wrapper some e cada bloco vira item da grade. */}
                     <div className="contents xl:relative xl:flex xl:min-h-0 xl:[scrollbar-gutter:stable] xl:flex-col xl:overflow-y-auto xl:border-r xl:border-border xl:bg-surface">
-                        <div className="md:col-span-2 xl:col-span-1 xl:px-3 xl:py-2.5">
+                        <div
+                            data-tour="tabs"
+                            className="md:col-span-2 xl:col-span-1 xl:px-3 xl:py-2.5"
+                        >
                             <ProjectTabs onClose={requestClose} />
                         </div>
                         <DriverPanel
@@ -266,6 +273,11 @@ export default function Workbench() {
                     error={openError}
                     onClose={() => setOpenError(null)}
                 />
+                {tutorialOpen && (
+                    <Suspense fallback={null}>
+                        <Tutorial onClose={() => setTutorialOpen(false)} />
+                    </Suspense>
+                )}
                 {submitting && (
                     <Suspense fallback={null}>
                         <SubmitDriverDialog

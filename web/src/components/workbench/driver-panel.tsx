@@ -91,6 +91,7 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
             <Button
                 variant="quiet"
                 aria-label={t('driverDialog.openDialog')}
+                data-tour="driver-expand"
                 onPress={() => {
                     setExpandedLoaded(true);
                     setExpanded(true);
