@@ -32,7 +32,11 @@ export function ThemeSwitch() {
             })}
             trigger={
                 <span className="flex size-8 items-center justify-center rounded-md border border-border bg-raised text-foreground">
-                    <Current aria-hidden="true" className="size-4" />
+                    <Current
+                        key={theme}
+                        aria-hidden="true"
+                        className="spin-in size-4"
+                    />
                 </span>
             }
         />
