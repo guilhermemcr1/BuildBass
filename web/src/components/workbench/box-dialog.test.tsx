@@ -58,8 +58,11 @@ describe('BoxDialog', () => {
         expect(
             within(dialog).getByRole('textbox', { name: /^Vb/ }),
         ).toBeVisible();
-        expect(await within(dialog).findByRole('img')).toBeVisible();
-        expect(within(dialog).getByText('Alto-falante')).toBeInTheDocument();
+        const image = await within(dialog).findByRole('img');
+
+        expect(image).toBeVisible();
+        expect(image).toHaveAccessibleName(/Alto-falante na frente\./);
+        expect(image.querySelector('[data-layer="cone"]')).not.toBeNull();
     });
 
     test('mudar um campo no modal atualiza o projeto ativo e a medida do 3D', async () => {

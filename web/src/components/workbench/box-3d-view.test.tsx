@@ -204,22 +204,28 @@ describe('Box3dView', () => {
         ).not.toBe(before);
     });
 
-    test('o recorte do alto-falante tem destaque e o rótulo "Alto-falante"', () => {
+    test('o alto-falante é desenhado com aro, suspensão, cone e capa, sem texto', () => {
         const { container } = renderWithProviders(
             <Box3dView plan={WITH_DRIVER} />,
         );
-        const speaker = container.querySelector('[data-part="driver"]');
+        const layers = [...container.querySelectorAll('[data-part="driver"]')];
 
-        // A vista padrão olha de cima e de lado: a frente aparece e o furo vem junto.
-        expect(speaker).not.toBeNull();
-        expect(speaker).toHaveClass('fill-accent-soft', 'stroke-accent');
+        // A vista padrão olha de cima e de lado: a frente aparece e o alto-falante vem junto.
+        expect(layers).toHaveLength(4);
         expect(
-            container.querySelector('[data-driver-label]'),
-        ).toHaveTextContent('Alto-falante');
+            container.querySelector('[data-layer="flange"]'),
+        ).not.toBeNull();
+        expect(container.querySelector('[data-layer="cone"]')).not.toBeNull();
+        expect(container.querySelector('[data-layer="cap"]')).toHaveClass(
+            'fill-accent',
+        );
+        expect(container.querySelector('svg text')?.textContent).not.toBe(
+            'Alto-falante',
+        );
         expect(view().svg).toHaveAccessibleName(/Alto-falante na frente\./);
     });
 
-    test('sem medida do recorte não há polígono do driver nem rótulo inventado', () => {
+    test('sem medida do recorte não há polígono do driver inventado', () => {
         const { container } = renderWithProviders(
             <Box3dView
                 plan={{
@@ -241,7 +247,6 @@ describe('Box3dView', () => {
         );
 
         expect(container.querySelector('[data-part="driver"]')).toBeNull();
-        expect(container.querySelector('[data-driver-label]')).toBeNull();
         expect(view().svg).not.toHaveAccessibleName(/Alto-falante na frente/);
     });
 });

@@ -422,3 +422,85 @@ describe('projeção com posição manual (feature 012)', () => {
         expect(Math.abs(my - ay)).toBeCloseTo(0.02, 6);
     });
 });
+
+describe('detalhes dentro dos recortes', () => {
+    const detail = (polygons: ReturnType<typeof projectBox>, layer: string) =>
+        polygons.filter((polygon) => polygon.layer === layer);
+
+    test('o alto-falante tem aro maior que o furo, cone e capa menores', () => {
+        const polygons = projectBox(plan(), FLAT, { translucent: false });
+        const width = ({ points }: { points: [number, number][] }) => {
+            const xs = points.map(([x]) => x);
+
+            return Math.max(...xs) - Math.min(...xs);
+        };
+        const hole = polygons.find(({ id }) => id === 'front:driver-1')!;
+        const [flange] = detail(polygons, 'flange');
+        const [cone] = detail(polygons, 'cone');
+        const [cap] = detail(polygons, 'cap');
+
+        expect(width(flange!)).toBeGreaterThan(width(hole));
+        expect(width(cone!)).toBeLessThan(width(hole));
+        expect(width(cap!)).toBeLessThan(width(cone!));
+        expect(ids(polygons).indexOf(flange!.id)).toBeLessThan(
+            ids(polygons).indexOf(hole.id),
+        );
+        expect(ids(polygons).indexOf(hole.id)).toBeLessThan(
+            ids(polygons).indexOf(cone!.id),
+        );
+    });
+
+    test.each([
+        ['round', { shape: 'round', diameter_m: 0.1, count: 1 }, 24],
+        ['rect', { shape: 'rect', width_m: 0.12, height_m: 0.05, count: 1 }, 4],
+        ['triangle', { shape: 'triangle', base_m: 0.1, height_m: 0.08, count: 1 }, 3],
+    ] as const)(
+        'o duto %s tem uma parede por lado, só as que olham para dentro',
+        (_name, port, sides) => {
+            const caixa = plan({ type: 'vented', fb_hz: 35, port });
+            const translucent = detail(
+                projectBox(caixa, DEFAULT_VIEW, { translucent: true }),
+                'wall',
+            );
+            const solid = detail(
+                projectBox(caixa, DEFAULT_VIEW, { translucent: false }),
+                'wall',
+            );
+
+            expect(translucent).toHaveLength(sides);
+            expect(solid.length).toBeGreaterThan(0);
+            expect(solid.length).toBeLessThan(sides);
+            expect(translucent.every(({ part }) => part === 'port')).toBe(true);
+        },
+    );
+
+    test('visto de frente, as paredes do duto ficam de lado e não aparecem', () => {
+        const caixa = plan({ type: 'vented', fb_hz: 35 });
+
+        expect(
+            detail(projectBox(caixa, FLAT, { translucent: false }), 'wall'),
+        ).toHaveLength(0);
+    });
+
+    test('pela abertura só se vê a parede dentro do furo', () => {
+        const caixa = plan({ type: 'vented', fb_hz: 35 });
+        const polygons = projectBox(caixa, DEFAULT_VIEW, { translucent: false });
+        const hole = polygons.find(({ id }) => id === 'front:port-1')!;
+        const box = (points: [number, number][]) => ({
+            minX: Math.min(...points.map(([x]) => x)),
+            maxX: Math.max(...points.map(([x]) => x)),
+            minY: Math.min(...points.map(([, y]) => y)),
+            maxY: Math.max(...points.map(([, y]) => y)),
+        });
+        const bounds = box(hole.points);
+
+        for (const wall of detail(polygons, 'wall')) {
+            const wallBounds = box(wall.points);
+
+            expect(wallBounds.minX).toBeGreaterThanOrEqual(bounds.minX - 1e-9);
+            expect(wallBounds.maxX).toBeLessThanOrEqual(bounds.maxX + 1e-9);
+            expect(wallBounds.minY).toBeGreaterThanOrEqual(bounds.minY - 1e-9);
+            expect(wallBounds.maxY).toBeLessThanOrEqual(bounds.maxY + 1e-9);
+        }
+    });
+});

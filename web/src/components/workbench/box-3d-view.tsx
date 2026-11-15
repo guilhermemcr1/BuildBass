@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { DEFAULT_VIEW, dimensionLines, projectBox } from '@/cutplan';
-import type { Plan, View } from '@/cutplan';
+import type { Plan, Polygon, View } from '@/cutplan';
 import { formatWithUnit } from '@/lib/units/format';
 import { defaultUnitFor } from '@/lib/units/quantities';
 import { usePreferences } from '@/stores/preferences';
@@ -46,6 +46,79 @@ function turned(view: View, yaw: number, pitch: number): View {
 
 function zoomed(view: View, factor: number): View {
     return { ...view, zoom: clamp(view.zoom * factor, ZOOM_MIN, ZOOM_MAX) };
+}
+
+type Look = {
+    className: string;
+    // Cor de preenchimento calculada (tom da luz); sem ela vale a classe.
+    fill?: string;
+    fillOpacity: number;
+    strokeOpacity: number;
+    // Espessura do traço, em fração do raio do quadro.
+    stroke: number;
+};
+
+// Aparência de cada polígono: faces com o tom da luz, furos escuros e, dentro do recorte, o
+// alto-falante (aro, suspensão, cone e capa) e as paredes do duto.
+function lookOf(polygon: Polygon, inside: boolean, behind: boolean): Look {
+    if (polygon.kind === 'detail') {
+        if (polygon.layer === 'wall') {
+            return {
+                className: 'stroke-foreground',
+                fill: `color-mix(in oklab, var(--color-foreground) ${Math.round(45 + (1 - polygon.light) * 35)}%, var(--color-raised))`,
+                fillOpacity: behind ? 0.35 : 1,
+                // Traço quase invisível: com ele, as muitas paredes de um duto redondo viram listras.
+                strokeOpacity: 0.1,
+                stroke: 0.003,
+            };
+        }
+
+        const layers = {
+            flange: { className: 'fill-foreground stroke-foreground', opacity: 0.9 },
+            cone: { className: 'fill-foreground stroke-muted', opacity: 0.75 },
+            cap: { className: 'fill-accent stroke-accent-soft', opacity: 1 },
+        } as const;
+        const layer = layers[polygon.layer ?? 'cone'];
+
+        return {
+            className: layer.className,
+            fillOpacity: behind ? layer.opacity * 0.5 : layer.opacity,
+            strokeOpacity: 0.75,
+            stroke: 0.004,
+        };
+    }
+
+    if (polygon.kind === 'cutout') {
+        // O furo do alto-falante é a suspensão, de tom claro entre o aro e o cone; o do duto é escuro.
+        return polygon.part === 'driver'
+            ? {
+                  className: 'fill-muted stroke-foreground',
+                  fillOpacity: behind ? 0.5 : 1,
+                  strokeOpacity: 0.9,
+                  stroke: 0.004,
+              }
+            : {
+                  className: 'fill-foreground stroke-foreground',
+                  fillOpacity: behind ? 0.15 : 0.85,
+                  strokeOpacity: 0.9,
+                  stroke: 0.005,
+              };
+    }
+
+    return inside
+        ? {
+              className: 'fill-accent-soft stroke-foreground',
+              fillOpacity: behind ? 0.12 : 0.35,
+              strokeOpacity: 0.75,
+              stroke: 0.005,
+          }
+        : {
+              className: 'stroke-foreground',
+              fill: faceTone(polygon.light),
+              fillOpacity: 1,
+              strokeOpacity: 0.75,
+              stroke: 0.005,
+          };
 }
 
 function ViewButton({
@@ -87,16 +160,11 @@ export function Box3dView({ plan }: { plan: Plan }) {
     const polygons = projectBox(plan, view, { translucent: inside });
     const lines = dimensionLines(plan, view);
     const format = (si: number) => formatWithUnit(si, unit, locale);
-    const driverShown = polygons.find((polygon) => polygon.part === 'driver');
     const driverOnFront = projectBox(
         plan,
         { yaw_rad: 0, pitch_rad: 0, zoom: 1 },
         { translucent: false },
     ).some((polygon) => polygon.part === 'driver');
-    const centroid = (points: [number, number][]): [number, number] => [
-        points.reduce((sum, [x]) => sum + x, 0) / points.length,
-        points.reduce((sum, [, y]) => sum + y, 0) / points.length,
-    ];
     const fontSize = radius * 0.07;
 
     const onKeyDown = (event: KeyboardEvent) => {
@@ -160,78 +228,35 @@ export function Box3dView({ plan }: { plan: Plan }) {
                 }}
             >
                 {polygons.map((polygon) => {
-                    const driver = polygon.part === 'driver';
-                    const hole = polygon.kind === 'cutout';
                     // Por dentro, o que está atrás fica tracejado e fraco para não competir com a frente.
                     const behind = inside && !polygon.facing;
+                    const look = lookOf(polygon, inside, behind);
 
                     return (
                         <polygon
                             key={polygon.id}
                             data-id={polygon.id}
                             data-part={polygon.part}
+                            data-layer={polygon.layer}
                             // O eixo y do SVG cresce para baixo.
                             points={polygon.points
                                 .map(([x, y]) => `${x},${-y}`)
                                 .join(' ')}
-                            className={
-                                driver
-                                    ? 'fill-accent-soft stroke-accent'
-                                    : hole
-                                      ? 'fill-foreground stroke-foreground'
-                                      : inside
-                                        ? 'fill-accent-soft stroke-foreground'
-                                        : 'stroke-foreground'
-                            }
+                            className={look.className}
                             // Cada face recebe um tom da luz; o volume se lê sem contorno pesado.
-                            style={
-                                hole || inside
-                                    ? undefined
-                                    : { fill: faceTone(polygon.light) }
-                            }
-                            fillOpacity={
-                                driver
-                                    ? behind
-                                        ? 0.5
-                                        : 1
-                                    : hole
-                                      ? behind
-                                          ? 0.15
-                                          : 0.8
-                                      : inside
-                                        ? behind
-                                            ? 0.12
-                                            : 0.35
-                                        : 1
-                            }
-                            strokeOpacity={behind ? 0.4 : hole ? 0.9 : 0.75}
+                            style={look.fill === undefined ? undefined : { fill: look.fill }}
+                            fillOpacity={look.fillOpacity}
+                            strokeOpacity={behind ? 0.4 : look.strokeOpacity}
                             strokeDasharray={
                                 behind
                                     ? `${radius * 0.015} ${radius * 0.012}`
                                     : undefined
                             }
-                            strokeWidth={
-                                driver ? radius * 0.012 : radius * 0.005
-                            }
+                            strokeWidth={radius * look.stroke}
                             strokeLinejoin="round"
                         />
                     );
                 })}
-                {driverShown !== undefined && (
-                    <text
-                        data-driver-label=""
-                        x={centroid(driverShown.points)[0]}
-                        y={-centroid(driverShown.points)[1]}
-                        fontSize={fontSize}
-                        textAnchor="middle"
-                        dominantBaseline="central"
-                        className="fill-foreground stroke-background font-semibold"
-                        strokeWidth={fontSize * 0.25}
-                        style={{ paintOrder: 'stroke' }}
-                    >
-                        {t('view3d.driver')}
-                    </text>
-                )}
                 {lines.map((line) => {
                     const dx = line.to[0] - line.from[0];
                     const dy = line.to[1] - line.from[1];

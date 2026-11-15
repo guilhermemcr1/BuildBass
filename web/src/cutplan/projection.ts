@@ -7,9 +7,13 @@ import type { Cutout, Piece, PieceRole, Plan } from './types';
 export type View = { yaw_rad: number; pitch_rad: number; zoom: number };
 
 export type Polygon = {
-    // 'front', 'back', 'top', 'bottom', 'side-1', 'side-2', 'divider' ou '<peça>:<driver|port>-<n>'.
+    // 'front', 'back', 'top', 'bottom', 'side-1', 'side-2', 'divider', '<peça>:<driver|port>-<n>'
+    // ou, nos detalhes, '<peça>:<driver|port>-<n>:<camada>'.
     id: string;
-    kind: 'face' | 'cutout';
+    // `detail`: o que se vê dentro do recorte (aro, cone e capa do alto-falante; paredes do duto).
+    kind: 'face' | 'cutout' | 'detail';
+    // Só nos detalhes: qual parte do alto-falante ou do duto.
+    layer?: 'flange' | 'cone' | 'cap' | 'wall';
     points: [number, number][];
     // Mais perto do observador = maior; os recortes ficam um pouco à frente da própria face.
     depth: number;
@@ -49,6 +53,13 @@ function rotate([x, y, z]: Vec, yaw: number, pitch: number): Vec {
 
 const CIRCLE_POINTS = 24;
 const CUTOUT_LIFT_M = 1e-6;
+// Alto-falante visto de frente: aro, cone e capa, em fração do tamanho do recorte. O cone e a
+// capa ficam afundados atrás do painel (também em fração do tamanho), o que dá a paralaxe ao girar.
+const FLANGE_SCALE = 1.2;
+const CONE_SCALE = 0.8;
+const CONE_RECESS = 0.05;
+const CAP_SCALE = 0.28;
+const CAP_RECESS = 0.11;
 // Normal quase perpendicular ao observador: a face aparece de lado e não é desenhada.
 const EDGE_ON = 1e-9;
 // Luz vinda de cima, da esquerda e de frente, no referencial do observador (z para ele).
@@ -228,6 +239,95 @@ function outline(cutout: Cutout): [number, number][] | undefined {
     }
 }
 
+
+type Point2 = [number, number];
+
+// Contorno escalado em torno do centro do recorte (coordenadas da peça).
+function scaled(
+    shape: Point2[],
+    center: { x_m: number; y_m: number },
+    factor: number,
+): Point2[] {
+    return shape.map(([x, y]) => [
+        center.x_m + (x - center.x_m) * factor,
+        center.y_m + (y - center.y_m) * factor,
+    ]);
+}
+
+function circle(center: { x_m: number; y_m: number }, radius: number): Point2[] {
+    return Array.from({ length: CIRCLE_POINTS }, (_, index) => {
+        const angle = (2 * Math.PI * index) / CIRCLE_POINTS;
+
+        return [
+            center.x_m + radius * Math.cos(angle),
+            center.y_m + radius * Math.sin(angle),
+        ];
+    });
+}
+
+function signedArea(points: Point2[]): number {
+    return (
+        points.reduce((sum, [x, y], index) => {
+            const [nx, ny] = points[(index + 1) % points.length]!;
+
+            return sum + (x * ny - nx * y);
+        }, 0) / 2
+    );
+}
+
+// Recorta um polígono por outro convexo (Sutherland–Hodgman); o duto só aparece dentro do furo.
+function clipConvex(subject: Point2[], clip: Point2[]): Point2[] {
+    const sign = signedArea(clip) >= 0 ? 1 : -1;
+    let output = subject;
+
+    for (let index = 0; index < clip.length && output.length > 0; index++) {
+        const a = clip[index]!;
+        const b = clip[(index + 1) % clip.length]!;
+        const inside = ([x, y]: Point2) =>
+            sign * ((b[0] - a[0]) * (y - a[1]) - (b[1] - a[1]) * (x - a[0])) >=
+            0;
+        const input = output;
+
+        output = [];
+
+        input.forEach((current, at) => {
+            const previous = input[(at + input.length - 1) % input.length]!;
+            const crossing = (): Point2 => {
+                const [dx, dy] = [current[0] - previous[0], current[1] - previous[1]];
+                const [ex, ey] = [b[0] - a[0], b[1] - a[1]];
+                const denominator = dx * ey - dy * ex;
+                const u =
+                    denominator === 0
+                        ? 0
+                        : ((a[0] - previous[0]) * ey - (a[1] - previous[1]) * ex) /
+                          denominator;
+
+                return [previous[0] + u * dx, previous[1] + u * dy];
+            };
+
+            if (inside(current)) {
+                if (!inside(previous)) {
+                    output.push(crossing());
+                }
+
+                output.push(current);
+            } else if (inside(previous)) {
+                output.push(crossing());
+            }
+        });
+    }
+
+    return output;
+}
+
+function cross(a: Vec, b: Vec): Vec {
+    return [
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0],
+    ];
+}
+
 export function projectBox(
     plan: Plan,
     view: View,
@@ -289,16 +389,146 @@ export function projectBox(
             }
 
             const lifted = shape.map(([x, y]) => project(onFace(face, x, y)));
+            const id = `${face.id}:${cutout.kind}-${counters[cutout.kind]}`;
+            const hole = lifted.map(({ xy }) => xy);
 
             polygons.push({
-                id: `${face.id}:${cutout.kind}-${counters[cutout.kind]}`,
+                id,
                 kind: 'cutout',
-                points: lifted.map(({ xy }) => xy),
+                points: hole,
                 depth: centre.depth + CUTOUT_LIFT_M,
                 part: cutout.kind,
                 facing,
                 light,
             });
+
+            // Atrás do painel (no sentido contrário à normal), por onde o cone e o duto entram.
+            const behind = (x: number, y: number, depth_m: number): Vec => {
+                const point = onFace(face, x, y);
+
+                return [
+                    point[0] - face.normal[0] * depth_m,
+                    point[1] - face.normal[1] * depth_m,
+                    point[2] - face.normal[2] * depth_m,
+                ];
+            };
+
+            if (cutout.kind === 'driver' && cutout.center !== undefined) {
+                const { center } = cutout;
+                const size =
+                    cutout.shape === 'round'
+                        ? (cutout.diameter_m ?? 0)
+                        : Math.min(cutout.width_m ?? 0, cutout.height_m ?? 0);
+                const layer = (
+                    name: 'flange' | 'cone' | 'cap',
+                    contour: Point2[],
+                    recess_m: number,
+                    lift: number,
+                ) => {
+                    const projected = contour.map(([x, y]) =>
+                        project(behind(x, y, recess_m)),
+                    );
+
+                    polygons.push({
+                        id: `${id}:${name}`,
+                        kind: 'detail',
+                        layer: name,
+                        points: projected.map(({ xy }) => xy),
+                        depth: centre.depth + CUTOUT_LIFT_M * lift,
+                        part: 'driver',
+                        facing,
+                        light,
+                    });
+                };
+
+                if (size > 0) {
+                    // O aro (a borda do cone sobre o painel) vem por baixo do furo.
+                    layer('flange', scaled(shape, center, FLANGE_SCALE), 0, 0.5);
+                    layer(
+                        'cone',
+                        circle(center, (size / 2) * CONE_SCALE),
+                        size * CONE_RECESS,
+                        1.5,
+                    );
+                    layer(
+                        'cap',
+                        circle(center, (size / 2) * CAP_SCALE),
+                        size * CAP_RECESS,
+                        2,
+                    );
+                }
+            }
+
+            if (cutout.kind === 'port') {
+                const rear = face.role === 'back';
+                const length = rear ? plan.port_rear_length_m : plan.port_length_m;
+                // O duto não passa da profundidade da câmara em que está.
+                const chamber = plan.dimensions.chambers;
+                const room = rear
+                    ? (chamber?.rear_d_m ?? plan.dimensions.internal.d_m)
+                    : (chamber?.front_d_m ?? plan.dimensions.internal.d_m);
+
+                if (length !== undefined && length > 0) {
+                    const reach = Math.min(length, room);
+
+                    shape.forEach(([ax, ay], index) => {
+                        const [bx, by] = shape[(index + 1) % shape.length]!;
+                        const a = onFace(face, ax, ay);
+                        const b = onFace(face, bx, by);
+                        const quad = [
+                            a,
+                            b,
+                            behind(bx, by, reach),
+                            behind(ax, ay, reach),
+                        ].map(project);
+                        // Parede vista por dentro: a normal aponta para o eixo do duto.
+                        const inward = cross(face.normal, [
+                            b[0] - a[0],
+                            b[1] - a[1],
+                            b[2] - a[2],
+                        ]);
+                        const turnedInward = rotate(inward, yaw, pitch);
+                        const visible = turnedInward[2] > EDGE_ON;
+                        const length3 = Math.hypot(...inward) || 1;
+                        const wallLight = Math.max(
+                            0,
+                            (turnedInward[0] * LIGHT[0] +
+                                turnedInward[1] * LIGHT[1] +
+                                turnedInward[2] * LIGHT[2]) /
+                                (LIGHT_NORM * length3),
+                        );
+                        let points = quad.map(({ xy }) => xy);
+                        let depth =
+                            quad.reduce((sum, { depth: z }) => sum + z, 0) / 4;
+
+                        if (!options.translucent) {
+                            // Sem transparência só se vê, pela abertura, a parede de dentro que
+                            // olha para o observador, e só o que cabe no furo.
+                            if (!visible) {
+                                return;
+                            }
+
+                            points = clipConvex(points, hole);
+                            depth = centre.depth + CUTOUT_LIFT_M * 1.5;
+
+                            if (points.length < 3) {
+                                return;
+                            }
+                        }
+
+                        polygons.push({
+                            id: `${id}:wall-${index + 1}`,
+                            kind: 'detail',
+                            layer: 'wall',
+                            points,
+                            depth,
+                            part: 'port',
+                            facing: options.translucent ? visible : facing,
+                            light: wallLight,
+                        });
+                    });
+                }
+            }
         }
     }
 
