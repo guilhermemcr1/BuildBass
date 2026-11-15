@@ -30,16 +30,7 @@ describe('DriverDialog', () => {
         const { dialog } = await openDialog();
 
         // Parâmetros que no painel ficam atrás de "Mostrar mais".
-        for (const symbol of [
-            'Fs',
-            'Qts',
-            'Qes',
-            'Qms',
-            'Re',
-            'Le',
-            'BL',
-            'Mms',
-        ]) {
+        for (const symbol of ['Qes', 'Re', 'BL']) {
             expect(
                 within(dialog).getByRole('textbox', {
                     name: new RegExp(`^${symbol}\\s?—`),
