@@ -196,6 +196,11 @@
         "triggerHint": "Find driver by brand or model…",
         "clearSearch": "Clear search"
     },
+    "driverDialog": {
+        "title": "Driver",
+        "openDialog": "Expand driver",
+        "parameters": "Driver parameters"
+    },
     "boxDialog": {
         "open3d": "View box in 3D",
         "openDialog": "Expand box",

@@ -35,7 +35,7 @@ export function ThemeSwitch() {
                     <Current
                         key={theme}
                         aria-hidden="true"
-                        className="spin-in size-4"
+                        className="size-4 spin-in"
                     />
                 </span>
             }

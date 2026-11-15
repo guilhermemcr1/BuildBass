@@ -74,7 +74,10 @@ function lookOf(polygon: Polygon, inside: boolean, behind: boolean): Look {
         }
 
         const layers = {
-            flange: { className: 'fill-foreground stroke-foreground', opacity: 0.9 },
+            flange: {
+                className: 'fill-foreground stroke-foreground',
+                opacity: 0.9,
+            },
             cone: { className: 'fill-foreground stroke-muted', opacity: 0.75 },
             cap: { className: 'fill-accent stroke-accent-soft', opacity: 1 },
         } as const;
@@ -244,7 +247,11 @@ export function Box3dView({ plan }: { plan: Plan }) {
                                 .join(' ')}
                             className={look.className}
                             // Cada face recebe um tom da luz; o volume se lê sem contorno pesado.
-                            style={look.fill === undefined ? undefined : { fill: look.fill }}
+                            style={
+                                look.fill === undefined
+                                    ? undefined
+                                    : { fill: look.fill }
+                            }
                             fillOpacity={look.fillOpacity}
                             strokeOpacity={behind ? 0.4 : look.strokeOpacity}
                             strokeDasharray={

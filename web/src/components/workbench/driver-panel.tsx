@@ -1,12 +1,11 @@
-import { BookmarkPlus, Ellipsis, Library, Send } from 'lucide-react';
+import { BookmarkPlus, Ellipsis, Library, Maximize2, Send } from 'lucide-react';
 import { Suspense, lazy, useState } from 'react';
-import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/ui/button';
 import { Menu } from '@/components/ui/menu';
-import { ParameterField } from '@/components/ui/parameter-field';
 import { ShowMore } from '@/components/ui/show-more';
 import { deriveDriver } from '@/engine';
-import type { DerivedDriver, DriverKey } from '@/engine';
+import type { DriverKey } from '@/engine';
 import {
     activeProjectStore,
     useActiveProject,
@@ -19,57 +18,18 @@ import {
 import { readField } from '@/lib/project/fields';
 import type { SavedDriverDraft } from '@/lib/saved-drivers/types';
 import { DriverDimensions } from './driver-dimensions';
+import { DriverField } from './driver-field';
 import { DriverIdentity } from './driver-identity';
 import { DriverPicker } from './driver-picker';
 import { DriversFields } from './drivers-fields';
 import { Panel } from './panel';
 import { SignalFields } from './signal-fields';
-import { useParameterField } from './use-parameter-field';
-
-// Status de consistência do motor (research.md §4) e valor calculado de cada campo (FR-015–017).
-function DriverField({
-    parameter,
-    derived,
-}: {
-    parameter: DriverKey;
-    derived: DerivedDriver;
-}) {
-    const { t } = useTranslation('engine');
-    const { locale } = useLocale();
-    const field = useParameterField(parameter);
-    const { status, relation, deviation } = derived.consistency[parameter];
-    const percent = new Intl.NumberFormat(locale, {
-        style: 'percent',
-        maximumFractionDigits: 1,
-    });
-
-    return (
-        <ParameterField
-            {...field}
-            status={status === 'derived' ? 'none' : status}
-            statusMessage={
-                relation !== undefined &&
-                deviation !== undefined &&
-                status !== 'ok'
-                    ? t(`status.${relation}`, {
-                          deviation: percent.format(deviation),
-                      })
-                    : undefined
-            }
-            derivedSi={
-                status === 'derived'
-                    ? derived.values[parameter].value
-                    : undefined
-            }
-            derivedLabel={t('status.derived')}
-        />
-    );
-}
 
 type DriverAction = 'save' | 'mine' | 'submit';
 
 const SaveDriverDialog = lazy(() => import('./save-driver-dialog'));
 const SavedDriversDialog = lazy(() => import('./saved-drivers-dialog'));
+const DriverDialog = lazy(() => import('./driver-dialog'));
 
 // O que o diálogo de salvar mostra de partida: nome da origem (se houver), os parâmetros T/S do
 // projeto e o recorte do plano, quando já informado.
@@ -120,11 +80,25 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
         undefined,
     );
     const [managing, setManaging] = useState(false);
+    // O modal só é carregado na primeira abertura; depois fica montado para a saída animada.
+    const [expanded, setExpanded] = useState(false);
+    const [expandedLoaded, setExpandedLoaded] = useState(false);
 
     // Uma ação à vista (buscar) e as demais num menu: enviar ao catálogo (depende do servidor,
     // Princípio V), salvar e abrir a lista pessoal.
     const actions = (
         <div className="flex min-w-0 items-center gap-1">
+            <Button
+                variant="quiet"
+                aria-label={t('driverDialog.openDialog')}
+                onPress={() => {
+                    setExpandedLoaded(true);
+                    setExpanded(true);
+                }}
+                className="px-2.5"
+            >
+                <Maximize2 aria-hidden="true" className="size-4" />
+            </Button>
             <DriverPicker
                 disabled={offline}
                 disabledReason={offlineReason}
@@ -209,6 +183,9 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
             <DriversFields />
             <SignalFields />
             <Suspense fallback={null}>
+                {expandedLoaded && (
+                    <DriverDialog open={expanded} onOpenChange={setExpanded} />
+                )}
                 {saving !== undefined && (
                     <SaveDriverDialog
                         initial={saving}

@@ -239,7 +239,6 @@ function outline(cutout: Cutout): [number, number][] | undefined {
     }
 }
 
-
 type Point2 = [number, number];
 
 // Contorno escalado em torno do centro do recorte (coordenadas da peça).
@@ -254,7 +253,10 @@ function scaled(
     ]);
 }
 
-function circle(center: { x_m: number; y_m: number }, radius: number): Point2[] {
+function circle(
+    center: { x_m: number; y_m: number },
+    radius: number,
+): Point2[] {
     return Array.from({ length: CIRCLE_POINTS }, (_, index) => {
         const angle = (2 * Math.PI * index) / CIRCLE_POINTS;
 
@@ -293,13 +295,17 @@ function clipConvex(subject: Point2[], clip: Point2[]): Point2[] {
         input.forEach((current, at) => {
             const previous = input[(at + input.length - 1) % input.length]!;
             const crossing = (): Point2 => {
-                const [dx, dy] = [current[0] - previous[0], current[1] - previous[1]];
+                const [dx, dy] = [
+                    current[0] - previous[0],
+                    current[1] - previous[1],
+                ];
                 const [ex, ey] = [b[0] - a[0], b[1] - a[1]];
                 const denominator = dx * ey - dy * ex;
                 const u =
                     denominator === 0
                         ? 0
-                        : ((a[0] - previous[0]) * ey - (a[1] - previous[1]) * ex) /
+                        : ((a[0] - previous[0]) * ey -
+                              (a[1] - previous[1]) * ex) /
                           denominator;
 
                 return [previous[0] + u * dx, previous[1] + u * dy];
@@ -443,7 +449,12 @@ export function projectBox(
 
                 if (size > 0) {
                     // O aro (a borda do cone sobre o painel) vem por baixo do furo.
-                    layer('flange', scaled(shape, center, FLANGE_SCALE), 0, 0.5);
+                    layer(
+                        'flange',
+                        scaled(shape, center, FLANGE_SCALE),
+                        0,
+                        0.5,
+                    );
                     layer(
                         'cone',
                         circle(center, (size / 2) * CONE_SCALE),
@@ -461,7 +472,9 @@ export function projectBox(
 
             if (cutout.kind === 'port') {
                 const rear = face.role === 'back';
-                const length = rear ? plan.port_rear_length_m : plan.port_length_m;
+                const length = rear
+                    ? plan.port_rear_length_m
+                    : plan.port_length_m;
                 // O duto não passa da profundidade da câmara em que está.
                 const chamber = plan.dimensions.chambers;
                 const room = rear

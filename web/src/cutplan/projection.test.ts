@@ -453,7 +453,11 @@ describe('detalhes dentro dos recortes', () => {
     test.each([
         ['round', { shape: 'round', diameter_m: 0.1, count: 1 }, 24],
         ['rect', { shape: 'rect', width_m: 0.12, height_m: 0.05, count: 1 }, 4],
-        ['triangle', { shape: 'triangle', base_m: 0.1, height_m: 0.08, count: 1 }, 3],
+        [
+            'triangle',
+            { shape: 'triangle', base_m: 0.1, height_m: 0.08, count: 1 },
+            3,
+        ],
     ] as const)(
         'o duto %s tem uma parede por lado, só as que olham para dentro',
         (_name, port, sides) => {
@@ -484,7 +488,9 @@ describe('detalhes dentro dos recortes', () => {
 
     test('pela abertura só se vê a parede dentro do furo', () => {
         const caixa = plan({ type: 'vented', fb_hz: 35 });
-        const polygons = projectBox(caixa, DEFAULT_VIEW, { translucent: false });
+        const polygons = projectBox(caixa, DEFAULT_VIEW, {
+            translucent: false,
+        });
         const hole = polygons.find(({ id }) => id === 'front:port-1')!;
         const box = (points: [number, number][]) => ({
             minX: Math.min(...points.map(([x]) => x)),

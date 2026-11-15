@@ -212,9 +212,7 @@ describe('Box3dView', () => {
 
         // A vista padrão olha de cima e de lado: a frente aparece e o alto-falante vem junto.
         expect(layers).toHaveLength(4);
-        expect(
-            container.querySelector('[data-layer="flange"]'),
-        ).not.toBeNull();
+        expect(container.querySelector('[data-layer="flange"]')).not.toBeNull();
         expect(container.querySelector('[data-layer="cone"]')).not.toBeNull();
         expect(container.querySelector('[data-layer="cap"]')).toHaveClass(
             'fill-accent',
