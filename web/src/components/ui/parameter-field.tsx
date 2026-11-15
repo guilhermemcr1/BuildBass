@@ -87,6 +87,7 @@ export function ParameterField({
     const row = layout === 'row';
     const compact = layout === 'compact';
     const stacked = layout === 'stacked' || compact;
+    const symbolOnly = !row && !stacked;
     // "Proporção — altura" → mostra só "altura"; o nome acessível mantém o texto inteiro.
     const fullLabel = t(`${parameter}.label`);
     const cut = fullLabel.lastIndexOf('—');
@@ -107,9 +108,14 @@ export function ParameterField({
     const input = (
         <Input
             ref={entryRef}
-            placeholder={t('common:placeholder.example', {
-                value: formatQuantity(EXAMPLES[parameter], unit, locale),
-            })}
+            placeholder={
+                // A caixa estreita (símbolo + valor) só comporta o número; o "Ex." tomaria o lugar dele.
+                symbolOnly
+                    ? formatQuantity(EXAMPLES[parameter], unit, locale)
+                    : t('common:placeholder.example', {
+                          value: formatQuantity(EXAMPLES[parameter], unit, locale),
+                      })
+            }
             className={cn(
                 'num h-full w-full min-w-0 bg-transparent text-left text-sm outline-none',
                 stacked ? 'px-2' : 'px-2.5',
