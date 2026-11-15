@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { uuid } from '@/lib/utils';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { sanitizeSavedDriver } from '@/lib/saved-drivers/sanitize';
 import { SAVED_DRIVERS_MAX, identityOf } from '@/lib/saved-drivers/types';
@@ -56,7 +57,7 @@ export const useSavedDrivers = create<SavedDriversState>()(
                     return { status: 'full' };
                 }
 
-                const driver = stamp(draft, crypto.randomUUID());
+                const driver = stamp(draft, uuid());
                 set({ items: [driver, ...items] });
 
                 return { status: 'saved', driver };
@@ -101,9 +102,7 @@ export const useSavedDrivers = create<SavedDriversState>()(
 
                     return match === undefined ? item : stamp(match, item.id);
                 });
-                const added = fresh.map((draft) =>
-                    stamp(draft, crypto.randomUUID()),
-                );
+                const added = fresh.map((draft) => stamp(draft, uuid()));
 
                 set({ items: [...added, ...kept].sort(byNewest) });
 

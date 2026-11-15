@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { uuid } from '@/lib/utils';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import {
     SERIES_COLORS,
@@ -65,7 +66,7 @@ function openEntry(
     color?: SeriesColor,
 ): OpenProject {
     return {
-        id: crypto.randomUUID(),
+        id: uuid(),
         slot: freeSlot(projects),
         color: color ?? freeColor(projects),
         data,
