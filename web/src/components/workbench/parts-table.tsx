@@ -28,7 +28,14 @@ export function PartsTable({ plan, name }: { plan: Plan; name: string }) {
 
     return (
         <div className="flex flex-col gap-2">
-            <div className="overflow-x-auto">
+            {/* Em telas estreitas a tabela rola na horizontal: a área recebe foco para rolar pelo
+                teclado (como a tabela de resultados). */}
+            <div
+                role="region"
+                aria-label={t('parts.caption', { name })}
+                tabIndex={0}
+                className="overflow-x-auto rounded-sm outline-none focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-solid"
+            >
                 <table className="w-full border-collapse text-left text-sm">
                     <caption className="pb-1.5 text-left text-xs font-semibold text-muted">
                         {t('parts.caption', { name })}

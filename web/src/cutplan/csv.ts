@@ -62,6 +62,25 @@ export type CsvLabels = {
         utilization: string;
         waste: string;
         oversize: string;
+        // Estoque e tipo de corte (specs/012).
+        stock: string;
+        unplaced: string;
+        cut: string;
+        guillotine: string;
+        free: string;
+    };
+    // Centro de cada recorte (specs/012, FR-017).
+    cutouts: {
+        title: string;
+        cutout: string;
+        size: string;
+        fromLeft: string;
+        fromBottom: string;
+        position: string;
+        manual: string;
+        auto: string;
+        driver: string;
+        port: string;
     };
 };
 
@@ -132,6 +151,45 @@ export function cutPlanCsv(
                 format.cutouts(piece.cutouts).join(CUTOUT_JOINER),
             ),
         );
+    }
+
+    const placed = plan.pieces.flatMap((piece) =>
+        piece.cutouts.flatMap((cutout) =>
+            cutout.ref === undefined || cutout.center === undefined
+                ? []
+                : [{ piece, cutout, ref: cutout.ref, center: cutout.center }],
+        ),
+    );
+
+    if (placed.length > 0) {
+        const text = labels.cutouts;
+
+        rows.push(
+            '',
+            line(
+                text.title,
+                labels.columns.piece,
+                text.cutout,
+                text.size,
+                withUnit(text.fromLeft, format.unitSymbol),
+                withUnit(text.fromBottom, format.unitSymbol),
+                text.position,
+            ),
+        );
+
+        for (const { piece, cutout, ref, center } of placed) {
+            rows.push(
+                line(
+                    '',
+                    labels.pieces[piece.role],
+                    `${text[ref.kind]} ${ref.n}`,
+                    format.cutouts([cutout]).join(CUTOUT_JOINER),
+                    format.number(center.x_m),
+                    format.number(center.y_m),
+                    cutout.manual === true ? text.manual : text.auto,
+                ),
+            );
+        }
     }
 
     const { internal, external, chambers } = plan.dimensions;
@@ -235,6 +293,7 @@ export function cutPlanCsv(
             line(
                 sheets.title,
                 sheets.sheet,
+                sheets.stock,
                 sheets.piece,
                 sheets.unit,
                 withUnit('x', format.unitSymbol),
@@ -251,6 +310,7 @@ export function cutPlanCsv(
                     line(
                         '',
                         String(index + 1),
+                        String(sheet.stock + 1),
                         labels.pieces[placement.role],
                         String(placement.unit),
                         format.number(placement.x_m),
@@ -264,6 +324,7 @@ export function cutPlanCsv(
         }
 
         rows.push(
+            line(sheets.cut, sheets[layout.cut]),
             line(sheets.utilization, format.percent(layout.utilization)),
             line(
                 withUnit(sheets.waste, format.areaSymbol),
@@ -275,6 +336,16 @@ export function cutPlanCsv(
             rows.push(
                 line(
                     sheets.oversize,
+                    labels.pieces[missing.role],
+                    String(missing.unit),
+                ),
+            );
+        }
+
+        for (const missing of layout.unplaced) {
+            rows.push(
+                line(
+                    sheets.unplaced,
                     labels.pieces[missing.role],
                     String(missing.unit),
                 ),

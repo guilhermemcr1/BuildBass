@@ -46,6 +46,8 @@ type ParameterFieldProps = {
     // Campo indispensável para algum cálculo: ganha um asterisco e a explicação na ajuda.
     requirement?: Requirement;
     disabled?: boolean;
+    // Prefixo só para o leitor de tela, quando o mesmo campo se repete (ex.: "Item 2" do estoque).
+    labelContext?: string;
     className?: string;
 };
 
@@ -71,6 +73,7 @@ export function ParameterField({
     layout = 'symbol',
     requirement,
     disabled = false,
+    labelContext,
     className,
 }: ParameterFieldProps) {
     const { t } = useTranslation(['parameters', 'common']);
@@ -171,6 +174,9 @@ export function ParameterField({
                             'w-11 shrink-0 truncate text-[13px] font-semibold text-muted',
                     )}
                 >
+                    {labelContext !== undefined && (
+                        <span className="sr-only">{labelContext}: </span>
+                    )}
                     <HelpTip
                         content={help}
                         label={t('common:help.of', {

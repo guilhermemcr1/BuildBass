@@ -383,3 +383,42 @@ describe('cotas e peças do 3D (feature 008)', () => {
         ).toBe(true);
     });
 });
+
+describe('projeção com posição manual (feature 012)', () => {
+    test('o furo do 3D acompanha o centro gravado do recorte', () => {
+        const centerOf = (box: Plan) => {
+            const hole = projectBox(box, FLAT, { translucent: false }).find(
+                ({ id }) => id === 'front:driver-1',
+            );
+            const points = hole?.points ?? [];
+
+            return [
+                points.reduce((sum, [x]) => sum + x, 0) / points.length,
+                points.reduce((sum, [, y]) => sum + y, 0) / points.length,
+            ];
+        };
+        const auto = plan();
+        const front = auto.pieces.find(({ role }) => role === 'front');
+        const auto_center = front?.cutouts[0].center ?? { x_m: 0, y_m: 0 };
+        const moved = plan(
+            {},
+            {
+                positions: [
+                    {
+                        piece: 'front',
+                        kind: 'driver',
+                        n: 1,
+                        x_m: auto_center.x_m - 0.05,
+                        y_m: auto_center.y_m + 0.02,
+                    },
+                ],
+            },
+        );
+        const [ax, ay] = centerOf(auto);
+        const [mx, my] = centerOf(moved);
+
+        // De frente, x da tela segue a largura; o sinal de y depende da convenção da tela.
+        expect(Math.abs(mx - ax)).toBeCloseTo(0.05, 6);
+        expect(Math.abs(my - ay)).toBeCloseTo(0.02, 6);
+    });
+});

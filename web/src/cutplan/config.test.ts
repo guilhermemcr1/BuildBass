@@ -170,7 +170,12 @@ describe('chapa do usuário (feature 008)', () => {
     test('com largura e altura vêm os padrões: perda de serra de 3 mm e girar', () => {
         expect(
             resolveCutPlan({ sheet: { w_m: 2.75, h_m: 1.85 } }).sheet,
-        ).toEqual({ w_m: 2.75, h_m: 1.85, kerf_m: 0.003, rotate: true });
+        ).toEqual({
+            stock: [{ index: 0, w_m: 2.75, h_m: 1.85 }],
+            kerf_m: 0.003,
+            rotate: true,
+            cut: 'guillotine',
+        });
     });
 
     test('perda de serra e rotação informadas são respeitadas', () => {
@@ -178,7 +183,12 @@ describe('chapa do usuário (feature 008)', () => {
             resolveCutPlan({
                 sheet: { w_m: 2.75, h_m: 1.85, kerf_m: 0, rotate: false },
             }).sheet,
-        ).toEqual({ w_m: 2.75, h_m: 1.85, kerf_m: 0, rotate: false });
+        ).toEqual({
+            stock: [{ index: 0, w_m: 2.75, h_m: 1.85 }],
+            kerf_m: 0,
+            rotate: false,
+            cut: 'guillotine',
+        });
     });
 
     test('chapa incompleta (só um lado) não entra na configuração resolvida', () => {
@@ -204,5 +214,52 @@ describe('chapa do usuário (feature 008)', () => {
         expect(
             validateCutPlan({ sheet: { w_m: Number.NaN, h_m: 1, kerf_m: -1 } }),
         ).toEqual(['sheet_w_m', 'kerf_m']);
+    });
+});
+
+describe('estoque de chapas e tipo de corte (feature 012)', () => {
+    test('o estoque resolvido traz só os itens completos, com quantidade e tipo de corte', () => {
+        expect(
+            resolveCutPlan({
+                sheet: {
+                    w_m: 2.75,
+                    h_m: 1.85,
+                    more: [{ w_m: 1.2 }, { w_m: 1.2, h_m: 0.6, quantity: 2 }],
+                    cut: 'free',
+                },
+            }).sheet,
+        ).toEqual({
+            stock: [
+                { index: 0, w_m: 2.75, h_m: 1.85 },
+                { index: 2, w_m: 1.2, h_m: 0.6, quantity: 2 },
+            ],
+            kerf_m: 0.003,
+            rotate: true,
+            cut: 'free',
+        });
+    });
+
+    test('o 1º item incompleto não impede os demais', () => {
+        expect(
+            resolveCutPlan({ sheet: { w_m: 2.75, more: [{ w_m: 1, h_m: 1 }] } })
+                .sheet?.stock,
+        ).toEqual([{ index: 1, w_m: 1, h_m: 1 }]);
+    });
+
+    test('valida as medidas de todos os itens e a quantidade inteira de 1 a 99', () => {
+        expect(
+            validateCutPlan({
+                sheet: { w_m: 1, h_m: 1, more: [{ w_m: 6, h_m: 1 }] },
+            }),
+        ).toEqual(['sheet_w_m']);
+        expect(
+            validateCutPlan({ sheet: { w_m: 1, h_m: 1, quantity: 100 } }),
+        ).toEqual(['sheet_quantity']);
+        expect(
+            validateCutPlan({ sheet: { w_m: 1, h_m: 1, quantity: 1.5 } }),
+        ).toEqual(['sheet_quantity']);
+        expect(
+            validateCutPlan({ sheet: { w_m: 1, h_m: 1, quantity: 99 } }),
+        ).toEqual([]);
     });
 });

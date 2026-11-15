@@ -163,6 +163,18 @@
         "label": "Perda de serra",
         "help": "Espessura que a serra consome a cada corte, em geral cerca de 3 mm. O sistema deixa essa folga entre as peças."
     },
+    "sheet_quantity": {
+        "label": "Quantidade",
+        "help": "Quantas chapas desse tamanho você tem. Deixe em branco se puder comprar quantas forem precisas."
+    },
+    "cutpos_x_m": {
+        "label": "Centro — distância da borda esquerda",
+        "help": "Distância da borda esquerda da peça até o centro do recorte, olhando a peça de frente."
+    },
+    "cutpos_y_m": {
+        "label": "Centro — distância da borda de baixo",
+        "help": "Distância da borda de baixo da peça até o centro do recorte, olhando a peça de frente."
+    },
     "dim_h_m": {
         "label": "Medida interna — altura",
         "help": "Altura interna da caixa. Editar uma medida ajusta as outras duas para o volume continuar o mesmo."

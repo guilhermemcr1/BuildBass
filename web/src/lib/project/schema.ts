@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { MAX_STOCK_ITEMS } from '@/cutplan/stock';
 import { PARAMETERS } from '@/lib/parameters';
 import type { ParameterKey } from '@/lib/parameters';
 import { QUANTITIES } from '@/lib/units/quantities';
@@ -88,6 +89,7 @@ const driverSource = z.object({
 // Configuração do plano de corte (opcional: só existe depois que o usuário edita um campo do plano).
 // Campos desconhecidos são ignorados; `custom` com outra proporção é aceito e não é usado.
 const ratioRange = range('ratio_h');
+const sheetQuantity = range('sheet_quantity').int();
 const cutPlan = z.object({
     thickness_m: range('thickness_m').optional(),
     proportion: z
@@ -98,14 +100,40 @@ const cutPlan = z.object({
         .optional(),
     braces_m3: range('braces_m3').optional(),
     cutout_m: range('cutout_m').optional(),
-    // Chapa que o usuário tem (versão 5): largura e altura obrigatórias dentro do objeto.
+    // Chapa que o usuário tem (versão 5): largura e altura obrigatórias dentro do objeto. A versão 7
+    // acrescenta o estoque (quantidade, demais itens) e o tipo de corte (specs/012, research R1).
     sheet: z
         .object({
             w_m: range('sheet_w_m'),
             h_m: range('sheet_h_m'),
             kerf_m: range('kerf_m').optional(),
             rotate: z.boolean().optional(),
+            quantity: sheetQuantity.optional(),
+            more: z
+                .array(
+                    z.object({
+                        w_m: range('sheet_w_m'),
+                        h_m: range('sheet_h_m'),
+                        quantity: sheetQuantity.optional(),
+                    }),
+                )
+                .max(MAX_STOCK_ITEMS - 1)
+                .optional(),
+            cut: z.enum(['guillotine', 'free']).optional(),
         })
+        .optional(),
+    // Centros dos recortes movidos pelo usuário (versão 7).
+    positions: z
+        .array(
+            z.object({
+                piece: z.enum(['front', 'back', 'divider']),
+                kind: z.enum(['driver', 'port']),
+                n: z.number().int().min(1).max(16),
+                x_m: range('cutpos_x_m'),
+                y_m: range('cutpos_y_m'),
+            }),
+        )
+        .max(32)
         .optional(),
 });
 

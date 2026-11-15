@@ -1,5 +1,18 @@
-import { CUT_PLAN_LIMITS, DEFAULT_KERF_M, resolveCutPlan } from '@/cutplan';
-import type { CutPlanConfig, CutPlanProportion, SheetConfig } from '@/cutplan';
+import {
+    CUT_PLAN_LIMITS,
+    DEFAULT_KERF_M,
+    resolveCutPlan,
+    withStock,
+} from '@/cutplan';
+import type {
+    CutMode,
+    CutoutPiece,
+    CutoutRef,
+    CutPlanConfig,
+    CutPlanProportion,
+    SheetConfig,
+    StockItem,
+} from '@/cutplan';
 import { DRIVER_KEYS } from '@/engine';
 import type { CatalogDims } from '@/lib/catalog/to-driver-input';
 import type { ParameterKey } from '@/lib/parameters';
@@ -179,12 +192,20 @@ const SHEET_FIELD = {
     kerf_m: 'kerf_m',
 } as const;
 
-// A chapa some do projeto quando largura e altura ficam vazias (sobrariam só a perda de serra e a
-// rotação, que sem chapa não significam nada).
-function withSheet(data: ProjectData, sheet: SheetConfig): ProjectData {
+// A chapa some do projeto quando largura e altura ficam vazias e não há outro item no estoque
+// (sobrariam só a perda de serra, a rotação e o tipo de corte, que sem chapa não significam nada).
+function withSheet(
+    data: ProjectData,
+    sheet: SheetConfig | undefined,
+): ProjectData {
     const current = data.cutPlan ?? {};
 
-    if (sheet.w_m === undefined && sheet.h_m === undefined) {
+    if (
+        sheet === undefined ||
+        (sheet.w_m === undefined &&
+            sheet.h_m === undefined &&
+            sheet.more === undefined)
+    ) {
         return withCutPlan(data, without(current, 'sheet'));
     }
 
@@ -230,6 +251,105 @@ export function writeSheetRotate(
     const sheet = data.cutPlan?.sheet;
 
     return sheet === undefined ? data : withSheet(data, { ...sheet, rotate });
+}
+
+// Estoque de chapas (specs/012): grava a lista inteira de uma vez (adicionar, editar, remover e
+// reordenar são todas trocas da lista), preservando perda de serra, rotação e tipo de corte.
+export function setStock(data: ProjectData, items: StockItem[]): ProjectData {
+    return withSheet(data, withStock(data.cutPlan?.sheet, items));
+}
+
+// "Serra" é o padrão e não fica gravado: o arquivo só muda de versão por "CNC/tupia".
+export function setCutMode(data: ProjectData, cut: CutMode): ProjectData {
+    const sheet = data.cutPlan?.sheet;
+
+    if (sheet === undefined) {
+        return data;
+    }
+
+    return withSheet(
+        data,
+        withField(sheet, 'cut', cut === 'guillotine' ? undefined : cut),
+    );
+}
+
+const sameRef = (a: CutoutRef, b: CutoutRef) =>
+    a.piece === b.piece && a.kind === b.kind && a.n === b.n;
+
+function withPositions(
+    data: ProjectData,
+    positions: NonNullable<CutPlanConfig['positions']>,
+): ProjectData {
+    const current = data.cutPlan ?? {};
+
+    return withCutPlan(
+        data,
+        withField(
+            current,
+            'positions',
+            positions.length === 0 ? undefined : positions,
+        ),
+    );
+}
+
+// Centro de um recorte, da borda esquerda e de baixo da peça; limitado às faixas do arquivo.
+export function setCutoutPosition(
+    data: ProjectData,
+    ref: CutoutRef,
+    x_m: number,
+    y_m: number,
+): ProjectData {
+    const clamp = (value: number, key: 'cutpos_x_m' | 'cutpos_y_m') =>
+        Math.min(
+            CUT_PLAN_LIMITS[key].max,
+            Math.max(CUT_PLAN_LIMITS[key].min, value),
+        );
+    const others = (data.cutPlan?.positions ?? []).filter(
+        (item) => !sameRef(item, ref),
+    );
+
+    return withPositions(data, [
+        ...others,
+        {
+            piece: ref.piece,
+            kind: ref.kind,
+            n: ref.n,
+            x_m: clamp(x_m, 'cutpos_x_m'),
+            y_m: clamp(y_m, 'cutpos_y_m'),
+        },
+    ]);
+}
+
+export function clearCutoutPosition(
+    data: ProjectData,
+    ref: CutoutRef,
+): ProjectData {
+    const positions = data.cutPlan?.positions;
+
+    if (positions === undefined) {
+        return data;
+    }
+
+    return withPositions(
+        data,
+        positions.filter((item) => !sameRef(item, ref)),
+    );
+}
+
+export function clearPiecePositions(
+    data: ProjectData,
+    piece: CutoutPiece,
+): ProjectData {
+    const positions = data.cutPlan?.positions;
+
+    if (positions === undefined) {
+        return data;
+    }
+
+    return withPositions(
+        data,
+        positions.filter((item) => item.piece !== piece),
+    );
 }
 
 type Axis = 'h' | 'w' | 'd';

@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vite-plus/test';
-import { layoutRow } from './layout';
+import { checkCutouts, layoutRow } from './layout';
+import type { Cutout } from './types';
 
 const round = (diameter: number) => ({ w_m: diameter, h_m: diameter });
 
@@ -137,5 +138,97 @@ describe('layoutRow', () => {
             tight: false,
             tooBig: false,
         });
+    });
+});
+
+describe('checkCutouts (specs/012)', () => {
+    const panel = { w_m: 0.5, h_m: 0.8 };
+    const web = 0.018;
+    const at = (
+        n: number,
+        x_m: number,
+        y_m: number,
+        manual = true,
+        diameter_m = 0.2,
+    ): Cutout => ({
+        kind: 'driver',
+        shape: 'round',
+        diameter_m,
+        center: { x_m, y_m },
+        ref: { piece: 'front', kind: 'driver', n },
+        ...(manual ? { manual: true as const } : {}),
+    });
+
+    test('recorte manual bem colocado não gera aviso', () => {
+        expect(checkCutouts(panel, [at(1, 0.25, 0.4)], web)).toEqual([]);
+    });
+
+    test('dois recortes sobrepostos ou a menos da espessura: um aviso para cada', () => {
+        for (const y of [0.55, 0.61]) {
+            expect(
+                checkCutouts(
+                    panel,
+                    [at(1, 0.25, 0.4), at(2, 0.25, y, false)],
+                    web,
+                ),
+            ).toEqual([
+                {
+                    ref: { piece: 'front', kind: 'driver', n: 1 },
+                    id: 'cutoutOverlap',
+                },
+                {
+                    ref: { piece: 'front', kind: 'driver', n: 2 },
+                    id: 'cutoutOverlap',
+                },
+            ]);
+        }
+
+        expect(
+            checkCutouts(panel, [at(1, 0.25, 0.2), at(2, 0.25, 0.62)], web),
+        ).toEqual([]);
+    });
+
+    test('borda na faixa de colagem avisa; além da peça é erro e vence a faixa', () => {
+        expect(checkCutouts(panel, [at(1, 0.11, 0.4)], web)).toEqual([
+            {
+                ref: { piece: 'front', kind: 'driver', n: 1 },
+                id: 'cutoutInGlueBand',
+            },
+        ]);
+        expect(checkCutouts(panel, [at(1, 0.09, 0.4)], web)).toEqual([
+            {
+                ref: { piece: 'front', kind: 'driver', n: 1 },
+                id: 'cutoutOutside',
+            },
+        ]);
+    });
+
+    test('recortes automáticos entre si ficam com os avisos da fila', () => {
+        expect(
+            checkCutouts(
+                panel,
+                [at(1, 0.05, 0.4, false), at(2, 0.05, 0.45, false)],
+                web,
+            ),
+        ).toEqual([]);
+    });
+
+    test('o triangular é medido pelo retângulo que o envolve', () => {
+        const triangle: Cutout = {
+            kind: 'port',
+            shape: 'triangle',
+            base_m: 0.3,
+            height_m: 0.1,
+            center: { x_m: 0.16, y_m: 0.4 },
+            ref: { piece: 'front', kind: 'port', n: 1 },
+            manual: true,
+        };
+
+        expect(checkCutouts(panel, [triangle], web)).toEqual([
+            {
+                ref: { piece: 'front', kind: 'port', n: 1 },
+                id: 'cutoutInGlueBand',
+            },
+        ]);
     });
 });

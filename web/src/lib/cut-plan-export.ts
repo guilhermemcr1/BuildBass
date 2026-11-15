@@ -34,6 +34,11 @@ const SHEETS = [
     'utilization',
     'waste',
     'oversize',
+    'stock',
+    'unplaced',
+    'cut',
+    'guillotine',
+    'free',
 ] as const;
 
 function decimalSeparatorOf(locale: string): string {
@@ -129,6 +134,18 @@ export function csvFormatFor(
             sheets: Object.fromEntries(
                 SHEETS.map((key) => [key, text(`sheets.${key}`)]),
             ) as CsvFormat['labels']['sheets'],
+            cutouts: {
+                title: text('csvCutouts.title'),
+                cutout: text('csvCutouts.cutout'),
+                size: text('csvCutouts.size'),
+                fromLeft: text('csvCutouts.fromLeft'),
+                fromBottom: text('csvCutouts.fromBottom'),
+                position: text('csvCutouts.position'),
+                manual: text('csvCutouts.manual'),
+                auto: text('csvCutouts.auto'),
+                driver: text('cutouts.driver'),
+                port: text('cutouts.port'),
+            },
         },
     };
 }

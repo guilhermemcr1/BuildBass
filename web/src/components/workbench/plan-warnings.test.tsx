@@ -121,3 +121,46 @@ describe('PlanWarnings — bandpass de 6ª ordem (feature 007)', () => {
         ).toBeVisible();
     });
 });
+
+describe('PlanWarnings — posição dos recortes (feature 012)', () => {
+    beforeEach(() => {
+        usePreferences.setState({ unitSystem: 'metric' });
+    });
+
+    test('cada aviso nomeia o recorte e a peça; dois recortes com o mesmo aviso não se misturam', () => {
+        renderWithProviders(
+            <PlanWarnings
+                plan={{
+                    ...PLAN,
+                    warnings: [
+                        {
+                            id: 'cutoutOverlap',
+                            tone: 'warn',
+                            piece: 'front',
+                            cutout: { piece: 'front', kind: 'driver', n: 1 },
+                        },
+                        {
+                            id: 'cutoutOverlap',
+                            tone: 'warn',
+                            piece: 'front',
+                            cutout: { piece: 'front', kind: 'port', n: 1 },
+                        },
+                        {
+                            id: 'cutoutOutside',
+                            tone: 'error',
+                            piece: 'back',
+                            cutout: { piece: 'back', kind: 'port', n: 1 },
+                        },
+                    ],
+                }}
+            />,
+        );
+
+        const items = screen.getAllByRole('listitem');
+
+        expect(items).toHaveLength(3);
+        expect(items[0]).toHaveTextContent('Duto 1 passa da borda de fundo');
+        expect(items[1]).toHaveTextContent(/^Driver 1 em frente encosta/);
+        expect(items[2]).toHaveTextContent(/^Duto 1 em frente encosta/);
+    });
+});

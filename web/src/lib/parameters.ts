@@ -55,7 +55,10 @@ export type ParameterKey =
     | 'dim_d_m'
     | 'sheet_w_m'
     | 'sheet_h_m'
-    | 'kerf_m';
+    | 'kerf_m'
+    | 'sheet_quantity'
+    | 'cutpos_x_m'
+    | 'cutpos_y_m';
 
 export type ParameterGroup =
     | 'driver'
@@ -212,6 +215,31 @@ export const PARAMETERS: Record<ParameterKey, ParameterDefinition> = {
         'plan',
         CUT_PLAN_LIMITS.kerf_m.min,
         CUT_PLAN_LIMITS.kerf_m.max,
+    ),
+    // Estoque de chapas e posição dos recortes (specs/012).
+    sheet_quantity: parameter(
+        'sheet_quantity',
+        'n',
+        'count',
+        'plan',
+        CUT_PLAN_LIMITS.sheet_quantity.min,
+        CUT_PLAN_LIMITS.sheet_quantity.max,
+    ),
+    cutpos_x_m: parameter(
+        'cutpos_x_m',
+        'X',
+        'length',
+        'plan',
+        CUT_PLAN_LIMITS.cutpos_x_m.min,
+        CUT_PLAN_LIMITS.cutpos_x_m.max,
+    ),
+    cutpos_y_m: parameter(
+        'cutpos_y_m',
+        'Y',
+        'length',
+        'plan',
+        CUT_PLAN_LIMITS.cutpos_y_m.min,
+        CUT_PLAN_LIMITS.cutpos_y_m.max,
     ),
 };
 

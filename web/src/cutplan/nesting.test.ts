@@ -7,12 +7,20 @@ import type { SheetLayout } from './nesting';
 import { buildCutPlan } from './plan';
 import type { Piece, PieceRole, ResolvedSheet } from './types';
 
-const SHEET: ResolvedSheet = {
-    w_m: 2.75,
-    h_m: 1.85,
-    kerf_m: 0.003,
-    rotate: true,
-};
+function stockSheet(
+    stock: { w_m: number; h_m: number; quantity?: number }[],
+    extra: Partial<Omit<ResolvedSheet, 'stock'>> = {},
+): ResolvedSheet {
+    return {
+        stock: stock.map((item, index) => ({ index, ...item })),
+        kerf_m: 0.003,
+        rotate: true,
+        cut: 'guillotine',
+        ...extra,
+    };
+}
+
+const SHEET = stockSheet([{ w_m: 2.75, h_m: 1.85 }]);
 
 function piece(role: PieceRole, w_m: number, h_m: number, quantity = 1): Piece {
     return { role, quantity, w_m, h_m, thickness_m: 0.018, cutouts: [] };
@@ -29,12 +37,20 @@ function expectValid(
 ) {
     const eps = 1e-9;
 
-    for (const { placements } of layout.sheets) {
+    for (const { placements, w_m, h_m, stock } of layout.sheets) {
+        const source = sheet.stock.find(({ index }) => index === stock);
+
+        expect(source).toMatchObject({ w_m, h_m });
+
         for (const p of placements) {
             expect(p.x_m).toBeGreaterThanOrEqual(-eps);
             expect(p.y_m).toBeGreaterThanOrEqual(-eps);
-            expect(p.x_m + p.w_m).toBeLessThanOrEqual(sheet.w_m + eps);
-            expect(p.y_m + p.h_m).toBeLessThanOrEqual(sheet.h_m + eps);
+            expect(p.x_m + p.w_m).toBeLessThanOrEqual(w_m + eps);
+            expect(p.y_m + p.h_m).toBeLessThanOrEqual(h_m + eps);
+
+            if (!sheet.rotate) {
+                expect(p.rotated).toBe(false);
+            }
         }
 
         for (const [index, a] of placements.entries()) {
@@ -55,8 +71,20 @@ function expectValid(
         0,
     );
 
-    expect(placed + layout.oversize.length).toBe(total(pieces));
+    expect(placed + layout.oversize.length + layout.unplaced.length).toBe(
+        total(pieces),
+    );
     expect(layout.sheetCount).toBe(layout.sheets.length);
+
+    for (const { index, quantity } of sheet.stock) {
+        const used = layout.sheets.filter(
+            ({ stock }) => stock === index,
+        ).length;
+
+        if (quantity !== undefined) {
+            expect(used).toBeLessThanOrEqual(quantity);
+        }
+    }
 }
 
 function plan(box: Partial<BoxInput> = {}) {
@@ -223,7 +251,7 @@ describe('encaixe das peças na chapa (feature 008)', () => {
 
     test('chapa pequena: o plano real lista as peças que não cabem e coloca o resto', () => {
         const { pieces } = plan();
-        const small = { ...SHEET, w_m: 0.3, h_m: 0.3 };
+        const small = stockSheet([{ w_m: 0.3, h_m: 0.3 }]);
         const layout = nestPieces(pieces, small);
 
         expectValid(layout, pieces, small);

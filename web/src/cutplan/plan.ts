@@ -6,12 +6,16 @@ import type {
 } from '@/engine';
 import { portArea, twoChambers } from '@/engine';
 import { validateResolved } from './config';
-import { layoutRow } from './layout';
+import { checkCutouts, layoutRow } from './layout';
+import type { CutoutIssue } from './layout';
 import type { LayoutItem } from './layout';
 import type {
     CutPlan,
     ChamberCheck,
     Cutout,
+    CutoutPiece,
+    CutoutPosition,
+    CutoutRef,
     Dimensions,
     DriverBody,
     Piece,
@@ -155,27 +159,72 @@ export type PlacedCutouts = {
     doNotFit: boolean;
     tight: boolean;
     tooBig: boolean;
+    // Problemas que envolvem um recorte com posição manual (specs/012).
+    issues: CutoutIssue[];
 };
 
-// Posiciona os recortes de uma peça em fila única (drivers antes dos dutos).
+// Posiciona os recortes de uma peça (drivers antes dos dutos). Os que têm posição manual gravada e
+// medida conhecida usam o centro gravado; os demais seguem a fila única automática, montada só com
+// eles (specs/012, FR-016). `n` conta dentro do tipo, a partir de 1.
 export function placeCutouts(
     panel: { w_m: number; h_m: number },
     measures: { kind: Cutout['kind']; measure: PortMeasure }[],
     web_m: number,
+    piece: CutoutPiece = 'front',
+    positions: CutoutPosition[] = [],
 ): PlacedCutouts {
+    const seen = { driver: 0, port: 0 };
+    const entries = measures.map(({ kind, measure }) => {
+        seen[kind] += 1;
+        const ref: CutoutRef = { piece, kind, n: seen[kind] };
+        const saved = positions.find(
+            (item) =>
+                item.piece === piece && item.kind === kind && item.n === ref.n,
+        );
+        const sized = measure.w_m !== undefined && measure.h_m !== undefined;
+
+        return {
+            kind,
+            measure,
+            ref,
+            manual:
+                saved !== undefined && sized
+                    ? { x_m: saved.x_m, y_m: saved.y_m }
+                    : undefined,
+        };
+    });
+    const queue = entries.filter(({ manual }) => manual === undefined);
     const layout = layoutRow(
         panel,
-        measures.map(({ measure }) => measure),
+        queue.map(({ measure }) => measure),
         web_m,
     );
+    const cutouts = entries.map((entry) => {
+        if (entry.manual !== undefined) {
+            return {
+                ...cutoutOf(entry.kind, entry.measure, entry.manual),
+                ref: entry.ref,
+                manual: true as const,
+            };
+        }
+
+        return {
+            ...cutoutOf(
+                entry.kind,
+                entry.measure,
+                layout.centers[queue.indexOf(entry)],
+            ),
+            ref: entry.ref,
+        };
+    });
+    const manual = cutouts.some((cutout) => cutout.manual === true);
 
     return {
-        cutouts: measures.map(({ kind, measure }, index) =>
-            cutoutOf(kind, measure, layout.centers[index]),
-        ),
+        cutouts,
         doNotFit: layout.doNotFit,
         tight: layout.tight,
         tooBig: layout.tooBig,
+        issues: manual ? checkCutouts(panel, cutouts, web_m) : [],
     };
 }
 
@@ -351,12 +400,25 @@ export function buildCutPlan(
               ...driverMeasures(project, config, body),
               ...(boxType === 'vented' ? portMeasures(project.box.port) : []),
           ];
-    const front = placeCutouts(frontPanel, frontMeasures, t);
+    const positions = config.positions ?? [];
+    const front = placeCutouts(
+        frontPanel,
+        frontMeasures,
+        t,
+        'front',
+        positions,
+    );
     const back = sixth
-        ? placeCutouts(frontPanel, portMeasures(rearPort), t)
+        ? placeCutouts(frontPanel, portMeasures(rearPort), t, 'back', positions)
         : undefined;
     const divider = bandpass
-        ? placeCutouts(dividerPanel, driverMeasures(project, config, body), t)
+        ? placeCutouts(
+              dividerPanel,
+              driverMeasures(project, config, body),
+              t,
+              'divider',
+              positions,
+          )
         : undefined;
 
     const piece = (
@@ -477,6 +539,15 @@ export function buildCutPlan(
 
         if (result.tight && !result.tooBig && !result.doNotFit) {
             warnings.push({ id: 'cutoutTight', tone: 'warn', piece: role });
+        }
+
+        for (const issue of result.issues) {
+            warnings.push({
+                id: issue.id,
+                tone: issue.id === 'cutoutOutside' ? 'error' : 'warn',
+                piece: role,
+                cutout: issue.ref,
+            });
         }
     }
 

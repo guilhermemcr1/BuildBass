@@ -294,6 +294,7 @@ describe('recortes (C9 no plano)', () => {
             kind: 'driver',
             shape: 'round',
             pending: ['cutout_m'],
+            ref: { piece: 'front', kind: 'driver', n: 1 },
         });
     });
 
@@ -1065,5 +1066,123 @@ describe('medidas do alto-falante no plano', () => {
 
         expect(deep.warnings.map((w) => w.id)).toContain('driverTooDeep');
         expect(fits.warnings.map((w) => w.id)).not.toContain('driverTooDeep');
+    });
+});
+
+describe('posição manual dos recortes (feature 012, US3)', () => {
+    const vented = project({ type: 'vented', vb_m3: 0.1, fb_hz: 35 }, 2);
+    const front = (plan: Plan) =>
+        plan.pieces.find((piece) => piece.role === 'front');
+
+    test('sem posições o plano é o mesmo e todo recorte ganha a identidade', () => {
+        const panel = front(ready(vented, { cutout_m: 0.2 }));
+
+        expect(panel?.cutouts.map(({ ref }) => ref)).toEqual([
+            { piece: 'front', kind: 'driver', n: 1 },
+            { piece: 'front', kind: 'driver', n: 2 },
+            { piece: 'front', kind: 'port', n: 1 },
+        ]);
+        expect(panel?.cutouts.some(({ manual }) => manual)).toBe(false);
+    });
+
+    test('o recorte manual usa o centro gravado e os demais refazem a fila só entre eles', () => {
+        const auto = front(ready(vented, { cutout_m: 0.2 }));
+        const panel = front(
+            ready(vented, {
+                cutout_m: 0.2,
+                positions: [
+                    {
+                        piece: 'front',
+                        kind: 'port',
+                        n: 1,
+                        x_m: 0.12,
+                        y_m: 0.11,
+                    },
+                ],
+            }),
+        );
+        const port = panel?.cutouts[2];
+
+        expect(port).toMatchObject({
+            manual: true,
+            center: { x_m: 0.12, y_m: 0.11 },
+        });
+        expect(panel?.cutouts[0].center).not.toEqual(auto?.cutouts[0].center);
+        expect(panel?.w_m).toBe(auto?.w_m);
+    });
+
+    test('posição de outra peça ou de recorte que não existe é ignorada', () => {
+        const auto = front(ready(vented, { cutout_m: 0.2 }));
+        const panel = front(
+            ready(vented, {
+                cutout_m: 0.2,
+                positions: [
+                    { piece: 'back', kind: 'driver', n: 1, x_m: 0.1, y_m: 0.1 },
+                    {
+                        piece: 'front',
+                        kind: 'driver',
+                        n: 5,
+                        x_m: 0.1,
+                        y_m: 0.1,
+                    },
+                ],
+            }),
+        );
+
+        expect(panel?.cutouts).toEqual(auto?.cutouts);
+    });
+
+    test('recorte sem medida não usa a posição gravada', () => {
+        const panel = front(
+            ready(project(), {
+                positions: [
+                    {
+                        piece: 'front',
+                        kind: 'driver',
+                        n: 1,
+                        x_m: 0.1,
+                        y_m: 0.1,
+                    },
+                ],
+            }),
+        );
+
+        expect(panel?.cutouts[0].manual).toBeUndefined();
+        expect(panel?.cutouts[0].center).toBeUndefined();
+    });
+
+    test('avisos de sobreposição, faixa de colagem e fora da peça trazem a peça e o recorte', () => {
+        const plan = ready(project({}, 2), {
+            cutout_m: 0.2,
+            positions: [
+                { piece: 'front', kind: 'driver', n: 1, x_m: 0.05, y_m: 0.2 },
+            ],
+        });
+        const warnings = plan.warnings.filter(
+            ({ cutout }) => cutout !== undefined,
+        );
+
+        expect(warnings).toContainEqual({
+            id: 'cutoutOutside',
+            tone: 'error',
+            piece: 'front',
+            cutout: { piece: 'front', kind: 'driver', n: 1 },
+        });
+        expect(warnings.some(({ id }) => id === 'cutoutInGlueBand')).toBe(
+            false,
+        );
+    });
+
+    test('a posição manual não muda volumes nem medidas da caixa (FR-018)', () => {
+        const auto = ready(vented, { cutout_m: 0.2 });
+        const moved = ready(vented, {
+            cutout_m: 0.2,
+            positions: [
+                { piece: 'front', kind: 'driver', n: 1, x_m: 0.2, y_m: 0.2 },
+            ],
+        });
+
+        expect(moved.dimensions).toEqual(auto.dimensions);
+        expect(moved.volume).toEqual(auto.volume);
     });
 });

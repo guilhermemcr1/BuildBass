@@ -938,3 +938,76 @@ for (const theme of ['light', 'dark'] as const) {
         await context.close();
     });
 }
+
+// Plano de corte avançado (feature 012): estoque com dois itens, tipo de corte, visão "Chapas" e o
+// diálogo de posição dos recortes, nos dois temas, em tela larga e a 360 px sem rolagem horizontal.
+for (const theme of ['light', 'dark'] as const) {
+    for (const width of [1440, 360]) {
+        test(`estoque, tipo de corte e posição dos recortes sem violações WCAG AA em ${width} px no tema ${theme} (feature 012)`, async ({
+            browser,
+        }) => {
+            test.slow();
+            const context = await browser.newContext({
+                colorScheme: theme,
+                viewport: { width, height: 900 },
+            });
+            const page = await context.newPage();
+            const plan = page.locator('[data-region="plan"]');
+            const overflow = () =>
+                page.evaluate(
+                    () =>
+                        document.documentElement.scrollWidth -
+                        document.documentElement.clientWidth,
+                );
+            const fillPlan = async (name: RegExp, value: string) => {
+                const field = plan.getByRole('textbox', { name });
+                await field.fill(value);
+                await field.press('Tab');
+            };
+
+            await page.goto('/');
+            await page.locator('main').waitFor();
+            await page.getByRole('radio', { name: 'Selada' }).click();
+            await fill(page, /^Vb/, '60');
+            await page
+                .getByRole('button', { name: 'Plano de corte', exact: true })
+                .click();
+            await fillPlan(/^Ød/, '200');
+            await fillPlan(/^Wc/, '2750');
+            await fillPlan(/^Hc/, '1850');
+            await plan.getByRole('button', { name: 'Adicionar chapa' }).click();
+            await fillPlan(/^Item 2:.*Largura da chapa/, '900');
+            await fillPlan(/^Item 2:.*Altura da chapa/, '600');
+
+            const more = plan.getByRole('button', { name: /^Mostrar mais/ });
+            if ((await more.count()) > 0) {
+                await more.click();
+            }
+            await plan
+                .getByRole('radio', { name: 'CNC/tupia (livre)' })
+                .click();
+            await page.waitForTimeout(300);
+            expect(await axe(page)).toEqual([]);
+            expect(await overflow()).toBeLessThanOrEqual(0);
+
+            await plan.getByRole('tab', { name: 'Chapas' }).click();
+            await expect(plan.locator('[data-piece]').first()).toBeVisible();
+            expect(await axe(page)).toEqual([]);
+
+            await plan.getByRole('tab', { name: 'Desenhos 2D' }).click();
+            await plan
+                .getByRole('button', { name: 'Posicionar recortes de frente' })
+                .click();
+            const dialog = page.getByRole('dialog', {
+                name: 'Posicionar recortes — Frente',
+            });
+            await expect(dialog).toBeVisible();
+            await dialog.getByRole('button', { name: /^Driver 1,/ }).focus();
+            await page.keyboard.press('ArrowRight');
+            await page.waitForTimeout(300);
+            expect(await axe(page)).toEqual([]);
+            expect(await overflow()).toBeLessThanOrEqual(0);
+            await context.close();
+        });
+    }
+}

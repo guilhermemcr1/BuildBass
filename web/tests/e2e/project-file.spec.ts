@@ -172,7 +172,7 @@ test('arquivo de versão futura mostra a mensagem de app mais novo (feature 004,
         buffer: Buffer.from(
             JSON.stringify({
                 format: 'buildbass.project',
-                version: 7,
+                version: 8,
                 project: {},
             }),
         ),
@@ -268,7 +268,7 @@ test('plano de corte: ver não muda o arquivo; editar grava a versão 3 e reabre
     ).toBeVisible();
 });
 
-test('plano de corte: arquivo de versão 5 pede atualizar e valor fora da faixa cita o caminho (feature 005, US6)', async ({
+test('plano de corte: arquivo de versão futura pede atualizar e valor fora da faixa cita o caminho (feature 005, US6)', async ({
     page,
 }) => {
     await page.goto('/');
@@ -279,7 +279,7 @@ test('plano de corte: arquivo de versão 5 pede atualizar e valor fora da faixa 
         'futuro.buildbass.json',
         JSON.stringify({
             format: 'buildbass.project',
-            version: 7,
+            version: 8,
             project: {},
         }),
     );

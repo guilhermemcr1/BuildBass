@@ -4,9 +4,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { InfoTip } from '@/components/ui/help-tip';
 import { ShowMore } from '@/components/ui/show-more';
 import { ParameterField } from '@/components/ui/parameter-field';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import { resolveCutPlan } from '@/cutplan';
 import { useActiveProject } from '@/hooks/use-active-project';
-import { writeSheetRotate } from '@/lib/project/fields';
+import { setCutMode, writeSheetRotate } from '@/lib/project/fields';
+import { StockList, StockQuantities } from './stock-list';
 import { useParameterField } from './use-parameter-field';
 
 type GroupProps = {
@@ -44,17 +46,21 @@ export function PlanConfig() {
     const thickness = useParameterField('thickness_m');
     const braces = useParameterField('braces_m3');
     const cutout = useParameterField('cutout_m');
-    const sheetW = useParameterField('sheet_w_m');
-    const sheetH = useParameterField('sheet_h_m');
     const kerf = useParameterField('kerf_m');
     const sheetStarted = config?.sheet !== undefined;
-    // Avançados com valor próprio (reforços, perda de serra diferente da padrão ou rotação
-    // desligada): o botão recolhido avisa que há algo dentro.
+    // Avançados com valor próprio (reforços, perda de serra diferente da padrão, rotação
+    // desligada, corte livre ou quantidade no estoque): o botão recolhido avisa que há algo dentro.
     const advancedFilled = [
         config?.braces_m3 !== undefined,
         config?.sheet?.kerf_m !== undefined,
         config?.sheet?.rotate === false,
+        config?.sheet?.cut === 'free',
+        config?.sheet?.quantity !== undefined ||
+            (config?.sheet?.more ?? []).some(
+                ({ quantity }) => quantity !== undefined,
+            ),
     ].filter(Boolean).length;
+    const cut = config?.sheet?.cut ?? 'guillotine';
 
     return (
         <div className="flex flex-col divide-y divide-border rounded-lg border border-border bg-raised/40">
@@ -74,10 +80,10 @@ export function PlanConfig() {
                 title={t('config.groups.sheet')}
                 help={t('config.help.sheet')}
             >
-                <ParameterField {...sheetW} layout="row" />
-                <ParameterField {...sheetH} layout="row" />
+                <StockList />
                 <ShowMore id="planAdvanced" filled={advancedFilled}>
                     <ParameterField {...braces} layout="row" />
+                    <StockQuantities />
                     <ParameterField {...kerf} layout="row" />
                     <Checkbox
                         selected={
@@ -92,6 +98,40 @@ export function PlanConfig() {
                     >
                         {t('sheet.rotate')}
                     </Checkbox>
+                    <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center gap-1">
+                            <span className="text-[13px] text-foreground">
+                                {t('cut.label')}
+                            </span>
+                            <InfoTip
+                                content={t('cut.help')}
+                                label={t('config.help.info', {
+                                    topic: t('cut.label'),
+                                })}
+                            />
+                        </div>
+                        <SegmentedControl
+                            label={t('cut.label')}
+                            size="sm"
+                            variant="tiles"
+                            options={[
+                                {
+                                    id: 'guillotine',
+                                    label: t('cut.guillotine'),
+                                    disabled: !sheetStarted,
+                                },
+                                {
+                                    id: 'free',
+                                    label: t('cut.free'),
+                                    disabled: !sheetStarted,
+                                },
+                            ]}
+                            selected={cut}
+                            onChange={(mode) =>
+                                apply((data) => setCutMode(data, mode))
+                            }
+                        />
+                    </div>
                 </ShowMore>
             </Group>
         </div>

@@ -20,7 +20,7 @@
             "panel": "Espessura da madeira dos painéis. Ela define o tamanho das peças: o volume interno do projeto é mantido e as medidas externas crescem com a espessura.",
             "proportion": "Relação entre altura, largura e profundidade da caixa. Áurea: 2,62 : 1,62 : 1. Louden: 1,9 : 1,4 : 1, evita lados múltiplos entre si. Passos iguais: 1,59 : 1,26 : 1. Cúbica: lados iguais. Própria: você informa. São pontos de partida, não garantia de som melhor.",
             "cutout": "Furo do driver no painel da frente. O diâmetro vem da ficha técnica; sem ele, o recorte aparece como \"a informar\".",
-            "sheet": "Informe a chapa que você tem (por exemplo, 2,75 × 1,85 m) para ver como encaixar as peças e quantas chapas gastam. A espessura é a do painel.",
+            "sheet": "Informe as chapas que você tem, inteiras e sobras (por exemplo, 2,75 × 1,85 m e uma sobra de 1,20 × 0,60 m), para ver como encaixar as peças e quantas chapas gastam. Uma sobra só entra quando economiza chapa inteira. A espessura é a do painel.",
             "dimensions": "Internas: o volume que o driver \"vê\". Externas: as medidas da caixa pronta, com a espessura da madeira somada.",
             "info": "Ajuda: {{topic}}",
             "totalsHelp": "Quanto de madeira o projeto gasta: área e comprimento de corte, com e sem a espessura do MDF.",
@@ -88,7 +88,9 @@
         "rect": "{{width}} × {{height}}",
         "triangle": "base {{base}}, altura {{height}}",
         "driverPending": "diâmetro a informar",
-        "portPending": "medidas do duto a informar"
+        "portPending": "medidas do duto a informar",
+        "ref_driver": "Driver {{n}}",
+        "ref_port": "Duto {{n}}"
     },
     "volume": {
         "title": "Conferência de volume",
@@ -125,7 +127,10 @@
         "portLongerThanDepth_front": "O duto frontal ({{length}}) é mais longo que a profundidade da câmara frontal ({{depth}}): ele precisará de curva ou dobra.",
         "portUnknown_rear": "O duto da câmara traseira está sem medidas: informe-as para ter o recorte e o volume dele.",
         "portUnknown_front": "O duto da câmara frontal está sem medidas: informe-as para ter o recorte e o volume dele.",
-        "driverTooDeep": "O alto-falante tem {{length}} atrás do painel e a câmara só {{depth}} de profundidade interna: ele não cabe, aumente a profundidade ou mude a proporção."
+        "driverTooDeep": "O alto-falante tem {{length}} atrás do painel e a câmara só {{depth}} de profundidade interna: ele não cabe, aumente a profundidade ou mude a proporção.",
+        "cutoutOverlap": "{{cutout}} em {{piece}} encosta em outro recorte ou fica a menos da espessura do painel ({{thickness}}) dele: afaste os recortes.",
+        "cutoutInGlueBand": "{{cutout}} em {{piece}} fica a menos da espessura do painel ({{thickness}}) da borda, na faixa onde as peças são coladas: afaste-o da borda.",
+        "cutoutOutside": "{{cutout}} passa da borda de {{piece}}: mova o recorte para dentro da peça."
     },
     "drawings": {
         "title": "Desenhos 2D",
@@ -134,7 +139,8 @@
         "desc": "{{name}}: {{width}} por {{height}}, espessura {{thickness}}. Recortes: {{cutouts}}.",
         "noCutouts": "nenhum",
         "pendingLabel": "diâmetro a informar",
-        "note": "Todas as peças estão na mesma escala. As medidas do desenho estão na tabela de peças."
+        "note": "Todas as peças estão na mesma escala. As medidas do desenho estão na tabela de peças.",
+        "center": "{{cutout}}: centro a {{x}} da esquerda e {{y}} de baixo"
     },
     "view3d": {
         "title": "Vista 3D",
@@ -205,14 +211,70 @@
         "oversize": "Não cabe",
         "sheetOf": "Chapa {{n}} de {{total}}",
         "summary": "{{count}} chapa(s), aproveitamento de {{utilization}}, sobra de {{waste}}.",
-        "oversizeWarning": "Não cabem na chapa informada: {{pieces}}.",
+        "oversizeWarning": "Não cabem em nenhuma chapa do estoque: {{pieces}}.",
         "rotatedMark": "girada",
         "drawing": "Chapa {{n}} com {{count}} peça(s), aproveitamento de {{utilization}}",
-        "empty": "Nenhuma peça coube na chapa informada."
+        "empty": "Nenhuma peça coube no estoque informado.",
+        "origin": "{{w}} × {{h}} (item {{n}} do estoque)",
+        "usedOf": "{{used}} de {{total}}",
+        "byStock": "Chapas usadas: {{list}}.",
+        "byStockItem": "{{count}} × {{origin}}",
+        "unplacedWarning": "Faltou chapa no estoque para: {{pieces}}. Aumente a quantidade de um item ou adicione outra chapa.",
+        "freeCut": "Plano para corte livre (CNC ou tupia): alguns cortes param no meio da chapa e não saem só na serra de bancada.",
+        "stock": "Item do estoque",
+        "unplaced": "Sem chapa no estoque",
+        "cut": "Tipo de corte",
+        "guillotine": "Serra (guilhotina)",
+        "free": "CNC/tupia (livre)"
     },
     "summary": {
         "pieces_one": "{{count}} peça",
         "pieces_other": "{{count}} peças",
         "blocked": "faltam parâmetros"
+    },
+    "stock": {
+        "label": "Estoque de chapas",
+        "item": "Item {{n}}",
+        "add": "Adicionar chapa",
+        "limit": "O estoque aceita até {{max}} chapas.",
+        "moveUp": "Subir o item {{n}}",
+        "moveDown": "Descer o item {{n}}",
+        "remove": "Remover o item {{n}}",
+        "unlimited": "Sem limite",
+        "quantities": "Quantidade de cada item (vazio = sem limite)"
+    },
+    "cut": {
+        "label": "Tipo de corte",
+        "guillotine": "Serra (guilhotina)",
+        "free": "CNC/tupia (livre)",
+        "help": "Serra: todo corte atravessa a chapa de lado a lado, como na serra circular ou na esquadrejadeira. CNC/tupia: as peças se encaixam livremente e alguns cortes param no meio da chapa; exige CNC ou tupia com gabarito, mas costuma gastar menos chapa."
+    },
+    "position": {
+        "open": "Posicionar recortes",
+        "openFor": "Posicionar recortes de {{piece}}",
+        "title": "Posicionar recortes — {{piece}}",
+        "hint": "Arraste um recorte ou use as setas com ele em foco (1 mm por toque; 10 mm com Shift). As medidas vão do centro do recorte até a borda esquerda e a de baixo, com a peça vista de frente.",
+        "drawing": "Recortes da peça {{piece}}",
+        "manual": "posição manual",
+        "auto": "posição automática",
+        "reset": "Voltar ao automático",
+        "resetAll": "Todos automáticos",
+        "resetDone": "{{cutout}} voltou à posição automática.",
+        "resetAllDone": "Todos os recortes da peça voltaram à posição automática.",
+        "announce": "{{cutout}}: {{x}} da esquerda, {{y}} de baixo.",
+        "pending": "{{cutout}}: medida a informar, sem posição.",
+        "noneMovable": "Os recortes desta peça ainda não têm medida: informe-as para posicioná-los.",
+        "unavailable": "O plano não está pronto: complete os campos que faltam para posicionar os recortes.",
+        "manualMark": "posição manual"
+    },
+    "csvCutouts": {
+        "title": "Recortes",
+        "cutout": "Recorte",
+        "size": "Medida",
+        "fromLeft": "Centro da esquerda",
+        "fromBottom": "Centro de baixo",
+        "position": "Posição",
+        "manual": "manual",
+        "auto": "automática"
     }
 }

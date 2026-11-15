@@ -69,7 +69,7 @@ export function PrintSheet({ onReady }: PrintSheetProps) {
                 <VolumeCheck volume={plan.volume} />
             )}
             <PlanWarnings plan={plan} />
-            <CutDrawings plan={plan} />
+            <CutDrawings plan={plan} editable={false} />
             {suggestion !== undefined && (
                 <SheetLayout
                     layout={suggestion.layout}

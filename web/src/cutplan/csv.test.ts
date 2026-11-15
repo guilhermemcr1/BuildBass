@@ -79,6 +79,23 @@ const LABELS: CsvFormat['labels'] = {
         utilization: 'Aproveitamento',
         waste: 'Sobra',
         oversize: 'Não cabe',
+        stock: 'Item do estoque',
+        unplaced: 'Sem chapa no estoque',
+        cut: 'Tipo de corte',
+        guillotine: 'Serra (guilhotina)',
+        free: 'CNC/tupia (livre)',
+    },
+    cutouts: {
+        title: 'Recortes',
+        cutout: 'Recorte',
+        size: 'Medida',
+        fromLeft: 'Centro da esquerda',
+        fromBottom: 'Centro de baixo',
+        position: 'Posição',
+        manual: 'manual',
+        auto: 'automática',
+        driver: 'Driver',
+        port: 'Duto',
     },
 };
 
@@ -380,16 +397,17 @@ describe('cutPlanCsv — corte total e chapas (feature 008)', () => {
 
     test('com chapa: uma linha por colocação, aproveitamento e sobra', () => {
         const layout = nestPieces(PLAN.pieces, {
-            w_m: 2.75,
-            h_m: 1.85,
+            stock: [{ index: 0, w_m: 2.75, h_m: 1.85 }],
             kerf_m: 0.003,
             rotate: true,
+            cut: 'guillotine',
         });
         const rows = parse(cutPlanCsv(PLAN, format(','), layout), ';');
         const at = rows.findIndex((row) => row[0] === 'Chapas');
 
         expect(rows[at].slice(1)).toEqual([
             'Chapa',
+            'Item do estoque',
             'Peça',
             'Unidade',
             'x (mm)',
@@ -400,27 +418,127 @@ describe('cutPlanCsv — corte total e chapas (feature 008)', () => {
         ]);
         const placed = rows.slice(at + 1, at + 4);
 
-        expect(placed.map((row) => row[2]).sort()).toEqual([
+        expect(placed.map((row) => row[3]).sort()).toEqual([
             'Frente',
             'Lateral',
             'Lateral',
         ]);
         expect(placed.every((row) => row[1] === '1')).toBe(true);
+        expect(placed.every((row) => row[2] === '1')).toBe(true);
         expect(rows.some((row) => row[0] === 'Aproveitamento')).toBe(true);
         expect(rows.some((row) => row[0].startsWith('Sobra'))).toBe(true);
+        expect(rows.find((row) => row[0] === 'Tipo de corte')?.[1]).toBe(
+            'Serra (guilhotina)',
+        );
+    });
+
+    test('estoque: cada colocação diz o item de origem, e o que faltou sai como "Sem chapa no estoque"', () => {
+        const layout = nestPieces(PLAN.pieces, {
+            stock: [
+                { index: 0, w_m: 0.3, h_m: 0.3, quantity: 1 },
+                { index: 1, w_m: 2.75, h_m: 1.85, quantity: 1 },
+            ],
+            kerf_m: 0.003,
+            rotate: true,
+            cut: 'free',
+        });
+        const rows = parse(cutPlanCsv(PLAN, format(','), layout), ';');
+        const at = rows.findIndex((row) => row[0] === 'Chapas');
+        const placed = rows
+            .slice(at + 1)
+            .filter((row) => row[0] === '' && row[1] !== undefined);
+
+        expect(placed.every((row) => row[2] === '2')).toBe(true);
+        expect(rows.find((row) => row[0] === 'Tipo de corte')?.[1]).toBe(
+            'CNC/tupia (livre)',
+        );
     });
 
     test('peça que não cabe aparece como "Não cabe"', () => {
         const layout = nestPieces(PLAN.pieces, {
-            w_m: 0.3,
-            h_m: 0.3,
+            stock: [{ index: 0, w_m: 0.3, h_m: 0.3 }],
             kerf_m: 0.003,
             rotate: true,
+            cut: 'guillotine',
         });
         const rows = parse(cutPlanCsv(PLAN, format(','), layout), ';');
 
         expect(
             rows.filter((row) => row[0] === 'Não cabe').length,
         ).toBeGreaterThan(0);
+    });
+});
+
+describe('cutPlanCsv — centros dos recortes (feature 012)', () => {
+    test('bloco "Recortes" com o centro de cada recorte e se a posição é manual', () => {
+        const [front, ...rest] = PLAN.pieces;
+        const plan: Plan = {
+            ...PLAN,
+            pieces: [
+                {
+                    ...front,
+                    cutouts: [
+                        {
+                            kind: 'driver',
+                            shape: 'round',
+                            diameter_m: 0.2,
+                            center: { x_m: 0.15, y_m: 0.3 },
+                            ref: { piece: 'front', kind: 'driver', n: 1 },
+                            manual: true,
+                        },
+                        {
+                            kind: 'port',
+                            shape: 'round',
+                            diameter_m: 0.1,
+                            center: { x_m: 0.2, y_m: 0.1 },
+                            ref: { piece: 'front', kind: 'port', n: 1 },
+                        },
+                        {
+                            kind: 'driver',
+                            shape: 'round',
+                            ref: { piece: 'front', kind: 'driver', n: 2 },
+                        },
+                    ],
+                },
+                ...rest,
+            ],
+        };
+        const rows = parse(cutPlanCsv(plan, format(',')), ';');
+        const start = rows.findIndex((row) => row[0] === 'Recortes');
+
+        expect(rows[start]).toEqual([
+            'Recortes',
+            'Peça',
+            'Recorte',
+            'Medida',
+            'Centro da esquerda (mm)',
+            'Centro de baixo (mm)',
+            'Posição',
+        ]);
+        expect(rows[start + 1]).toEqual([
+            '',
+            'Frente',
+            'Driver 1',
+            'driver Ø 200,0 mm',
+            '150,0',
+            '300,0',
+            'manual',
+        ]);
+        expect(rows[start + 2]).toEqual([
+            '',
+            'Frente',
+            'Duto 1',
+            'port Ø 100,0 mm',
+            '200,0',
+            '100,0',
+            'automática',
+        ]);
+        expect(rows[start + 3]).toEqual(['']);
+    });
+
+    test('sem recorte posicionado não há o bloco', () => {
+        const rows = parse(cutPlanCsv(PLAN, format(',')), ';');
+
+        expect(rows.some((row) => row[0] === 'Recortes')).toBe(false);
     });
 });

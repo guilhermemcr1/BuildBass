@@ -10,13 +10,14 @@ export {
     validateResolved,
 } from './config';
 export type * from './types';
-export { layoutRow } from './layout';
+export { checkCutouts, layoutRow } from './layout';
+export { MAX_STOCK_ITEMS, stockItems, stockOf, withStock } from './stock';
 export { buildCutPlan } from './plan';
 export { DEFAULT_VIEW, dimensionLines, projectBox } from './projection';
 export type { DimensionLine, Polygon, View } from './projection';
 export { cutPlanCsv } from './csv';
 export type { CsvFormat, CsvLabels } from './csv';
 export { nestPieces } from './nesting';
-export type { PieceRef, Placement, Sheet, SheetLayout } from './nesting';
+export type { Sheet, SheetLayout } from './nesting';
 export { cutTotals } from './totals';
 export type { Basis, CutTotals } from './totals';

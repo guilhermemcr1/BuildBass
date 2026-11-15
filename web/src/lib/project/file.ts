@@ -1,3 +1,4 @@
+import { stockOf, withStock } from '@/cutplan/stock';
 import { CURRENT_VERSION, migrate } from './migrate';
 import { validColor } from './types';
 import type { ProjectData, SeriesColor } from './types';
@@ -26,6 +27,17 @@ export type ParseResult =
 // plano de corte editado = 3, bandpass de 4ª ordem = 2 e os demais continuam v1 e abrem em apps
 // anteriores (specs/004, 005, 007 e 008, contracts/project-file.md).
 function versionOf(data: ProjectData, color?: SeriesColor): number {
+    const sheet = data.cutPlan?.sheet;
+
+    if (
+        data.cutPlan?.positions !== undefined ||
+        sheet?.quantity !== undefined ||
+        sheet?.more !== undefined ||
+        sheet?.cut === 'free'
+    ) {
+        return 7;
+    }
+
     if (data.driverDims !== undefined) {
         return 6;
     }
@@ -45,25 +57,31 @@ function versionOf(data: ProjectData, color?: SeriesColor): number {
     return data.box.type === 'bandpass' ? 2 : 1;
 }
 
-// Chapa com só um lado digitado ainda é rascunho: não vai para o arquivo (o esquema exige os dois).
+// Item do estoque com só um lado digitado ainda é rascunho: não vai para o arquivo (o esquema exige
+// os dois). Sem nenhum item completo a chapa inteira sai; o 1º completo passa para a raiz. O tipo de
+// corte padrão ('guillotine') também não é gravado, para o arquivo não subir de versão à toa.
 function persistable(data: ProjectData): ProjectData {
     const { cutPlan } = data;
     const sheet = cutPlan?.sheet;
 
-    if (
-        cutPlan === undefined ||
-        sheet === undefined ||
-        (sheet.w_m !== undefined && sheet.h_m !== undefined)
-    ) {
+    if (cutPlan === undefined || sheet === undefined) {
         return data;
     }
 
-    const { sheet: _draft, ...rest } = cutPlan;
+    const items = stockOf(sheet).map(({ index: _index, ...item }) => item);
+    const stored = withStock(sheet, items);
+    const { sheet: _sheet, ...rest } = cutPlan;
+
+    if (stored?.cut === 'guillotine') {
+        delete stored.cut;
+    }
+
+    const next = stored === undefined ? rest : { ...rest, sheet: stored };
     const { cutPlan: _plan, ...others } = data;
 
-    return Object.keys(rest).length === 0
+    return Object.keys(next).length === 0
         ? others
-        : { ...others, cutPlan: rest };
+        : { ...others, cutPlan: next };
 }
 
 // A cor é do projeto aberto (aba), não do `ProjectData`: vai na raiz do arquivo (specs/008, R3).

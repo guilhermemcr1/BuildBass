@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { StatusIndicator } from '@/components/ui/status-indicator';
 import type { FieldStatus } from '@/components/ui/status-indicator';
 import type { Plan, PlanWarning } from '@/cutplan';
-import { pieceName, planKeySymbol } from '@/lib/cut-plan-text';
+import { cutoutName, pieceName, planKeySymbol } from '@/lib/cut-plan-text';
 import { formatWithUnit } from '@/lib/units/format';
 import { defaultUnitFor } from '@/lib/units/quantities';
 import { usePreferences } from '@/stores/preferences';
@@ -51,6 +51,10 @@ export function PlanWarnings({ plan }: { plan: Plan }) {
                         warning.key === undefined
                             ? ''
                             : planKeySymbol(warning.key, t),
+                    cutout:
+                        warning.cutout === undefined
+                            ? ''
+                            : cutoutName(warning.cutout, t),
                     thickness: length(plan.thickness_m),
                     length: length(warning.length_m ?? plan.port_length_m ?? 0),
                     depth: length(
@@ -62,7 +66,7 @@ export function PlanWarnings({ plan }: { plan: Plan }) {
 
                 return (
                     <li
-                        key={`${warning.id}-${warning.piece ?? ''}-${warning.duct ?? ''}`}
+                        key={`${warning.id}-${warning.piece ?? ''}-${warning.duct ?? ''}-${warning.cutout === undefined ? '' : `${warning.cutout.kind}${warning.cutout.n}`}`}
                         className="flex items-start"
                     >
                         <StatusIndicator

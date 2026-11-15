@@ -1,3 +1,5 @@
+import type { Cutout, CutoutRef } from './types';
+
 // Posição dos recortes numa peça (specs/005, research.md §5): fila única ao longo do lado maior,
 // centralizada no lado menor, com folgas iguais entre os itens e as bordas.
 
@@ -73,4 +75,111 @@ export function layoutRow(
     }
 
     return { centers, doNotFit, tight, tooBig };
+}
+
+export type CutoutIssue = {
+    ref: CutoutRef;
+    id: 'cutoutOverlap' | 'cutoutInGlueBand' | 'cutoutOutside';
+};
+
+type Box = {
+    ref: CutoutRef;
+    manual: boolean;
+    x0: number;
+    y0: number;
+    x1: number;
+    y1: number;
+};
+
+// Retângulo que envolve o recorte (inclusive o triangular); sem medida ou sem centro, nada.
+function boxOf(cutout: Cutout): Box | undefined {
+    const w =
+        cutout.shape === 'round'
+            ? cutout.diameter_m
+            : cutout.shape === 'rect'
+              ? cutout.width_m
+              : cutout.base_m;
+    const h = cutout.shape === 'round' ? cutout.diameter_m : cutout.height_m;
+
+    if (
+        cutout.ref === undefined ||
+        cutout.center === undefined ||
+        w === undefined ||
+        h === undefined
+    ) {
+        return undefined;
+    }
+
+    const { x_m, y_m } = cutout.center;
+
+    return {
+        ref: cutout.ref,
+        manual: cutout.manual === true,
+        x0: x_m - w / 2,
+        y0: y_m - h / 2,
+        x1: x_m + w / 2,
+        y1: y_m + h / 2,
+    };
+}
+
+// Posição manual dos recortes (specs/012, research R5). Só olha o que envolve um recorte manual: a
+// fila automática já tem os avisos dela (`layoutRow`). Fora da peça vence a faixa de colagem; dois
+// recortes que se tocam ou ficam a menos de `web_m` geram um aviso para cada um.
+export function checkCutouts(
+    panel: { w_m: number; h_m: number },
+    cutouts: Cutout[],
+    web_m: number,
+): CutoutIssue[] {
+    const boxes = cutouts.flatMap((cutout) => {
+        const box = boxOf(cutout);
+
+        return box === undefined ? [] : [box];
+    });
+    const issues: CutoutIssue[] = [];
+    const overlapping = new Set<Box>();
+
+    boxes.forEach((a, index) => {
+        for (const b of boxes.slice(index + 1)) {
+            if (!a.manual && !b.manual) {
+                continue;
+            }
+
+            const gap = Math.max(
+                a.x0 - b.x1,
+                b.x0 - a.x1,
+                a.y0 - b.y1,
+                b.y0 - a.y1,
+            );
+
+            if (gap < web_m - EPSILON) {
+                overlapping.add(a);
+                overlapping.add(b);
+            }
+        }
+    });
+
+    for (const box of boxes) {
+        if (overlapping.has(box)) {
+            issues.push({ ref: box.ref, id: 'cutoutOverlap' });
+        }
+
+        if (!box.manual) {
+            continue;
+        }
+
+        const edge = Math.min(
+            box.x0,
+            box.y0,
+            panel.w_m - box.x1,
+            panel.h_m - box.y1,
+        );
+
+        if (edge < -EPSILON) {
+            issues.push({ ref: box.ref, id: 'cutoutOutside' });
+        } else if (edge < web_m - EPSILON) {
+            issues.push({ ref: box.ref, id: 'cutoutInGlueBand' });
+        }
+    }
+
+    return issues;
 }

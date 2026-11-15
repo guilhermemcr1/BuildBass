@@ -1,3 +1,4 @@
+import { stockOf } from './stock';
 import type {
     CutPlanConfig,
     CutPlanProportion,
@@ -18,6 +19,10 @@ export const CUT_PLAN_LIMITS = {
     sheet_w_m: { min: 0.1, max: 5 },
     sheet_h_m: { min: 0.1, max: 5 },
     kerf_m: { min: 0, max: 0.02 },
+    // Estoque e posição dos recortes (specs/012, data-model.md §5).
+    sheet_quantity: { min: 1, max: 99 },
+    cutpos_x_m: { min: 0, max: 3 },
+    cutpos_y_m: { min: 0, max: 3 },
 } as const;
 
 // Perda de serra típica de uma serra circular de bancada (~3 mm); o usuário ajusta.
@@ -62,22 +67,28 @@ export function resolveCutPlan(
         braces_m3: config.braces_m3 ?? 0,
         ...(config.cutout_m === undefined ? {} : { cutout_m: config.cutout_m }),
         ...resolveSheet(config.sheet),
+        ...(config.positions === undefined || config.positions.length === 0
+            ? {}
+            : { positions: config.positions.map((item) => ({ ...item })) }),
     };
 }
 
+// Só existe com ao menos um item completo no estoque.
 function resolveSheet(
     sheet?: SheetConfig,
 ): Pick<ResolvedCutPlanConfig, 'sheet'> {
-    if (sheet?.w_m === undefined || sheet.h_m === undefined) {
+    const stock = stockOf(sheet);
+
+    if (sheet === undefined || stock.length === 0) {
         return {};
     }
 
     return {
         sheet: {
-            w_m: sheet.w_m,
-            h_m: sheet.h_m,
+            stock,
             kerf_m: sheet.kerf_m ?? DEFAULT_KERF_M,
             rotate: sheet.rotate ?? true,
+            cut: sheet.cut ?? 'guillotine',
         },
     };
 }
@@ -117,12 +128,31 @@ export function validateResolved(resolved: ResolvedCutPlanConfig): PlanKey[] {
     const { sheet } = resolved;
 
     if (sheet !== undefined) {
-        if (!within(sheet.w_m, CUT_PLAN_LIMITS.sheet_w_m)) {
+        if (
+            !sheet.stock.every((item) =>
+                within(item.w_m, CUT_PLAN_LIMITS.sheet_w_m),
+            )
+        ) {
             invalid.push('sheet_w_m');
         }
 
-        if (!within(sheet.h_m, CUT_PLAN_LIMITS.sheet_h_m)) {
+        if (
+            !sheet.stock.every((item) =>
+                within(item.h_m, CUT_PLAN_LIMITS.sheet_h_m),
+            )
+        ) {
             invalid.push('sheet_h_m');
+        }
+
+        if (
+            !sheet.stock.every(
+                ({ quantity }) =>
+                    quantity === undefined ||
+                    (Number.isInteger(quantity) &&
+                        within(quantity, CUT_PLAN_LIMITS.sheet_quantity)),
+            )
+        ) {
+            invalid.push('sheet_quantity');
         }
 
         if (!within(sheet.kerf_m, CUT_PLAN_LIMITS.kerf_m)) {

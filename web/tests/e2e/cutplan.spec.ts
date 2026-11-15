@@ -521,7 +521,9 @@ test('chapa 2,75 × 1,85 m: visão "Chapas", aproveitamento, total nas duas base
     );
     expect(csv).toContain('Corte total;Peças;Área (cm²);Corte (mm)');
     expect(csv).toContain('Sem desconto do MDF;');
-    expect(csv).toContain('Chapas;Chapa;Peça;Unidade;x (mm);y (mm)');
+    expect(csv).toContain(
+        'Chapas;Chapa;Item do estoque;Peça;Unidade;x (mm);y (mm)',
+    );
     expect(csv).toContain('Aproveitamento;');
 });
 
@@ -537,7 +539,7 @@ test('chapa pequena avisa as peças que não cabem e a chapa sobrevive ao recarr
     await page.getByRole('tab', { name: 'Chapas' }).click();
 
     await expect(
-        planRegion(page).getByText(/Não cabem na chapa informada:/),
+        planRegion(page).getByText(/Não cabem em nenhuma chapa do estoque:/),
     ).toBeVisible();
 
     await page.reload();

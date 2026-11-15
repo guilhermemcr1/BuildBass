@@ -93,7 +93,7 @@ describe('arquivo de projeto', () => {
 
     test('versão mais nova', async () => {
         expect(
-            await parseProjectFile(file(envelope({}, { version: 7 }))),
+            await parseProjectFile(file(envelope({}, { version: 8 }))),
         ).toEqual({ ok: false, code: 'newerVersion' });
     });
 
@@ -444,9 +444,9 @@ describe('plano de corte no arquivo (versão 3)', () => {
         });
     });
 
-    test('versão 7 pede para atualizar o app', async () => {
+    test('versão 8 pede para atualizar o app', async () => {
         expect(
-            await parseProjectFile(file(envelope(PLAN, { version: 7 }))),
+            await parseProjectFile(file(envelope(PLAN, { version: 8 }))),
         ).toEqual({ ok: false, code: 'newerVersion' });
     });
 });
@@ -526,9 +526,9 @@ describe('bandpass de 6ª ordem e versão 4 (feature 007)', () => {
         }
     });
 
-    test('versão 7 é recusada pedindo para atualizar o app', async () => {
+    test('versão 8 é recusada pedindo para atualizar o app', async () => {
         expect(
-            await parseProjectFile(file(envelope(SIXTH, { version: 7 }))),
+            await parseProjectFile(file(envelope(SIXTH, { version: 8 }))),
         ).toEqual({ ok: false, code: 'newerVersion' });
     });
 
@@ -621,8 +621,8 @@ describe('bandpass de 6ª ordem e versão 4 (feature 007)', () => {
 describe('cor do projeto e versão 5 (feature 008)', () => {
     const versionOf = (text: string): number => JSON.parse(text).version;
 
-    test('a versão atual é 6', () => {
-        expect(CURRENT_VERSION).toBe(6);
+    test('a versão atual é 7', () => {
+        expect(CURRENT_VERSION).toBe(7);
     });
 
     test('com cor o arquivo é gravado como versão 5; sem cor, na menor versão', () => {
@@ -784,5 +784,157 @@ describe('medidas do alto-falante e versão 6', () => {
                 await parseProjectFile(file(serializeProject(withDims(bad)))),
             ).toMatchObject({ ok: false, code: 'invalidContent' });
         }
+    });
+});
+
+describe('estoque, tipo de corte, posições e versão 7 (feature 012)', () => {
+    const withPlan = (cutPlan: unknown) =>
+        ({ ...FULL, cutPlan }) as ProjectData;
+    const one = { w_m: 2.75, h_m: 1.85 };
+
+    test('chapa única sem nada novo continua saindo na versão 5', () => {
+        const text = serializeProject(
+            withPlan({ sheet: { ...one, cut: 'guillotine' } }),
+        );
+
+        expect(JSON.parse(text).version).toBe(5);
+        expect(JSON.parse(text).project.cutPlan).toEqual({ sheet: one });
+    });
+
+    test('estoque, quantidade, corte livre e posição vão na versão 7 e voltam iguais', async () => {
+        for (const cutPlan of [
+            { sheet: { ...one, quantity: 2 } },
+            { sheet: { ...one, more: [{ w_m: 0.9, h_m: 0.6, quantity: 1 }] } },
+            { sheet: { ...one, cut: 'free' } },
+            {
+                positions: [
+                    {
+                        piece: 'front',
+                        kind: 'driver',
+                        n: 1,
+                        x_m: 0.2,
+                        y_m: 0.25,
+                    },
+                ],
+            },
+        ]) {
+            const data = withPlan(cutPlan);
+            const text = serializeProject(data);
+
+            expect(JSON.parse(text).version, JSON.stringify(cutPlan)).toBe(7);
+            expect(await parseProjectFile(file(text))).toEqual({
+                ok: true,
+                data,
+            });
+        }
+    });
+
+    test('rascunhos do estoque não vão para o arquivo; o 1º item completo sobe para a raiz', () => {
+        const text = serializeProject(
+            withPlan({
+                sheet: {
+                    w_m: 1.2,
+                    kerf_m: 0.004,
+                    more: [{ h_m: 0.5 }, { w_m: 0.9, h_m: 0.6, quantity: 3 }],
+                },
+            }),
+        );
+
+        expect(JSON.parse(text).project.cutPlan).toEqual({
+            sheet: { w_m: 0.9, h_m: 0.6, kerf_m: 0.004, quantity: 3 },
+        });
+    });
+
+    test('estoque só com rascunhos some do arquivo', () => {
+        const text = serializeProject(
+            withPlan({ sheet: { w_m: 1.2, more: [{ h_m: 0.5 }] } }),
+        );
+
+        expect(JSON.parse(text).project.cutPlan).toBeUndefined();
+    });
+
+    test('limites do estoque e das posições recusam o arquivo com o caminho', async () => {
+        const many = Array.from({ length: 10 }, () => ({ w_m: 0.9, h_m: 0.6 }));
+
+        for (const [cutPlan, path] of [
+            [
+                { sheet: { ...one, quantity: 0 } },
+                'project.cutPlan.sheet.quantity',
+            ],
+            [
+                { sheet: { ...one, quantity: 1.5 } },
+                'project.cutPlan.sheet.quantity',
+            ],
+            [
+                { sheet: { ...one, quantity: 100 } },
+                'project.cutPlan.sheet.quantity',
+            ],
+            [{ sheet: { ...one, more: many } }, 'project.cutPlan.sheet.more'],
+            [{ sheet: { ...one, cut: 'laser' } }, 'project.cutPlan.sheet.cut'],
+            [
+                {
+                    positions: [
+                        {
+                            piece: 'side',
+                            kind: 'driver',
+                            n: 1,
+                            x_m: 0.1,
+                            y_m: 0.1,
+                        },
+                    ],
+                },
+                'project.cutPlan.positions.0.piece',
+            ],
+            [
+                {
+                    positions: [
+                        {
+                            piece: 'front',
+                            kind: 'port',
+                            n: 0,
+                            x_m: 0.1,
+                            y_m: 0.1,
+                        },
+                    ],
+                },
+                'project.cutPlan.positions.0.n',
+            ],
+            [
+                {
+                    positions: [
+                        {
+                            piece: 'front',
+                            kind: 'port',
+                            n: 1,
+                            x_m: 4,
+                            y_m: 0.1,
+                        },
+                    ],
+                },
+                'project.cutPlan.positions.0.x_m',
+            ],
+        ] as const) {
+            expect(
+                await parseProjectFile(
+                    file(
+                        envelope(
+                            cutPlan === undefined ? {} : { ...FULL, cutPlan },
+                            { version: 7 },
+                        ),
+                    ),
+                ),
+                path,
+            ).toEqual({ ok: false, code: 'invalidContent', path });
+        }
+    });
+
+    test('arquivo da versão 5 com chapa única abre igual', async () => {
+        const data = withPlan({
+            sheet: { ...one, kerf_m: 0.003, rotate: false },
+        });
+
+        expect(
+            await parseProjectFile(file(envelope(data, { version: 5 }))),
+        ).toEqual({ ok: true, data });
     });
 });

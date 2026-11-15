@@ -163,6 +163,18 @@
         "label": "Saw kerf",
         "help": "Width the saw removes on each cut, usually about 3 mm. The system leaves this gap between pieces."
     },
+    "sheet_quantity": {
+        "label": "Quantity",
+        "help": "How many sheets of this size you have. Leave blank if you can buy as many as needed."
+    },
+    "cutpos_x_m": {
+        "label": "Center — distance from left edge",
+        "help": "Distance from the panel's left edge to the cutout center, looking at the panel from the front."
+    },
+    "cutpos_y_m": {
+        "label": "Center — distance from bottom edge",
+        "help": "Distance from the panel's bottom edge to the cutout center, looking at the panel from the front."
+    },
     "dim_h_m": {
         "label": "Inner size — height",
         "help": "Inner height of the box. Editing one measure adjusts the other two so the volume stays the same."

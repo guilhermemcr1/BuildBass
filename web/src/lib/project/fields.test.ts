@@ -2,6 +2,11 @@ import { expect, test } from 'vite-plus/test';
 import type { ParameterKey } from '@/lib/parameters';
 import { PROPORTIONS } from '@/cutplan';
 import {
+    clearCutoutPosition,
+    clearPiecePositions,
+    setCutMode,
+    setCutoutPosition,
+    setStock,
     readField,
     withIdentity,
     writeDimension,
@@ -264,4 +269,70 @@ test('formato e medidas do alto-falante somem do projeto quando esvaziados', () 
             undefined,
         ),
     ).toEqual(base);
+});
+
+test('estoque: a lista inteira vai para a raiz e `more`, preservando perda de serra e corte', () => {
+    const base = createProjectData('p');
+    const started = setCutMode(
+        setStock(base, [{ w_m: 2.75, h_m: 1.85 }]),
+        'free',
+    );
+    const kerfed = writeField(started, 'kerf_m', 0.004);
+    const two = setStock(kerfed, [
+        { w_m: 2.75, h_m: 1.85 },
+        { w_m: 0.9, h_m: 0.6, quantity: 2 },
+    ]);
+
+    expect(two.cutPlan?.sheet).toEqual({
+        w_m: 2.75,
+        h_m: 1.85,
+        kerf_m: 0.004,
+        more: [{ w_m: 0.9, h_m: 0.6, quantity: 2 }],
+        cut: 'free',
+    });
+    expect(setStock(two, []).cutPlan).toBeUndefined();
+});
+
+test('estoque: 1º item vazio com outro item preenchido mantém a chapa', () => {
+    const data = setStock(createProjectData('p'), [{}, { w_m: 0.9, h_m: 0.6 }]);
+
+    expect(data.cutPlan?.sheet).toEqual({ more: [{ w_m: 0.9, h_m: 0.6 }] });
+    expect(writeField(data, 'sheet_w_m', undefined).cutPlan?.sheet).toEqual({
+        more: [{ w_m: 0.9, h_m: 0.6 }],
+    });
+});
+
+test('tipo de corte: "Serra" é o padrão e não fica gravado; sem chapa não muda nada', () => {
+    const base = createProjectData('p');
+
+    expect(setCutMode(base, 'free')).toBe(base);
+
+    const sheet = setStock(base, [{ w_m: 2.75, h_m: 1.85 }]);
+
+    expect(setCutMode(sheet, 'free').cutPlan?.sheet?.cut).toBe('free');
+    expect(
+        setCutMode(setCutMode(sheet, 'free'), 'guillotine').cutPlan?.sheet,
+    ).toEqual({ w_m: 2.75, h_m: 1.85 });
+});
+
+test('posição dos recortes: grava, troca, limita às faixas e volta ao automático', () => {
+    const driver = { piece: 'front', kind: 'driver', n: 1 } as const;
+    const port = { piece: 'front', kind: 'port', n: 1 } as const;
+    const rear = { piece: 'back', kind: 'port', n: 1 } as const;
+    let data = setCutoutPosition(createProjectData('p'), driver, 0.2, 0.3);
+
+    data = setCutoutPosition(data, driver, 0.25, -1);
+    data = setCutoutPosition(data, port, 5, 0.1);
+    data = setCutoutPosition(data, rear, 0.1, 0.1);
+
+    expect(data.cutPlan?.positions).toEqual([
+        { ...driver, x_m: 0.25, y_m: 0 },
+        { ...port, x_m: 3, y_m: 0.1 },
+        { ...rear, x_m: 0.1, y_m: 0.1 },
+    ]);
+
+    const front = clearPiecePositions(data, 'front');
+
+    expect(front.cutPlan?.positions).toEqual([{ ...rear, x_m: 0.1, y_m: 0.1 }]);
+    expect(clearCutoutPosition(front, rear).cutPlan).toBeUndefined();
 });

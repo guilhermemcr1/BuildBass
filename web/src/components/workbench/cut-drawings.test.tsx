@@ -120,7 +120,7 @@ describe('CutDrawings', () => {
     test('todos os desenhos usam a mesma escala', () => {
         const { container } = renderWithProviders(<CutDrawings plan={PLAN} />);
         const figures = [...container.querySelectorAll('figure')];
-        const svgs = [...container.querySelectorAll('svg')];
+        const svgs = [...container.querySelectorAll('figure > svg')];
         const widthRem = figures.map((figure) =>
             Number.parseFloat((figure as HTMLElement).style.width),
         );
@@ -134,5 +134,63 @@ describe('CutDrawings', () => {
         expect(ratios[0]).toBeCloseTo(ratios[1], 9);
         // A escala é em rem: o maior desenho nunca passa de 22rem, qualquer que seja o painel.
         expect(Math.max(...widthRem)).toBeLessThanOrEqual(22);
+    });
+});
+
+describe('CutDrawings — posição dos recortes (feature 012)', () => {
+    beforeEach(() => {
+        usePreferences.setState({ unitSystem: 'metric' });
+    });
+
+    test('só peças com recorte posicionado ganham o botão "Posicionar recortes"', () => {
+        renderWithProviders(<CutDrawings plan={PLAN} />);
+
+        expect(
+            screen.getByRole('button', {
+                name: 'Posicionar recortes de frente',
+            }),
+        ).toBeVisible();
+        expect(
+            screen.getAllByRole('button', { name: /Posicionar recortes/ }),
+        ).toHaveLength(1);
+    });
+
+    test('recorte com posição manual leva a marca no desenho', () => {
+        const [front, ...rest] = PLAN.pieces;
+        const { container } = renderWithProviders(
+            <CutDrawings
+                plan={{
+                    ...PLAN,
+                    pieces: [
+                        {
+                            ...front,
+                            cutouts: [
+                                {
+                                    ...front.cutouts[0],
+                                    manual: true,
+                                    ref: {
+                                        piece: 'front',
+                                        kind: 'driver',
+                                        n: 1,
+                                    },
+                                },
+                                front.cutouts[1],
+                            ],
+                        },
+                        ...rest,
+                    ],
+                }}
+            />,
+        );
+
+        expect(container.querySelectorAll('[data-manual="true"]')).toHaveLength(
+            1,
+        );
+        expect(container.querySelector('[data-centers]')).toHaveTextContent(
+            'Driver 1: centro a 218,0 mm da esquerda e 400,0 mm de baixo (posição manual)',
+        );
+        expect(
+            container.querySelector('[data-manual="true"] path'),
+        ).not.toBeNull();
     });
 });

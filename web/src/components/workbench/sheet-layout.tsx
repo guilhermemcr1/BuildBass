@@ -19,8 +19,9 @@ type SheetLayoutProps = {
     sheet: ResolvedSheet;
 };
 
-// Sugestão de corte da chapa do usuário (specs/008): uma figura por chapa usada, com cada peça
-// no lugar em que deve ser cortada, o aproveitamento e a sobra.
+// Sugestão de corte do estoque do usuário (specs/008 e 012): uma figura por chapa usada, com o item
+// do estoque de onde veio, cada peça no lugar em que deve ser cortada, o aproveitamento e a sobra.
+// As figuras ficam na mesma escala: uma sobra aparece menor que a chapa inteira.
 export function SheetLayout({ layout, sheet }: SheetLayoutProps) {
     const { t } = useTranslation('cutplan');
     const { locale } = useLocale();
@@ -39,7 +40,21 @@ export function SheetLayout({ layout, sheet }: SheetLayoutProps) {
         style: 'long',
         type: 'conjunction',
     });
-    const fontSize = Math.max(sheet.w_m, sheet.h_m) * MM * 0.022;
+    const widest = Math.max(...layout.sheets.map(({ w_m }) => w_m), 0);
+    const largest = Math.max(
+        ...layout.sheets.map(({ w_m, h_m }) => Math.max(w_m, h_m)),
+        0,
+    );
+    const fontSize = largest * MM * 0.022;
+    const itemNumber = (stock: number) => stock + 1;
+    const origin = (entry: { stock: number; w_m: number; h_m: number }) =>
+        t('sheets.origin', {
+            n: itemNumber(entry.stock),
+            w: length(entry.w_m),
+            h: length(entry.h_m),
+        });
+    const quantityOf = (stock: number) =>
+        sheet.stock.find(({ index }) => index === stock)?.quantity;
 
     return (
         <div className="flex flex-col gap-3">
@@ -50,6 +65,16 @@ export function SheetLayout({ layout, sheet }: SheetLayoutProps) {
                     })}
                 </Banner>
             )}
+            {layout.unplaced.length > 0 && (
+                <Banner tone="warn">
+                    {t('sheets.unplacedWarning', {
+                        pieces: list.format(layout.unplaced.map(label)),
+                    })}
+                </Banner>
+            )}
+            {layout.cut === 'free' && layout.sheetCount > 0 && (
+                <Banner tone="info">{t('sheets.freeCut')}</Banner>
+            )}
             {layout.sheetCount === 0 ? (
                 <p className="text-sm text-muted">{t('sheets.empty')}</p>
             ) : (
@@ -59,13 +84,38 @@ export function SheetLayout({ layout, sheet }: SheetLayoutProps) {
                             count: layout.sheetCount,
                             utilization: percent.format(layout.utilization),
                             waste: area(layout.waste_m2),
-                        })}
+                        })}{' '}
+                        <span data-testid="cut-mode">
+                            {t('sheets.cut')}: {t(`sheets.${layout.cut}`)}.
+                        </span>
                     </p>
+                    {sheet.stock.length > 1 && (
+                        <p className="num text-sm" data-testid="by-stock">
+                            {t('sheets.byStock', {
+                                list: list.format(
+                                    layout.byStock.map(({ stock, count }) => {
+                                        const entry = layout.sheets.find(
+                                            (item) => item.stock === stock,
+                                        );
+
+                                        return t('sheets.byStockItem', {
+                                            count,
+                                            origin:
+                                                entry === undefined
+                                                    ? ''
+                                                    : origin(entry),
+                                        });
+                                    }),
+                                ),
+                            })}
+                        </p>
+                    )}
                     {layout.sheets.map((entry, index) => (
                         <figure
                             key={index}
                             className="flex flex-col gap-1.5"
                             data-sheet={index + 1}
+                            data-stock={itemNumber(entry.stock)}
                         >
                             <figcaption className="text-xs font-semibold text-muted">
                                 {t('sheets.sheetOf', {
@@ -74,6 +124,20 @@ export function SheetLayout({ layout, sheet }: SheetLayoutProps) {
                                 })}
                                 {' · '}
                                 <span className="num font-normal">
+                                    {origin(entry)}
+                                    {quantityOf(entry.stock) === undefined
+                                        ? ''
+                                        : ` · ${t('sheets.usedOf', {
+                                              used: layout.sheets
+                                                  .slice(0, index + 1)
+                                                  .filter(
+                                                      (other) =>
+                                                          other.stock ===
+                                                          entry.stock,
+                                                  ).length,
+                                              total: quantityOf(entry.stock),
+                                          })}`}
+                                    {' · '}
                                     {percent.format(entry.utilization)}
                                 </span>
                             </figcaption>
@@ -86,14 +150,15 @@ export function SheetLayout({ layout, sheet }: SheetLayoutProps) {
                                         entry.utilization,
                                     ),
                                 })}
-                                viewBox={`${-fontSize} ${-fontSize} ${sheet.w_m * MM + 2 * fontSize} ${sheet.h_m * MM + 2 * fontSize}`}
-                                className="h-auto w-full max-w-3xl rounded-sm"
+                                viewBox={`${-fontSize} ${-fontSize} ${entry.w_m * MM + 2 * fontSize} ${entry.h_m * MM + 2 * fontSize}`}
+                                width={`${(entry.w_m / widest) * 100}%`}
+                                className="h-auto max-w-3xl rounded-sm"
                             >
                                 <rect
                                     x={0}
                                     y={0}
-                                    width={sheet.w_m * MM}
-                                    height={sheet.h_m * MM}
+                                    width={entry.w_m * MM}
+                                    height={entry.h_m * MM}
                                     className="fill-surface stroke-muted"
                                     strokeWidth={fontSize * 0.1}
                                 />
@@ -103,7 +168,7 @@ export function SheetLayout({ layout, sheet }: SheetLayoutProps) {
                                     const x = placement.x_m * MM;
                                     // O eixo y do SVG cresce para baixo; a chapa nasce embaixo.
                                     const y =
-                                        (sheet.h_m -
+                                        (entry.h_m -
                                             placement.y_m -
                                             placement.h_m) *
                                         MM;

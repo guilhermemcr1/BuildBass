@@ -395,7 +395,33 @@ describe('PlanPanel — chapa e corte total (feature 008, US5)', () => {
         await userEvent.click(screen.getByRole('tab', { name: 'Chapas' }));
 
         expect(
-            await screen.findByText(/Não cabem na chapa informada:/),
+            await screen.findByText(/Não cabem em nenhuma chapa do estoque:/),
+        ).toBeVisible();
+    });
+
+    test('tipo de corte: CNC/tupia grava no projeto e o encaixe avisa o corte livre (feature 012)', async () => {
+        renderWithProviders(<PlanPanel open onOpenChange={() => undefined} />);
+        setField('sheet_w_m', 2.75);
+        setField('sheet_h_m', 1.85);
+
+        const group = screen.getByRole('radiogroup', { name: 'Tipo de corte' });
+
+        expect(
+            within(group).getByRole('radio', { name: 'Serra (guilhotina)' }),
+        ).toBeChecked();
+
+        await userEvent.click(
+            within(group).getByRole('radio', { name: 'CNC/tupia (livre)' }),
+        );
+
+        expect(activeProjectStore().getState().data.cutPlan?.sheet?.cut).toBe(
+            'free',
+        );
+
+        await userEvent.click(screen.getByRole('tab', { name: 'Chapas' }));
+
+        expect(
+            await screen.findByText(/corte livre \(CNC ou tupia\)/),
         ).toBeVisible();
     });
 

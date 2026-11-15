@@ -11,8 +11,19 @@ export type CutPlanProportion =
 
 export type Ratio = { h: number; w: number; d: number };
 
-// Chapa que o usuário tem para cortar (specs/008). Enquanto só um lado foi digitado a chapa
-// está incompleta e não entra no encaixe nem no arquivo.
+// Item do estoque de chapas (specs/012). Enquanto só um lado foi digitado o item é rascunho: não
+// entra no encaixe nem no arquivo. Quantidade ausente = sem limite.
+export type StockItem = {
+    w_m?: number;
+    h_m?: number;
+    quantity?: number;
+};
+
+// Serra (guilhotina: todo corte atravessa o retângulo) ou CNC/tupia (encaixe livre, MaxRects).
+export type CutMode = 'guillotine' | 'free';
+
+// Chapas que o usuário tem para cortar (specs/008 e 012). A raiz é o 1º item do estoque (os campos
+// da 008 continuam onde estavam); `more` guarda do 2º ao 10º (research R1).
 export type SheetConfig = {
     w_m?: number;
     h_m?: number;
@@ -20,14 +31,40 @@ export type SheetConfig = {
     kerf_m?: number;
     // Pode girar as peças em 90°; padrão sim.
     rotate?: boolean;
+    quantity?: number;
+    more?: StockItem[];
+    // Padrão 'guillotine'.
+    cut?: CutMode;
+};
+
+export type ResolvedStockItem = {
+    // Posição na lista completa (rascunhos incluídos), para o rótulo "Chapa 2".
+    index: number;
+    w_m: number;
+    h_m: number;
+    quantity?: number;
 };
 
 export type ResolvedSheet = {
-    w_m: number;
-    h_m: number;
+    // Ao menos um item completo.
+    stock: ResolvedStockItem[];
     kerf_m: number;
     rotate: boolean;
+    cut: CutMode;
 };
+
+// Qual recorte de qual peça: `n` conta a partir de 1 dentro do tipo na peça, para que mudar o número
+// de alto-falantes não desloque a posição dos dutos (specs/012, research R5).
+export type CutoutPiece = 'front' | 'back' | 'divider';
+
+export type CutoutRef = {
+    piece: CutoutPiece;
+    kind: 'driver' | 'port';
+    n: number;
+};
+
+// Centro do recorte medido da borda esquerda e da de baixo da peça vista de frente.
+export type CutoutPosition = CutoutRef & { x_m: number; y_m: number };
 
 // O que o usuário alterou; o resto vem dos padrões em `resolveCutPlan`.
 export type CutPlanConfig = {
@@ -37,6 +74,7 @@ export type CutPlanConfig = {
     braces_m3?: number;
     cutout_m?: number;
     sheet?: SheetConfig;
+    positions?: CutoutPosition[];
 };
 
 // O corpo do alto-falante que o plano usa: o formato decide o recorte (redondo ou retangular) e a
@@ -56,6 +94,8 @@ export type ResolvedCutPlanConfig = {
     cutout_m?: number;
     // Só existe com largura e altura informadas.
     sheet?: ResolvedSheet;
+    // Centros gravados pelo usuário (specs/012); ausente quando não há nenhum.
+    positions?: CutoutPosition[];
 };
 
 export type PlanKey =
@@ -67,7 +107,10 @@ export type PlanKey =
     | 'drv_d_m'
     | 'sheet_w_m'
     | 'sheet_h_m'
-    | 'kerf_m';
+    | 'kerf_m'
+    | 'sheet_quantity'
+    | 'cutpos_x_m'
+    | 'cutpos_y_m';
 
 export type PieceRole =
     | 'front'
@@ -77,8 +120,24 @@ export type PieceRole =
     | 'side'
     | 'divider';
 
+// Uma unidade de uma peça (a lateral tem 2) e onde ela foi parar numa chapa (specs/008 e 012).
+export type PieceRef = { role: PieceRole; unit: number };
+
+export type Placement = PieceRef & {
+    // Canto inferior esquerdo da peça na chapa.
+    x_m: number;
+    y_m: number;
+    // Medidas como colocadas (trocadas quando girada).
+    w_m: number;
+    h_m: number;
+    rotated: boolean;
+};
+
 export type Cutout = {
     kind: 'driver' | 'port';
+    // Identidade do recorte (specs/012); `manual` quando o centro veio de uma posição gravada.
+    ref?: CutoutRef;
+    manual?: true;
     shape: 'round' | 'rect' | 'triangle';
     // round
     diameter_m?: number;
@@ -138,7 +197,10 @@ export type PlanWarningId =
     | 'driverTooDeep'
     | 'portUnknown'
     | 'simulationUnavailable'
-    | 'volumeMismatch';
+    | 'volumeMismatch'
+    | 'cutoutOverlap'
+    | 'cutoutInGlueBand'
+    | 'cutoutOutside';
 
 export type PlanWarning = {
     id: PlanWarningId;
@@ -147,6 +209,8 @@ export type PlanWarning = {
     key?: PlanKey;
     // Bandpass de 6ª ordem: de qual duto é o aviso, com o comprimento e a profundidade da câmara.
     duct?: 'rear' | 'front';
+    // Avisos de posição de recorte (specs/012).
+    cutout?: CutoutRef;
     length_m?: number;
     depth_m?: number;
 };

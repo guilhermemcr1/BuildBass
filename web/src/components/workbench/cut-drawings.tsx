@@ -1,12 +1,19 @@
-import { useId } from 'react';
+import { Move } from 'lucide-react';
+import { Suspense, lazy, useId, useState } from 'react';
 import type { ReactElement } from 'react';
 import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
-import type { Cutout, Piece, Plan } from '@/cutplan';
-import { cutoutSummary, pieceName } from '@/lib/cut-plan-text';
+import { Button } from '@/components/ui/button';
+import type { Cutout, CutoutPiece, Piece, Plan } from '@/cutplan';
+import { cutoutName, cutoutSummary, pieceName } from '@/lib/cut-plan-text';
 import { formatWithUnit } from '@/lib/units/format';
 import { defaultUnitFor } from '@/lib/units/quantities';
 import { usePreferences } from '@/stores/preferences';
+
+const CutoutPositionDialog = lazy(() => import('./cutout-position-dialog'));
+
+// Peças em que os recortes podem ser posicionados à mão (specs/012).
+const POSITIONABLE = new Set<Piece['role']>(['front', 'back', 'divider']);
 
 // O desenho usa milímetros como unidade de tela; a unidade exibida nas cotas é a do usuário.
 const MM = 1000;
@@ -115,8 +122,16 @@ function CutoutShape({
     }
 
     return (
-        <g>
+        <g data-manual={cutout.manual === true}>
             {shape}
+            {cutout.manual === true && (
+                // Posição manual: uma cruz no centro marca o furo que o usuário moveu.
+                <path
+                    d={`M ${cx - size * 0.6} ${cy} H ${cx + size * 0.6} M ${cx} ${cy - size * 0.6} V ${cy + size * 0.6}`}
+                    className="stroke-foreground"
+                    strokeWidth={size * 0.12}
+                />
+            )}
             <text
                 x={cx}
                 y={cy + radius + size * 1.3}
@@ -130,14 +145,50 @@ function CutoutShape({
     );
 }
 
+// O diálogo só é baixado na primeira vez que alguém abre (como o modal da caixa).
+function PositionButton({ role }: { role: CutoutPiece }) {
+    const { t } = useTranslation('cutplan');
+    const [open, setOpen] = useState(false);
+    const [loaded, setLoaded] = useState(false);
+    const name = pieceName(role, t).toLowerCase();
+
+    return (
+        <>
+            <Button
+                variant="secondary"
+                className="h-7 w-fit px-2.5 text-xs"
+                aria-label={t('position.openFor', { piece: name })}
+                onPress={() => {
+                    setLoaded(true);
+                    setOpen(true);
+                }}
+            >
+                <Move aria-hidden="true" className="size-3.5" />
+                {t('position.open')}
+            </Button>
+            {loaded && (
+                <Suspense fallback={null}>
+                    <CutoutPositionDialog
+                        piece={role}
+                        open={open}
+                        onOpenChange={setOpen}
+                    />
+                </Suspense>
+            )}
+        </>
+    );
+}
+
 function PieceDrawing({
     piece,
     scale,
     format,
+    editable,
 }: {
     piece: Piece;
     scale: { size: number; pad: number; max: number };
     format: Format;
+    editable: boolean;
 }) {
     const { t } = useTranslation('cutplan');
     const { locale } = useLocale();
@@ -158,6 +209,11 @@ function PieceDrawing({
         length: (si) => formatWithUnit(si, unit, locale),
     });
     const pending = piece.cutouts.filter(({ center }) => center === undefined);
+    const centered = piece.cutouts.flatMap(({ ref, center, manual }) =>
+        ref === undefined || center === undefined
+            ? []
+            : [{ ref, center, manual }],
+    );
 
     return (
         <figure
@@ -231,13 +287,42 @@ function PieceDrawing({
                 </text>
             </svg>
             <figcaption className="text-xs text-muted">{title}</figcaption>
+            {centered.length > 0 && (
+                // Centro de cada recorte, para marcar na madeira (specs/012, FR-017).
+                <ul className="text-[11px] leading-4 text-muted" data-centers>
+                    {centered.map(({ ref, center, manual }) => (
+                        <li key={`${ref.kind}-${ref.n}`}>
+                            {t('drawings.center', {
+                                cutout: cutoutName(ref, t),
+                                x: format(center.x_m),
+                                y: format(center.y_m),
+                            })}
+                            {manual === true
+                                ? ` (${t('position.manualMark')})`
+                                : ''}
+                        </li>
+                    ))}
+                </ul>
+            )}
+            {editable &&
+                POSITIONABLE.has(piece.role) &&
+                piece.cutouts.some(({ center }) => center !== undefined) && (
+                    <PositionButton role={piece.role as CutoutPiece} />
+                )}
         </figure>
     );
 }
 
 // Um desenho por peça, todos na mesma escala; as medidas estão na tabela, o desenho só as mostra
 // (specs/005, FR-011 e FR-012).
-export function CutDrawings({ plan }: { plan: Plan }) {
+// `editable: false` na folha impressa: sem o botão de posicionar.
+export function CutDrawings({
+    plan,
+    editable = true,
+}: {
+    plan: Plan;
+    editable?: boolean;
+}) {
     const { t } = useTranslation('cutplan');
     const { locale } = useLocale();
     const unitSystem = usePreferences((state) => state.unitSystem);
@@ -259,6 +344,7 @@ export function CutDrawings({ plan }: { plan: Plan }) {
                         piece={piece}
                         scale={scale}
                         format={format}
+                        editable={editable}
                     />
                 ))}
             </div>
