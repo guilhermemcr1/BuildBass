@@ -10,7 +10,7 @@ import {
 } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { useNumberEntry } from '@/hooks/use-number-entry';
-import { PARAMETERS, withinRange } from '@/lib/parameters';
+import { EXAMPLES, PARAMETERS, withinRange } from '@/lib/parameters';
 import type { Requirement } from '@/lib/requirements';
 import type { ParameterKey } from '@/lib/parameters';
 import { fromSi, toSi } from '@/lib/units/convert';
@@ -107,6 +107,9 @@ export function ParameterField({
     const input = (
         <Input
             ref={entryRef}
+            placeholder={t('common:placeholder.example', {
+                value: formatQuantity(EXAMPLES[parameter], unit, locale),
+            })}
             className={cn(
                 'num h-full w-full min-w-0 bg-transparent text-left text-sm outline-none',
                 stacked ? 'px-2' : 'px-2.5',

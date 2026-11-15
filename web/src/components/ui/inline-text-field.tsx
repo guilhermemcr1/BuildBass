@@ -6,6 +6,7 @@ type InlineTextFieldProps = {
     label: string;
     value: string;
     maxLength?: number;
+    placeholder?: string;
     // Enter ou sair do campo confirma; Esc cancela. Os dois encerram a edição.
     onCommit: (value: string) => void;
     onCancel: () => void;
@@ -17,6 +18,7 @@ export function InlineTextField({
     label,
     value,
     maxLength,
+    placeholder,
     onCommit,
     onCancel,
     className,
@@ -42,6 +44,7 @@ export function InlineTextField({
             className={className}
         >
             <Input
+                placeholder={placeholder}
                 className={cn(
                     'h-8 w-56 max-w-full rounded-md border border-accent bg-surface px-2 text-sm text-foreground outline-none',
                 )}

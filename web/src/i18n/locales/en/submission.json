@@ -24,6 +24,8 @@
         "diameter": "Nominal diameter",
         "diameterHint": "Commercial size of the loudspeaker, for example 12\".",
         "trap": "Do not fill in this field",
+        "brandPlaceholder": "e.g. Triton",
+        "modelPlaceholder": "e.g. TR 620 12\"",
         "sourcePlaceholder": "E.g. datasheet, rev. B, 03/2024",
         "emailPlaceholder": "name@example.com",
         "calculated": "calculated"

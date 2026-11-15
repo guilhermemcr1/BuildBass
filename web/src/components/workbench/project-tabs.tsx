@@ -145,6 +145,7 @@ function ProjectTab({
                         label={t('tabs.rename', { name })}
                         value={project.data.name}
                         maxLength={PROJECT_NAME_MAX}
+                        placeholder={t('tabs.namePlaceholder')}
                         onCommit={rename}
                         onCancel={() => setEditing(false)}
                     />

@@ -6,6 +6,7 @@ import { ImpedanceField } from '@/components/ui/impedance-field';
 import { isImpedance } from '@/lib/impedance';
 import { TextInput } from '@/components/ui/text-field';
 import { CUT_PLAN_LIMITS } from '@/cutplan/config';
+import { EXAMPLES } from '@/lib/parameters';
 import {
     SAVED_DRIVER_LIMITS,
     SAVED_DRIVERS_MAX,
@@ -208,6 +209,7 @@ export default function SaveDriverDialog({
                 <div className="grid gap-3 sm:grid-cols-2">
                     <TextInput
                         label={t('saved.fields.brand')}
+                        placeholder={t('identity.brandPlaceholder')}
                         value={brand}
                         onChange={setBrand}
                         required
@@ -215,6 +217,7 @@ export default function SaveDriverDialog({
                     />
                     <TextInput
                         label={t('saved.fields.model')}
+                        placeholder={t('identity.modelPlaceholder')}
                         value={model}
                         onChange={setModel}
                         required
@@ -222,6 +225,7 @@ export default function SaveDriverDialog({
                     />
                     <ImpedanceField
                         label={t('saved.fields.variant')}
+                        placeholder={t('identity.variantPlaceholder')}
                         value={variant}
                         onChange={setVariant}
                         error={message('variant')}
@@ -239,6 +243,7 @@ export default function SaveDriverDialog({
                             onChange={setDiameter}
                             range={SAVED_DRIVER_LIMITS.nominal_diameter_m}
                             unit={unit}
+                            example={EXAMPLES.drv_a_m}
                         />
                         <LengthInput
                             label={t('saved.fields.cutout')}
@@ -246,6 +251,7 @@ export default function SaveDriverDialog({
                             onChange={setCutout}
                             range={CUT_PLAN_LIMITS.cutout_m}
                             unit={unit}
+                            example={EXAMPLES.cutout_m}
                         />
                         <LengthInput
                             label={t('saved.fields.depth')}
@@ -253,6 +259,7 @@ export default function SaveDriverDialog({
                             onChange={setDepth}
                             range={SAVED_DRIVER_LIMITS.depth_m}
                             unit={unit}
+                            example={EXAMPLES.drv_g_m}
                         />
                     </div>
                 </fieldset>

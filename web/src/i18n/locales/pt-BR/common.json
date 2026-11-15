@@ -13,6 +13,9 @@
             "unchecked": "Sem verif."
         }
     },
+    "placeholder": {
+        "example": "Ex. {{value}}"
+    },
     "validation": {
         "invalidNumber": "Digite um número válido.",
         "outOfRange": "Fora da faixa aceita ({{min}} a {{max}}{{unit}})."

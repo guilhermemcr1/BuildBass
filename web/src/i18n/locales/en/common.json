@@ -13,6 +13,9 @@
             "unchecked": "Unchecked"
         }
     },
+    "placeholder": {
+        "example": "e.g. {{value}}"
+    },
     "validation": {
         "invalidNumber": "Enter a valid number.",
         "outOfRange": "Out of the accepted range ({{min}} to {{max}}{{unit}})."

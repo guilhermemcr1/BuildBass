@@ -21,6 +21,8 @@ type LengthInputProps = {
     onChange: (si: number | undefined) => void;
     range: { min: number; max: number };
     unit: UnitId;
+    // Valor típico (SI), mostrado como placeholder enquanto o campo está vazio.
+    example?: number;
 };
 
 // Medida física que não é parâmetro da bancada (diâmetro nominal, profundidade): digita-se na
@@ -31,6 +33,7 @@ export function LengthInput({
     onChange,
     range,
     unit,
+    example,
 }: LengthInputProps) {
     const { t } = useTranslation('workbench');
     const { locale } = useLocale();
@@ -68,7 +71,18 @@ export function LengthInput({
         >
             <Label className="text-xs font-semibold text-muted">{label}</Label>
             <div className={cn(FIELD_BOX, outOfRange && 'border-status-error')}>
-                <Input ref={entryRef} className={cn(FIELD_INPUT, 'num')} />
+                <Input
+                    ref={entryRef}
+                    placeholder={
+                        example === undefined
+                            ? undefined
+                            : t('placeholder.example', {
+                                  ns: 'common',
+                                  value: formatQuantity(example, unit, locale),
+                              })
+                    }
+                    className={cn(FIELD_INPUT, 'num')}
+                />
                 <UnitAddon symbol={findUnit(unit).symbol} />
             </div>
             <FieldError className="text-[11px] text-status-error">

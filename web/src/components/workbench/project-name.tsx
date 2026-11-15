@@ -105,6 +105,7 @@ function NameField({
     saveLabel: string;
     cancelLabel: string;
 }) {
+    const { t } = useTranslation('project');
     const [draft, setDraft] = useState(shown);
     const [seen, setSeen] = useState(shown);
     const [editing, setEditing] = useState(false);
@@ -177,6 +178,7 @@ function NameField({
             >
                 <Input
                     ref={input}
+                    placeholder={t('tabs.namePlaceholder')}
                     onFocus={(event) => event.currentTarget.select()}
                     className="h-8 w-full truncate rounded-md border border-transparent bg-transparent px-2 text-sm font-semibold text-foreground outline-none data-[focus-visible]:outline-2 data-[focus-visible]:outline-accent data-[focus-visible]:outline-solid data-[focused]:border-accent data-[hovered]:border-border"
                 />

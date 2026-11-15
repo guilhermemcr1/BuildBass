@@ -117,7 +117,14 @@ function DiameterField({
                         'border-status-error',
                 )}
             >
-                <Input ref={entryRef} className={cn(FIELD_INPUT, 'num')} />
+                <Input
+                    ref={entryRef}
+                    placeholder={t('placeholder.example', {
+                        ns: 'common',
+                        value: formatQuantity(0.3, unit, locale),
+                    })}
+                    className={cn(FIELD_INPUT, 'num')}
+                />
                 <UnitAddon symbol={findUnit(unit).symbol} />
             </div>
             <FieldError className="text-[11px] text-status-error">
@@ -297,10 +304,12 @@ export function SubmitDriverForm({
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     {text('brand', {
                         label: t('fields.brand'),
+                        placeholder: t('fields.brandPlaceholder'),
                         required: true,
                     })}
                     {text('model', {
                         label: t('fields.model'),
+                        placeholder: t('fields.modelPlaceholder'),
                         required: true,
                     })}
                     <ImpedanceField

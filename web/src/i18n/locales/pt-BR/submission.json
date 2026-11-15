@@ -24,6 +24,8 @@
         "diameter": "Diâmetro nominal",
         "diameterHint": "Tamanho comercial do alto-falante, por exemplo 12\".",
         "trap": "Não preencha este campo",
+        "brandPlaceholder": "Ex.: Triton",
+        "modelPlaceholder": "Ex.: TR 620 12\"",
         "sourcePlaceholder": "Ex.: ficha técnica, rev. B, 03/2024",
         "emailPlaceholder": "nome@exemplo.com",
         "calculated": "calculado"

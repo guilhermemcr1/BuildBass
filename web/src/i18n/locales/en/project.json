@@ -4,6 +4,7 @@
         "label": "Open projects",
         "plot": "Show {{name}} on the chart",
         "close": "Close {{name}}",
+        "namePlaceholder": "Project name",
         "rename": "Rename {{name}}",
         "unsaved": "unexported changes",
         "color": "Project color",

@@ -4,6 +4,7 @@
         "label": "Projetos abertos",
         "plot": "Mostrar {{name}} no gráfico",
         "close": "Fechar {{name}}",
+        "namePlaceholder": "Nome do projeto",
         "rename": "Renomear {{name}}",
         "unsaved": "alterações não exportadas",
         "color": "Cor do projeto",
