@@ -18,18 +18,28 @@ export function DriversFields() {
                 {t('drivers.title')}
             </legend>
             <div className="grid grid-cols-2 items-start gap-x-3 gap-y-2">
-                <ParameterField {...count} />
-                <SegmentedControl<Wiring>
-                    label={t('drivers.wiring')}
-                    selected={wiring}
-                    onChange={(next) => setDrivers({ wiring: next })}
-                    options={[
-                        { id: 'parallel', label: t('drivers.parallel') },
-                        { id: 'series', label: t('drivers.series') },
-                    ]}
-                    size="sm"
-                    className="w-full"
-                />
+                {/* Nome por extenso no lugar do "N", que não diz o que é; a ligação ganha o rótulo
+                    visível para os dois campos ficarem alinhados. */}
+                <ParameterField {...count} layout="stacked" />
+                <div className="flex flex-col gap-1">
+                    <span
+                        aria-hidden="true"
+                        className="truncate text-[11px] leading-4 font-semibold text-muted"
+                    >
+                        {t('drivers.wiringShort')}
+                    </span>
+                    <SegmentedControl<Wiring>
+                        label={t('drivers.wiring')}
+                        selected={wiring}
+                        onChange={(next) => setDrivers({ wiring: next })}
+                        options={[
+                            { id: 'parallel', label: t('drivers.parallel') },
+                            { id: 'series', label: t('drivers.series') },
+                        ]}
+                        size="sm"
+                        className="w-full"
+                    />
+                </div>
             </div>
         </fieldset>
     );

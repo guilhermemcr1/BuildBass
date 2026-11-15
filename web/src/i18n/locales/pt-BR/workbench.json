@@ -38,7 +38,8 @@
         "title": "Drivers",
         "wiring": "Ligação dos drivers",
         "series": "Série",
-        "parallel": "Paralelo"
+        "parallel": "Paralelo",
+        "wiringShort": "Ligação"
     },
     "signal": {
         "title": "Sinal",
