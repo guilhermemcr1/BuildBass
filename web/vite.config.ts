@@ -17,9 +17,14 @@ export default defineConfig({
             '@': fileURLToPath(new URL('./src', import.meta.url)),
         },
     },
+    // `host: true` escuta em 0.0.0.0 para abrir pelo IP da máquina na rede local.
     server: {
+        host: true,
         port: 5173,
         strictPort: true,
+    },
+    preview: {
+        host: true,
     },
     build: {
         // O orçamento real é ≤ 250 KB gzip do JS inicial (plan.md); o React Aria passa do limite
