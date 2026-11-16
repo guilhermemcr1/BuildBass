@@ -16,6 +16,7 @@ export const DRIVER_KEYS: DriverKey[] = [
     'vas_m3',
     're_ohm',
     'le_h',
+    'le10k_h',
     'xmax_m',
     'sd_m2',
     'pe_w',

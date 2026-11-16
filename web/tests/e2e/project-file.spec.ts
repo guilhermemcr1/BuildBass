@@ -172,7 +172,7 @@ test('arquivo de versão futura mostra a mensagem de app mais novo (feature 004,
         buffer: Buffer.from(
             JSON.stringify({
                 format: 'buildbass.project',
-                version: 8,
+                version: 9,
                 project: {},
             }),
         ),
@@ -279,7 +279,7 @@ test('plano de corte: arquivo de versão futura pede atualizar e valor fora da f
         'futuro.buildbass.json',
         JSON.stringify({
             format: 'buildbass.project',
-            version: 8,
+            version: 9,
             project: {},
         }),
     );

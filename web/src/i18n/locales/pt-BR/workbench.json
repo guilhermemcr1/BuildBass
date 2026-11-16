@@ -33,7 +33,13 @@
         "rect": "Retangular",
         "triangle": "Triangular",
         "titleFront": "Duto (câmara frontal)",
-        "titleRear": "Duto (câmara traseira)"
+        "titleRear": "Duto (câmara traseira)",
+        "end": "Pontas do duto",
+        "end_flangedFree": "Uma flangeada, uma livre (padrão)",
+        "end_free": "Duas livres",
+        "end_flanged": "Duas flangeadas",
+        "end_slotWall": "Slot encostado na parede",
+        "end_custom": "Fator próprio"
     },
     "drivers": {
         "title": "Drivers",
@@ -138,7 +144,15 @@
         "portLengthFront": "Comprimento do duto frontal",
         "portLengthRear": "Comprimento do duto traseiro",
         "portVelocityFront": "Velocidade máx. no duto frontal",
-        "portVelocityRear": "Velocidade máx. no duto traseiro"
+        "portVelocityRear": "Velocidade máx. no duto traseiro",
+        "netVolume": "Volume líquido",
+        "netVolumeFront": "Volume líquido (frontal)",
+        "portVolume": "Volume do duto",
+        "portVolumeFront": "Volume do duto frontal",
+        "portVolumeRear": "Volume do duto traseiro",
+        "portPipe": "Ressonância do duto",
+        "portPipeFront": "Ressonância do duto frontal",
+        "portPipeRear": "Ressonância do duto traseiro"
     },
     "catalog": {
         "label": "Catálogo de drivers",
@@ -340,5 +354,17 @@
         "previous": "Foto anterior",
         "next": "Próxima foto",
         "noImage": "Sem imagem"
+    },
+    "losses": {
+        "preset": "Perdas (Ql)",
+        "ql5": "5 (vazamento)",
+        "ql7": "7 (padrão)",
+        "ql10": "10 (WinISD)",
+        "ql15": "15 (bem vedada)",
+        "custom": "Outro valor",
+        "fill": "Material de absorção",
+        "fill_none": "Sem material",
+        "fill_lined": "Paredes revestidas",
+        "fill_stuffed": "Câmara preenchida"
     }
 }

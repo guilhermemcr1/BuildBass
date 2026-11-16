@@ -679,14 +679,14 @@ describe('bandpass 6ª ordem — avisos por câmara (T34)', () => {
     test('duto longo demais: portTooLong por duto, com o comprimento', () => {
         expect(
             warningsOf({
-                vr_m3: 0.01,
+                vr_m3: 0.02,
                 fb_rear_hz: 20,
-                port_rear: round(0.02),
+                port_rear: round(0.05),
             }),
         ).toContain('portTooLong:rear');
 
         const long = simulate(
-            sixth({ vf_m3: 0.01, fb_hz: 20, port: round(0.02) }),
+            sixth({ vf_m3: 0.02, fb_hz: 20, port: round(0.05) }),
         ).warnings.find(({ id }) => id === 'portTooLong');
         expect(long?.chamber).toBe('front');
         expect(long?.values?.length_m).toBeGreaterThan(0);

@@ -7,6 +7,7 @@ import { useActiveProject } from '@/hooks/use-active-project';
 import { useWorkspace } from '@/stores/workspace';
 import type { BoxType } from '@/lib/project/types';
 import { BoxShape } from './box-shape';
+import { LossFields } from './loss-fields';
 import { PortFields } from './port-fields';
 import { SuggestBox } from './suggest-box';
 import { useParameterField } from './use-parameter-field';
@@ -72,6 +73,7 @@ export function BoxFields() {
                             title={t('boxGroups.losses')}
                         >
                             <ParameterField {...losses} />
+                            <LossFields />
                         </SuggestBox>
                     </>
                 ) : (
@@ -122,6 +124,7 @@ export function BoxFields() {
                                 )}
                                 <ParameterField {...losses} layout="compact" />
                             </div>
+                            <LossFields />
                         </SuggestBox>
                         {boxType !== 'closed' && <PortFields />}
                     </>

@@ -25,7 +25,7 @@
     },
     "le_h": {
         "label": "Indutância da bobina",
-        "help": "Indutância da bobina, que reduz a resposta nas frequências altas."
+        "help": "Indutância da bobina medida em 1 kHz, que reduz a resposta nas frequências altas."
     },
     "xmax_m": {
         "label": "Excursão máxima",
@@ -49,7 +49,7 @@
     },
     "vb_m3": {
         "label": "Volume da caixa",
-        "help": "Volume interno bruto da caixa; o volume dos drivers e dos dutos é descontado no cálculo."
+        "help": "Volume interno bruto, com o duto e o driver dentro: o cálculo desconta os dois. WinISD e as calculadoras online pedem o volume líquido, que aparece nos resultados."
     },
     "vr_m3": {
         "label": "Volume da câmara traseira (selada)",
@@ -73,7 +73,7 @@
     },
     "ql": {
         "label": "Perdas da caixa (Ql)",
-        "help": "Perdas por vazamento e absorção. 7 é o valor típico de uma caixa bem vedada; menor significa mais perdas."
+        "help": "Perdas por vazamento. 7 é o padrão do Hornresp e das tabelas de alinhamento; o WinISD usa 10. Menor significa mais perdas."
     },
     "diameter_m": {
         "label": "Diâmetro do duto",
@@ -210,5 +210,17 @@
     "drv_g_m": {
         "label": "Profundidade G — total",
         "help": "Profundidade total do alto-falante, da frente do aro até o fim do ímã. Se passar da profundidade interna da caixa, o plano de corte avisa."
+    },
+    "le10k_h": {
+        "label": "Indutância da bobina em 10 kHz",
+        "help": "Le medida em 10 kHz, quando o fabricante informa as duas (Le em 1 kHz e em 10 kHz). Com ela a bobina segue o modelo com perdas, como no VituixCAD, e a resposta entre 100 e 200 Hz fica mais realista."
+    },
+    "end_k": {
+        "label": "Fator da correção de ponta",
+        "help": "Correção de ponta total, em múltiplos do raio do círculo de mesma área do duto. 1,463 é flangeada + livre (padrão do WinISD)."
+    },
+    "rear_end_k": {
+        "label": "Fator da correção de ponta (traseiro)",
+        "help": "Correção de ponta total do duto traseiro, em múltiplos do raio do círculo de mesma área. 1,463 é flangeada + livre."
     }
 }

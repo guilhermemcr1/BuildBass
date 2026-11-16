@@ -10,6 +10,7 @@ import {
     writeField,
 } from '@/lib/project/fields';
 import type {
+    BoxFill,
     BoxType,
     DriverInput,
     DriverKey,
@@ -30,6 +31,7 @@ export type ProjectState = {
     setDriverValue: (key: DriverKey, si: number | undefined) => void;
     setBoxValue: (key: BoxValueKey, si: number | undefined) => void;
     setBoxType: (type: BoxType) => void;
+    setBoxFill: (fill: BoxFill) => void;
     setPort: (port: PortInput) => void;
     setPortRear: (port: PortInput) => void;
     setDrivers: (drivers: Partial<DriversInput>) => void;
@@ -130,6 +132,16 @@ export function createProjectStore(
                                     ...rearPort,
                                     type,
                                 },
+                            };
+                        }),
+                    // Sem material não fica gravado, para o arquivo não subir de versão à toa.
+                    setBoxFill: (fill) =>
+                        update((data) => {
+                            const { fill: _old, ...box } = data.box;
+
+                            return {
+                                ...data,
+                                box: fill === 'none' ? box : { ...box, fill },
                             };
                         }),
                     setPort: (port) =>

@@ -7,19 +7,19 @@
         "netVolumeInvalid": "O volume ocupado pelos drivers é maior que a caixa. Aumente o volume ou reduza o volume ocupado.",
         "portVolumeTooLarge": "O duto não cabe na caixa nessa sintonia. Use um duto mais estreito, menos dutos ou uma caixa maior.",
         "portTooShort": "O duto ficaria com comprimento zero ou negativo. Use um duto mais estreito ou menos dutos.",
-        "portTooLong": "O duto fica longo ({{length}}) para essa caixa. Considere um duto mais estreito ou outra sintonia.",
+        "portTooLong": "O duto dessa caixa ({{length}}) tem a 1ª ressonância de tubo em {{pipe}}, dentro da faixa tocada: ela vaza como um pico. Mantenha-a acima de 3× o corte do passa-baixa, com um duto mais estreito ou outra sintonia.",
         "noInductance": "Sem Le, a resposta acima de algumas centenas de Hz pode sair otimista.",
         "aboveThermalPower": "A potência passa da potência térmica (Pe) do driver.",
         "rearVolumeInvalid": "O volume ocupado pelos drivers é maior que a câmara traseira. Aumente a câmara traseira ou reduza o volume ocupado.",
         "portVolumeTooLarge_bandpass": "O duto não cabe na câmara frontal nessa sintonia. Use um duto mais estreito, menos dutos ou uma câmara frontal maior.",
         "portTooShort_bandpass": "O duto ficaria com comprimento zero ou negativo para essa câmara frontal. Use um duto mais estreito ou menos dutos.",
-        "portTooLong_bandpass": "O duto fica longo ({{length}}) para essa câmara frontal. Considere um duto mais estreito ou outra sintonia.",
+        "portTooLong_bandpass": "O duto dessa câmara frontal ({{length}}) tem a 1ª ressonância de tubo em {{pipe}}, dentro da faixa tocada: ela vaza como um pico. Mantenha-a acima de 3× o corte do passa-baixa, com um duto mais estreito ou outra sintonia.",
         "portVolumeTooLarge_rear": "O duto não cabe na câmara traseira nessa sintonia. Use um duto mais estreito, menos dutos ou uma câmara traseira maior.",
         "portVolumeTooLarge_front": "O duto não cabe na câmara frontal nessa sintonia. Use um duto mais estreito, menos dutos ou uma câmara frontal maior.",
         "portTooShort_rear": "O duto ficaria com comprimento zero ou negativo para essa câmara traseira. Use um duto mais estreito ou menos dutos.",
         "portTooShort_front": "O duto ficaria com comprimento zero ou negativo para essa câmara frontal. Use um duto mais estreito ou menos dutos.",
-        "portTooLong_rear": "O duto fica longo ({{length}}) para essa câmara traseira. Considere um duto mais estreito ou outra sintonia.",
-        "portTooLong_front": "O duto fica longo ({{length}}) para essa câmara frontal. Considere um duto mais estreito ou outra sintonia."
+        "portTooLong_rear": "O duto dessa câmara traseira ({{length}}) tem a 1ª ressonância de tubo em {{pipe}}, dentro da faixa tocada: ela vaza como um pico. Mantenha-a acima de 3× o corte do passa-baixa, com um duto mais estreito ou outra sintonia.",
+        "portTooLong_front": "O duto dessa câmara frontal ({{length}}) tem a 1ª ressonância de tubo em {{pipe}}, dentro da faixa tocada: ela vaza como um pico. Mantenha-a acima de 3× o corte do passa-baixa, com um duto mais estreito ou outra sintonia."
     },
     "limits": {
         "portWarn": "Atenção: {{value}}",
@@ -39,11 +39,14 @@
     },
     "alignments": {
         "butterworth2": "Selada Butterworth (Qtc 0,707): Vb {{vb}}.",
-        "keele": "Dutada Thiele/Keele (QB3–SBB4): Vb {{vb}} e Fb {{fb}}.",
         "grossNote": "O volume já inclui o ocupado pelos drivers e pelos dutos.",
         "closedQtsTooHigh": "Com Qts {{qts}} a selada Butterworth passaria de 3,3·Vas. Use um Qtc mais alto ou baffle infinito.",
-        "ventedQtsTooHigh": "Qts {{qts}} é alto para dutada (acima de 0,5). Prefira a caixa selada.",
+        "ventedQtsTooHigh": "Qts {{qts}} é alto para dutada: o alinhamento passaria de 1 dB de ondulação. Prefira a caixa selada.",
         "qtsTooLow": "Qts {{qts}} é baixo para os alinhamentos dutados (abaixo de 0,2): a caixa ficaria pequena e a resposta alta demais para subwoofer.",
-        "portTooLarge": "O duto informado (área total {{area}}) é grande demais para esta caixa: para sintonizar em {{fb}} ele ocuparia mais volume que o ar que sobra dentro dela. Use dutos com área total de até {{max}}, com diâmetro menor ou menos dutos."
+        "portTooLarge": "O duto informado (área total {{area}}) é grande demais para esta caixa: para sintonizar em {{fb}} ele ocuparia mais volume que o ar que sobra dentro dela. Use dutos com área total de até {{max}}, com diâmetro menor ou menos dutos.",
+        "vented": "Dutada {{name}} para Ql {{ql}}: Vb {{vb}} e Fb {{fb}}. A aproximação de Keele, usada por algumas calculadoras, daria {{keeleVb}} e {{keeleFb}}.",
+        "name_qb3": "QB3",
+        "name_b4": "B4 (Butterworth)",
+        "name_c4": "C4 (Chebyshev)"
     }
 }

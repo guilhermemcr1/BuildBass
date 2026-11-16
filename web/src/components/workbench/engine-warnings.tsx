@@ -35,6 +35,10 @@ export function EngineWarnings() {
                         context:
                             chamber ??
                             (boxType === 'bandpass' ? 'bandpass' : undefined),
+                        pipe:
+                            values?.pipe_hz === undefined
+                                ? undefined
+                                : formatWithUnit(values.pipe_hz, 'Hz', locale),
                         length:
                             values?.length_m === undefined
                                 ? undefined

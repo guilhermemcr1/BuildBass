@@ -28,6 +28,9 @@ export function ResultsTable({ items }: { items: ProjectSimulation[] }) {
     const sixthPlotted = items.some(
         ({ project }) => project.data.box.type === 'bandpass6',
     );
+    const bandpassPlotted = items.some(({ project }) =>
+        twoChambers(project.data.box.type),
+    );
 
     const rows: Row[] = [
         {
@@ -92,6 +95,34 @@ export function ResultsTable({ items }: { items: ProjectSimulation[] }) {
             unit: defaultUnitFor('length', unitSystem),
             value: (r) => r.port_length_m,
         },
+        // Volume líquido: o número que WinISD, AJ e outras calculadoras pedem como "Vb" (elas não
+        // descontam o duto); o BassBuild recebe o bruto e desconta driver e duto.
+        {
+            key: 'netVolume',
+            label: t(
+                bandpassPlotted
+                    ? 'results.netVolumeFront'
+                    : 'results.netVolume',
+            ),
+            unit: defaultUnitFor('volume', unitSystem),
+            value: (r) => r.net_volume_m3 ?? r.net_front_m3,
+        },
+        {
+            key: 'portVolume',
+            label: t(
+                sixthPlotted ? 'results.portVolumeFront' : 'results.portVolume',
+            ),
+            unit: defaultUnitFor('volume', unitSystem),
+            value: (r) => r.port_volume_m3,
+        },
+        {
+            key: 'portPipe',
+            label: t(
+                sixthPlotted ? 'results.portPipeFront' : 'results.portPipe',
+            ),
+            unit: 'Hz',
+            value: (r) => r.port_pipe_hz,
+        },
         {
             key: 'portVelocity',
             label: t(
@@ -113,6 +144,18 @@ export function ResultsTable({ items }: { items: ProjectSimulation[] }) {
             label: t('results.portLengthRear'),
             unit: defaultUnitFor('length', unitSystem),
             value: (r) => r.port_rear_length_m,
+        },
+        {
+            key: 'portVolumeRear',
+            label: t('results.portVolumeRear'),
+            unit: defaultUnitFor('volume', unitSystem),
+            value: (r) => r.port_rear_volume_m3,
+        },
+        {
+            key: 'portPipeRear',
+            label: t('results.portPipeRear'),
+            unit: 'Hz',
+            value: (r) => r.port_rear_pipe_hz,
         },
         {
             key: 'portVelocityRear',
@@ -143,10 +186,13 @@ export function ResultsTable({ items }: { items: ProjectSimulation[] }) {
     // Linhas da bandpass só aparecem se algum projeto plotado a tem (as do F3 e da selada/dutada
     // continuam sempre, como antes).
     const BANDPASS_ROWS = ['fLow', 'fHigh', 'fCenter', 'bandwidth', 'peak'];
-    const REAR_ROWS = ['fbRear', 'portLengthRear', 'portVelocityRear'];
-    const bandpassPlotted = items.some(({ project }) =>
-        twoChambers(project.data.box.type),
-    );
+    const REAR_ROWS = [
+        'fbRear',
+        'portLengthRear',
+        'portVolumeRear',
+        'portPipeRear',
+        'portVelocityRear',
+    ];
     const shown = (row: Row) =>
         (bandpassPlotted || !BANDPASS_ROWS.includes(row.key)) &&
         (sixthPlotted || !REAR_ROWS.includes(row.key));

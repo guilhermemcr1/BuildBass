@@ -5,9 +5,15 @@ import { abs, arg, complex, mul } from './complex';
 import { AIR_DENSITY, SPEED_OF_SOUND } from './constants';
 import { deriveDriver } from './driver';
 import { ANALYSIS_FREQUENCIES_HZ, FREQUENCIES_HZ } from './frequencies';
-import { netVolume as solveNetVolume, portArea } from './port';
+import {
+    endFactor,
+    netVolume as solveNetVolume,
+    pipeResonance,
+    portArea,
+} from './port';
 import { twoChambers } from './types';
 import type {
+    BoxFill,
     BoxType,
     CurveId,
     DriverKey,
@@ -31,6 +37,17 @@ const NO_PORT: PortInput = { shape: 'round', count: 1 };
 const DISTANCE_M = 1;
 // Área usada só no modo normalizado, em que o nível absoluto não importa.
 const NORMALIZED_SD = 0.05;
+// Perdas por absorção QA por material ([S73v]): a regra de uso do WinISD e do Unibox, ~30 com as
+// paredes revestidas e ~10 com a câmara preenchida, não um valor medido.
+const FILL_QA: Record<BoxFill, number> = {
+    none: Number.POSITIVE_INFINITY,
+    lined: 30,
+    stuffed: 10,
+};
+// A 1ª ressonância de tubo precisa ficar acima das duas oitavas acima da sintonia (4·Fb), onde a
+// caixa trabalha, e de 3× o passa-baixa típico de subwoofer (80 Hz), a regra mais citada nos guias.
+const PIPE_MARGIN = 4;
+const PIPE_MIN_HZ = 3 * 80;
 
 export const RESPONSE_NEEDS: DriverKey[] = ['fs_hz', 'qts', 'vas_m3'];
 // Para nível absoluto, excursão e impedância: escala elétrica e mecânica do driver.
@@ -87,6 +104,9 @@ type DuctedChamber = {
     // Volume líquido: bruto − drivers − dutos (≤ 0 quando nada cabe).
     net_m3: number;
     length_m?: number;
+    // Volume dos dutos (n·a·L) e a 1ª ressonância de tubo.
+    port_m3?: number;
+    pipe_hz?: number;
     // false quando os drivers ou os dutos não cabem na câmara.
     fits: boolean;
     warnings: EngineWarning[];
@@ -98,6 +118,7 @@ type DuctedChamberInput = {
     fb_hz?: number;
     area_m2?: number;
     count: number;
+    end_factor: number;
     // Aviso quando só os drivers já não cabem (volume líquido ≤ 0).
     invalid: WarningId;
     chamber?: 'rear' | 'front';
@@ -112,6 +133,7 @@ function ductedChamber({
     fb_hz,
     area_m2,
     count,
+    end_factor,
     invalid,
     chamber,
 }: DuctedChamberInput): DuctedChamber {
@@ -139,6 +161,7 @@ function ductedChamber({
         fb_hz,
         area_m2,
         count,
+        end_factor,
     });
 
     if (Number.isNaN(solved.length_m)) {
@@ -150,18 +173,31 @@ function ductedChamber({
     }
 
     const warnings: EngineWarning[] = [];
+    const pipe_hz =
+        solved.length_m > 0
+            ? pipeResonance(solved.length_m, area_m2, end_factor)
+            : undefined;
 
     if (solved.length_m <= 0) {
         warnings.push(tag('portTooShort'));
-    } else if (solved.length_m > Math.cbrt(volume_m3)) {
-        // Duto mais longo que a maior medida de uma caixa cúbica: ressonâncias do tubo caem perto
-        // da banda e ele dificilmente cabe.
-        warnings.push(tag('portTooLong', { length_m: solved.length_m }));
+    } else if (
+        (pipe_hz as number) < Math.max(PIPE_MARGIN * fb_hz, PIPE_MIN_HZ)
+    ) {
+        // A ressonância do tubo vaza pelo duto como um pico estreito dentro da faixa tocada (no lugar
+        // da regra antiga, L > ∛Vb, que disparava em projetos comuns de subwoofer).
+        warnings.push(
+            tag('portTooLong', {
+                length_m: solved.length_m,
+                pipe_hz: pipe_hz as number,
+            }),
+        );
     }
 
     return {
         net_m3: solved.net_m3,
         length_m: solved.length_m,
+        port_m3: solved.port_m3,
+        pipe_hz,
         fits: true,
         warnings,
     };
@@ -488,6 +524,7 @@ export function simulate(project: ProjectInput): Simulation {
             fb_hz: box.fb_rear_hz,
             area_m2: rearArea,
             count: rearPortCount,
+            end_factor: endFactor(rearPort),
             invalid: 'rearVolumeInvalid',
             chamber: 'rear',
         });
@@ -496,6 +533,8 @@ export function simulate(project: ProjectInput): Simulation {
 
         if (rear.length_m !== undefined) {
             results.port_rear_length_m = rear.length_m;
+            results.port_rear_volume_m3 = rear.port_m3;
+            results.port_rear_pipe_hz = rear.pipe_hz;
         }
 
         warnings.push(...rear.warnings);
@@ -510,6 +549,7 @@ export function simulate(project: ProjectInput): Simulation {
         fb_hz: box.fb_hz,
         area_m2: area,
         count: portCount,
+        end_factor: endFactor(box.port),
         invalid: band ? 'portVolumeTooLarge' : 'netVolumeInvalid',
         chamber: band6 ? 'front' : undefined,
     });
@@ -522,6 +562,8 @@ export function simulate(project: ProjectInput): Simulation {
 
     if (front.length_m !== undefined) {
         results.port_length_m = front.length_m;
+        results.port_volume_m3 = front.port_m3;
+        results.port_pipe_hz = front.pipe_hz;
     }
 
     warnings.push(...front.warnings);
@@ -554,6 +596,10 @@ export function simulate(project: ProjectInput): Simulation {
         Math.PI *
         (ported ? (box.fb_hz as number) : (results.fc_hz as number));
     const ral = box.ql / (referenceOmega * cab);
+    // Absorção QA = 1 / (ω·Rab·Cab) na mesma frequência de referência ([S73v]).
+    const qa = FILL_QA[box.fill ?? 'none'];
+    const absorption = (omega: number, compliance: number) =>
+        Number.isFinite(qa) ? 1 / (qa * omega * compliance) : undefined;
     // Massa do duto pela sintonia: Fb = 1 / (2π·√(Map·Cab)); na bandpass, Cab é o da câmara
     // frontal com o cone bloqueado (research.md §2).
     const map = ported
@@ -570,6 +616,7 @@ export function simulate(project: ProjectInput): Simulation {
             cab: rearCab,
             ral: box.ql / (rearOmega * rearCab),
             map: 1 / (rearOmega ** 2 * rearCab),
+            rab: absorption(rearOmega, rearCab),
         };
     };
 
@@ -581,9 +628,37 @@ export function simulate(project: ProjectInput): Simulation {
     const qes = Number.isFinite(qms) ? (qts * qms) / (qms - qts) : qts;
     const cms = vas / (RHO_C2 * sd ** 2);
     const mms = 1 / (omegaS ** 2 * cms);
+    // Le em 1 kHz e em 10 kHz: bobina de Leach, Z = K·(jω)^n, com a indutância efetiva Im(Z)/ω
+    // passando pelos dois pontos: n = 1 − log10(Le1k/Le10k), K = Le1k·ω1^(1−n) / sin(nπ/2).
+    const le1k = values.le_h;
+    const le10k = values.le10k_h;
+    let leach: CircuitParams['leach'];
+
+    if (
+        absolute &&
+        le1k !== undefined &&
+        le1k > 0 &&
+        le10k !== undefined &&
+        le10k > 0
+    ) {
+        const n = Math.min(1, Math.max(0.05, 1 - Math.log10(le1k / le10k)));
+        const omega1k = 2 * Math.PI * 1000;
+
+        leach = {
+            n,
+            k: (le1k * omega1k ** (1 - n)) / Math.sin((n * Math.PI) / 2),
+        };
+    }
+
+    const rearPerDriver = rearNet === undefined ? undefined : rearNet / count;
+    const sealedRearOmega =
+        rearPerDriver === undefined
+            ? 0
+            : 2 * Math.PI * rearLossReferenceHz(fs, vas, rearPerDriver);
     const perDriver: CircuitParams = {
         re,
         le: absolute ? (values.le_h ?? 0) : 0,
+        leach,
         bl: Math.sqrt((omegaS * mms * re) / qes),
         mms,
         cms,
@@ -591,6 +666,7 @@ export function simulate(project: ProjectInput): Simulation {
         sd,
         cab,
         ral,
+        rab: absorption(referenceOmega, cab),
         map,
         rear:
             rearNet === undefined
@@ -599,13 +675,15 @@ export function simulate(project: ProjectInput): Simulation {
                   ? rearChamber(rearNet / count, box.fb_rear_hz as number)
                   : // Câmara traseira selada da 4ª ordem; perdas medidas na ressonância do driver.
                     {
-                        cab: rearNet / count / RHO_C2,
+                        cab: (rearPerDriver as number) / RHO_C2,
                         ral:
                             box.ql /
-                            (2 *
-                                Math.PI *
-                                rearLossReferenceHz(fs, vas, rearNet / count) *
-                                (rearNet / count / RHO_C2)),
+                            (sealedRearOmega *
+                                ((rearPerDriver as number) / RHO_C2)),
+                        rab: absorption(
+                            sealedRearOmega,
+                            (rearPerDriver as number) / RHO_C2,
+                        ),
                     },
     };
 
@@ -622,7 +700,7 @@ export function simulate(project: ProjectInput): Simulation {
     const solidAngle = signal.radiation === 'half' ? 2 * Math.PI : 4 * Math.PI;
     const model: Model = {
         perDriver,
-        lowFrequency: { ...perDriver, le: 0 },
+        lowFrequency: { ...perDriver, le: 0, leach: undefined },
         count,
         series,
         voltage: perDriverVoltage,

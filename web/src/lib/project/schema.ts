@@ -26,6 +26,7 @@ export const driverSchema = z.object({
     vas_m3: range('vas_m3').optional(),
     re_ohm: range('re_ohm').optional(),
     le_h: range('le_h').optional(),
+    le10k_h: range('le10k_h').optional(),
     xmax_m: range('xmax_m').optional(),
     sd_m2: range('sd_m2').optional(),
     pe_w: range('pe_w').optional(),
@@ -34,23 +35,34 @@ export const driverSchema = z.object({
     vd_m3: range('vd_m3').optional(),
 });
 
+// Correção de ponta (versão 8): opcional, ausente = flangeada + livre.
+const ends = {
+    end: z
+        .enum(['flangedFree', 'free', 'flanged', 'slotWall', 'custom'])
+        .optional(),
+    end_k: range('end_k').optional(),
+};
+
 const port = z.discriminatedUnion('shape', [
     z.object({
         shape: z.literal('round'),
         diameter_m: range('diameter_m').optional(),
         count,
+        ...ends,
     }),
     z.object({
         shape: z.literal('rect'),
         width_m: range('width_m').optional(),
         height_m: range('height_m').optional(),
         count,
+        ...ends,
     }),
     z.object({
         shape: z.literal('triangle'),
         base_m: range('base_m').optional(),
         height_m: range('height_m').optional(),
         count,
+        ...ends,
     }),
 ]);
 
@@ -165,6 +177,8 @@ export const projectSchema = z.object({
         vr_m3: range('vr_m3').optional(),
         vf_m3: range('vf_m3').optional(),
         ql: range('ql'),
+        // Material de absorção (versão 8).
+        fill: z.enum(['none', 'lined', 'stuffed']).optional(),
         fb_hz: range('fb_hz').optional(),
         fb_rear_hz: range('fb_rear_hz').optional(),
         port,

@@ -46,23 +46,90 @@ describe('suggestBox', () => {
         expect(relative(result.results.qtc, 0.707)).toBeLessThan(0.005);
     });
 
-    test('R12: dutada Qts 0,35 → Keele', () => {
-        const suggestion = suggestBox(
-            project({ fs_hz: 30, qts: 0.35, vas_m3: 0.08 }, 'vented'),
+    test('R12: dutada pela família de Thiele no QL da caixa (linha B4 publicada com QL 7)', () => {
+        // Tabela de alinhamentos com QL 7: B4 em Qts 0,4048, Vas/Vb 1,0613, Fb/Fs 1,0, F3/Fs 1,0.
+        const input = project(
+            { fs_hz: 30, qts: 0.4048, vas_m3: 0.08 },
+            'vented',
         );
-
-        expect(suggestion).toMatchObject({ ok: true, alignment: 'keele' });
+        const suggestion = suggestBox(input);
 
         if (!suggestion.ok) {
-            return;
+            throw new Error('sugestão esperada');
         }
 
+        expect(suggestion.alignment).toBe('b4');
+        expect(suggestion.ql).toBe(7);
+        expect(relative(0.08 / suggestion.vb_m3, 1.0613)).toBeLessThan(0.002);
+        expect(relative(suggestion.fb_hz, 30)).toBeLessThan(0.002);
+
+        const result = simulate({
+            ...input,
+            box: {
+                ...input.box,
+                vb_m3: suggestion.vb_m3,
+                fb_hz: suggestion.fb_hz,
+            },
+        });
+        expect(relative(result.results.f3_hz, 30)).toBeLessThan(0.005);
+    });
+
+    test('sem perdas cai na B4 de Thiele: Qts 0,3827, α = √2, h = 1', () => {
+        const input = project(
+            { fs_hz: 30, qts: 0.3827, vas_m3: 0.08 },
+            'vented',
+        );
+        input.box.ql = Infinity;
+        const suggestion = suggestBox(input);
+
+        if (!suggestion.ok) {
+            throw new Error('sugestão esperada');
+        }
+
+        expect(relative(0.08 / suggestion.vb_m3, Math.SQRT2)).toBeLessThan(
+            0.002,
+        );
+        expect(relative(suggestion.fb_hz, 30)).toBeLessThan(0.002);
+    });
+
+    test('abaixo da B4 é QB3, acima é C4, e o QL muda a sugestão', () => {
+        const at = (qts: number, ql = 7) => {
+            const input = project({ fs_hz: 30, qts, vas_m3: 0.08 }, 'vented');
+            input.box.ql = ql;
+            return suggestBox(input);
+        };
+        const qb3 = at(0.35);
+        const c4 = at(0.45);
+
+        expect(qb3).toMatchObject({ ok: true, alignment: 'qb3' });
+        expect(c4).toMatchObject({ ok: true, alignment: 'c4' });
+
+        // QL 10 (padrão do WinISD) pede caixa um pouco menor que QL 7 para o mesmo driver: com menos
+        // perdas a B4 vai para α = √2 (sem perdas), contra 1,061 com QL 7.
+        const ql7 = at(0.4, 7);
+        const ql10 = at(0.4, 10);
+        if (!ql7.ok || !ql10.ok) {
+            throw new Error('sugestão esperada');
+        }
+        expect(ql10.vb_m3).toBeLessThan(ql7.vb_m3);
+
+        // Keele vem junto, como referência: 15·Qts^2,87·Vas e 0,42·Fs·Qts^-0,9.
         expect(
-            relative(suggestion.vb_m3, 15 * 0.35 ** 2.87 * 0.08),
-        ).toBeLessThan(0.005);
+            relative(ql7.keele?.vb_m3, 15 * 0.4 ** 2.87 * 0.08),
+        ).toBeLessThan(1e-9);
         expect(
-            relative(suggestion.fb_hz, 0.42 * 30 * 0.35 ** -0.9),
-        ).toBeLessThan(0.005);
+            relative(ql7.keele?.fb_hz, 0.42 * 30 * 0.4 ** -0.9),
+        ).toBeLessThan(1e-9);
+    });
+
+    test('C4 com ondulação acima de 1 dB recusa e recomenda a selada', () => {
+        const input = project({ fs_hz: 30, qts: 0.49, vas_m3: 0.08 }, 'vented');
+
+        expect(suggestBox(input)).toEqual({
+            ok: false,
+            reason: 'qtsTooHigh',
+            recommend: 'closed',
+        });
     });
 
     test('Vb bruto soma o volume dos drivers e do duto, para N drivers', () => {
@@ -106,10 +173,16 @@ describe('suggestBox', () => {
     });
 
     test('duto que ocuparia mais que o ar da caixa: recusa e diz a área máxima', () => {
-        // Driver pequeno (Vas 8 L): V_líq do alinhamento ≈ 2,3 L e Fb ≈ 47 Hz.
+        // Driver pequeno (Vas 8 L): QB3 com V_líq ≈ 1,7 L e Fb ≈ 47 Hz.
         const driver = { fs_hz: 30, qts: 0.25, vas_m3: 0.008 };
-        const net = 15 * 0.25 ** 2.87 * 0.008;
-        const fb = 0.42 * 30 * 0.25 ** -0.9;
+        const base = suggestBox(project(driver, 'vented'));
+
+        if (!base.ok || base.fb_hz === undefined) {
+            throw new Error('sugestão esperada');
+        }
+
+        const net = base.vb_m3;
+        const fb = base.fb_hz;
         const maxArea = (2 * Math.PI * fb * net) / 343.2;
         const withPort = (diameter_m: number, count = 1) => {
             const input = project(driver, 'vented');

@@ -33,7 +33,13 @@
         "rect": "Rectangular",
         "triangle": "Triangular",
         "titleFront": "Port (front chamber)",
-        "titleRear": "Port (rear chamber)"
+        "titleRear": "Port (rear chamber)",
+        "end": "Port ends",
+        "end_flangedFree": "One flanged, one free (default)",
+        "end_free": "Both free",
+        "end_flanged": "Both flanged",
+        "end_slotWall": "Slot against a wall",
+        "end_custom": "Custom factor"
     },
     "drivers": {
         "title": "Drivers",
@@ -138,7 +144,15 @@
         "portLengthFront": "Front port length",
         "portLengthRear": "Rear port length",
         "portVelocityFront": "Max. front port velocity",
-        "portVelocityRear": "Max. rear port velocity"
+        "portVelocityRear": "Max. rear port velocity",
+        "netVolume": "Net volume",
+        "netVolumeFront": "Net volume (front)",
+        "portVolume": "Port volume",
+        "portVolumeFront": "Front port volume",
+        "portVolumeRear": "Rear port volume",
+        "portPipe": "Port pipe resonance",
+        "portPipeFront": "Front port pipe resonance",
+        "portPipeRear": "Rear port pipe resonance"
     },
     "catalog": {
         "label": "Driver catalog",
@@ -340,5 +354,17 @@
         "previous": "Previous photo",
         "next": "Next photo",
         "noImage": "No image"
+    },
+    "losses": {
+        "preset": "Losses (Ql)",
+        "ql5": "5 (leaky)",
+        "ql7": "7 (default)",
+        "ql10": "10 (WinISD)",
+        "ql15": "15 (well sealed)",
+        "custom": "Other value",
+        "fill": "Absorbent material",
+        "fill_none": "None",
+        "fill_lined": "Lined walls",
+        "fill_stuffed": "Stuffed chamber"
     }
 }

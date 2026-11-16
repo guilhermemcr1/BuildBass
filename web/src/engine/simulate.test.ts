@@ -281,14 +281,54 @@ describe('simulate — duto (US2)', () => {
         expect(result.warnings).toContainEqual({ id: 'portTooShort' });
     });
 
-    test('duto longo demais avisa', () => {
+    test('duto longo demais avisa pela ressonância de tubo', () => {
         const result = vented(
             { shape: 'round', diameter_m: 0.1, count: 1 },
-            0.1,
+            0.05,
             20,
         );
+        const warning = result.warnings.find(({ id }) => id === 'portTooLong');
+        const pipe = result.results.port_pipe_hz as number;
 
-        expect(result.warnings.map(({ id }) => id)).toContain('portTooLong');
+        // f = c / (2·(L + Δ)), Δ = 1,463·r.
+        expect(pipe).toBeCloseTo(
+            343.2 /
+                (2 * ((result.results.port_length_m as number) + 1.463 * 0.05)),
+            9,
+        );
+        expect(pipe).toBeLessThan(240);
+        expect(warning?.values?.pipe_hz).toBe(pipe);
+    });
+
+    test('duto de subwoofer comum não avisa (12", 50 L, 32 Hz, Ø 10 cm)', () => {
+        const result = vented(
+            { shape: 'round', diameter_m: 0.1, count: 1 },
+            0.05,
+            32,
+        );
+
+        // A regra antiga (L > ∛Vb = 36,8 cm) disparava aqui com o duto de 41,7 cm.
+        expect(result.results.port_length_m).toBeGreaterThan(Math.cbrt(0.05));
+        expect(result.results.port_pipe_hz).toBeGreaterThan(240);
+        expect(result.warnings.map(({ id }) => id)).not.toContain(
+            'portTooLong',
+        );
+    });
+
+    test('volume ocupado pelo duto: n·a·L, e Vb = líquido + duto', () => {
+        const result = vented(
+            { shape: 'round', diameter_m: 0.07, count: 2 },
+            0.05,
+            32,
+        );
+        const { port_volume_m3, port_length_m, net_volume_m3 } =
+            result.results as Record<string, number>;
+
+        expect(port_volume_m3).toBeCloseTo(
+            2 * Math.PI * 0.035 ** 2 * port_length_m,
+            12,
+        );
+        expect(net_volume_m3 + port_volume_m3).toBeCloseTo(0.05, 12);
     });
 
     test('duto que não cabe na caixa: sem curvas', () => {
@@ -567,7 +607,12 @@ describe('simulate — selada e dutada não mudaram com a bandpass (004, T013)',
         close(sample(result.curves.excursion_m), BASELINE.vented.exc);
         close(sample(result.curves.group_delay_s), BASELINE.vented.gd);
         close(sample(result.curves.port_velocity_ms), BASELINE.vented.pv);
-        expect(result.results).toEqual(BASELINE.vented.results);
+        // Os campos novos (volume do duto, ressonância de tubo) não mudam os de antes.
+        expect(result.results).toEqual({
+            ...BASELINE.vented.results,
+            port_volume_m3: expect.any(Number),
+            port_pipe_hz: expect.any(Number),
+        });
     });
 });
 

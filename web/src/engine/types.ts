@@ -9,6 +9,9 @@ export type DriverKey =
     | 'vas_m3'
     | 're_ohm'
     | 'le_h'
+    // Indutância medida em 10 kHz (a `le_h` é a de 1 kHz). Com as duas, a bobina segue o modelo com
+    // perdas de Leach em vez do indutor simples (research de mercado, recomendação 5).
+    | 'le10k_h'
     | 'xmax_m'
     | 'sd_m2'
     | 'pe_w'
@@ -25,10 +28,27 @@ export type DriversInput = { count: number; wiring: Wiring };
 
 export type PortShape = 'round' | 'rect' | 'triangle';
 
-export type PortInput =
+// Correção de ponta do duto (port.ts): as duas pontas, flangeada + livre é o padrão do WinISD e do
+// Hornresp; `custom` usa `end_k`, o fator sobre o raio do círculo de mesma área.
+export type PortEnd =
+    | 'flangedFree'
+    | 'free'
+    | 'flanged'
+    | 'slotWall'
+    | 'custom';
+
+type PortEnds = { end?: PortEnd; end_k?: number };
+
+export type PortInput = (
     | { shape: 'round'; diameter_m?: number; count: number }
     | { shape: 'rect'; width_m?: number; height_m?: number; count: number }
-    | { shape: 'triangle'; base_m?: number; height_m?: number; count: number };
+    | { shape: 'triangle'; base_m?: number; height_m?: number; count: number }
+) &
+    PortEnds;
+
+// Material de absorção nas câmaras, como o "Fill" do BassBox: vira as perdas por absorção QA de
+// Small (simulate.ts). Ausente = sem material.
+export type BoxFill = 'none' | 'lined' | 'stuffed';
 
 // 'bandpass' é a de 4ª ordem (traseira selada + frontal dutada, specs/004); 'bandpass6' a de 6ª
 // ordem (as duas câmaras dutadas, specs/007).
@@ -47,6 +67,7 @@ export type BoxInput = {
     vr_m3?: number;
     vf_m3?: number;
     ql: number;
+    fill?: BoxFill;
     // Dutada: sintonia da caixa. Bandpass: sintonia da câmara frontal.
     fb_hz?: number;
     // Bandpass de 6ª ordem: sintonia da câmara traseira (mesma faixa de `fb_hz`).
@@ -174,11 +195,16 @@ export type SimulationResults = {
     net_rear_m3?: number;
     net_front_m3?: number;
     port_length_m?: number;
+    // Volume que os dutos ocupam (n·a·L) e a 1ª ressonância de tubo, c / (2·(L + Δ)).
+    port_volume_m3?: number;
+    port_pipe_hz?: number;
     port_velocity_max_ms?: number;
     // Bandpass de 6ª ordem: sintonia, comprimento e velocidade máxima do duto da câmara traseira
     // (`fb_hz`, `port_length_m` e `port_velocity_max_ms` são os do duto frontal).
     fb_rear_hz?: number;
     port_rear_length_m?: number;
+    port_rear_volume_m3?: number;
+    port_rear_pipe_hz?: number;
     port_rear_velocity_max_ms?: number;
     xmax_power_w?: number;
     efficiency?: number;

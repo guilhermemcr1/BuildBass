@@ -106,3 +106,58 @@ describe('PortFields', () => {
         expect(screen.getByRole('radio', { name: 'Redondo' })).toBeChecked();
     });
 });
+
+describe('PortFields — pontas do duto', () => {
+    beforeEach(() => {
+        localStorage.clear();
+        useWorkspace.setState(initialWorkspace());
+        usePreferences.setState({ unitSystem: 'metric' });
+    });
+
+    const port = () => activeProjectStore().getState().data.box.port;
+    const choose = async (option: string) => {
+        await userEvent.click(
+            screen.getByRole('button', { name: /Pontas do duto/ }),
+        );
+        await userEvent.click(screen.getByRole('option', { name: option }));
+    };
+
+    test('padrão flangeada + livre, sem nada gravado no duto', () => {
+        renderWithProviders(<PortFields />);
+
+        expect(
+            screen.getByRole('button', { name: /Pontas do duto/ }),
+        ).toHaveTextContent('Uma flangeada, uma livre (padrão)');
+        expect(port().end).toBeUndefined();
+    });
+
+    test('slot na parede grava a escolha; o fator só aparece em "Fator próprio"', async () => {
+        renderWithProviders(<PortFields />);
+
+        await choose('Slot encostado na parede');
+        expect(port().end).toBe('slotWall');
+        expect(
+            screen.queryByLabelText(/Fator da correção de ponta/),
+        ).toBeNull();
+
+        await choose('Fator próprio');
+        expect(port().end).toBe('custom');
+        expect(
+            screen.getByLabelText(/Fator da correção de ponta/),
+        ).toBeVisible();
+
+        await choose('Uma flangeada, uma livre (padrão)');
+        expect(port().end).toBeUndefined();
+    });
+
+    test('trocar o formato mantém a ponta escolhida', async () => {
+        renderWithProviders(<PortFields />);
+
+        await choose('Duas livres');
+        await userEvent.click(
+            screen.getByRole('radio', { name: 'Retangular' }),
+        );
+
+        expect(port()).toMatchObject({ shape: 'rect', end: 'free' });
+    });
+});

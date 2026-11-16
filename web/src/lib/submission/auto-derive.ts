@@ -50,6 +50,10 @@ export function syncDerived(
     const nextAuto = new Set<NumericKey>();
 
     for (const key of DRIVER_KEYS) {
+        if (key === 'le10k_h') {
+            continue;
+        }
+
         const { value, source } = derived.values[key];
         const { min, max } = PARAMETERS[key];
 

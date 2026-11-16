@@ -185,12 +185,12 @@ describe('EngineWarnings — bandpass de 6ª ordem (US3)', () => {
         ).toBeInTheDocument();
         second.unmount();
 
-        sixth({ vr_m3: 0.01, fb_rear_hz: 20, port_rear: round(0.02) }, DRIVER);
+        sixth({ vr_m3: 0.02, fb_rear_hz: 20, port_rear: round(0.05) }, DRIVER);
         renderWithProviders(<EngineWarnings />);
 
         expect(
             screen.getByText(
-                /O duto fica longo \(.+\) para essa câmara traseira/,
+                /O duto dessa câmara traseira \(.+\) tem a 1ª ressonância de tubo em .+ Hz/,
             ),
         ).toBeInTheDocument();
     });

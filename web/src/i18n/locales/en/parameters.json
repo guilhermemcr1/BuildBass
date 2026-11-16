@@ -25,7 +25,7 @@
     },
     "le_h": {
         "label": "Coil inductance",
-        "help": "Inductance of the voice coil, which reduces the response at high frequencies."
+        "help": "Voice-coil inductance measured at 1 kHz, which reduces the response at high frequencies."
     },
     "xmax_m": {
         "label": "Maximum excursion",
@@ -49,7 +49,7 @@
     },
     "vb_m3": {
         "label": "Box volume",
-        "help": "Gross internal box volume; driver and port volumes are subtracted in the calculation."
+        "help": "Gross internal volume, with the port and driver inside: the calculation subtracts both. WinISD and online calculators ask for the net volume, which is shown in the results."
     },
     "vr_m3": {
         "label": "Rear chamber volume (sealed)",
@@ -73,7 +73,7 @@
     },
     "ql": {
         "label": "Box losses (Ql)",
-        "help": "Leakage and absorption losses. 7 is typical for a well-sealed box; lower means more loss."
+        "help": "Leakage losses. 7 is the Hornresp and alignment-table default; WinISD uses 10. Lower means more losses."
     },
     "diameter_m": {
         "label": "Port diameter",
@@ -210,5 +210,17 @@
     "drv_g_m": {
         "label": "Depth G — total",
         "help": "Total loudspeaker depth, from the front of the flange to the end of the magnet. If it exceeds the box internal depth, the cut plan warns you."
+    },
+    "le10k_h": {
+        "label": "Voice-coil inductance at 10 kHz",
+        "help": "Le measured at 10 kHz, when the maker lists both (Le at 1 kHz and at 10 kHz). With it the voice coil follows the lossy model, as in VituixCAD, and the response between 100 and 200 Hz is more realistic."
+    },
+    "end_k": {
+        "label": "End-correction factor",
+        "help": "Total end correction, in multiples of the radius of the circle with the port’s area. 1.463 is flanged + free (the WinISD default)."
+    },
+    "rear_end_k": {
+        "label": "End-correction factor (rear)",
+        "help": "Total end correction of the rear port, in multiples of the radius of the circle with the same area. 1.463 is flanged + free."
     }
 }

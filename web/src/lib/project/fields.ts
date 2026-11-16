@@ -144,6 +144,10 @@ export function readField(
     }
 
     switch (key) {
+        case 'end_k':
+            return data.box.port.end_k;
+        case 'rear_end_k':
+            return data.box.port_rear?.end_k;
         case 'port_count':
             return data.box.port.count;
         case 'rear_port_count':
@@ -529,6 +533,26 @@ export function writeField(
     }
 
     switch (key) {
+        case 'end_k':
+            return {
+                ...data,
+                box: {
+                    ...data.box,
+                    port: withField(data.box.port, 'end_k', si),
+                },
+            };
+        case 'rear_end_k':
+            return {
+                ...data,
+                box: {
+                    ...data.box,
+                    port_rear: withField(
+                        data.box.port_rear ?? EMPTY_PORT,
+                        'end_k',
+                        si,
+                    ),
+                },
+            };
         case 'port_count':
             return {
                 ...data,

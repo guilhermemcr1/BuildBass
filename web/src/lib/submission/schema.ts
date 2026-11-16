@@ -10,11 +10,14 @@ import type { DriverType } from '@/lib/project/types';
 // (api/app/Http/Requests/StoreDriverSubmissionRequest.php); as faixas vêm de PARAMETERS e o
 // servidor as confere pela fixture api/tests/Fixtures/submission-ranges.json.
 
-export type NumericKey = DriverKey | 'nominal_diameter_m';
+// Le em 10 kHz ainda não existe no catálogo da API: fica só na bancada e nos arquivos de projeto.
+type CatalogDriverKey = Exclude<DriverKey, 'le10k_h'>;
+
+export type NumericKey = CatalogDriverKey | 'nominal_diameter_m';
 
 export const NUMERIC_KEYS: NumericKey[] = [
     'nominal_diameter_m',
-    ...DRIVER_KEYS,
+    ...DRIVER_KEYS.filter((key): key is CatalogDriverKey => key !== 'le10k_h'),
 ];
 
 export const REQUIRED_KEYS: NumericKey[] = ['fs_hz', 'qts', 'vas_m3'];

@@ -1,7 +1,7 @@
 import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'vite-plus/test';
-import { simulate } from '@/engine';
+import { simulate, suggestBox } from '@/engine';
 import { activeProjectStore } from '@/hooks/use-active-project';
 import { renderWithProviders } from '@/test/render';
 import { initialWorkspace, useWorkspace } from '@/stores/workspace';
@@ -48,14 +48,24 @@ describe('SuggestBox (US6)', () => {
 
         const { data } = store.getState();
         const { box } = data;
+        // Sem a medida do duto a sugestão é o volume líquido do alinhamento (QB3 para Qts 0,35 e Ql 7).
+        const aligned = suggestBox({
+            ...data,
+            box: { ...data.box, port: { shape: 'round', count: 1 } },
+        });
+
+        if (!aligned.ok) {
+            throw new Error('sugestão esperada');
+        }
+
         // Vb bruto inclui o duto padrão; o volume líquido é o do alinhamento.
         expect(simulate(data).results.net_volume_m3).toBeCloseTo(
-            15 * 0.35 ** 2.87 * 0.08,
+            aligned.vb_m3,
             9,
         );
-        expect(box.fb_hz).toBeCloseTo(0.42 * 30 * 0.35 ** -0.9, 9);
+        expect(box.fb_hz).toBeCloseTo(aligned.fb_hz as number, 9);
         expect(screen.getByRole('status')).toHaveTextContent(
-            /Dutada Thiele\/Keele/,
+            /Dutada QB3 para Ql 7.*aproximação de Keele/,
         );
 
         act(() => store.temporal.getState().undo());
@@ -93,7 +103,7 @@ describe('SuggestBox (US6)', () => {
         );
 
         expect(screen.getByRole('status')).toHaveTextContent(
-            /área total 38 cm²\) é grande demais.*até 18 cm²/,
+            /área total 38 cm²\) é grande demais.*até 15 cm²/,
         );
         expect(activeProjectStore().getState().data.box).toBe(before);
     });

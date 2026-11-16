@@ -108,12 +108,26 @@ export function SuggestBox({ title, children }: SuggestBoxProps) {
             data.fieldUnits.vb_m3 ?? defaultUnitFor('volume', unitSystem);
         const vb = formatWithUnit(suggestion.vb_m3, volumeUnit, locale);
         const text =
-            suggestion.alignment === 'keele'
-                ? t('engine:alignments.keele', {
+            suggestion.alignment === 'butterworth2'
+                ? t('engine:alignments.butterworth2', { vb })
+                : t('engine:alignments.vented', {
+                      name: t(`engine:alignments.name_${suggestion.alignment}`),
+                      ql: new Intl.NumberFormat(locale).format(
+                          suggestion.ql ?? 7,
+                      ),
                       vb,
                       fb: formatWithUnit(suggestion.fb_hz ?? 0, 'Hz', locale),
-                  })
-                : t('engine:alignments.butterworth2', { vb });
+                      keeleVb: formatWithUnit(
+                          suggestion.keele?.vb_m3 ?? 0,
+                          volumeUnit,
+                          locale,
+                      ),
+                      keeleFb: formatWithUnit(
+                          suggestion.keele?.fb_hz ?? 0,
+                          'Hz',
+                          locale,
+                      ),
+                  });
         setMessage(`${text} ${t('engine:alignments.grossNote')}`);
     };
 

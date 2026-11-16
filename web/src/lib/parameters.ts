@@ -13,6 +13,7 @@ export type ParameterKey =
     | 'vas_m3'
     | 're_ohm'
     | 'le_h'
+    | 'le10k_h'
     | 'xmax_m'
     | 'sd_m2'
     | 'pe_w'
@@ -35,6 +36,8 @@ export type ParameterKey =
     | 'rear_base_m'
     | 'port_count'
     | 'rear_port_count'
+    | 'end_k'
+    | 'rear_end_k'
     | 'driver_count'
     | 'power_w'
     | 'voltage_v'
@@ -96,6 +99,8 @@ export const PARAMETERS: Record<ParameterKey, ParameterDefinition> = {
     vas_m3: parameter('vas_m3', 'Vas', 'volume', 'driver', 1e-6, 10),
     re_ohm: parameter('re_ohm', 'Re', 'resistance', 'driver', 0.1, 100),
     le_h: parameter('le_h', 'Le', 'inductance', 'driver', 0, 0.1),
+    // Le medida em 10 kHz: com ela a bobina segue o modelo com perdas (engine/simulate.ts).
+    le10k_h: parameter('le10k_h', 'Le10k', 'inductance', 'driver', 0, 0.1),
     xmax_m: parameter('xmax_m', 'Xmax', 'length', 'driver', 0, 0.1),
     sd_m2: parameter('sd_m2', 'Sd', 'area', 'driver', 1e-4, 2),
     pe_w: parameter('pe_w', 'Pe', 'power', 'driver', 0.1, 50_000),
@@ -127,6 +132,10 @@ export const PARAMETERS: Record<ParameterKey, ParameterDefinition> = {
     rear_base_m: parameter('rear_base_m', 'B', 'length', 'port', 0.005, 2),
     port_count: parameter('port_count', 'n', 'count', 'port', 1, 8),
     rear_port_count: parameter('rear_port_count', 'n', 'count', 'port', 1, 8),
+    // Correção de ponta personalizada: fator sobre o raio do círculo de mesma área (VituixCAD aceita
+    // 0,60–2,40; a faixa daqui cobre a dele).
+    end_k: parameter('end_k', 'k', 'ratio', 'port', 0.3, 3),
+    rear_end_k: parameter('rear_end_k', 'k', 'ratio', 'port', 0.3, 3),
     driver_count: parameter('driver_count', 'N', 'count', 'driver', 1, 8),
     power_w: parameter('power_w', 'P', 'power', 'signal', 0, 50_000),
     voltage_v: parameter('voltage_v', 'V', 'voltage', 'signal', 0, 1000),
@@ -253,6 +262,7 @@ export const EXAMPLES: Record<ParameterKey, number> = {
     vas_m3: 0.08,
     re_ohm: 3.6,
     le_h: 0.002,
+    le10k_h: 0.0008,
     xmax_m: 0.012,
     sd_m2: 0.05,
     pe_w: 500,
@@ -275,6 +285,8 @@ export const EXAMPLES: Record<ParameterKey, number> = {
     rear_base_m: 0.1,
     port_count: 1,
     rear_port_count: 1,
+    end_k: 1.463,
+    rear_end_k: 1.463,
     driver_count: 1,
     power_w: 100,
     voltage_v: 20,
@@ -309,6 +321,7 @@ export const DRIVER_PARAMETERS: ParameterKey[] = [
     'vas_m3',
     're_ohm',
     'le_h',
+    'le10k_h',
     'xmax_m',
     'sd_m2',
     'pe_w',

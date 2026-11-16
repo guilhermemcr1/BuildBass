@@ -4,6 +4,7 @@ import type { ParameterKey } from '@/lib/parameters';
 import type { UnitId } from '@/lib/units/quantities';
 
 export type {
+    BoxFill,
     BoxInput,
     BoxType,
     DriverInput,

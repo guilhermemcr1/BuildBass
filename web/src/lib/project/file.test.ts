@@ -93,7 +93,7 @@ describe('arquivo de projeto', () => {
 
     test('versão mais nova', async () => {
         expect(
-            await parseProjectFile(file(envelope({}, { version: 8 }))),
+            await parseProjectFile(file(envelope({}, { version: 9 }))),
         ).toEqual({ ok: false, code: 'newerVersion' });
     });
 
@@ -444,9 +444,9 @@ describe('plano de corte no arquivo (versão 3)', () => {
         });
     });
 
-    test('versão 8 pede para atualizar o app', async () => {
+    test('versão 9 pede para atualizar o app', async () => {
         expect(
-            await parseProjectFile(file(envelope(PLAN, { version: 8 }))),
+            await parseProjectFile(file(envelope(PLAN, { version: 9 }))),
         ).toEqual({ ok: false, code: 'newerVersion' });
     });
 });
@@ -526,9 +526,9 @@ describe('bandpass de 6ª ordem e versão 4 (feature 007)', () => {
         }
     });
 
-    test('versão 8 é recusada pedindo para atualizar o app', async () => {
+    test('versão 9 é recusada pedindo para atualizar o app', async () => {
         expect(
-            await parseProjectFile(file(envelope(SIXTH, { version: 8 }))),
+            await parseProjectFile(file(envelope(SIXTH, { version: 9 }))),
         ).toEqual({ ok: false, code: 'newerVersion' });
     });
 
@@ -621,8 +621,8 @@ describe('bandpass de 6ª ordem e versão 4 (feature 007)', () => {
 describe('cor do projeto e versão 5 (feature 008)', () => {
     const versionOf = (text: string): number => JSON.parse(text).version;
 
-    test('a versão atual é 7', () => {
-        expect(CURRENT_VERSION).toBe(7);
+    test('a versão atual é 8', () => {
+        expect(CURRENT_VERSION).toBe(8);
     });
 
     test('com cor o arquivo é gravado como versão 5; sem cor, na menor versão', () => {
@@ -936,5 +936,81 @@ describe('estoque, tipo de corte, posições e versão 7 (feature 012)', () => {
         expect(
             await parseProjectFile(file(envelope(data, { version: 5 }))),
         ).toEqual({ ok: true, data });
+    });
+});
+
+describe('enchimento, ponta do duto e Le em 10 kHz: versão 8', () => {
+    const versionOf = (text: string): number => JSON.parse(text).version;
+    const base = createProjectData('v8');
+
+    test('só sobe para 8 quando algum dos três não é o padrão', () => {
+        expect(versionOf(serializeProject(base))).toBe(1);
+        expect(
+            versionOf(
+                serializeProject({
+                    ...base,
+                    box: { ...base.box, fill: 'none' },
+                }),
+            ),
+        ).toBe(1);
+        expect(
+            versionOf(
+                serializeProject({
+                    ...base,
+                    box: { ...base.box, fill: 'lined' },
+                }),
+            ),
+        ).toBe(8);
+        expect(
+            versionOf(
+                serializeProject({
+                    ...base,
+                    box: {
+                        ...base.box,
+                        port: { ...base.box.port, end: 'slotWall' },
+                    },
+                }),
+            ),
+        ).toBe(8);
+        expect(
+            versionOf(
+                serializeProject({ ...base, driver: { le10k_h: 0.001 } }),
+            ),
+        ).toBe(8);
+    });
+
+    test('ida e volta pelo arquivo preserva os três', async () => {
+        const data = {
+            ...base,
+            driver: { le_h: 0.00265, le10k_h: 0.00111 },
+            box: {
+                ...base.box,
+                fill: 'stuffed' as const,
+                port: { ...base.box.port, end: 'custom' as const, end_k: 1.9 },
+            },
+        };
+
+        expect(await parseProjectFile(file(serializeProject(data)))).toEqual({
+            ok: true,
+            data,
+        });
+    });
+
+    test('fator de ponta fora da faixa é recusado com o caminho', async () => {
+        const data = {
+            ...base,
+            box: {
+                ...base.box,
+                port: { ...base.box.port, end: 'custom' as const, end_k: 9 },
+            },
+        };
+
+        expect(
+            await parseProjectFile(file(envelope(data, { version: 8 }))),
+        ).toEqual({
+            ok: false,
+            code: 'invalidContent',
+            path: 'project.box.port.end_k',
+        });
     });
 });

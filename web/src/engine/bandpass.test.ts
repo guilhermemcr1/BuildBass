@@ -548,17 +548,18 @@ describe('bandpass — avisos (US3)', () => {
         ).toContain('portTooShort');
     });
 
-    test('duto mais longo que ∛Vf', () => {
+    test('duto com ressonância de tubo na faixa tocada', () => {
         const result = simulate(
             bandpass({
                 vf_m3: 0.05,
-                fb_hz: 15,
-                port: { shape: 'round', diameter_m: 0.05, count: 1 },
+                fb_hz: 20,
+                port: { shape: 'round', diameter_m: 0.1, count: 1 },
             }),
         );
         const warning = result.warnings.find(({ id }) => id === 'portTooLong');
 
-        expect(warning?.values?.length_m).toBeGreaterThan(Math.cbrt(0.05));
+        expect(warning?.values?.pipe_hz).toBeLessThan(240);
+        expect(warning?.values?.length_m).toBe(result.results.port_length_m);
     });
 
     test('câmara frontal zerada não lança nem produz NaN', () => {

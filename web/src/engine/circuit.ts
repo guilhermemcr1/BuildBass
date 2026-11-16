@@ -22,9 +22,16 @@ import type { Complex } from './complex';
 // traseira quando comprime a frontal, então o ar entra pelo duto traseiro:
 //   traseira:  pr = −Zr·Ud,  Upr = pr / (jω·Mapr)   (negativo: fluxo para dentro)
 //   saída:     U0 = Up + Upr   (os dois dutos irradiam para fora, como uma fonte pontual a 1 m)
+//
+// Absorção (material na caixa, [S73v] QA): Rab em série com a compliância de cada câmara, então o
+// ramo da compliância vira Yc = 1 / (Rab + 1/(jωCab)), e o total radiado da caixa com duto é o que
+// entra nesse ramo, U0 = Yc·Zb·Ud. Bobina com perdas ([Leach 2002]): Ze = Re + K·(jω)^n no lugar
+// de Re + jωLe.
 export type CircuitParams = {
     re: number;
     le: number;
+    // Bobina com perdas de Leach; quando presente, `le` não é usado.
+    leach?: { k: number; n: number };
     bl: number;
     mms: number;
     cms: number;
@@ -34,11 +41,13 @@ export type CircuitParams = {
     cab: number;
     // Resistência de vazamento; Infinity = caixa sem perdas.
     ral: number;
+    // Resistência de absorção em série com a compliância; ausente ou 0 = sem material.
+    rab?: number;
     // Massa acústica do duto; undefined = caixa selada.
     map?: number;
     // Câmara traseira da bandpass (`cab`, `ral` e `map` passam a ser os da câmara frontal);
     // undefined = selada ou dutada como na feature 002. Com `map` a traseira é dutada (6ª ordem).
-    rear?: { cab: number; ral: number; map?: number };
+    rear?: { cab: number; ral: number; map?: number; rab?: number };
 };
 
 export type CircuitPoint = {
@@ -62,13 +71,31 @@ export function solveCircuit(
     const omega = 2 * Math.PI * frequency;
     const jw = complex(0, omega);
 
-    const ze = complex(params.re, omega * params.le);
+    const ze =
+        params.leach === undefined
+            ? complex(params.re, omega * params.le)
+            : add(
+                  complex(params.re),
+                  scale(
+                      complex(
+                          Math.cos((params.leach.n * Math.PI) / 2),
+                          Math.sin((params.leach.n * Math.PI) / 2),
+                      ),
+                      params.leach.k * omega ** params.leach.n,
+                  ),
+              );
     const zm = add(
         complex(params.rms, omega * params.mms),
         inv(scale(jw, params.cms)),
     );
 
-    let boxAdmittance = add(scale(jw, params.cab), complex(1 / params.ral));
+    // Ramo da compliância de uma câmara, com a absorção em série quando há material.
+    const compliance = (cab: number, rab?: number) =>
+        rab === undefined || rab <= 0
+            ? scale(jw, cab)
+            : inv(add(complex(rab), inv(scale(jw, cab))));
+    const boxCompliance = compliance(params.cab, params.rab);
+    let boxAdmittance = add(boxCompliance, complex(1 / params.ral));
 
     if (params.map !== undefined) {
         boxAdmittance = add(boxAdmittance, inv(scale(jw, params.map)));
@@ -78,7 +105,10 @@ export function solveCircuit(
     let rearAdmittance =
         params.rear === undefined
             ? complex(0)
-            : add(scale(jw, params.rear.cab), complex(1 / params.rear.ral));
+            : add(
+                  compliance(params.rear.cab, params.rear.rab),
+                  complex(1 / params.rear.ral),
+              );
 
     if (params.rear?.map !== undefined) {
         rearAdmittance = add(rearAdmittance, inv(scale(jw, params.rear.map)));
@@ -116,7 +146,7 @@ export function solveCircuit(
         params.map === undefined
             ? complex(0)
             : div(boxPressure, scale(jw, params.map));
-    const radiated = mul(scale(mul(jw, zb), params.cab), coneVolume);
+    const radiated = mul(mul(boxCompliance, zb), coneVolume);
     const impedance = add(ze, div(complex(params.bl ** 2), motional));
 
     return { velocity, radiated, port, rearPort: complex(0), impedance };
