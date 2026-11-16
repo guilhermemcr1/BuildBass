@@ -14,6 +14,7 @@ import { PreferencesBar } from '@/components/workbench/preferences-bar';
 import { ProjectName } from '@/components/workbench/project-name';
 import { ProjectTabs } from '@/components/workbench/project-tabs';
 import { ResultsPanel } from '@/components/workbench/results-panel';
+import { AboutDialog } from '@/components/workbench/about-dialog';
 import { ShortcutsDialog } from '@/components/workbench/shortcuts-dialog';
 import { TabLimitDialog } from '@/components/workbench/tab-limit-dialog';
 import { TopBar } from '@/components/workbench/top-bar';
@@ -52,6 +53,7 @@ export default function Workbench() {
     const { t } = useTranslation(['workbench', 'project']);
     const [submitting, setSubmitting] = useState(false);
     const [helpOpen, setHelpOpen] = useState(false);
+    const [aboutOpen, setAboutOpen] = useState(false);
     const [tutorialOpen, setTutorialOpen] = useState(false);
     const [limitOpen, setLimitOpen] = useState(false);
     const [openError, setOpenError] = useState<OpenError | null>(null);
@@ -160,6 +162,7 @@ export default function Workbench() {
                     history={history}
                     projectName={<ProjectName />}
                     onHelp={() => setHelpOpen(true)}
+                    onAbout={() => setAboutOpen(true)}
                     onTutorial={() => setTutorialOpen(true)}
                     preferences={<PreferencesBar />}
                 />
@@ -232,6 +235,7 @@ export default function Workbench() {
                 />
                 <FileDrop onFile={(file) => void openFile(file)} />
                 <ShortcutsDialog open={helpOpen} onOpenChange={setHelpOpen} />
+                <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
                 <TabLimitDialog
                     // Fechar um projeto pelo aviso libera o lugar e encerra o aviso.
                     open={limitOpen && projectCount >= MAX_OPEN_PROJECTS}

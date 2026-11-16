@@ -12,7 +12,23 @@
         "undo": "Undo",
         "redo": "Redo",
         "tutorial": "Tutorial",
-        "help": "Keyboard shortcuts"
+        "help": "Keyboard shortcuts",
+        "about": "About BuildBass"
+    },
+    "about": {
+        "title": "About BuildBass",
+        "tagline": "Design, simulate and cut your speaker enclosure right in the browser.",
+        "authorLabel": "Author",
+        "authorRole": "Concept and development",
+        "linksLabel": "Links",
+        "github": "GitHub",
+        "portfolio": "Portfolio",
+        "repository": "BuildBass source code",
+        "referencesLabel": "Technical references",
+        "references": "The calculation engine builds on the work of A. N. Thiele, R. H. Small, D. B. Keele Jr., W. M. Leach Jr., V. Dickason and L. L. Beranek.",
+        "licenseLabel": "License",
+        "license": "Free software under the MIT license.",
+        "fullCredits": "See full credits"
     },
     "boxType": {
         "label": "Box type",

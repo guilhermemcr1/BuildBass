@@ -3,6 +3,7 @@ import {
     FilePlus,
     FolderOpen,
     GraduationCap,
+    Info,
     Keyboard,
     Redo2,
     Undo2,
@@ -19,6 +20,7 @@ type TopBarProps = {
     // Nome do projeto ativo (editável), entre as ações e as preferências.
     projectName?: ReactNode;
     onHelp: () => void;
+    onAbout: () => void;
     onTutorial: () => void;
     preferences?: ReactNode;
 };
@@ -28,6 +30,7 @@ export function TopBar({
     history,
     projectName,
     onHelp,
+    onAbout,
     onTutorial,
     preferences,
 }: TopBarProps) {
@@ -98,6 +101,14 @@ export function TopBar({
                     className="px-2.5"
                 >
                     <Keyboard aria-hidden="true" className="size-4" />
+                </Button>
+                <Button
+                    variant="quiet"
+                    onPress={onAbout}
+                    aria-label={t('workbench:actions.about')}
+                    className="px-2.5"
+                >
+                    <Info aria-hidden="true" className="size-4" />
                 </Button>
             </div>
         </header>

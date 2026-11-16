@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "Se você usar o BuildBass em um trabalho, por favor cite-o como abaixo."
+title: "BuildBass"
+abstract: "Simulador de caixas acústicas no navegador: parâmetros Thiele-Small entram, curvas de resposta e um plano de corte pronto para a marcenaria saem."
+type: software
+authors:
+  - given-names: "Guilherme"
+    family-names: "G."
+    website: "https://galarca.dev"
+repository-code: "https://github.com/guilhermemcr1/BuildBass"
+url: "https://github.com/guilhermemcr1/BuildBass"
+license: MIT
+keywords:
+  - loudspeaker
+  - enclosure
+  - thiele-small
+  - subwoofer
+  - acoustics
+  - simulation

@@ -23,7 +23,8 @@ Parâmetros Thiele-Small entram, curvas de resposta e um plano de corte pronto p
   <a href="#-começando">Começando</a> ·
   <a href="#-testes-e-qualidade">Testes</a> ·
   <a href="#-o-motor-de-cálculo">Motor de cálculo</a> ·
-  <a href="#-contribuindo">Contribuindo</a>
+  <a href="#-contribuindo">Contribuindo</a> ·
+  <a href="#-créditos">Créditos</a>
 </p>
 
 <picture>
@@ -201,6 +202,17 @@ Contribuições são bem-vindas, sejam elas correções, novos tipos de caixa, t
 4. Equações novas no motor precisam citar a fonte e vir acompanhadas de testes contra um caso conhecido.
 
 Encontrou um resultado estranho? Abra uma [issue](https://github.com/guilhermemcr1/BuildBass/issues) com o arquivo `.buildbass.json` do projeto e o valor que você esperava.
+
+## 🙌 Créditos
+
+Idealizado e desenvolvido por **Guilherme G.**
+
+[![GitHub](https://img.shields.io/badge/GitHub-guilhermemcr1-121212?logo=github&logoColor=white&labelColor=121212)](https://github.com/guilhermemcr1)
+[![Portfólio](https://img.shields.io/badge/portf%C3%B3lio-galarca.dev-b8f53d?labelColor=121212)](https://galarca.dev)
+
+O BuildBass se apoia na teoria publicada por Thiele, Small, Keele, Leach, Dickason e Beranek e em software livre de terceiros. A lista completa de referências, dados, bibliotecas, fontes e agradecimentos está em [CREDITS.md](CREDITS.md). No app, o botão ⓘ da barra do topo abre a tela **Sobre**.
+
+Usou o BuildBass em um trabalho? O GitHub gera a citação pelo botão **Cite this repository**, a partir do [CITATION.cff](CITATION.cff).
 
 ## 📄 Licença
 

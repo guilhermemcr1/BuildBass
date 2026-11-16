@@ -12,7 +12,23 @@
         "undo": "Desfazer",
         "redo": "Refazer",
         "tutorial": "Tutorial",
-        "help": "Atalhos de teclado"
+        "help": "Atalhos de teclado",
+        "about": "Sobre o BuildBass"
+    },
+    "about": {
+        "title": "Sobre o BuildBass",
+        "tagline": "Projete, simule e corte a sua caixa acústica direto no navegador.",
+        "authorLabel": "Autoria",
+        "authorRole": "Idealização e desenvolvimento",
+        "linksLabel": "Links",
+        "github": "GitHub",
+        "portfolio": "Portfólio",
+        "repository": "Código-fonte do BuildBass",
+        "referencesLabel": "Referências técnicas",
+        "references": "O motor de cálculo se apoia nos trabalhos de A. N. Thiele, R. H. Small, D. B. Keele Jr., W. M. Leach Jr., V. Dickason e L. L. Beranek.",
+        "licenseLabel": "Licença",
+        "license": "Software livre sob a licença MIT.",
+        "fullCredits": "Ver créditos completos"
     },
     "boxType": {
         "label": "Tipo de caixa",
