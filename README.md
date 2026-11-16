@@ -9,7 +9,7 @@
 Parâmetros Thiele-Small entram, curvas de resposta e um plano de corte pronto para a marcenaria saem.</p>
 
 <p>
-  <a href="https://github.com/guilhermemcr1/BassBuild/actions/workflows/tests.yml"><img alt="Testes" src="https://github.com/guilhermemcr1/BassBuild/actions/workflows/tests.yml/badge.svg"></a>
+  <a href="https://github.com/guilhermemcr1/BuildBass/actions/workflows/tests.yml"><img alt="Testes" src="https://github.com/guilhermemcr1/BuildBass/actions/workflows/tests.yml/badge.svg"></a>
   <a href="LICENSE"><img alt="Licença MIT" src="https://img.shields.io/badge/licen%C3%A7a-MIT-b8f53d?labelColor=121212"></a>
   <img alt="React 19" src="https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white&labelColor=121212">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=white&labelColor=121212">
@@ -200,7 +200,7 @@ Contribuições são bem-vindas, sejam elas correções, novos tipos de caixa, t
 3. Use [Conventional Commits](https://www.conventionalcommits.org/pt-br/) (`feat(engine): …`, `fix(web): …`).
 4. Equações novas no motor precisam citar a fonte e vir acompanhadas de testes contra um caso conhecido.
 
-Encontrou um resultado estranho? Abra uma [issue](https://github.com/guilhermemcr1/BassBuild/issues) com o arquivo `.buildbass.json` do projeto e o valor que você esperava.
+Encontrou um resultado estranho? Abra uma [issue](https://github.com/guilhermemcr1/BuildBass/issues) com o arquivo `.buildbass.json` do projeto e o valor que você esperava.
 
 ## 📄 Licença
 

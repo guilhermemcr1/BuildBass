@@ -96,7 +96,7 @@ export function ResultsTable({ items }: { items: ProjectSimulation[] }) {
             value: (r) => r.port_length_m,
         },
         // Volume líquido: o número que WinISD, AJ e outras calculadoras pedem como "Vb" (elas não
-        // descontam o duto); o BassBuild recebe o bruto e desconta driver e duto.
+        // descontam o duto); o BuildBass recebe o bruto e desconta driver e duto.
         {
             key: 'netVolume',
             label: t(

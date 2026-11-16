@@ -1,4 +1,4 @@
-# BassBuild API
+# BuildBass API
 
 API JSON em Laravel 13 (catálogo de drivers e envio de drivers para moderação). Sem Inertia; o
 front é a SPA em `../web`.
