@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * Grava a trilha de auditoria (feature 010, contracts/audit-events.md). Duas portas:
+ * Grava a trilha de auditoria. Duas portas:
  * - `record()`: síncrono, para as ações de moderador; roda dentro da transação da ação e **propaga**
  *   o erro, para nunca existir mudança sem evento;
  * - `recordDeferred()`: para a API pública; roda depois da resposta e engole qualquer falha, para o

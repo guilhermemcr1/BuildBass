@@ -1,6 +1,6 @@
 <?php
 
-// Validation messages for the driver submission (feature 006). The app shows its own per-field
+// Validation messages for the driver submission. The app shows its own per-field
 // texts; these serve anyone calling the API directly.
 return [
     'required' => 'Fill in this field.',

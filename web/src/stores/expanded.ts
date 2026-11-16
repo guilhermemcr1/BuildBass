@@ -19,7 +19,7 @@ function all(open: boolean): Record<SectionId, boolean> {
 }
 
 // Quais seções "Mostrar mais" estão abertas. Só em memória: ao carregar a página segue o modo
-// salvo (Pro → tudo aberto, Normal → tudo recolhido) e não vira preferência (specs/008, R13).
+// salvo (Pro → tudo aberto, Normal → tudo recolhido) e não vira preferência.
 export const useExpanded = create<ExpandedState>()((set) => ({
     open: all(usePreferences.getState().mode === 'pro'),
     toggle: (id) => set(({ open }) => ({ open: { ...open, [id]: !open[id] } })),
@@ -29,7 +29,7 @@ export const useExpanded = create<ExpandedState>()((set) => ({
 }));
 
 // Trocar o modo abre (Pro) ou recolhe (Normal) todas as seções de uma vez; depois o usuário pode
-// abrir ou fechar uma sozinha sem mudar o modo (FR-030).
+// abrir ou fechar uma sozinha sem mudar o modo.
 usePreferences.subscribe((state, previous) => {
     if (state.mode === previous.mode) {
         return;

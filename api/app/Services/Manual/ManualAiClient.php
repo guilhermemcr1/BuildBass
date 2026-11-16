@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
-// Consulta ao OpenRouter (feature 009, research.md §2): só o texto do manual vai, com saída JSON
+// Consulta ao OpenRouter: só o texto do manual vai, com saída JSON
 // estrita, sem retry e só para provedores que não retêm os dados. Devolve os drivers lidos, ainda
 // sem converter unidade nem conferir faixa (isso é do ManualSuggestionBuilder).
 class ManualAiClient

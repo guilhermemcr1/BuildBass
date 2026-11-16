@@ -17,7 +17,7 @@ function tile(page: Page, label: string) {
         .locator('..');
 }
 
-// Driver de referência do quickstart (specs/004, §2).
+// Driver de referência do quickstart.
 async function referenceDriver(page: Page) {
     await fill(page, /^Fs/, '28');
     await fill(page, /^Qts/, '0,38');
@@ -38,7 +38,7 @@ async function bandpassBox(page: Page) {
     await fill(page, /Diâmetro do duto/, '100');
 }
 
-test('bandpass: escolher o tipo, preencher as câmaras e ver curvas e cortes (US1)', async ({
+test('bandpass: escolher o tipo, preencher as câmaras e ver curvas e cortes', async ({
     page,
 }) => {
     await page.goto('/');
@@ -68,7 +68,7 @@ test('bandpass: escolher o tipo, preencher as câmaras e ver curvas e cortes (US
     }
 });
 
-test('bandpass: mudar a sintonia atualiza os cortes sem ação extra (US1)', async ({
+test('bandpass: mudar a sintonia atualiza os cortes sem ação extra', async ({
     page,
 }) => {
     await page.goto('/');
@@ -83,7 +83,7 @@ test('bandpass: mudar a sintonia atualiza os cortes sem ação extra (US1)', asy
     await expect(high).not.toHaveText(before ?? '');
 });
 
-test('bandpass: o seletor tem as quatro opções e nenhum aviso de indisponível (US1)', async ({
+test('bandpass: o seletor tem as quatro opções e nenhum aviso de indisponível', async ({
     page,
 }) => {
     await page.goto('/');
@@ -100,7 +100,7 @@ test('bandpass: o seletor tem as quatro opções e nenhum aviso de indisponível
     await expect(page.getByText(/chega numa próxima versão/)).toHaveCount(0);
 });
 
-test('bandpass: câmara traseira pequena demais avisa e nenhum gráfico quebra (US3)', async ({
+test('bandpass: câmara traseira pequena demais avisa e nenhum gráfico quebra', async ({
     page,
 }) => {
     await page.goto('/');
@@ -120,7 +120,7 @@ test('bandpass: câmara traseira pequena demais avisa e nenhum gráfico quebra (
     await expect(page.locator('[data-region="charts"] canvas')).toBeVisible();
 });
 
-test('bandpass: duto fino com potência alta mostra o erro de velocidade com texto (US3)', async ({
+test('bandpass: duto fino com potência alta mostra o erro de velocidade com texto', async ({
     page,
 }) => {
     await page.goto('/');
@@ -137,7 +137,7 @@ test('bandpass: duto fino com potência alta mostra o erro de velocidade com tex
     await expect(velocity).toContainText(/Acima de/);
 });
 
-test('três projetos plotados (selada, dutada, bandpass): curvas, legenda e tabela (US4)', async ({
+test('três projetos plotados (selada, dutada, bandpass): curvas, legenda e tabela', async ({
     page,
 }) => {
     await page.goto('/');
@@ -179,7 +179,7 @@ test('três projetos plotados (selada, dutada, bandpass): curvas, legenda e tabe
     }
 });
 
-test('bandpass: só pelo teclado, Tab alcança tipo, câmaras, Fb, Ql e duto e as setas movem o foco do seletor (US5)', async ({
+test('bandpass: só pelo teclado, Tab alcança tipo, câmaras, Fb, Ql e duto e as setas movem o foco do seletor', async ({
     page,
 }) => {
     await page.goto('/');

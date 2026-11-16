@@ -7,7 +7,7 @@ import type { UnitSystem } from '@/lib/units/quantities';
 
 export type ThemeChoice = 'light' | 'dark' | 'system';
 
-// Normal esconde os campos não essenciais atrás de "Mostrar mais"; Pro abre tudo (specs/008, US7).
+// Normal esconde os campos não essenciais atrás de "Mostrar mais"; Pro abre tudo.
 export type Mode = 'normal' | 'pro';
 
 export function validMode(value: unknown): value is Mode {
@@ -28,7 +28,7 @@ type PreferencesState = {
 };
 
 // Janela privada ou cookies bloqueados fazem o localStorage lançar erro; nesse caso as escolhas
-// valem só na sessão, em memória, sem mostrar erro ao usuário (FR-018).
+// valem só na sessão, em memória, sem mostrar erro ao usuário.
 export function createSafeStorage(
     resolveStorage: () => Storage = () => window.localStorage,
 ): StateStorage {
@@ -85,7 +85,7 @@ export const usePreferences = create<PreferencesState>()(
                 unitSystem,
                 mode,
             }),
-            // v1 não tinha modo: quem já tinha preferências entra no Normal (specs/008, data-model §7).
+            // v1 não tinha modo: quem já tinha preferências entra no Normal.
             migrate: (persisted, version) =>
                 version < 2
                     ? { ...(persisted as object), mode: 'normal' }

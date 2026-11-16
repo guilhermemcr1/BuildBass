@@ -35,7 +35,7 @@ type PlanPanelProps = {
     onPrint?: () => void;
 };
 
-// Plano de corte do projeto ativo (specs/005): configuração, dimensões e lista de peças. Seção
+// Plano de corte do projeto ativo: configuração, dimensões e lista de peças. Seção
 // recolhível abaixo dos gráficos, com um resumo no título para valer a pena mesmo fechada.
 export function PlanPanel({
     open,

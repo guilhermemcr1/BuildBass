@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\UploadedFile;
 
-// Validação do PDF enviado para a leitura de manual (feature 009). Só confere o arquivo; páginas,
+// Validação do PDF enviado para a leitura de manual. Só confere o arquivo; páginas,
 // texto e cotas vêm depois, no service. Nada do arquivo é gravado.
 class ExtractManualRequest extends FormRequest
 {

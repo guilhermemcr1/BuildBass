@@ -34,7 +34,7 @@ function driverField(symbol: string) {
     });
 }
 
-describe('ModeSwitch e "Mostrar mais" (specs/008, US7)', () => {
+describe('ModeSwitch e "Mostrar mais"', () => {
     beforeEach(() => {
         localStorage.clear();
         useWorkspace.setState(initialWorkspace());
@@ -123,7 +123,7 @@ describe('ModeSwitch e "Mostrar mais" (specs/008, US7)', () => {
         expect(run()).toEqual(before);
     });
 
-    test('SC-009: no Normal há pelo menos 30 % menos campos que no Pro', async () => {
+    test('no Normal há pelo menos 30 % menos campos que no Pro', async () => {
         renderWithProviders(<Both />);
         const normal = symbols().length;
 

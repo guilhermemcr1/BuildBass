@@ -56,7 +56,7 @@ describe('exportChart', () => {
     });
 });
 
-describe('SVG e PDF dizem o mesmo (SC-004)', () => {
+describe('SVG e PDF dizem o mesmo', () => {
     test('todo texto da cena está nos dois', () => {
         const scene = buildScene(makeInput(), GROUPS);
         const svg = sceneToSvg(scene);

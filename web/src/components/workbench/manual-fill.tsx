@@ -59,7 +59,7 @@ function failureMessage(
     return t(`manual.failure.${failure.error}`);
 }
 
-// Leitura de manual (specs/009, contracts/ui.md): anexa o PDF (arrastando ou escolhendo) e pede ao
+// Leitura de manual: anexa o PDF (arrastando ou escolhendo) e pede ao
 // servidor a sugestão, que o hook aplica só nos campos vazios. Falhas e limites nunca bloqueiam o
 // resto do formulário.
 export function ManualFill({

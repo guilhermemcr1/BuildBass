@@ -18,7 +18,7 @@ type Row = {
     value: (results: SimulationResults) => number | undefined;
 };
 
-// Resultados lado a lado de 2–3 projetos plotados, o ativo primeiro (FR-021d).
+// Resultados lado a lado de 2–3 projetos plotados, o ativo primeiro.
 export function ResultsTable({ items }: { items: ProjectSimulation[] }) {
     const { t } = useTranslation(['workbench', 'project']);
     const { locale } = useLocale();

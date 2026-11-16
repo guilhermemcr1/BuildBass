@@ -7,9 +7,9 @@ import {
 } from '@/lib/project/types';
 import type { ParameterKey } from '@/lib/parameters';
 
-// Resposta da API do catálogo (contracts/catalog-api.md). A resposta é entrada não confiável
+// Resposta da API do catálogo. A resposta é entrada não confiável
 // (constituição, princípio IV): só chega ao projeto depois de passar por aqui. As faixas vêm de
-// PARAMETERS, as mesmas da digitação manual (FR-009). Carregado sob demanda pelo cliente.
+// PARAMETERS, as mesmas da digitação manual. Carregado sob demanda pelo cliente.
 
 function range(key: ParameterKey) {
     const { min, max } = PARAMETERS[key];

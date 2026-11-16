@@ -9,7 +9,7 @@ import type {
     ResolvedStockItem,
 } from './types';
 
-// Encaixe das peças no estoque de chapas do usuário (specs/008 e 012, contracts/cutplan-012.md).
+// Encaixe das peças no estoque de chapas do usuário.
 //
 // Dois tipos de corte:
 // - Serra (guilhotina): todo corte atravessa o retângulo livre de lado a lado, como numa serra de
@@ -26,7 +26,7 @@ import type {
 //
 // São heurísticas: não garantem o mínimo de chapas, mas são deterministas e rápidas. A primeira
 // tentativa é exatamente a da 008, e outra só a substitui se for estritamente melhor; por isso um
-// projeto antigo só muda de encaixe quando economiza chapa (FR-008, FR-020).
+// projeto antigo só muda de encaixe quando economiza chapa.
 
 export type { PieceRef, Placement } from './types';
 
@@ -238,7 +238,7 @@ function guillotineBin(
 
 type BinFactory = (stock: ResolvedStockItem) => Bin;
 
-// Qual item abrir quando a peça não cabe nas chapas abertas (research R4).
+// Qual item abrir quando a peça não cabe nas chapas abertas.
 type Opener = 'smallest' | 'largest' | 'list';
 
 type Attempt = {
@@ -335,7 +335,7 @@ function packStock(
 }
 
 // Cada chapa aberta tenta passar para o menor item ainda disponível onde todas as suas peças cabem:
-// é o que faz uma sobra receber as peças pequenas da última chapa inteira (research R4).
+// é o que faz uma sobra receber as peças pequenas da última chapa inteira.
 function shrink(
     attempt: Attempt,
     sheet: ResolvedSheet,

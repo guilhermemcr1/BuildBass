@@ -63,7 +63,7 @@ class DriverSubmissionService
 
     /**
      * Aprova o envio: cria o driver no catálogo com os valores finais, na mesma transação em que
-     * marca o envio como aprovado (FR-017). Colisão com um driver existente ou envio já decidido
+     * marca o envio como aprovado. Colisão com um driver existente ou envio já decidido
      * não mudam nada.
      *
      * @throws AlreadyDecidedException
@@ -158,7 +158,7 @@ class DriverSubmissionService
     }
 
     /**
-     * Avisa o remetente da decisão, se ele deixou e-mail, e apaga o e-mail em seguida (FR-019).
+     * Avisa o remetente da decisão, se ele deixou e-mail, e apaga o e-mail em seguida.
      * Roda depois do commit: uma falha no envio é registrada e a decisão continua valendo; o
      * e-mail fica guardado para nova tentativa (sendNotice de novo, pelo painel).
      *
@@ -191,7 +191,7 @@ class DriverSubmissionService
     }
 
     /**
-     * Avisos para o moderador sobre um envio pendente (FR-015): driver igual no catálogo, outro
+     * Avisos para o moderador sobre um envio pendente: driver igual no catálogo, outro
      * envio igual em análise e outros envios do mesmo remetente (mesma impressão de rede).
      *
      * @return list<string>

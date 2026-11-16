@@ -25,7 +25,7 @@ test('a 1440 px driver, gráficos e resultados aparecem sem rolar e a caixa fica
 });
 
 for (const width of [360, 768, 1024, 1280, 1440, 2560]) {
-    test(`sem rolagem horizontal a ${width} px (SC-008)`, async ({ page }) => {
+    test(`sem rolagem horizontal a ${width} px`, async ({ page }) => {
         await page.setViewportSize({ width, height: 900 });
         await page.goto('/');
         await page.locator('[data-region="driver"]').waitFor();
@@ -58,7 +58,7 @@ test('a 360 px as regiões empilham na ordem driver → caixa → resultados →
     expect(tops).toEqual([...tops].sort((a, b) => a - b));
 });
 
-test('a 360 px a bandpass completa não rola na horizontal (feature 004, US5)', async ({
+test('a 360 px a bandpass completa não rola na horizontal', async ({
     page,
 }) => {
     await page.setViewportSize({ width: 360, height: 800 });
@@ -86,9 +86,7 @@ test('a 360 px a bandpass completa não rola na horizontal (feature 004, US5)', 
     expect(overflow).toBeLessThanOrEqual(0);
 });
 
-test('a 360 px o plano de corte não rola na horizontal (feature 005, US7)', async ({
-    page,
-}) => {
+test('a 360 px o plano de corte não rola na horizontal', async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 800 });
     await page.goto('/');
     await page.getByRole('radio', { name: 'Bandpass 4ª ordem' }).click();
@@ -133,7 +131,7 @@ test('a 360 px o plano de corte não rola na horizontal (feature 005, US7)', asy
     ).toBeLessThanOrEqual(0);
 });
 
-// SC-003 (feature 008, US7): o painel do Driver ocupa pelo menos 30 % menos altura que antes da
+// SC-003: o painel do Driver ocupa pelo menos 30 % menos altura que antes da
 // feature, medido em 1440 px. A referência é a altura do painel no main antes da 008 (928 px, com
 // os 13 campos em cartões). Só o modo Normal é comparado com ela: o Pro passou a incluir o desenho,
 // as medidas do alto-falante e a identificação, que não existiam na referência.

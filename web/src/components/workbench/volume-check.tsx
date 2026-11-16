@@ -18,7 +18,7 @@ const ROWS = [
 
 type Row = (typeof ROWS)[number];
 
-// Conferência de volume por câmara (FR-008): o líquido do plano contra o da simulação.
+// Conferência de volume por câmara: o líquido do plano contra o da simulação.
 export function VolumeCheck({ volume }: { volume: VolumeCheckData }) {
     const { t } = useTranslation('cutplan');
     const { locale } = useLocale();

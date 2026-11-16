@@ -14,9 +14,7 @@ test.use({ viewport: { width: 1440, height: 900 } });
 
 const search = openPicker;
 
-test('buscar, escolher e preencher o driver do projeto (US1)', async ({
-    page,
-}) => {
+test('buscar, escolher e preencher o driver do projeto', async ({ page }) => {
     await mockCatalog(page);
     await page.goto('/');
 
@@ -43,9 +41,7 @@ test('buscar, escolher e preencher o driver do projeto (US1)', async ({
     await expect(page.getByRole('textbox', { name: /^Fs/ })).toHaveValue('');
 });
 
-test('duas abas: só o projeto ativo recebe o driver (US1)', async ({
-    page,
-}) => {
+test('duas abas: só o projeto ativo recebe o driver', async ({ page }) => {
     await mockCatalog(page);
     await page.goto('/');
     await page.keyboard.press('Alt+n');
@@ -67,7 +63,7 @@ test('duas abas: só o projeto ativo recebe o driver (US1)', async ({
 
 const message = 'Não foi possível consultar o catálogo agora';
 
-test('servidor com erro: mensagem, tentar de novo e a bancada segue editável (US2)', async ({
+test('servidor com erro: mensagem, tentar de novo e a bancada segue editável', async ({
     page,
 }) => {
     let failing = true;
@@ -104,7 +100,7 @@ test('servidor com erro: mensagem, tentar de novo e a bancada segue editável (U
     await expect(page.getByText(message)).toBeHidden();
 });
 
-test('busca sem resultado mostra o termo (US2)', async ({ page }) => {
+test('busca sem resultado mostra o termo', async ({ page }) => {
     await mockCatalog(page, (route) =>
         json(route, { data: [], meta: { limit: 20, has_more: false } }),
     );
@@ -117,7 +113,7 @@ test('busca sem resultado mostra o termo (US2)', async ({ page }) => {
     ).toBeVisible();
 });
 
-test('respostas fora de ordem: só a última digitação aparece (US2)', async ({
+test('respostas fora de ordem: só a última digitação aparece', async ({
     page,
 }) => {
     const answer = (model: string, id: string) => ({
@@ -154,7 +150,7 @@ test('respostas fora de ordem: só a última digitação aparece (US2)', async (
     await expect(page.getByRole('option', { name: /NOVO/ })).toBeVisible();
 });
 
-test('driver que saiu do catálogo avisa e não muda o projeto (US2)', async ({
+test('driver que saiu do catálogo avisa e não muda o projeto', async ({
     page,
 }) => {
     await mockCatalog(page, (route, url) =>
@@ -195,7 +191,7 @@ async function choose(page: Page) {
     );
 }
 
-test('a origem vai no arquivo exportado e volta ao reabrir (US4)', async ({
+test('a origem vai no arquivo exportado e volta ao reabrir', async ({
     page,
 }) => {
     await mockCatalog(page);
@@ -226,7 +222,7 @@ test('a origem vai no arquivo exportado e volta ao reabrir (US4)', async ({
     );
 });
 
-test('editar um parâmetro ou esvaziar o driver mantém a identificação (US4)', async ({
+test('editar um parâmetro ou esvaziar o driver mantém a identificação', async ({
     page,
 }) => {
     await mockCatalog(page);
@@ -261,7 +257,7 @@ test('editar um parâmetro ou esvaziar o driver mantém a identificação (US4)'
     await expectIdentity(page, true);
 });
 
-test('arquivo da feature 002, sem origem, abre normalmente (US4)', async ({
+test('arquivo da feature 002, sem origem, abre normalmente', async ({
     page,
 }) => {
     await page.goto('/');

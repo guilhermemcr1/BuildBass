@@ -145,7 +145,7 @@ function ViewButton({
     );
 }
 
-// Caixa montada em projeção ortográfica desenhada em SVG (specs/005, research.md §8). A lista de
+// Caixa montada em projeção ortográfica desenhada em SVG. A lista de
 // peças continua sendo a fonte; aqui só se vê como as peças se juntam.
 export function Box3dView({ plan }: { plan: Plan }) {
     const { t } = useTranslation('cutplan');

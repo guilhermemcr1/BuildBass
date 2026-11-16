@@ -1,6 +1,6 @@
 <?php
 
-// Mensagens de recusa das imagens de driver (feature 010). O painel é só pt-BR.
+// Mensagens de recusa das imagens de driver. O painel é só pt-BR.
 return [
 
     'formats' => 'Use uma imagem JPEG, PNG ou WebP (sem animação).',

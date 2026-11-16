@@ -1,6 +1,6 @@
 <?php
 
-// Mensagens de validação do envio de driver (feature 006). O app mostra textos próprios por
+// Mensagens de validação do envio de driver. O app mostra textos próprios por
 // campo; estas servem a quem chama a API direto.
 return [
     'required' => 'Preencha este campo.',

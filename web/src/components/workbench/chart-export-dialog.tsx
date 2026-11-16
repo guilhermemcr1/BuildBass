@@ -25,7 +25,7 @@ type ChartExportDialogProps = {
     input: ExportInput;
 };
 
-// Exportar o gráfico aberto como PNG ou PDF, com a legenda que a pessoa escolher (specs/011). A
+// Exportar o gráfico aberto como PNG ou PDF, com a legenda que a pessoa escolher. A
 // prévia é o mesmo SVG de onde saem os dois arquivos.
 export default function ChartExportDialog({
     open,

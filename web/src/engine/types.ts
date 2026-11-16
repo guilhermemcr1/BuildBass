@@ -1,4 +1,4 @@
-// Entradas e saídas do motor, sempre em SI (data-model.md). O motor não depende de nada da
+// Entradas e saídas do motor, sempre em SI. O motor não depende de nada da
 // interface; `lib/project/types.ts` reexporta estes tipos para o resto do app.
 
 export type DriverKey =
@@ -50,8 +50,8 @@ export type PortInput = (
 // Small (simulate.ts). Ausente = sem material.
 export type BoxFill = 'none' | 'lined' | 'stuffed';
 
-// 'bandpass' é a de 4ª ordem (traseira selada + frontal dutada, specs/004); 'bandpass6' a de 6ª
-// ordem (as duas câmaras dutadas, specs/007).
+// 'bandpass' é a de 4ª ordem (traseira selada + frontal dutada); 'bandpass6' a de 6ª
+// ordem (as duas câmaras dutadas).
 export type BoxType = 'closed' | 'vented' | 'bandpass' | 'bandpass6';
 
 // Tipos com duas câmaras separadas pelo driver (volumes vr/vf, divisória no plano de corte).

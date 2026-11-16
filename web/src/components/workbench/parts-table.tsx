@@ -6,7 +6,7 @@ import { formatWithUnit } from '@/lib/units/format';
 import { defaultUnitFor } from '@/lib/units/quantities';
 import { usePreferences } from '@/stores/preferences';
 
-// Lista de corte: a fonte da verdade do plano (os desenhos só repetem o que está aqui, FR-012).
+// Lista de corte: a fonte da verdade do plano (os desenhos só repetem o que está aqui).
 export function PartsTable({ plan, name }: { plan: Plan; name: string }) {
     const { t } = useTranslation('cutplan');
     const { locale } = useLocale();

@@ -50,7 +50,7 @@ function decimalSeparatorOf(locale: string): string {
 }
 
 // Formatação do CSV na locale e na unidade ativas: números sem separador de milhar, para a
-// planilha não confundir "1.234" com mil e duzentos (research.md §9).
+// planilha não confundir "1.234" com mil e duzentos.
 export function csvFormatFor(
     locale: string,
     unitSystem: UnitSystem,

@@ -27,7 +27,7 @@ describe('traduções', () => {
     const portuguese = flatten(resources['pt-BR'] as unknown as Tree);
     const english = flatten(resources.en as unknown as Tree);
 
-    test('pt-BR e en têm exatamente as mesmas chaves (SC-005)', () => {
+    test('pt-BR e en têm exatamente as mesmas chaves', () => {
         expect([...english.keys()].sort()).toEqual(
             [...portuguese.keys()].sort(),
         );
@@ -46,7 +46,7 @@ describe('traduções', () => {
         }
     });
 
-    test('as chaves da bandpass de 6ª ordem existem nos dois idiomas (feature 007)', () => {
+    test('as chaves da bandpass de 6ª ordem existem nos dois idiomas', () => {
         const keys = [
             'workbench.boxType.bandpass6',
             'workbench.chambers.rear',

@@ -1,8 +1,8 @@
 import { CUT_PLAN_LIMITS } from '@/cutplan/config';
 import type { QuantityId } from '@/lib/units/quantities';
 
-// Definições dos parâmetros editáveis na bancada (data-model.md). As chaves seguem o SI e serão
-// as mesmas do arquivo de projeto. Faixas: limites físicos largos (research.md §6), não a checagem
+// Definições dos parâmetros editáveis na bancada. As chaves seguem o SI e serão
+// as mesmas do arquivo de projeto. Faixas: limites físicos largos, não a checagem
 // de consistência entre parâmetros, que é da feature 002.
 
 export type ParameterKey =
@@ -139,7 +139,7 @@ export const PARAMETERS: Record<ParameterKey, ParameterDefinition> = {
     driver_count: parameter('driver_count', 'N', 'count', 'driver', 1, 8),
     power_w: parameter('power_w', 'P', 'power', 'signal', 0, 50_000),
     voltage_v: parameter('voltage_v', 'V', 'voltage', 'signal', 0, 1000),
-    // Plano de corte (specs/005): faixas em CUT_PLAN_LIMITS.
+    // Plano de corte: faixas em CUT_PLAN_LIMITS.
     thickness_m: parameter(
         'thickness_m',
         't',
@@ -200,7 +200,7 @@ export const PARAMETERS: Record<ParameterKey, ParameterDefinition> = {
     dim_h_m: parameter('dim_h_m', 'Hi', 'length', 'plan', 0.02, 3),
     dim_w_m: parameter('dim_w_m', 'Wi', 'length', 'plan', 0.02, 3),
     dim_d_m: parameter('dim_d_m', 'Di', 'length', 'plan', 0.02, 3),
-    // Chapa que o usuário tem e perda de serra (specs/008).
+    // Chapa que o usuário tem e perda de serra.
     sheet_w_m: parameter(
         'sheet_w_m',
         'Wc',
@@ -225,7 +225,7 @@ export const PARAMETERS: Record<ParameterKey, ParameterDefinition> = {
         CUT_PLAN_LIMITS.kerf_m.min,
         CUT_PLAN_LIMITS.kerf_m.max,
     ),
-    // Estoque de chapas e posição dos recortes (specs/012).
+    // Estoque de chapas e posição dos recortes.
     sheet_quantity: parameter(
         'sheet_quantity',
         'n',
@@ -330,7 +330,7 @@ export const DRIVER_PARAMETERS: ParameterKey[] = [
     'vd_m3',
 ];
 
-// Campos do driver sempre à vista no modo Normal (specs/008, R13); os demais ficam atrás de
+// Campos do driver sempre à vista no modo Normal; os demais ficam atrás de
 // "Mostrar mais". Fonte única: mudar a lista é editar esta constante.
 export const ESSENTIAL_DRIVER_PARAMETERS: ParameterKey[] =
     DRIVER_PARAMETERS.filter((key) =>

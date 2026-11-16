@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
-// Plano de corte avançado (specs/012): estoque de chapas, tipo de corte e posição dos recortes.
+// Plano de corte avançado: estoque de chapas, tipo de corte e posição dos recortes.
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -52,7 +52,7 @@ async function download(page: Page, button: string, exact = false) {
     return { path, text: await readFile(path, 'utf8') };
 }
 
-test('estoque com sobra, quantidade, corte livre e arquivo v7 que volta igual (US1, US2)', async ({
+test('estoque com sobra, quantidade, corte livre e arquivo v7 que volta igual', async ({
     page,
 }) => {
     await sealedBox(page);
@@ -122,7 +122,7 @@ test('estoque com sobra, quantidade, corte livre e arquivo v7 que volta igual (U
     ).toBeChecked();
 });
 
-test('posição do recorte por medida, teclado e arrasto; desfazer e CSV (US3)', async ({
+test('posição do recorte por medida, teclado e arrasto; desfazer e CSV', async ({
     page,
 }) => {
     await sealedBox(page);

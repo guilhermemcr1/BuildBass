@@ -5,7 +5,7 @@ import type { Wiring } from '@/engine';
 import { useActiveProject } from '@/hooks/use-active-project';
 import { useParameterField } from './use-parameter-field';
 
-// Quantidade de drivers iguais na caixa e como são ligados (research.md §5).
+// Quantidade de drivers iguais na caixa e como são ligados.
 export function DriversFields() {
     const { t } = useTranslation('workbench');
     const wiring = useActiveProject((state) => state.data.drivers.wiring);

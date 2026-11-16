@@ -33,7 +33,7 @@ export function isDriverType(value: unknown): value is DriverType {
 }
 
 // Identificação do driver do projeto: preenchida ao copiar do catálogo ou de "Meus alto-falantes"
-// e editável à mão. Só informação: não aponta de volta ao catálogo (specs/003, FR-008), e cada
+// e editável à mão. Só informação: não aponta de volta ao catálogo, e cada
 // parte pode faltar.
 export type DriverSource = {
     brand?: string;
@@ -63,17 +63,17 @@ export type DriverDims = {
 export const DRIVER_SHAPES: DriverShape[] = ['round', 'square', 'rect'];
 export const DRIVER_PISTONS: DriverPiston[] = ['cone', 'dome', 'flat'];
 
-// O projeto completo (data-model.md): a entrada do motor mais a unidade escolhida em cada campo.
+// O projeto completo: a entrada do motor mais a unidade escolhida em cada campo.
 export type ProjectData = ProjectInput & {
     driverSource?: DriverSource;
     // Medidas físicas do alto-falante (versão 6 do arquivo).
     driverDims?: DriverDims;
-    // Configuração do plano de corte (specs/005): só o que o usuário alterou.
+    // Configuração do plano de corte: só o que o usuário alterou.
     cutPlan?: CutPlanConfig;
     fieldUnits: Partial<Record<ParameterKey, UnitId>>;
 };
 
-// Cor do projeto (tokens --series-N), escolhida pelo usuário na aba (specs/008, FR-006). Vive no
+// Cor do projeto (tokens --series-N), escolhida pelo usuário na aba. Vive no
 // projeto aberto e no arquivo, não no `ProjectData`.
 export type SeriesColor = 1 | 2 | 3 | 4 | 5 | 6;
 

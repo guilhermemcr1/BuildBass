@@ -1,6 +1,6 @@
 import type { BoxType, FieldKey } from '@/engine';
 
-// Tipos do plano de corte (specs/005, data-model.md). Tudo em SI.
+// Tipos do plano de corte. Tudo em SI.
 
 export type CutPlanProportion =
     | 'golden'
@@ -11,7 +11,7 @@ export type CutPlanProportion =
 
 export type Ratio = { h: number; w: number; d: number };
 
-// Item do estoque de chapas (specs/012). Enquanto só um lado foi digitado o item é rascunho: não
+// Item do estoque de chapas. Enquanto só um lado foi digitado o item é rascunho: não
 // entra no encaixe nem no arquivo. Quantidade ausente = sem limite.
 export type StockItem = {
     w_m?: number;
@@ -22,8 +22,8 @@ export type StockItem = {
 // Serra (guilhotina: todo corte atravessa o retângulo) ou CNC/tupia (encaixe livre, MaxRects).
 export type CutMode = 'guillotine' | 'free';
 
-// Chapas que o usuário tem para cortar (specs/008 e 012). A raiz é o 1º item do estoque (os campos
-// da 008 continuam onde estavam); `more` guarda do 2º ao 10º (research R1).
+// Chapas que o usuário tem para cortar. A raiz é o 1º item do estoque (os campos
+// da 008 continuam onde estavam); `more` guarda do 2º ao 10º.
 export type SheetConfig = {
     w_m?: number;
     h_m?: number;
@@ -54,7 +54,7 @@ export type ResolvedSheet = {
 };
 
 // Qual recorte de qual peça: `n` conta a partir de 1 dentro do tipo na peça, para que mudar o número
-// de alto-falantes não desloque a posição dos dutos (specs/012, research R5).
+// de alto-falantes não desloque a posição dos dutos.
 export type CutoutPiece = 'front' | 'back' | 'divider';
 
 export type CutoutRef = {
@@ -94,7 +94,7 @@ export type ResolvedCutPlanConfig = {
     cutout_m?: number;
     // Só existe com largura e altura informadas.
     sheet?: ResolvedSheet;
-    // Centros gravados pelo usuário (specs/012); ausente quando não há nenhum.
+    // Centros gravados pelo usuário; ausente quando não há nenhum.
     positions?: CutoutPosition[];
 };
 
@@ -120,7 +120,7 @@ export type PieceRole =
     | 'side'
     | 'divider';
 
-// Uma unidade de uma peça (a lateral tem 2) e onde ela foi parar numa chapa (specs/008 e 012).
+// Uma unidade de uma peça (a lateral tem 2) e onde ela foi parar numa chapa.
 export type PieceRef = { role: PieceRole; unit: number };
 
 export type Placement = PieceRef & {
@@ -135,7 +135,7 @@ export type Placement = PieceRef & {
 
 export type Cutout = {
     kind: 'driver' | 'port';
-    // Identidade do recorte (specs/012); `manual` quando o centro veio de uma posição gravada.
+    // Identidade do recorte; `manual` quando o centro veio de uma posição gravada.
     ref?: CutoutRef;
     manual?: true;
     shape: 'round' | 'rect' | 'triangle';
@@ -209,7 +209,7 @@ export type PlanWarning = {
     key?: PlanKey;
     // Bandpass de 6ª ordem: de qual duto é o aviso, com o comprimento e a profundidade da câmara.
     duct?: 'rear' | 'front';
-    // Avisos de posição de recorte (specs/012).
+    // Avisos de posição de recorte.
     cutout?: CutoutRef;
     length_m?: number;
     depth_m?: number;

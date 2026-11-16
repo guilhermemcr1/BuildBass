@@ -358,7 +358,7 @@ describe('BoxPanel — bandpass de 6ª ordem', () => {
     });
 });
 
-describe('BoxPanel — modal da caixa (feature 008, US4)', () => {
+describe('BoxPanel — modal da caixa', () => {
     beforeEach(() => {
         localStorage.clear();
         useWorkspace.setState(initialWorkspace());

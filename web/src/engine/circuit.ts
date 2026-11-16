@@ -17,7 +17,7 @@ import type { Complex } from './complex';
 //   mecânico:  Bl·i = (Zm + Sd²·(Zb + Zr))·u
 //   frontal:   pf = Zb·Ud,  Up = pf / (jω·Map)   (a única saída acústica é o duto)
 //
-// Bandpass de 6ª ordem (feature 007, research.md §1): a câmara traseira também leva um duto,
+// Bandpass de 6ª ordem: a câmara traseira também leva um duto,
 // Zr = 1 / (jωCr + 1/Ralr + 1/(jω·Mapr)), aberto para fora da caixa. O cone rarefaz a câmara
 // traseira quando comprime a frontal, então o ar entra pelo duto traseiro:
 //   traseira:  pr = −Zr·Ud,  Upr = pr / (jω·Mapr)   (negativo: fluxo para dentro)

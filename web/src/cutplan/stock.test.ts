@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vite-plus/test';
 import { MAX_STOCK_ITEMS, stockItems, stockOf, withStock } from './stock';
 import type { SheetConfig } from './types';
 
-describe('estoque de chapas (specs/012, R1)', () => {
+describe('estoque de chapas', () => {
     test('sem chapa, a lista é vazia', () => {
         expect(stockItems(undefined)).toEqual([]);
         expect(stockOf(undefined)).toEqual([]);

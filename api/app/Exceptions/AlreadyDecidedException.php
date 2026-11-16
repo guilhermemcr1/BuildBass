@@ -4,7 +4,7 @@ namespace App\Exceptions;
 
 use RuntimeException;
 
-/** O envio já foi aprovado ou rejeitado: cada envio é decidido uma única vez (FR-018). */
+/** O envio já foi aprovado ou rejeitado: cada envio é decidido uma única vez. */
 class AlreadyDecidedException extends RuntimeException
 {
     public function __construct()

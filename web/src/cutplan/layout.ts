@@ -1,6 +1,6 @@
 import type { Cutout, CutoutRef } from './types';
 
-// Posição dos recortes numa peça (specs/005, research.md §5): fila única ao longo do lado maior,
+// Posição dos recortes numa peça: fila única ao longo do lado maior,
 // centralizada no lado menor, com folgas iguais entre os itens e as bordas.
 
 export type LayoutItem = {
@@ -122,7 +122,7 @@ function boxOf(cutout: Cutout): Box | undefined {
     };
 }
 
-// Posição manual dos recortes (specs/012, research R5). Só olha o que envolve um recorte manual: a
+// Posição manual dos recortes. Só olha o que envolve um recorte manual: a
 // fila automática já tem os avisos dela (`layoutRow`). Fora da peça vence a faixa de colagem; dois
 // recortes que se tocam ou ficam a menos de `web_m` geram um aviso para cada um.
 export function checkCutouts(

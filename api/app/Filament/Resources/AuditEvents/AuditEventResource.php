@@ -14,7 +14,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 
-/** Trilha de auditoria, somente leitura (feature 010, FR-014/FR-015). */
+/** Trilha de auditoria, somente leitura. */
 class AuditEventResource extends Resource
 {
     protected static ?string $model = AuditEvent::class;

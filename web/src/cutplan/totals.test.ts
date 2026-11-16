@@ -62,7 +62,7 @@ const CASES: [string, Partial<BoxInput>][] = [
     ],
 ];
 
-describe('corte total (feature 008)', () => {
+describe('corte total', () => {
     test.each(CASES)(
         '%s: "com desconto" bate com a soma das peças do plano',
         (_name, box) => {

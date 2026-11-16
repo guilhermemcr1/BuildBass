@@ -10,9 +10,9 @@ use App\Services\Audit\AuditLogger;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 
-// Leitura de manual (feature 009): PDF → texto → IA → sugestão. Sem estado e sem gravar nada: o
-// arquivo é o temporário do upload e o log leva só desfecho, duração e modelo (FR-010, FR-013).
-// Ordem (research.md §5): páginas (sem cota) → recurso ligado → limite por hora → teto diário →
+// Leitura de manual: PDF → texto → IA → sugestão. Sem estado e sem gravar nada: o
+// arquivo é o temporário do upload e o log leva só desfecho, duração e modelo.
+// Ordem: páginas (sem cota) → recurso ligado → limite por hora → teto diário →
 // conta a tentativa → texto → IA → conta o teto diário se o provedor respondeu.
 // Feature 010: cada tentativa também vira um evento de auditoria (manual_read ou manual_blocked),
 // gravado depois da resposta, sem PDF, texto nem IP em claro.

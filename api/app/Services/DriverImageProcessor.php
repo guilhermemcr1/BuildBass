@@ -6,8 +6,8 @@ use App\Exceptions\DriverImageException;
 use GdImage;
 
 /**
- * Transforma o arquivo enviado em duas imagens WebP (ampliada e miniatura), sem biblioteca extra
- * (feature 010, research.md §4). O arquivo é entrada não confiável: o tipo vem do conteúdo, as
+ * Transforma o arquivo enviado em duas imagens WebP (ampliada e miniatura), sem biblioteca extra.
+ * O arquivo é entrada não confiável: o tipo vem do conteúdo, as
  * dimensões são checadas antes de decodificar (protege a memória) e o reencode descarta todo
  * metadado (EXIF, GPS). A orientação do JPEG é aplicada antes.
  */

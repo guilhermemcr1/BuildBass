@@ -52,8 +52,7 @@ class StoreDriverSubmissionRequest extends FormRequest
     }
 
     /**
-     * Texto puro de uma linha: sem marcação, sem caracteres de controle e com espaços colapsados
-     * (FR-013).
+     * Texto puro de uma linha: sem marcação, sem caracteres de controle e com espaços colapsados.
      */
     public static function plainText(string $value): string
     {

@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-// Catálogo de drivers (specs/003-catalogo-de-drivers/data-model.md). Tudo em SI, com os mesmos
+// Catálogo de drivers. Tudo em SI, com os mesmos
 // nomes de campo do projeto do front. Fs, Qts e Vas são obrigatórios; o resto pode faltar.
 return new class extends Migration
 {

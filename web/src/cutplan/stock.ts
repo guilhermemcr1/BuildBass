@@ -1,6 +1,6 @@
 import type { ResolvedStockItem, SheetConfig, StockItem } from './types';
 
-// Estoque de chapas (specs/012, research R1): a raiz de `SheetConfig` é o 1º item e `more` guarda
+// Estoque de chapas: a raiz de `SheetConfig` é o 1º item e `more` guarda
 // os demais. Estas funções são a única ponte entre as duas formas.
 
 export const MAX_STOCK_ITEMS = 10;

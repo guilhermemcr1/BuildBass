@@ -160,7 +160,7 @@ class Driver extends Model
             );
         });
 
-        // Os arquivos de imagem acompanham o registro (feature 010, FR-033): saem os que deixaram
+        // Os arquivos de imagem acompanham o registro: saem os que deixaram
         // de estar na lista e todos quando o driver é excluído. Só depois do commit, para uma
         // transação desfeita não deixar o driver sem as imagens.
         static::saved(function (Driver $driver): void {

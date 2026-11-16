@@ -132,7 +132,7 @@ describe('PlanPanel', () => {
         );
     });
 
-    describe('idioma e unidades (US7)', () => {
+    describe('idioma e unidades', () => {
         test('em inglês os rótulos, cabeçalhos, peças e avisos aparecem traduzidos', () => {
             setField('vb_m3', 0.06);
             renderWithProviders(
@@ -286,7 +286,7 @@ describe('PlanPanel', () => {
     });
 });
 
-describe('PlanPanel — chapa e corte total (feature 008, US5)', () => {
+describe('PlanPanel — chapa e corte total', () => {
     beforeEach(() => {
         localStorage.clear();
         useWorkspace.setState(initialWorkspace());
@@ -399,7 +399,7 @@ describe('PlanPanel — chapa e corte total (feature 008, US5)', () => {
         ).toBeVisible();
     });
 
-    test('tipo de corte: CNC/tupia grava no projeto e o encaixe avisa o corte livre (feature 012)', async () => {
+    test('tipo de corte: CNC/tupia grava no projeto e o encaixe avisa o corte livre', async () => {
         renderWithProviders(<PlanPanel open onOpenChange={() => undefined} />);
         setField('sheet_w_m', 2.75);
         setField('sheet_h_m', 1.85);

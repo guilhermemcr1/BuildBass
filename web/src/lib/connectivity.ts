@@ -20,7 +20,7 @@ export type Connectivity = {
 const PROBE_TIMEOUT_MS = 3000;
 
 // Confirma no /up da API, que é o que importa para catálogo e envio: navigator.onLine diz só
-// que há rede, não que o servidor responde (research.md §8).
+// que há rede, não que o servidor responde.
 async function probeApi(): Promise<boolean> {
     try {
         const response = await fetch(apiUrl('/up'), {

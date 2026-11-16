@@ -13,7 +13,7 @@ type TabLimitDialogProps = {
     onCancel: () => void;
 };
 
-// Novo/abrir com 3 projetos abertos (FR-021b): fechar um deles libera o lugar.
+// Novo/abrir com 3 projetos abertos: fechar um deles libera o lugar.
 export function TabLimitDialog({
     open,
     onCloseProject,

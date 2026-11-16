@@ -1,6 +1,6 @@
 import { ANALYSIS_FREQUENCIES_HZ } from './frequencies';
 
-// Apoio da caixa bandpass de 4ª ordem (feature 004, research.md §2, §5 e §7). O circuito em si
+// Apoio da caixa bandpass de 4ª ordem. O circuito em si
 // fica em circuit.ts; aqui só o que é específico da bandpass.
 
 // O magneto e o cesto do driver ficam na câmara traseira (o cone fica de frente para a câmara

@@ -6,7 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Apaga os eventos de auditoria mais antigos que o prazo de retenção (feature 010, FR-018). Apaga
+ * Apaga os eventos de auditoria mais antigos que o prazo de retenção. Apaga
  * por consulta direta, fora do model: o `AuditEvent` é imutável e não aceita `delete()`.
  */
 class PruneAuditEvents extends Command

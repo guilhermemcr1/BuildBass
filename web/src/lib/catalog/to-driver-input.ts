@@ -15,7 +15,7 @@ export type CatalogDims = {
     measures: Partial<Record<CatalogDimensionKey, number>>;
 };
 
-// Cópia do cadastro para o projeto (FR-006, FR-008): só entram os parâmetros do driver, com o
+// Cópia do cadastro para o projeto: só entram os parâmetros do driver, com o
 // valor exato; id e fonte ficam de fora, e a identificação (com o tipo) não aponta de volta ao
 // catálogo.
 export function toDriverInput(catalog: CatalogDriver): {

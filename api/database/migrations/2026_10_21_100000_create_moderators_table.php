@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Moderadores do painel (feature 006). Contas criadas pelo mantenedor com `moderator:create`;
+     * Moderadores do painel. Contas criadas pelo mantenedor com `moderator:create`;
      * não há cadastro público nem login de usuário final.
      */
     public function up(): void

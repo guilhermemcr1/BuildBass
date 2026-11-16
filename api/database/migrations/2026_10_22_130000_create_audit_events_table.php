@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Trilha de auditoria do painel (feature 010). Imutável: uma linha por evento. O autor e o
+     * Trilha de auditoria do painel. Imutável: uma linha por evento. O autor e o
      * objeto não têm chave estrangeira de propósito: nome, e-mail e rótulo são copiados no
      * instante, então apagar o moderador ou o driver não apaga nem anonimiza a trilha. O IP só
      * existe em hash.

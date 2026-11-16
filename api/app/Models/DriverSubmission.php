@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
- * Envio de driver à espera de moderação (feature 006). O id é o código de protocolo. Valores em
+ * Envio de driver à espera de moderação. O id é o código de protocolo. Valores em
  * SI. `ip_hash` e `contact_email` nunca saem em JSON.
  *
  * @property string $id

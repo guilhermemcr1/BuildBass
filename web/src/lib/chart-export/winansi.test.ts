@@ -14,7 +14,7 @@ function strings(tree: Tree): string[] {
 // Tudo o que pode aparecer na imagem: nomes e eixos dos gráficos, tipos de caixa, rótulos de limite
 // e de legenda, símbolos de unidade. Se algum tiver caractere fora do WinAnsi (que o PDF com fonte
 // padrão não desenha), o SVG e o PDF passariam a dizer coisas diferentes.
-describe('textos da imagem cabem no WinAnsi (SC-004)', () => {
+describe('textos da imagem cabem no WinAnsi', () => {
     const symbols = Object.values(QUANTITIES).flatMap((quantity) =>
         quantity.units.map((unit) => unit.symbol),
     );

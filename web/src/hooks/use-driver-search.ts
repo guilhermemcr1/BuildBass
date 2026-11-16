@@ -28,7 +28,7 @@ type Options = { offline?: boolean; filters?: DriverFilters };
 
 const NO_FILTERS: DriverFilters = {};
 
-// Busca no catálogo enquanto o usuário digita (FR-001–003): espera a digitação parar, exige
+// Busca no catálogo enquanto o usuário digita: espera a digitação parar, exige
 // 2 caracteres de texto, e cada busca nova aborta a anterior, então um resultado atrasado nunca
 // sobrepõe um mais novo. Com algum filtro (marca, tipo, diâmetro) a busca roda mesmo sem texto, e
 // o texto, quando passa de 2 letras, soma-se a eles. Os mesmos limites valem no servidor

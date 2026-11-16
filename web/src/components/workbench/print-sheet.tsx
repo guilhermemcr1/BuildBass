@@ -16,7 +16,7 @@ import { VolumeCheck } from './volume-check';
 const PAPER =
     'print:[--accent-soft:#ddd] print:[--background:#fff] print:[--border:#999] print:[--foreground:#000] print:[--muted:#444] print:[--raised:#fff] print:[--status-error:#a00] print:[--status-ok:#060] print:[--status-warn:#850] print:[--surface:#fff]';
 
-// Folha do plano para imprimir (specs/005, FR-013): fica na página, oculta na tela, e é a única
+// Folha do plano para imprimir: fica na página, oculta na tela, e é a única
 // coisa visível ao imprimir a visão Plano. Sem a vista 3D e sem controles.
 type PrintSheetProps = {
     // Chamado depois que a folha está na página; a bancada abre a impressão a partir dele.

@@ -25,7 +25,7 @@ import type {
     VolumeCheck,
 } from './types';
 
-// Plano de corte (specs/005, research.md §1 e §2): geometria de marcenaria sobre o volume bruto do
+// Plano de corte: geometria de marcenaria sobre o volume bruto do
 // projeto. O módulo só lê o resultado da simulação; não a altera nem a repete.
 
 function positive(value: number | undefined): value is number {
@@ -159,13 +159,13 @@ export type PlacedCutouts = {
     doNotFit: boolean;
     tight: boolean;
     tooBig: boolean;
-    // Problemas que envolvem um recorte com posição manual (specs/012).
+    // Problemas que envolvem um recorte com posição manual.
     issues: CutoutIssue[];
 };
 
 // Posiciona os recortes de uma peça (drivers antes dos dutos). Os que têm posição manual gravada e
 // medida conhecida usam o centro gravado; os demais seguem a fila única automática, montada só com
-// eles (specs/012, FR-016). `n` conta dentro do tipo, a partir de 1.
+// eles. `n` conta dentro do tipo, a partir de 1.
 export function placeCutouts(
     panel: { w_m: number; h_m: number },
     measures: { kind: Cutout['kind']; measure: PortMeasure }[],
@@ -278,7 +278,7 @@ function portMeasures(
     }));
 }
 
-// Diferença acima disso é erro de álgebra, não de arredondamento (research.md §1).
+// Diferença acima disso é erro de álgebra, não de arredondamento.
 const MATCH_TOLERANCE = 1e-9;
 
 type ChamberInput = {
@@ -388,7 +388,7 @@ export function buildCutPlan(
     const frontPanel = { w_m: external.w_m, h_m: external.h_m };
     const dividerPanel = { w_m: internal.w_m, h_m: internal.h_m };
 
-    // Bandpass de 6ª ordem: cada câmara tem o seu duto; o traseiro sai pelo fundo (specs/007).
+    // Bandpass de 6ª ordem: cada câmara tem o seu duto; o traseiro sai pelo fundo.
     const sixth = boxType === 'bandpass6';
     const rearPort: PortInput = project.box.port_rear ?? {
         shape: 'round',
@@ -458,7 +458,7 @@ export function buildCutPlan(
     const portLength = results.port_length_m;
     const rearLength = results.port_rear_length_m;
     const ported = boxType !== 'closed';
-    // O mesmo volume de duto que o motor descontou (research.md §1); sem área ou comprimento a
+    // O mesmo volume de duto que o motor descontou; sem área ou comprimento a
     // conferência não tem como fechar.
     const ductVolume = (
         port: PortInput,

@@ -1,4 +1,4 @@
-// Cloudflare Turnstile em modo invisível (specs/006, research.md §5). O script só é carregado
+// Cloudflare Turnstile em modo invisível. O script só é carregado
 // quando alguém envia um driver e só existe com VITE_TURNSTILE_SITE_KEY; sem a chave (desenvolvimento)
 // o envio segue sem token e o servidor, com a verificação desligada, aceita.
 

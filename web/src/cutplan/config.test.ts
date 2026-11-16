@@ -158,7 +158,7 @@ describe('validateCutPlan', () => {
     });
 });
 
-describe('chapa do usuário (feature 008)', () => {
+describe('chapa do usuário', () => {
     test('sem chapa o resultado é idêntico ao de hoje', () => {
         expect(resolveCutPlan().sheet).toBeUndefined();
         expect(resolveCutPlan({ thickness_m: 0.015 })).toEqual(
@@ -217,7 +217,7 @@ describe('chapa do usuário (feature 008)', () => {
     });
 });
 
-describe('estoque de chapas e tipo de corte (feature 012)', () => {
+describe('estoque de chapas e tipo de corte', () => {
     test('o estoque resolvido traz só os itens completos, com quantidade e tipo de corte', () => {
         expect(
             resolveCutPlan({

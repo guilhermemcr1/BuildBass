@@ -17,7 +17,7 @@ function driver(qts: number) {
     });
 }
 
-describe('SuggestBox (US6)', () => {
+describe('SuggestBox', () => {
     beforeEach(() => {
         localStorage.clear();
         useWorkspace.setState(initialWorkspace());

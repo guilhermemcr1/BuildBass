@@ -31,7 +31,7 @@ export type Availability =
 
 const AVAILABLE: Availability = { available: true };
 
-// Quais grupos de legenda fazem sentido para o gráfico aberto (specs/011, research §10). A razão é
+// Quais grupos de legenda fazem sentido para o gráfico aberto. A razão é
 // uma chave do namespace `workbench`.
 export function availableGroups(
     kind: ExportKind,

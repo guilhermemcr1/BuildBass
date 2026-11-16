@@ -1,6 +1,6 @@
 import type { Cutout, Piece, PieceRole, Plan } from './types';
 
-// Projeção ortográfica da caixa montada (specs/005, research.md §8). Função pura: devolve
+// Projeção ortográfica da caixa montada. Função pura: devolve
 // polígonos 2D em metros, com a origem no centro da caixa e y para cima, ordenados de trás
 // para frente. Quem desenha decide a escala de tela e inverte o eixo y.
 
@@ -25,7 +25,7 @@ export type Polygon = {
     light: number;
 };
 
-// Cota de uma aresta da caixa (specs/008): linha afastada da aresta, com o ponto do texto no meio.
+// Cota de uma aresta da caixa: linha afastada da aresta, com o ponto do texto no meio.
 export type DimensionLine = {
     axis: 'width' | 'height' | 'depth';
     // Medida externa, em metros.

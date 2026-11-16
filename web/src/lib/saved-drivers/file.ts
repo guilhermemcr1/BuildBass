@@ -1,7 +1,7 @@
 import { SAVED_DRIVERS_MAX, SAVED_DRIVERS_MAX_BYTES } from './types';
 import type { SavedDriver, SavedDriverDraft } from './types';
 
-// Arquivo .buildbass-drivers.json (specs/008, contracts/drivers-file.md): a cópia de segurança da
+// Arquivo .buildbass-drivers.json: a cópia de segurança da
 // lista "Meus alto-falantes" e a forma de levá-la a outro aparelho. Entrada não confiável.
 
 export const DRIVERS_FILE_FORMAT = 'buildbass-drivers';

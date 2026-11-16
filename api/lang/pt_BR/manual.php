@@ -1,6 +1,6 @@
 <?php
 
-// Mensagens da leitura de manual por IA (feature 009).
+// Mensagens da leitura de manual por IA.
 return [
     'required' => 'Envie o PDF do manual.',
     'not_pdf' => 'O arquivo precisa ser um PDF.',

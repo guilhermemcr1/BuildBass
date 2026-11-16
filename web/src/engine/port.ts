@@ -1,7 +1,7 @@
 import { SPEED_OF_SOUND } from './constants';
 import type { PortEnd, PortInput } from './types';
 
-// Área de um duto por formato (data-model.md); undefined se faltar medida.
+// Área de um duto por formato; undefined se faltar medida.
 export function portArea(port: PortInput): number | undefined {
     switch (port.shape) {
         case 'round':
@@ -96,7 +96,7 @@ export type NetVolume = {
 
 // Volume líquido = Vb − drivers − dutos, e o comprimento do duto depende do volume líquido.
 // Com Lv = C/net − Δ (C = c²·n·a / (4π²·Fb²)) e volume dos dutos n·a·Lv, o volume líquido é a
-// maior raiz de net² − (A + n·a·Δ)·net + n·a·C = 0, com A = Vb − drivers (research.md §7).
+// maior raiz de net² − (A + n·a·Δ)·net + n·a·C = 0, com A = Vb − drivers.
 export function netVolume({
     vb_m3,
     drivers_m3,

@@ -12,7 +12,7 @@ import {
 // Roda no projeto "dev" (servidor de desenvolvimento), único lugar onde /dev/ui existe.
 for (const theme of ['light', 'dark'] as const) {
     for (const path of ['/', '/dev/ui']) {
-        test(`sem violações WCAG AA em ${path} no tema ${theme} (SC-002)`, async ({
+        test(`sem violações WCAG AA em ${path} no tema ${theme}`, async ({
             browser,
         }) => {
             const context = await browser.newContext({ colorScheme: theme });
@@ -36,7 +36,7 @@ for (const theme of ['light', 'dark'] as const) {
     }
 }
 
-test('todo controle da bancada recebe foco visível só com Tab (SC-003)', async ({
+test('todo controle da bancada recebe foco visível só com Tab', async ({
     page,
 }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -133,7 +133,7 @@ async function fill(
     await field.press('Tab');
 }
 
-// Bancada com dados: dois projetos plotados, avisos, tabela, gráfico e diálogos (feature 002).
+// Bancada com dados: dois projetos plotados, avisos, tabela, gráfico e diálogos.
 for (const theme of ['light', 'dark'] as const) {
     test(`bancada com 2 projetos e diálogos sem violações no tema ${theme}`, async ({
         browser,
@@ -256,7 +256,7 @@ test('teclado chega às abas de projeto, aos toggles e ao gráfico', async ({
     );
 });
 
-// Catálogo de drivers (feature 003): lista aberta, estado vazio e estado de erro.
+// Catálogo de drivers: lista aberta, estado vazio e estado de erro.
 for (const theme of ['light', 'dark'] as const) {
     test(`catálogo: lista, vazio e erro sem violações no tema ${theme}`, async ({
         browser,
@@ -303,9 +303,9 @@ for (const theme of ['light', 'dark'] as const) {
     });
 }
 
-// Caixa bandpass completa (feature 004): região da caixa, resultados e gráfico preenchidos.
+// Caixa bandpass completa: região da caixa, resultados e gráfico preenchidos.
 for (const theme of ['light', 'dark'] as const) {
-    test(`sem violações WCAG AA com a bandpass completa no tema ${theme} (feature 004, US5)`, async ({
+    test(`sem violações WCAG AA com a bandpass completa no tema ${theme}`, async ({
         browser,
     }) => {
         const context = await browser.newContext({
@@ -353,10 +353,10 @@ for (const theme of ['light', 'dark'] as const) {
     });
 }
 
-// Plano de corte (feature 005): selada pronta, bandpass pronta com os desenhos e plano bloqueado.
+// Plano de corte: selada pronta, bandpass pronta com os desenhos e plano bloqueado.
 for (const theme of ['light', 'dark'] as const) {
     for (const state of ['selada', 'bandpass', 'bloqueado'] as const) {
-        test(`sem violações WCAG AA no plano de corte (${state}) no tema ${theme} (feature 005, US7)`, async ({
+        test(`sem violações WCAG AA no plano de corte (${state}) no tema ${theme}`, async ({
             browser,
         }) => {
             const context = await browser.newContext({
@@ -429,11 +429,11 @@ for (const theme of ['light', 'dark'] as const) {
     }
 }
 
-// Formulário de envio de driver (specs/006, SC-007): sem violações AA nos dois temas e uso em
+// Formulário de envio de driver: sem violações AA nos dois temas e uso em
 // 360 px sem rolagem horizontal.
 for (const theme of ['light', 'dark'] as const) {
     for (const width of [1440, 360]) {
-        test(`diálogo de envio de driver sem violações WCAG AA em ${width} px no tema ${theme} (SC-007)`, async ({
+        test(`diálogo de envio de driver sem violações WCAG AA em ${width} px no tema ${theme}`, async ({
             browser,
         }) => {
             const context = await browser.newContext({
@@ -478,7 +478,7 @@ for (const theme of ['light', 'dark'] as const) {
     }
 }
 
-test('o formulário de envio é operável só pelo teclado e devolve o foco ao botão (SC-007)', async ({
+test('o formulário de envio é operável só pelo teclado e devolve o foco ao botão', async ({
     page,
 }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -525,7 +525,7 @@ test('o formulário de envio é operável só pelo teclado e devolve o foco ao b
     await expect(trigger).toBeFocused();
 });
 
-// Bandpass de 6ª ordem (feature 007, US6): região da caixa, resultados e plano de corte.
+// Bandpass de 6ª ordem: região da caixa, resultados e plano de corte.
 const sixthOrderFields = async (page: Page) => {
     const group = (name: string) =>
         page.getByRole('group', { name, exact: true });
@@ -569,7 +569,7 @@ const sixthOrderFields = async (page: Page) => {
 
 for (const theme of ['light', 'dark'] as const) {
     for (const view of ['bancada', 'plano'] as const) {
-        test(`sem violações WCAG AA na bandpass de 6ª ordem (${view}) no tema ${theme} (feature 007, US6)`, async ({
+        test(`sem violações WCAG AA na bandpass de 6ª ordem (${view}) no tema ${theme}`, async ({
             browser,
         }) => {
             const context = await browser.newContext({
@@ -618,7 +618,7 @@ for (const theme of ['light', 'dark'] as const) {
     }
 }
 
-test('bandpass de 6ª ordem: a 360 px não rola na horizontal e os dois grupos de duto empilham (feature 007, US6)', async ({
+test('bandpass de 6ª ordem: a 360 px não rola na horizontal e os dois grupos de duto empilham', async ({
     page,
 }) => {
     await page.setViewportSize({ width: 360, height: 800 });
@@ -650,7 +650,7 @@ test('bandpass de 6ª ordem: a 360 px não rola na horizontal e os dois grupos d
     expect(overflow).toBeLessThanOrEqual(0);
 });
 
-test('bandpass de 6ª ordem: todos os campos são alcançáveis só pelo teclado, de trás para a frente (feature 007, US6)', async ({
+test('bandpass de 6ª ordem: todos os campos são alcançáveis só pelo teclado, de trás para a frente', async ({
     page,
 }) => {
     await page.goto('/');
@@ -683,9 +683,9 @@ test('bandpass de 6ª ordem: todos os campos são alcançáveis só pelo teclado
     }
 });
 
-// Modal da caixa (feature 008, US4): aberto, com o 3D cotado e o alto-falante destacado.
+// Modal da caixa: aberto, com o 3D cotado e o alto-falante destacado.
 for (const theme of ['light', 'dark'] as const) {
-    test(`modal da caixa sem violações WCAG AA no tema ${theme} (feature 008, US4)`, async ({
+    test(`modal da caixa sem violações WCAG AA no tema ${theme}`, async ({
         browser,
     }) => {
         const context = await browser.newContext({
@@ -720,9 +720,9 @@ for (const theme of ['light', 'dark'] as const) {
     });
 }
 
-// Plano com a chapa do usuário (feature 008, US5): total, grupo da chapa e visão "Chapas".
+// Plano com a chapa do usuário: total, grupo da chapa e visão "Chapas".
 for (const theme of ['light', 'dark'] as const) {
-    test(`plano com chapa sem violações WCAG AA no tema ${theme} (feature 008, US5)`, async ({
+    test(`plano com chapa sem violações WCAG AA no tema ${theme}`, async ({
         browser,
     }) => {
         const context = await browser.newContext({
@@ -755,9 +755,9 @@ for (const theme of ['light', 'dark'] as const) {
     });
 }
 
-// Diálogos de alto-falantes salvos (feature 008, US6): salvar e gerenciar, nos dois temas.
+// Diálogos de alto-falantes salvos: salvar e gerenciar, nos dois temas.
 for (const theme of ['light', 'dark'] as const) {
-    test(`diálogos de alto-falantes salvos sem violações WCAG AA no tema ${theme} (feature 008, US6)`, async ({
+    test(`diálogos de alto-falantes salvos sem violações WCAG AA no tema ${theme}`, async ({
         browser,
     }) => {
         const context = await browser.newContext({
@@ -792,9 +792,9 @@ for (const theme of ['light', 'dark'] as const) {
     });
 }
 
-// Modo Normal (feature 008, US7): seções "Mostrar mais" recolhidas e abertas à mão, nos dois temas.
+// Modo Normal: seções "Mostrar mais" recolhidas e abertas à mão, nos dois temas.
 for (const theme of ['light', 'dark'] as const) {
-    test(`modo Normal com "Mostrar mais" sem violações WCAG AA no tema ${theme} (feature 008, US7)`, async ({
+    test(`modo Normal com "Mostrar mais" sem violações WCAG AA no tema ${theme}`, async ({
         browser,
     }) => {
         const context = await browser.newContext({
@@ -821,7 +821,7 @@ for (const theme of ['light', 'dark'] as const) {
 }
 
 // A página de referência (só no servidor de desenvolvimento) mostra os componentes da feature 008.
-test('/dev/ui mostra HelpTip, status compacto, cores, bandeiras e "Mostrar mais" (feature 008)', async ({
+test('/dev/ui mostra HelpTip, status compacto, cores, bandeiras e "Mostrar mais"', async ({
     page,
 }) => {
     await page.goto('/dev/ui');
@@ -844,9 +844,9 @@ test('/dev/ui mostra HelpTip, status compacto, cores, bandeiras e "Mostrar mais"
     ).toBeVisible();
 });
 
-// A 360 px (feature 008, T092): bancada no modo Normal, modal da caixa, busca e diálogo de salvar.
+// A 360 px: bancada no modo Normal, modal da caixa, busca e diálogo de salvar.
 for (const theme of ['light', 'dark'] as const) {
-    test(`a 360 px a bancada e os diálogos novos não têm violações WCAG AA no tema ${theme} (feature 008)`, async ({
+    test(`a 360 px a bancada e os diálogos novos não têm violações WCAG AA no tema ${theme}`, async ({
         browser,
     }) => {
         const context = await browser.newContext({
@@ -939,11 +939,11 @@ for (const theme of ['light', 'dark'] as const) {
     });
 }
 
-// Plano de corte avançado (feature 012): estoque com dois itens, tipo de corte, visão "Chapas" e o
+// Plano de corte avançado: estoque com dois itens, tipo de corte, visão "Chapas" e o
 // diálogo de posição dos recortes, nos dois temas, em tela larga e a 360 px sem rolagem horizontal.
 for (const theme of ['light', 'dark'] as const) {
     for (const width of [1440, 360]) {
-        test(`estoque, tipo de corte e posição dos recortes sem violações WCAG AA em ${width} px no tema ${theme} (feature 012)`, async ({
+        test(`estoque, tipo de corte e posição dos recortes sem violações WCAG AA em ${width} px no tema ${theme}`, async ({
             browser,
         }) => {
             test.slow();

@@ -36,7 +36,7 @@ function butterworthDb(frequency: number, cutoff: number, order: number) {
     return 10 * Math.log10(x / (1 + x));
 }
 
-// Driver de referência coerente (quickstart.md).
+// Driver de referência coerente.
 const REFERENCE: DriverInput = {
     fs_hz: 28,
     qes: 0.42,
@@ -231,7 +231,7 @@ describe('simulate — dados faltando (R15)', () => {
     });
 });
 
-describe('simulate — duto (US2)', () => {
+describe('simulate — duto', () => {
     const vented = (port: BoxInput['port'], vb = 0.1, fb = 35) =>
         simulate(
             project(REFERENCE, { type: 'vented', vb_m3: vb, fb_hz: fb, port }),
@@ -662,8 +662,8 @@ describe('simulate — curvas até 20 kHz, resultados na grade de análise', () 
     });
 });
 
-// F-10 (specs/011): mesma busca do F3, com a queda de 10 dB sob a banda de passagem.
-describe('simulate — F-10 (specs/011)', () => {
+// F-10: mesma busca do F3, com a queda de 10 dB sob a banda de passagem.
+describe('simulate — F-10', () => {
     test('selada Butterworth: F-10 = fc·(1/9)^(1/4) = 0,5774·fc (0,5 %)', () => {
         // |H|² = x⁴/(1 + x⁴) = 0,1 → x⁴ = 1/9.
         const fs = 30;

@@ -1,6 +1,6 @@
 <?php
 
-// Leitura assistida de manual de driver (feature 009): o PDF vira texto no servidor (poppler) e só o
+// Leitura assistida de manual de driver: o PDF vira texto no servidor (poppler) e só o
 // texto segue para a IA. Nada é gravado. Os limites valem em qualquer ambiente.
 return [
 

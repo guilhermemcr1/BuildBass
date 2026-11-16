@@ -9,7 +9,7 @@ import { useSavedDrivers } from '@/stores/saved-drivers';
 import { DriverGallery } from './driver-gallery';
 import { DriverTypeSelect } from './driver-type-select';
 
-// Quem é o driver do projeto: marca, modelo, variação e tipo (contracts/ui.md). Preenchido ao
+// Quem é o driver do projeto: marca, modelo, variação e tipo. Preenchido ao
 // copiar do catálogo ou de "Meus alto-falantes" e editável à mão, para o driver que não está em
 // nenhum dos dois. É só informação: não muda os cálculos, e o que se escreve aqui vai junto no
 // "Salvar alto-falante" e no "Enviar driver".

@@ -1,6 +1,6 @@
 import { SCENE_HEIGHT, SCENE_WIDTH } from './types';
 
-// SVG → PNG no canvas, a 2× por padrão (specs/011, research §7). Só roda no navegador. O SVG como
+// SVG → PNG no canvas, a 2× por padrão. Só roda no navegador. O SVG como
 // imagem não executa script nem carrega recurso externo.
 export async function sceneToPng(svg: string, scale = 2): Promise<Blob> {
     const url = URL.createObjectURL(

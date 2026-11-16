@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-// Mapa único de atalhos (research.md §11): o hook e a ajuda leem daqui.
+// Mapa único de atalhos: o hook e a ajuda leem daqui.
 export type ShortcutId =
     | 'new'
     | 'open'

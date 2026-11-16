@@ -28,7 +28,7 @@ async function rename(page: Page, current: RegExp, next: string) {
 const tabs = (page: Page) =>
     page.getByRole('navigation', { name: 'Projetos abertos' });
 
-test('dois projetos plotados: legenda, tabela e recarregar (US7)', async ({
+test('dois projetos plotados: legenda, tabela e recarregar', async ({
     page,
 }) => {
     await page.goto('/');
@@ -80,7 +80,7 @@ test('dois projetos plotados: legenda, tabela e recarregar (US7)', async ({
     ).toHaveAttribute('aria-pressed', 'false');
 });
 
-test('fechar alterado pede confirmação e o quarto projeto avisa o limite (US7)', async ({
+test('fechar alterado pede confirmação e o quarto projeto avisa o limite', async ({
     page,
 }) => {
     await page.goto('/');

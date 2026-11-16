@@ -17,7 +17,7 @@ function tile(page: Page, label: string) {
         .locator('..');
 }
 
-// Driver de referência do quickstart (specs/004, §2).
+// Driver de referência do quickstart.
 async function referenceDriver(page: Page) {
     await fill(page, /^Fs/, '28');
     await fill(page, /^Qts/, '0,38');
@@ -59,8 +59,8 @@ async function openPlan(page: Page) {
     ).toBeVisible();
 }
 
-// Caixa selada de 60 L do quickstart (specs/005, §1): proporção áurea, painel de 18 mm.
-test('plano da selada: dimensões, tabela, espessura, proporção e volume em falta (US1)', async ({
+// Caixa selada de 60 L do quickstart: proporção áurea, painel de 18 mm.
+test('plano da selada: dimensões, tabela, espessura, proporção e volume em falta', async ({
     page,
 }) => {
     await page.goto('/');
@@ -133,7 +133,7 @@ test('plano da dutada: recorte do driver aparece na frente quando o diâmetro é
     await expect(front).not.toContainText('diâmetro a informar');
 });
 
-test('conferência: o líquido do plano é o da simulação e os avisos citam a peça (US2)', async ({
+test('conferência: o líquido do plano é o da simulação e os avisos citam a peça', async ({
     page,
 }) => {
     await page.goto('/');
@@ -166,7 +166,7 @@ test('conferência: o líquido do plano é o da simulação e os avisos citam a 
     await expect(planRegion(page).getByText(/Igual à simulação/)).toBeVisible();
 });
 
-test('sem volume o plano diz o que falta e some a conferência (US2)', async ({
+test('sem volume o plano diz o que falta e some a conferência', async ({
     page,
 }) => {
     await page.goto('/');
@@ -189,8 +189,8 @@ test('sem volume o plano diz o que falta e some a conferência (US2)', async ({
     );
 });
 
-// Bandpass do quickstart (specs/005, §4): 40 + 60 L, áurea, painel de 18 mm.
-test('plano da bandpass: sete peças, divisória, câmaras e conferência por câmara (US3)', async ({
+// Bandpass do quickstart: 40 + 60 L, áurea, painel de 18 mm.
+test('plano da bandpass: sete peças, divisória, câmaras e conferência por câmara', async ({
     page,
 }) => {
     await page.goto('/');
@@ -244,8 +244,8 @@ test('plano da bandpass: sete peças, divisória, câmaras e conferência por c�
     );
 });
 
-// Bandpass de 6ª ordem (specs/007, quickstart cenário 12): duto frontal na frente, traseiro no fundo.
-test('plano da bandpass de 6ª ordem: recortes dos dois dutos e conferência por câmara (feature 007, US5)', async ({
+// Bandpass de 6ª ordem: duto frontal na frente, traseiro no fundo.
+test('plano da bandpass de 6ª ordem: recortes dos dois dutos e conferência por câmara', async ({
     page,
 }) => {
     await page.goto('/');
@@ -291,7 +291,7 @@ test('plano da bandpass de 6ª ordem: recortes dos dois dutos e conferência por
     await expect(planRegion(page).getByText(/Igual à simulação/)).toBeVisible();
 });
 
-test('desenhos 2D e vista 3D: um desenho por peça, girar por teclado e por botões (US4)', async ({
+test('desenhos 2D e vista 3D: um desenho por peça, girar por teclado e por botões', async ({
     page,
 }) => {
     await page.goto('/');
@@ -359,7 +359,7 @@ async function downloadCsv(page: Page, button: string) {
     return { name: download.suggestedFilename(), bytes: Buffer.concat(chunks) };
 }
 
-test('exportar CSV: ; e vírgula decimal em pt-BR, vírgula e ponto em en (US5)', async ({
+test('exportar CSV: ; e vírgula decimal em pt-BR, vírgula e ponto em en', async ({
     page,
 }) => {
     await page.goto('/');
@@ -396,7 +396,7 @@ test('exportar CSV: ; e vírgula decimal em pt-BR, vírgula e ponto em en (US5)'
     expect(enText).toContain('Side,Left and right sides,2,');
 });
 
-test('imprimir: só a folha do plano fica visível (US5)', async ({ page }) => {
+test('imprimir: só a folha do plano fica visível', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('radio', { name: 'Selada' }).click();
     await fill(page, /^Vb/, '60');
@@ -423,7 +423,7 @@ test('imprimir: só a folha do plano fica visível (US5)', async ({ page }) => {
     await expect(page.locator('[data-region="plan"]')).toBeVisible();
 });
 
-test('só pelo teclado: seletor de visão, campos, proporção, botões, abas e vista 3D (US7)', async ({
+test('só pelo teclado: seletor de visão, campos, proporção, botões, abas e vista 3D', async ({
     page,
 }) => {
     await page.goto('/');
@@ -485,8 +485,8 @@ test('só pelo teclado: seletor de visão, campos, proporção, botões, abas e 
     ).toBe(true);
 });
 
-// Chapa do usuário e corte total (feature 008, US5).
-test('chapa 2,75 × 1,85 m: visão "Chapas", aproveitamento, total nas duas bases e CSV (US5)', async ({
+// Chapa do usuário e corte total.
+test('chapa 2,75 × 1,85 m: visão "Chapas", aproveitamento, total nas duas bases e CSV', async ({
     page,
 }) => {
     await page.goto('/');
@@ -527,7 +527,7 @@ test('chapa 2,75 × 1,85 m: visão "Chapas", aproveitamento, total nas duas base
     expect(csv).toContain('Aproveitamento;');
 });
 
-test('chapa pequena avisa as peças que não cabem e a chapa sobrevive ao recarregar (US5)', async ({
+test('chapa pequena avisa as peças que não cabem e a chapa sobrevive ao recarregar', async ({
     page,
 }) => {
     await page.goto('/');

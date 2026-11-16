@@ -150,7 +150,7 @@ export function ParameterField({
                 const si = toSi(value, unit);
 
                 // Valor impossível não entra no rascunho: o campo volta ao último valor válido e
-                // mostra o motivo (FR-016).
+                // mostra o motivo.
                 if (!withinRange(parameter, si)) {
                     setOutOfRange(true);
                     return;

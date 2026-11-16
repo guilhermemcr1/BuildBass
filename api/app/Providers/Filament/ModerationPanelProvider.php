@@ -28,7 +28,7 @@ class ModerationPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
-        // Painel da moderação (specs/006, 010): só login de moderador, sem cadastro público. Início
+        // Painel da moderação: só login de moderador, sem cadastro público. Início
         // com métricas de uso, mais envios, drivers e auditoria; o guard `moderator` usa a tabela
         // `moderators`.
         return $panel

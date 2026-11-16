@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Fila de envios de drivers (feature 006). O id é o código de protocolo. Valores em SI, com os
+     * Fila de envios de drivers. O id é o código de protocolo. Valores em SI, com os
      * mesmos nomes de `drivers`. O IP nunca é guardado em claro (só `ip_hash`) e `contact_email` é
      * apagado depois do aviso da decisão.
      */

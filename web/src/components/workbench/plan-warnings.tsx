@@ -20,7 +20,7 @@ const ORDER: Record<PlanWarning['tone'], number> = {
     info: 2,
 };
 
-// Avisos do plano com ícone, cor e texto, do mais grave ao informativo (FR-009, FR-010).
+// Avisos do plano com ícone, cor e texto, do mais grave ao informativo.
 export function PlanWarnings({ plan }: { plan: Plan }) {
     const { t } = useTranslation('cutplan');
     const { locale } = useLocale();

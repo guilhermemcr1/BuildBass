@@ -7,8 +7,8 @@ use App\Exceptions\Manual\ManualUnavailableException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 
-// Cotas da leitura de manual (feature 009, research.md §5). O `throttle` do Laravel conta toda
-// requisição que chega; aqui só conta o que a spec manda (FR-017 a FR-020). O IP é só chave de
+// Cotas da leitura de manual. O `throttle` do Laravel conta toda
+// requisição que chega; aqui só conta o que a spec manda. O IP é só chave de
 // cache (expira em 1 h) e nunca vai a log. O teto diário é um soft cap: requisições concorrentes
 // podem passar dele por uma ou duas, o que basta para proteger o custo.
 class ExtractionQuota

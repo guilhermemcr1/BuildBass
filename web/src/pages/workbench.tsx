@@ -45,7 +45,7 @@ const PlanPanel = lazy(() =>
     })),
 );
 
-// Layout da bancada (FR-007): ≥ 1280 px lateral fixa (abas, driver, caixa) e, à direita, resultados
+// Layout da bancada: ≥ 1280 px lateral fixa (abas, driver, caixa) e, à direita, resultados
 // numa faixa acima do gráfico; 768–1279 px driver e caixa lado a lado com resultados e gráficos em
 // largura total; < 768 px uma coluna na ordem do DOM: driver → caixa → resultados → gráficos.
 export default function Workbench() {
@@ -94,7 +94,7 @@ export default function Workbench() {
         }
     };
 
-    // Projeto com alterações não exportadas pede confirmação antes de fechar (FR-021c).
+    // Projeto com alterações não exportadas pede confirmação antes de fechar.
     const requestClose = (id: string) => {
         const project = useWorkspace
             .getState()
@@ -153,7 +153,7 @@ export default function Workbench() {
 
     return (
         <div className="flex min-h-dvh flex-col xl:h-dvh">
-            {/* Ao imprimir o plano, só a folha do plano sai; a bancada some (specs/005, FR-013). */}
+            {/* Ao imprimir o plano, só a folha do plano sai; a bancada some. */}
             <div className={printing ? 'contents print:hidden' : 'contents'}>
                 <TopBar
                     onAction={runAction}

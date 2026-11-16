@@ -12,8 +12,8 @@ import { cn } from '@/lib/utils';
 
 type ShowMoreProps = {
     id: SectionId;
-    // Quantos campos avançados já têm valor: o botão avisa com texto quando a seção está recolhida
-    // (FR-031). Valores recolhidos continuam valendo nos cálculos.
+    // Quantos campos avançados já têm valor: o botão avisa com texto quando a seção está recolhida.
+    // Valores recolhidos continuam valendo nos cálculos.
     filled?: number;
     // Título próprio no lugar de "Mostrar mais" (seção que é um assunto, como as dimensões).
     title?: string;

@@ -14,7 +14,7 @@ const CORS = {
 
 type Submitted = Record<string, unknown>;
 
-// O envio simulado pelo contrato (specs/006-enviar-driver-moderacao/contracts/submission-api.md):
+// O envio simulado pelo contrato:
 // o servidor real tem os próprios testes (Pest).
 async function mockSubmission(
     page: Page,
@@ -50,7 +50,7 @@ async function fillProjectDriver(page: Page) {
     await page.keyboard.press('Tab');
 }
 
-test('enviar o driver do projeto: pré-preenchido, protocolo e projeto intacto (US1)', async ({
+test('enviar o driver do projeto: pré-preenchido, protocolo e projeto intacto', async ({
     page,
 }) => {
     await mockCatalog(page);
@@ -103,9 +103,7 @@ test('enviar o driver do projeto: pré-preenchido, protocolo e projeto intacto (
     );
 });
 
-test('sem driver no projeto: preencher à mão e enviar (US4)', async ({
-    page,
-}) => {
+test('sem driver no projeto: preencher à mão e enviar', async ({ page }) => {
     await mockCatalog(page);
     const received = await mockSubmission(page);
     await page.goto('/');
@@ -133,7 +131,7 @@ test('sem driver no projeto: preencher à mão e enviar (US4)', async ({
     expect(received[0]).toMatchObject({ fs_hz: 40, qts: 0.4, vas_m3: 0.05 });
 });
 
-test('falha do servidor: mantém o digitado e o reenvio funciona (US4)', async ({
+test('falha do servidor: mantém o digitado e o reenvio funciona', async ({
     page,
 }) => {
     await mockCatalog(page);
@@ -188,7 +186,7 @@ test('falha do servidor: mantém o digitado e o reenvio funciona (US4)', async (
     expect(attempts).toBe(2);
 });
 
-test('perder a conexão com o diálogo aberto desativa o envio sem perder o digitado (US4)', async ({
+test('perder a conexão com o diálogo aberto desativa o envio sem perder o digitado', async ({
     page,
     context,
 }) => {
@@ -224,7 +222,7 @@ test('perder a conexão com o diálogo aberto desativa o envio sem perder o digi
     ).toHaveValue('Exemplo');
 });
 
-test('preencher a partir do manual: preenche os vazios, destaca o suspeito e não envia nada (specs/009)', async ({
+test('preencher a partir do manual: preenche os vazios, destaca o suspeito e não envia nada', async ({
     page,
 }) => {
     await mockCatalog(page);

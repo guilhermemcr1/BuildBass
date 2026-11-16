@@ -232,7 +232,7 @@ function Editor({ piece, role }: { piece: Piece; role: CutoutPiece }) {
         });
     };
 
-    // Soltar grava uma vez: o arrasto inteiro é uma etapa do Desfazer (FR-013).
+    // Soltar grava uma vez: o arrasto inteiro é uma etapa do Desfazer.
     const onPointerUp = () => {
         if (drag === undefined) {
             return;
@@ -494,7 +494,7 @@ type CutoutPositionDialogProps = {
     onOpenChange: (open: boolean) => void;
 };
 
-// Posicionar os recortes de uma peça (specs/012, US3, research R6): desenho grande com arrasto e
+// Posicionar os recortes de uma peça: desenho grande com arrasto e
 // teclado, campos do centro, voltar ao automático e os avisos da peça. Lê o plano vivo: cada
 // gravação refaz o plano e o desenho acompanha.
 export default function CutoutPositionDialog({

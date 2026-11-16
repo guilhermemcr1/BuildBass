@@ -5,7 +5,7 @@ import { DRIVER_TYPES } from '@/lib/project/types';
 import { SAVED_DRIVER_LIMITS, SAVED_DRIVERS_MAX } from './types';
 import type { SavedDriverDraft } from './types';
 
-// Esquema do arquivo .buildbass-drivers.json (specs/008, contracts/drivers-file.md). Carregado
+// Esquema do arquivo .buildbass-drivers.json. Carregado
 // sob demanda: o Zod só entra quando o usuário importa um arquivo.
 
 function span(limit: { min: number; max: number }) {

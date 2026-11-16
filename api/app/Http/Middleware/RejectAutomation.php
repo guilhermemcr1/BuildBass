@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
-// Barra automação nos envios públicos (FR-011) antes de qualquer validação ou gravação:
+// Barra automação nos envios públicos antes de qualquer validação ou gravação:
 // 1. campo-armadilha preenchido → resposta idêntica a um sucesso, mas nada é gravado;
 // 2. verificação anti-robô reprovada → 422 genérico, sem revelar o motivo.
 class RejectAutomation

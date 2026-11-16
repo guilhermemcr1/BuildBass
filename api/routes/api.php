@@ -7,7 +7,7 @@ use App\Http\Middleware\RejectAutomation;
 use Illuminate\Support\Facades\Route;
 
 // Rotas JSON consumidas pelo front (web/). O catálogo é só leitura; a única escrita pública é o
-// envio de um driver para a fila de moderação (feature 006).
+// envio de um driver para a fila de moderação.
 Route::middleware('throttle:catalog')->group(function () {
     Route::get('/drivers', [DriverController::class, 'index']);
     Route::get('/driver-brands', [DriverController::class, 'brands']);
@@ -18,7 +18,7 @@ Route::middleware('throttle:catalog')->group(function () {
 Route::middleware(['throttle:submission', RejectAutomation::class])
     ->post('/driver-submissions', [DriverSubmissionController::class, 'store']);
 
-// Leitura assistida de manual (feature 009): devolve uma sugestão para pré-preencher o formulário e
+// Leitura assistida de manual: devolve uma sugestão para pré-preencher o formulário e
 // não grava nada. Os limites de uso (por hora e diário) contam dentro do service, depois da
 // validação, para que anti-robô e arquivo inválido não consumam cota.
 Route::middleware(['throttle:catalog', RejectAutomation::class])

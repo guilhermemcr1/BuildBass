@@ -6,7 +6,7 @@ use App\Exceptions\Manual\ManualInvalidFileException;
 use App\Exceptions\Manual\ManualUnreadableException;
 use Illuminate\Support\Facades\Process;
 
-// Texto do PDF via poppler (feature 009, research.md §1). Os binários rodam com array de argumentos,
+// Texto do PDF via poppler. Os binários rodam com array de argumentos,
 // sem shell, sobre o arquivo temporário do próprio upload; nada é copiado nem gravado.
 class PdfTextExtractor
 {

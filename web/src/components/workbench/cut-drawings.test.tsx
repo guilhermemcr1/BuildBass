@@ -137,7 +137,7 @@ describe('CutDrawings', () => {
     });
 });
 
-describe('CutDrawings — posição dos recortes (feature 012)', () => {
+describe('CutDrawings — posição dos recortes', () => {
     beforeEach(() => {
         usePreferences.setState({ unitSystem: 'metric' });
     });

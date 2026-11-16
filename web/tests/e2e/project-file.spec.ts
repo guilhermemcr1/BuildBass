@@ -19,7 +19,7 @@ function field(page: Page, name: RegExp) {
     return page.getByRole('textbox', { name });
 }
 
-test('exportar, criar novo e abrir o arquivo reproduz os valores (US3)', async ({
+test('exportar, criar novo e abrir o arquivo reproduz os valores', async ({
     page,
 }) => {
     await page.goto('/');
@@ -52,7 +52,7 @@ test('exportar, criar novo e abrir o arquivo reproduz os valores (US3)', async (
     await expect(field(page, /Altura do duto/)).toHaveValue('300,0');
 });
 
-test('arquivo inválido mostra o motivo e não mexe no projeto (US3)', async ({
+test('arquivo inválido mostra o motivo e não mexe no projeto', async ({
     page,
 }) => {
     await page.goto('/');
@@ -74,7 +74,7 @@ test('arquivo inválido mostra o motivo e não mexe no projeto (US3)', async ({
     await expect(field(page, /^Fs/)).toHaveValue('31,0');
 });
 
-test('desfazer, refazer e recarregar (US3)', async ({ page }) => {
+test('desfazer, refazer e recarregar', async ({ page }) => {
     await page.goto('/');
     await fill(page, /^Vb/, '50');
     // Edições a menos de 400 ms viram um passo só (arrastar o slider); aqui são dois passos.
@@ -117,7 +117,7 @@ test('bandpass exportada grava a versão 5 e reabre igual (feature 004, US4; 008
 
     const text = await exportedFile(page);
     const file = JSON.parse(text);
-    expect(file.version).toBe(5); // a cor do projeto sempre vai (feature 008)
+    expect(file.version).toBe(5); // a cor do projeto sempre vai
     expect(file.project.box).toMatchObject({
         type: 'bandpass',
         vr_m3: 0.04,
@@ -156,7 +156,7 @@ test('caixa dutada exporta a versão 5 com a cor do projeto (feature 004, US4; 0
     expect(file.version).toBe(5);
 });
 
-test('arquivo de versão futura mostra a mensagem de app mais novo (feature 004, US4)', async ({
+test('arquivo de versão futura mostra a mensagem de app mais novo', async ({
     page,
 }) => {
     await page.goto('/');
@@ -184,7 +184,7 @@ test('arquivo de versão futura mostra a mensagem de app mais novo (feature 004,
     await expect(field(page, /^Fs/)).toHaveValue('31,0');
 });
 
-test('trocar para bandpass leva o Vb digitado às duas câmaras (feature 004, US4)', async ({
+test('trocar para bandpass leva o Vb digitado às duas câmaras', async ({
     page,
 }) => {
     await page.goto('/');
@@ -221,7 +221,7 @@ async function openFile(page: Page, name: string, text: string) {
     });
 }
 
-test('plano de corte: ver não muda o arquivo; editar grava a versão 3 e reabre igual (feature 005, US6)', async ({
+test('plano de corte: ver não muda o arquivo; editar grava a versão 3 e reabre igual', async ({
     page,
 }) => {
     await page.goto('/');
@@ -268,7 +268,7 @@ test('plano de corte: ver não muda o arquivo; editar grava a versão 3 e reabre
     ).toBeVisible();
 });
 
-test('plano de corte: arquivo de versão futura pede atualizar e valor fora da faixa cita o caminho (feature 005, US6)', async ({
+test('plano de corte: arquivo de versão futura pede atualizar e valor fora da faixa cita o caminho', async ({
     page,
 }) => {
     await page.goto('/');
@@ -301,7 +301,7 @@ test('plano de corte: arquivo de versão futura pede atualizar e valor fora da f
     await expect(field(page, /^Fs/)).toHaveValue('31,0');
 });
 
-test('plano de corte: desfazer e refazer a edição da espessura (feature 005, US6)', async ({
+test('plano de corte: desfazer e refazer a edição da espessura', async ({
     page,
 }) => {
     await page.goto('/');
@@ -318,7 +318,7 @@ test('plano de corte: desfazer e refazer a edição da espessura (feature 005, U
     await expect(field(page, /Espessura/)).toHaveValue('25,0');
 });
 
-test('bandpass de 6ª ordem grava a versão 4 e reabre igual, com os dois dutos (feature 007, US4)', async ({
+test('bandpass de 6ª ordem grava a versão 4 e reabre igual, com os dois dutos', async ({
     page,
 }) => {
     await page.goto('/');
@@ -405,7 +405,7 @@ for (const [version, extra] of [
     [2, {}],
     [3, { cutPlan: { thickness_m: 0.02, proportion: 'louden' } }],
 ] as const) {
-    test(`abre um arquivo existente de versão ${version} sem mudança (feature 007, US4)`, async ({
+    test(`abre um arquivo existente de versão ${version} sem mudança`, async ({
         page,
     }) => {
         await page.goto('/');
@@ -427,9 +427,7 @@ for (const [version, extra] of [
     });
 }
 
-test('a cor do projeto vai no arquivo e volta ao reabrir (feature 008, US2)', async ({
-    page,
-}) => {
+test('a cor do projeto vai no arquivo e volta ao reabrir', async ({ page }) => {
     await page.goto('/');
     await fill(page, /^Fs/, '31');
 

@@ -6,7 +6,7 @@ import { PARAMETERS } from '@/lib/parameters';
 import { DRIVER_TYPES } from '@/lib/project/types';
 import type { DriverType } from '@/lib/project/types';
 
-// Regras do envio de driver (specs/006, data-model.md §5). Espelham o Form Request do servidor
+// Regras do envio de driver. Espelham o Form Request do servidor
 // (api/app/Http/Requests/StoreDriverSubmissionRequest.php); as faixas vêm de PARAMETERS e o
 // servidor as confere pela fixture api/tests/Fixtures/submission-ranges.json.
 
@@ -102,7 +102,7 @@ export const submissionSchema = z.object({
     }),
     type: z.union([z.literal(''), z.enum(DRIVER_TYPES)]),
     source: text(TEXT_LIMITS.source, true),
-    // Obrigatório (specs/009): vazio é 'required'; preenchido precisa ser e-mail.
+    // Obrigatório: vazio é 'required'; preenchido precisa ser e-mail.
     contact_email: z
         .string()
         .trim()
@@ -172,12 +172,12 @@ export type SubmissionPayload = Partial<Record<NumericKey, number>> & {
     source: string;
     contact_email: string;
     locale: 'pt-BR' | 'en';
-    // Campo-armadilha (FR-011): o usuário nunca o preenche.
+    // Campo-armadilha: o usuário nunca o preenche.
     website: string;
     turnstile_token?: string;
 };
 
-// Valores em SI como estão no formulário; texto aparado, vazios fora do corpo (FR-007).
+// Valores em SI como estão no formulário; texto aparado, vazios fora do corpo.
 export function toPayload(
     form: SubmissionForm,
     extra: { locale: 'pt-BR' | 'en'; turnstileToken?: string },

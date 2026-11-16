@@ -1,4 +1,4 @@
-// Grandezas físicas, unidades aceitas e precisão de exibição (research.md §5).
+// Grandezas físicas, unidades aceitas e precisão de exibição.
 // O valor guardado é sempre o SI; `factor` converte da unidade para o SI: si = valor × factor.
 
 export type UnitSystem = 'metric' | 'imperial';

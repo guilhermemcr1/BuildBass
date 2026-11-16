@@ -9,7 +9,7 @@ type CatalogGalleryState = {
     clear: () => void;
 };
 
-// Só em memória, de propósito (specs/010, R10): o projeto não aponta de volta ao catálogo e o
+// Só em memória, de propósito: o projeto não aponta de volta ao catálogo e o
 // arquivo `.buildbass.json` não leva imagens. Recarregar a página ou mudar a identidade esconde.
 export const useCatalogGallery = create<CatalogGalleryState>()((set) => ({
     current: undefined,

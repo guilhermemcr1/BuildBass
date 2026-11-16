@@ -46,7 +46,7 @@ const inside = (outer: Rect, inner: Rect) =>
     inner.x + inner.w <= outer.x + outer.w + EPS &&
     inner.y + inner.h <= outer.y + outer.h + EPS;
 
-describe('maxRectsBin (specs/012, R3)', () => {
+describe('maxRectsBin', () => {
     test.each(CHOICES)(
         '%s: peças dentro da chapa e sem sobreposição, contando a perda de serra',
         (choice) => {

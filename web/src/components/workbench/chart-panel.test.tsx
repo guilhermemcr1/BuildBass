@@ -302,7 +302,7 @@ describe('ChartPanel', () => {
     });
 });
 
-describe('ChartPanel — campo faltante em seção recolhida (specs/008, US7)', () => {
+describe('ChartPanel — campo faltante em seção recolhida', () => {
     beforeEach(() => {
         useWorkspace.setState(initialWorkspace());
         useExpanded.getState().collapseAll();
@@ -353,7 +353,7 @@ describe('ChartPanel — campo faltante em seção recolhida (specs/008, US7)', 
     });
 });
 
-describe('ChartPanel — exportar (specs/011)', () => {
+describe('ChartPanel — exportar', () => {
     beforeEach(() => {
         useWorkspace.setState(initialWorkspace());
     });
@@ -429,7 +429,7 @@ describe('ChartPanel — exportar (specs/011)', () => {
     });
 });
 
-describe('ChartPanel — exportar no idioma e nas unidades da bancada (specs/011, US4)', () => {
+describe('ChartPanel — exportar no idioma e nas unidades da bancada', () => {
     beforeEach(() => {
         useWorkspace.setState(initialWorkspace());
         usePreferences.setState({ unitSystem: 'metric' });

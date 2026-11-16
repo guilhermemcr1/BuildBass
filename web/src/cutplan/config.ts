@@ -8,18 +8,17 @@ import type {
     SheetConfig,
 } from './types';
 
-// Limites (SI) usados pelo esquema do arquivo, pelos campos da bancada e pela validação
-// (specs/005, data-model.md §1).
+// Limites (SI) usados pelo esquema do arquivo, pelos campos da bancada e pela validação.
 export const CUT_PLAN_LIMITS = {
     thickness_m: { min: 0.006, max: 0.05 },
     braces_m3: { min: 0, max: 20 },
     cutout_m: { min: 0.03, max: 1 },
     ratio: { min: 0.1, max: 10 },
-    // Chapa e perda de serra (specs/008, data-model.md §2).
+    // Chapa e perda de serra.
     sheet_w_m: { min: 0.1, max: 5 },
     sheet_h_m: { min: 0.1, max: 5 },
     kerf_m: { min: 0, max: 0.02 },
-    // Estoque e posição dos recortes (specs/012, data-model.md §5).
+    // Estoque e posição dos recortes.
     sheet_quantity: { min: 1, max: 99 },
     cutpos_x_m: { min: 0, max: 3 },
     cutpos_y_m: { min: 0, max: 3 },
@@ -28,12 +27,12 @@ export const CUT_PLAN_LIMITS = {
 // Perda de serra típica de uma serra circular de bancada (~3 mm); o usuário ajusta.
 export const DEFAULT_KERF_M = 0.003;
 
-// Painel de MDF comum (research.md §2).
+// Painel de MDF comum.
 export const DEFAULT_THICKNESS_M = 0.018;
 
 const GOLDEN = (1 + Math.sqrt(5)) / 2; // [MAT]
 
-// Sugestões de proporção altura : largura : profundidade (research.md §3). A profundidade fica com
+// Sugestões de proporção altura : largura : profundidade. A profundidade fica com
 // o menor valor porque o painel frontal leva o recorte do driver e precisa dos dois lados maiores.
 // São convenções para não repetir dimensões, não prova acústica:
 // - golden: φ² : φ : 1, construção popular de "caixa áurea" em projetos DIY [AU], definição em [MAT];

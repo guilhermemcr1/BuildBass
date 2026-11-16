@@ -7,7 +7,7 @@ use App\Models\Driver;
 use App\Models\DriverSubmission;
 use App\Support\DriverVariant;
 
-// Da leitura bruta da IA para a sugestão do formulário (feature 009, research.md §3 e §4): converte
+// Da leitura bruta da IA para a sugestão do formulário: converte
 // para SI, descarta o que sai de Driver::RANGES e marca como suspeito o que não fecha entre si.
 class ManualSuggestionBuilder
 {

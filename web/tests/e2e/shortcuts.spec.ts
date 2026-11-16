@@ -1,8 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('atalhos trocam o gráfico, abrem a ajuda e exportam (FR-028)', async ({
-    page,
-}) => {
+test('atalhos trocam o gráfico, abrem a ajuda e exportam', async ({ page }) => {
     await page.goto('/');
     await page.locator('[data-region="driver"]').waitFor();
 

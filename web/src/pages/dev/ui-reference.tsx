@@ -27,7 +27,7 @@ import type { SeriesColor } from '@/lib/project/types';
 import type { UnitId } from '@/lib/units/quantities';
 import { usePreferences } from '@/stores/preferences';
 
-// Página de referência do design system (FR-023). Só existe com o servidor de desenvolvimento:
+// Página de referência do design system. Só existe com o servidor de desenvolvimento:
 // main.tsx a carrega sob import.meta.env.DEV. Marcador usado pelo teste de build: buildbass-ui-reference.
 
 // Classes listadas por extenso para o Tailwind gerar todas (nada de nomes montados em runtime).

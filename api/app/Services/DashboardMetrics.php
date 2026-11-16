@@ -13,7 +13,7 @@ use Illuminate\Support\Collection;
 use stdClass;
 
 /**
- * Números do painel inicial da moderação (feature 010). Só consultas agregadas, sem cache: cada
+ * Números do painel inicial da moderação. Só consultas agregadas, sem cache: cada
  * abertura do painel lê o estado de agora. Dias são UTC (fuso do app), como a cota diária da IA.
  */
 class DashboardMetrics

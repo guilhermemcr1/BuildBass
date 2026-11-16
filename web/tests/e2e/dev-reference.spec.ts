@@ -2,7 +2,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test } from '@playwright/test';
 
-// Roda contra o preview do build de produção (FR-023).
+// Roda contra o preview do build de produção.
 test('no build de produção /dev/ui mostra a bancada', async ({ page }) => {
     await page.goto('/dev/ui');
 

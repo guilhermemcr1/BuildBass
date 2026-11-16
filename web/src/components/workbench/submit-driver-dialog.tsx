@@ -12,15 +12,15 @@ type SubmitDriverDialogProps = {
     onClose: () => void;
 };
 
-// Envio de driver ao catálogo (specs/006, contracts/ui.md). Montado só enquanto aberto, então o
-// formulário sempre parte do driver do projeto ativo naquele momento (FR-002).
+// Envio de driver ao catálogo. Montado só enquanto aberto, então o
+// formulário sempre parte do driver do projeto ativo naquele momento.
 export default function SubmitDriverDialog({
     onClose,
 }: SubmitDriverDialogProps) {
     const { t } = useTranslation('submission');
     const driver = useActiveProject((state) => state.data.driver);
     const driverSource = useActiveProject((state) => state.data.driverSource);
-    // O formulário é uma cópia: editá-lo nunca altera o projeto (FR-022).
+    // O formulário é uma cópia: editá-lo nunca altera o projeto.
     const [initial] = useState(() => formFromProject(driver, driverSource));
     const submission = useSubmitDriver(initial);
     const [confirmingDiscard, setConfirmingDiscard] = useState(false);

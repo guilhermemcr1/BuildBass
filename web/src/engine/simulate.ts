@@ -68,7 +68,7 @@ export function requiredBoxFields(type: BoxType): FieldKey[] {
 
 type Model = {
     perDriver: CircuitParams;
-    // Sem perdas por indutância, para o F3 (research.md §8).
+    // Sem perdas por indutância, para o F3.
     lowFrequency: CircuitParams;
     count: number;
     series: boolean;
@@ -251,7 +251,7 @@ function unwrap(phases: number[]): number[] {
     return result;
 }
 
-// Atraso de grupo τ = −dφ/dω por diferenças centrais (research.md §9).
+// Atraso de grupo τ = −dφ/dω por diferenças centrais.
 // Os máximos e os cortes valem só na grade de análise; as curvas vão além, até 20 kHz.
 function analysisPart(values: number[]): number[] {
     return values.slice(0, ANALYSIS_FREQUENCIES_HZ.length);
@@ -286,8 +286,8 @@ function relativeLevel(model: Model, frequency: number): number {
 }
 
 // Corte de `dropDb` dB: da frequência mais alta para a mais baixa, o primeiro ponto `dropDb` dB
-// abaixo da banda; o cruzamento é refinado por bisseção em log f (research.md §8). Com 3 dB é o
-// F3; com 10 dB, o F-10 que a exportação do gráfico mostra (specs/011).
+// abaixo da banda; o cruzamento é refinado por bisseção em log f. Com 3 dB é o
+// F3; com 10 dB, o F-10 que a exportação do gráfico mostra.
 function findCutoff(
     model: Model,
     dropDb: number,
@@ -329,7 +329,7 @@ export type SignalLevels = {
     power_w?: number;
 };
 
-// Sinal (research.md §6): watts e volts se convertem pela resistência DC do conjunto,
+// Sinal: watts e volts se convertem pela resistência DC do conjunto,
 // V = √(P·Re_tot). O modo diz qual dos dois foi digitado.
 export function signalLevels({
     driver,
@@ -516,7 +516,7 @@ export function simulate(project: ProjectInput): Simulation {
     }
 
     // Bandpass de 6ª ordem: a traseira também leva duto; o driver sai dela e cada duto sai da
-    // câmara dele (research.md §2).
+    // câmara dele.
     if (band6) {
         const rear = ductedChamber({
             volume_m3: box.vr_m3 as number,
@@ -579,7 +579,7 @@ export function simulate(project: ProjectInput): Simulation {
     const vas = values.vas_m3 as number;
     const omegaS = 2 * Math.PI * fs;
 
-    // Cada driver vê a sua fração da caixa (research.md §5).
+    // Cada driver vê a sua fração da caixa.
     const boxPerDriver = netVolume / count;
     const alpha = vas / boxPerDriver;
     const cab = boxPerDriver / RHO_C2;
@@ -601,7 +601,7 @@ export function simulate(project: ProjectInput): Simulation {
     const absorption = (omega: number, compliance: number) =>
         Number.isFinite(qa) ? 1 / (qa * omega * compliance) : undefined;
     // Massa do duto pela sintonia: Fb = 1 / (2π·√(Map·Cab)); na bandpass, Cab é o da câmara
-    // frontal com o cone bloqueado (research.md §2).
+    // frontal com o cone bloqueado.
     const map = ported
         ? 1 / ((2 * Math.PI * (box.fb_hz as number)) ** 2 * cab)
         : undefined;
@@ -837,7 +837,7 @@ export function simulate(project: ProjectInput): Simulation {
     }
 
     // Potência que leva o cone ao Xmax: x ∝ V, então P·(Xmax/x)², a menor entre F3 (na bandpass,
-    // o corte inferior) e 1000 Hz (research.md §7); abaixo dele a caixa já não é usada.
+    // o corte inferior) e 1000 Hz; abaixo dele a caixa já não é usada.
     if (
         curves.excursion_m !== undefined &&
         values.xmax_m !== undefined &&

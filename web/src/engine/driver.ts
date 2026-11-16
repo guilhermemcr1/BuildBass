@@ -36,8 +36,7 @@ type Rule = {
 const TWO_PI = 2 * Math.PI;
 const RHO_C2 = AIR_DENSITY * SPEED_OF_SOUND ** 2;
 
-// Relações de Thiele-Small de [S72] (Small, JAES 1972), aplicadas em ordem fixa até nada mudar
-// (research.md §4):
+// Relações de Thiele-Small de [S72] (Small, JAES 1972), aplicadas em ordem fixa até nada mudar:
 //   Qts = Qes·Qms / (Qes + Qms)
 //   Cms = Vas / (ρ·c²·Sd²)
 //   Fs  = 1 / (2π·√(Mms·Cms))

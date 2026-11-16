@@ -44,7 +44,7 @@ return [
             'provider' => 'users',
         ],
 
-        // Painel de moderação (feature 006): sem login de usuário final.
+        // Painel de moderação: sem login de usuário final.
         'moderator' => [
             'driver' => 'session',
             'provider' => 'moderators',

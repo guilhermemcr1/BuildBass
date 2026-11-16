@@ -15,7 +15,7 @@ function tile(page: Page, label: string) {
         .locator('..');
 }
 
-test('com driver e caixa preenchidos a bancada calcula e desenha (US1)', async ({
+test('com driver e caixa preenchidos a bancada calcula e desenha', async ({
     page,
 }) => {
     await page.goto('/');
@@ -34,7 +34,7 @@ test('com driver e caixa preenchidos a bancada calcula e desenha (US1)', async (
     ).toHaveCount(0);
 });
 
-test('na dutada, mudar Fb muda o F3 sem ação extra (US1)', async ({ page }) => {
+test('na dutada, mudar Fb muda o F3 sem ação extra', async ({ page }) => {
     await page.goto('/');
     await fill(page, /^Fs/, '28');
     await fill(page, /^Qts/, '0,38');
@@ -50,7 +50,7 @@ test('na dutada, mudar Fb muda o F3 sem ação extra (US1)', async ({ page }) =>
     await expect(f3).not.toHaveText(before ?? '');
 });
 
-test('duto: comprimento por formato e aviso quando não cabe (US2)', async ({
+test('duto: comprimento por formato e aviso quando não cabe', async ({
     page,
 }) => {
     await page.goto('/');
@@ -86,7 +86,7 @@ test('duto: comprimento por formato e aviso quando não cabe (US2)', async ({
     await expect(page.getByText(/O duto não cabe na caixa/)).toBeVisible();
 });
 
-test('o gráfico é lido pelo teclado (FR-007)', async ({ page }) => {
+test('o gráfico é lido pelo teclado', async ({ page }) => {
     await page.goto('/');
     await fill(page, /^Fs/, '28');
     await fill(page, /^Qts/, '0,38');

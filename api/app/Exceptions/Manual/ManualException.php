@@ -4,7 +4,7 @@ namespace App\Exceptions\Manual;
 
 use RuntimeException;
 
-/** Falha esperada da leitura de manual: vira resposta JSON `{message, code}` (feature 009). */
+/** Falha esperada da leitura de manual: vira resposta JSON `{message, code}`. */
 abstract class ManualException extends RuntimeException
 {
     /**

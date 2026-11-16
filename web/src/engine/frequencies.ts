@@ -1,4 +1,4 @@
-// Grade logarítmica com 180 pontos por década (research.md §3). A grade de análise (10 Hz a
+// Grade logarítmica com 180 pontos por década. A grade de análise (10 Hz a
 // 1000 Hz) é onde o motor mede F3, bordas de −3 dB e velocidades máximas: o modelo de baixas
 // frequências não vale acima disso, e a queda de agudos faria o F3 (buscado do topo) cair no lugar
 // errado. A grade das curvas segue com os mesmos pontos e continua até 20 kHz, só para o gráfico.

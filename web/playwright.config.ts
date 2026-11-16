@@ -5,7 +5,7 @@ const PREVIEW_URL = 'http://127.0.0.1:4173';
 const DEV_URL = 'http://127.0.0.1:5173';
 
 // Os cenários antigos preenchem Qes, Qms, Re etc., que o modo Normal esconde atrás de "Mostrar
-// mais" (feature 008, US7). Eles rodam em Pro por padrão; os cenários do Normal limpam isso com
+// mais". Eles rodam em Pro por padrão; os cenários do Normal limpam isso com
 // `test.use({ storageState: NORMAL_MODE })`.
 function proMode(origin: string) {
     return {

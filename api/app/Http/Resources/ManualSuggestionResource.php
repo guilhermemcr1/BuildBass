@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Sugestão de preenchimento da leitura de manual (feature 009): só os campos do driver em SI, os
+ * Sugestão de preenchimento da leitura de manual: só os campos do driver em SI, os
  * suspeitos, os descartados e os avisos. Nunca o texto do manual nem a resposta bruta da IA.
  *
  * @property array{suggestion: array<string, mixed>, suspect: list<string>, discarded: list<string>, warnings: list<string>} $resource

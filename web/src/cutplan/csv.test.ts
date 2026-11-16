@@ -371,7 +371,7 @@ describe('cutPlanCsv (C14)', () => {
     });
 });
 
-describe('cutPlanCsv — corte total e chapas (feature 008)', () => {
+describe('cutPlanCsv — corte total e chapas', () => {
     test('sempre traz o bloco "Corte total" com as duas bases e a diferença', () => {
         const rows = parse(cutPlanCsv(PLAN, format(',')), ';');
         const at = rows.findIndex((row) => row[0] === 'Corte total');
@@ -469,7 +469,7 @@ describe('cutPlanCsv — corte total e chapas (feature 008)', () => {
     });
 });
 
-describe('cutPlanCsv — centros dos recortes (feature 012)', () => {
+describe('cutPlanCsv — centros dos recortes', () => {
     test('bloco "Recortes" com o centro de cada recorte e se a posição é manual', () => {
         const [front, ...rest] = PLAN.pieces;
         const plan: Plan = {

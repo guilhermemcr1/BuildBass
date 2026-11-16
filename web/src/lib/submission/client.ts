@@ -2,7 +2,7 @@ import { apiUrl } from '@/lib/api';
 import { submissionResponseSchema } from './schema';
 import type { SubmissionPayload } from './schema';
 
-// Cliente fino do envio de driver (specs/006, contracts/submission-api.md). Nunca lança: devolve
+// Cliente fino do envio de driver. Nunca lança: devolve
 // o protocolo ou o motivo da falha, e `aborted` quando a própria interface cancelou o pedido.
 
 export type SubmitError =

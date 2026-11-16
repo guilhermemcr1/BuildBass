@@ -94,7 +94,7 @@ function chartData(
 // Gráfico com eixo de frequência logarítmico. As cores vêm dos tokens do tema (lidas em tempo
 // de execução) e o gráfico é refeito quando o tema ou a composição das séries muda; mudanças só
 // de valores usam setData.
-// Passos do cursor pelo teclado: um ponto, ou dez com Shift (research.md §13).
+// Passos do cursor pelo teclado: um ponto, ou dez com Shift.
 function nextIndex(
     event: KeyboardEvent,
     current: number | null,

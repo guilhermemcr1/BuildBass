@@ -15,7 +15,7 @@ export type CatalogPick = {
     clearError: () => void;
 };
 
-// Escolher = buscar o detalhe e só então copiar (FR-009): se algo falhar, o projeto fica como
+// Escolher = buscar o detalhe e só então copiar: se algo falhar, o projeto fica como
 // estava. Copiar registra o driver nos recentes.
 export function useCatalogPick(): CatalogPick {
     const [applying, setApplying] = useState(false);

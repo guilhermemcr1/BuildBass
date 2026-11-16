@@ -20,7 +20,7 @@ type ProjectTabsProps = {
     onClose: (id: string) => void;
 };
 
-// Projetos abertos (contracts/ui.md). Uma lista de botões, não um tablist: cada projeto tem
+// Projetos abertos. Uma lista de botões, não um tablist: cada projeto tem
 // também os botões de plotar e fechar, e controles dentro de uma aba ARIA não são alcançáveis.
 export function ProjectTabs({ onClose }: ProjectTabsProps) {
     const { t } = useTranslation('project');

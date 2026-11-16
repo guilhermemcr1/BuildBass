@@ -12,7 +12,7 @@ import { usePreferences } from '@/stores/preferences';
 
 const CutoutPositionDialog = lazy(() => import('./cutout-position-dialog'));
 
-// Peças em que os recortes podem ser posicionados à mão (specs/012).
+// Peças em que os recortes podem ser posicionados à mão.
 const POSITIONABLE = new Set<Piece['role']>(['front', 'back', 'divider']);
 
 // O desenho usa milímetros como unidade de tela; a unidade exibida nas cotas é a do usuário.
@@ -288,7 +288,7 @@ function PieceDrawing({
             </svg>
             <figcaption className="text-xs text-muted">{title}</figcaption>
             {centered.length > 0 && (
-                // Centro de cada recorte, para marcar na madeira (specs/012, FR-017).
+                // Centro de cada recorte, para marcar na madeira.
                 <ul className="text-[11px] leading-4 text-muted" data-centers>
                     {centered.map(({ ref, center, manual }) => (
                         <li key={`${ref.kind}-${ref.n}`}>
@@ -313,8 +313,7 @@ function PieceDrawing({
     );
 }
 
-// Um desenho por peça, todos na mesma escala; as medidas estão na tabela, o desenho só as mostra
-// (specs/005, FR-011 e FR-012).
+// Um desenho por peça, todos na mesma escala; as medidas estão na tabela, o desenho só as mostra.
 // `editable: false` na folha impressa: sem o botão de posicionar.
 export function CutDrawings({
     plan,

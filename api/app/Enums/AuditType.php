@@ -5,7 +5,7 @@ namespace App\Enums;
 use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasLabel;
 
-/** Tipos de evento da trilha de auditoria (feature 010, data-model.md). */
+/** Tipos de evento da trilha de auditoria. */
 enum AuditType: string implements HasColor, HasLabel
 {
     case SubmissionApproved = 'submission_approved';

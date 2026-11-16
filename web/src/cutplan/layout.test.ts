@@ -141,7 +141,7 @@ describe('layoutRow', () => {
     });
 });
 
-describe('checkCutouts (specs/012)', () => {
+describe('checkCutouts', () => {
     const panel = { w_m: 0.5, h_m: 0.8 };
     const web = 0.018;
     const at = (

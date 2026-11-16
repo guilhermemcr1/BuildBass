@@ -210,7 +210,7 @@ describe('projeção da caixa (C15)', () => {
     });
 });
 
-describe('bandpass de 6ª ordem na projeção (feature 007)', () => {
+describe('bandpass de 6ª ordem na projeção', () => {
     const sixth = () =>
         plan({
             type: 'bandpass6',
@@ -256,7 +256,7 @@ describe('bandpass de 6ª ordem na projeção (feature 007)', () => {
     });
 });
 
-describe('cotas e peças do 3D (feature 008)', () => {
+describe('cotas e peças do 3D', () => {
     const VIEWS = [
         DEFAULT_VIEW,
         { yaw_rad: 0.7, pitch_rad: -0.3, zoom: 1 },
@@ -384,7 +384,7 @@ describe('cotas e peças do 3D (feature 008)', () => {
     });
 });
 
-describe('projeção com posição manual (feature 012)', () => {
+describe('projeção com posição manual', () => {
     test('o furo do 3D acompanha o centro gravado do recorte', () => {
         const centerOf = (box: Plan) => {
             const hole = projectBox(box, FLAT, { translucent: false }).find(

@@ -8,7 +8,7 @@ import { buildCutPlan } from './plan';
 import { nestPieces008 } from './testing/nesting-008';
 import type { Piece, Placement, ResolvedSheet } from './types';
 
-// Conjunto de referência da feature 012 (SC-001, SC-002, SC-004): planos reais de vários tipos de
+// Conjunto de referência da feature 012: planos reais de vários tipos de
 // caixa, em lotes de 1 a 3 caixas, em chapas de tamanhos comuns.
 
 const BOXES: [string, Partial<BoxInput>, number][] = [
@@ -157,7 +157,7 @@ describe(`conjunto de referência (${CASES.length} casos)`, () => {
         expect(CASES.length).toBeGreaterThanOrEqual(20);
     });
 
-    test('Serra: nunca usa mais chapas que a 008 e é idêntico quando não economiza (FR-008, SC-001)', () => {
+    test('Serra: nunca usa mais chapas que a 008 e é idêntico quando não economiza', () => {
         let improved = 0;
 
         for (const item of CASES) {
@@ -189,7 +189,7 @@ describe(`conjunto de referência (${CASES.length} casos)`, () => {
         expect(improved).toBeGreaterThan(0);
     });
 
-    test('Serra: todo resultado é cortável em guilhotina (FR-008)', () => {
+    test('Serra: todo resultado é cortável em guilhotina', () => {
         for (const item of CASES) {
             const layout = nestPieces(item.pieces, single(item, 'guillotine'));
 
@@ -202,7 +202,7 @@ describe(`conjunto de referência (${CASES.length} casos)`, () => {
         }
     });
 
-    test('CNC/tupia: nunca pior que a Serra e economiza área em ao menos um caso (FR-009, SC-002)', () => {
+    test('CNC/tupia: nunca pior que a Serra e economiza área em ao menos um caso', () => {
         let improved = 0;
 
         for (const item of CASES) {
@@ -225,7 +225,7 @@ describe(`conjunto de referência (${CASES.length} casos)`, () => {
         expect(improved).toBeGreaterThan(0);
     });
 
-    test('uma sobra recebe as peças pequenas e reduz a chapa inteira aberta (SC-003)', () => {
+    test('uma sobra recebe as peças pequenas e reduz a chapa inteira aberta', () => {
         let checked = 0;
 
         for (const item of CASES.filter(({ w_m }) => w_m === 2.75)) {
@@ -259,7 +259,7 @@ describe(`conjunto de referência (${CASES.length} casos)`, () => {
         expect(checked).toBeGreaterThan(0);
     });
 
-    test('40 peças com 10 itens de estoque em até 200 ms nos dois tipos (SC-004, folga de 2×)', () => {
+    test('40 peças com 10 itens de estoque em até 200 ms nos dois tipos', () => {
         const pieces: Piece[] = Array.from({ length: 40 }, (_, index) => ({
             role: (
                 ['front', 'back', 'top', 'bottom', 'side', 'divider'] as const

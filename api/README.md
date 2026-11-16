@@ -16,10 +16,10 @@ php artisan serve
 Testes: `vendor/bin/pest` (SQLite em memória), `vendor/bin/pint --test`,
 `vendor/bin/phpstan analyse --memory-limit=1G`.
 
-## Envio de drivers e moderação (feature 006)
+## Envio de drivers e moderação
 
 - `POST /api/driver-submissions` cria um envio **pendente** (5 por hora por IP, honeypot `website`,
-  Turnstile). Contrato: `../specs/006-enviar-driver-moderacao/contracts/submission-api.md`.
+  Turnstile).
 - Painel de moderação (Filament) em `/moderation`, só para moderadores. Crie o primeiro:
 
   ```bash
@@ -37,13 +37,13 @@ Testes: `vendor/bin/pest` (SQLite em memória), `vendor/bin/pint --test`,
 | `FRONTEND_URL` | origem(ns) da SPA, separadas por vírgula | domínio do front |
 
 Do IP do remetente só se guarda um hash (HMAC com a chave do app); o e-mail de contato (obrigatório
-desde a feature 009) é apagado depois do aviso da decisão.
+no envio) é apagado depois do aviso da decisão.
 
-## Leitura de manual por IA (feature 009)
+## Leitura de manual por IA
 
 `POST /api/driver-submissions/extract` recebe o PDF de uma ficha técnica, extrai o texto com o
 poppler e consulta o OpenRouter para **sugerir** os campos do formulário de envio. Não grava o
-PDF, o texto nem a resposta da IA. Contrato: `../specs/009-preenchimento-por-manual/contracts/extract-api.md`.
+PDF, o texto nem a resposta da IA.
 
 Requisitos de deploy:
 

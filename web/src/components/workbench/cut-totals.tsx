@@ -6,7 +6,7 @@ import { formatWithUnit } from '@/lib/units/format';
 import { defaultUnitFor } from '@/lib/units/quantities';
 import { usePreferences } from '@/stores/preferences';
 
-// Corte total sem e com o desconto do MDF (specs/008): a espessura acrescentada às medidas aparece
+// Corte total sem e com o desconto do MDF: a espessura acrescentada às medidas aparece
 // na linha de diferença.
 export function CutTotals({ plan }: { plan: Plan }) {
     const { t } = useTranslation('cutplan');

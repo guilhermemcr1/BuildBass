@@ -19,7 +19,7 @@ type SheetLayoutProps = {
     sheet: ResolvedSheet;
 };
 
-// Sugestão de corte do estoque do usuário (specs/008 e 012): uma figura por chapa usada, com o item
+// Sugestão de corte do estoque do usuário: uma figura por chapa usada, com o item
 // do estoque de onde veio, cada peça no lugar em que deve ser cortada, o aproveitamento e a sobra.
 // As figuras ficam na mesma escala: uma sobra aparece menor que a chapa inteira.
 export function SheetLayout({ layout, sheet }: SheetLayoutProps) {

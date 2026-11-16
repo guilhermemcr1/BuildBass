@@ -3,7 +3,7 @@ import { aborted, readBody, retryAfter } from './client';
 import { parseManualResponse } from './manual-schema';
 import type { ManualResult } from './manual-schema';
 
-// Cliente fino da leitura de manual (specs/009, contracts/extract-api.md). Nunca lança: devolve a
+// Cliente fino da leitura de manual. Nunca lança: devolve a
 // sugestão ou o motivo da falha, e `aborted` quando a própria interface cancelou o pedido.
 
 export const MANUAL_MAX_BYTES = 10 * 1024 * 1024;

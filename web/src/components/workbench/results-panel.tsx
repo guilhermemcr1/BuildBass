@@ -48,7 +48,7 @@ function lengthStatus(
     return { status: 'none' };
 }
 
-// Velocidade máxima no duto contra os limites de 17 e 25 m/s (FR-011).
+// Velocidade máxima no duto contra os limites de 17 e 25 m/s.
 function velocityStatus(
     velocity: number | undefined,
     format: (si: number) => string,
@@ -82,7 +82,7 @@ function velocityStatus(
     };
 }
 
-// Resultados do projeto ativo, calculados pelo motor (FR-004).
+// Resultados do projeto ativo, calculados pelo motor.
 export function ResultsPanel() {
     const { t } = useTranslation(['workbench', 'engine']);
     const { locale } = useLocale();

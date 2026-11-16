@@ -31,7 +31,7 @@ describe('conversão de unidades', () => {
         }
     });
 
-    test('20 idas e voltas L → ft³ → L não acumulam desvio (SC-004)', () => {
+    test('20 idas e voltas L → ft³ → L não acumulam desvio', () => {
         let litres = 85;
 
         for (let round = 0; round < 20; round++) {

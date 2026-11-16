@@ -9,7 +9,7 @@ type SubmitConfirmationProps = {
     onClose: () => void;
 };
 
-// Recibo do envio (FR-006): protocolo, explicação da revisão e garantia de que o projeto não mudou.
+// Recibo do envio: protocolo, explicação da revisão e garantia de que o projeto não mudou.
 export function SubmitConfirmation({
     protocol,
     emailNotice,

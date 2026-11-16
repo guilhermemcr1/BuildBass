@@ -106,7 +106,7 @@ describe('HelpTip', () => {
     });
 });
 
-// Spike (specs/008, T014): o tooltip também precisa abrir pelo campo numérico do NumberField.
+// Spike: o tooltip também precisa abrir pelo campo numérico do NumberField.
 describe('Tooltip sobre o campo numérico', () => {
     test('abre ao focar e ao pairar o Input, fecha com Esc', async () => {
         renderWithProviders(

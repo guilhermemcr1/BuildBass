@@ -7,7 +7,7 @@ import type { UnitId } from '@/lib/units/quantities';
 import { DRIVER_TYPES, PROJECT_NAME_MAX } from './types';
 import type { ProjectData } from './types';
 
-// Schema do projeto na versão 1 (contracts/project-file.md). As faixas vêm de PARAMETERS, as
+// Schema do projeto na versão 1. As faixas vêm de PARAMETERS, as
 // mesmas de data-model.md. Carregado sob demanda: o Zod só entra quando se abre um arquivo.
 
 function range(key: ParameterKey) {
@@ -113,7 +113,7 @@ const cutPlan = z.object({
     braces_m3: range('braces_m3').optional(),
     cutout_m: range('cutout_m').optional(),
     // Chapa que o usuário tem (versão 5): largura e altura obrigatórias dentro do objeto. A versão 7
-    // acrescenta o estoque (quantidade, demais itens) e o tipo de corte (specs/012, research R1).
+    // acrescenta o estoque (quantidade, demais itens) e o tipo de corte.
     sheet: z
         .object({
             w_m: range('sheet_w_m'),

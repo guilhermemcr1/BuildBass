@@ -15,7 +15,7 @@ const STARS = Array.from({ length: 12 }, (_, index) => ({
 }));
 
 // Bandeiras do Brasil e dos EUA em SVG próprio, só decorativas: o idioma é sempre dito em texto ao
-// lado (FR-032). As cores são os tokens `--flag-*` de app.css, iguais nos dois temas porque são
+// lado. As cores são os tokens `--flag-*` de app.css, iguais nos dois temas porque são
 // cores de identidade. Desenho simplificado para ler bem a 20 px.
 export function Flag({ country, className }: FlagProps) {
     return (

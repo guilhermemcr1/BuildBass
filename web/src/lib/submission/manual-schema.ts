@@ -4,7 +4,7 @@ import type { DriverType } from '@/lib/project/types';
 import { NUMERIC_KEYS, rangeOf } from './schema';
 import type { NumericKey } from './schema';
 
-// Resposta da leitura de manual (specs/009, contracts/extract-api.md). O servidor já descarta o que
+// Resposta da leitura de manual. O servidor já descarta o que
 // sai das faixas; aqui as faixas são conferidas de novo, porque o front não confia no que recebe.
 
 export const MANUAL_WARNINGS = [

@@ -13,7 +13,7 @@ type DriverGalleryProps = {
 };
 
 // Galeria do driver copiado do catálogo: tira de miniaturas e ampliação num diálogo, com setas e
-// Esc pelo teclado (specs/010, US2). Sem imagens não renderiza nada.
+// Esc pelo teclado. Sem imagens não renderiza nada.
 export function DriverGallery({ name, images }: DriverGalleryProps) {
     const { t } = useTranslation('workbench');
     const [current, setCurrent] = useState<number>();

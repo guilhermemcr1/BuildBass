@@ -48,7 +48,7 @@ function matches(driver: SavedDriver, term: string): boolean {
 }
 
 // Gerenciar a lista pessoal: pesquisar, usar no projeto, editar, excluir (com confirmação),
-// exportar e importar (specs/008, FR-024, FR-025, FR-027a).
+// exportar e importar.
 export default function SavedDriversDialog({
     onClose,
 }: SavedDriversDialogProps) {

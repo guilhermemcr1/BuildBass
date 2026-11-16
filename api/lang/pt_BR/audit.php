@@ -1,6 +1,6 @@
 <?php
 
-// Rótulos da trilha de auditoria do painel (feature 010).
+// Rótulos da trilha de auditoria do painel.
 return [
 
     'types' => [

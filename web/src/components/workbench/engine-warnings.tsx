@@ -8,7 +8,7 @@ import { formatWithUnit } from '@/lib/units/format';
 import { defaultUnitFor } from '@/lib/units/quantities';
 import { usePreferences } from '@/stores/preferences';
 
-// Avisos do motor para o projeto ativo (FR-010), cada um com o que fazer a seguir.
+// Avisos do motor para o projeto ativo, cada um com o que fazer a seguir.
 export function EngineWarnings() {
     const { t } = useTranslation('engine');
     const { locale } = useLocale();

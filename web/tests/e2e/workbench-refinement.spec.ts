@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { driverAction, mockCatalog, openPicker } from './catalog-mock';
 
-// Refinamento da bancada (feature 008): um cenário por história.
+// Refinamento da bancada: um cenário por história.
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -20,7 +20,7 @@ async function box(page: Page, selector: string) {
 }
 
 test.describe('US1 — campos que não expandem', () => {
-    test('focar um campo não muda o tamanho nem a posição de nenhum elemento (SC-001)', async ({
+    test('focar um campo não muda o tamanho nem a posição de nenhum elemento', async ({
         page,
     }) => {
         await page.goto('/');
@@ -141,7 +141,7 @@ test.describe('US2 — abas com cor acima do Driver', () => {
         ).toBeVisible();
     });
 
-    test('duas cores escolhidas identificam as curvas na legenda (SC-004)', async ({
+    test('duas cores escolhidas identificam as curvas na legenda', async ({
         page,
     }) => {
         await page.goto('/');
@@ -175,7 +175,7 @@ test.describe('US2 — abas com cor acima do Driver', () => {
 });
 
 test.describe('US3 — busca compacta do Driver', () => {
-    test('o painel não mostra campo de busca fixo; o botão abre a listagem e escolher preenche o driver (SC-005)', async ({
+    test('o painel não mostra campo de busca fixo; o botão abre a listagem e escolher preenche o driver', async ({
         page,
     }) => {
         await mockCatalog(page);
@@ -241,7 +241,7 @@ test.describe('US4 — modal da caixa', () => {
         }
     }
 
-    test('abrir, mudar o volume, ver cotas e o alto-falante, e fechar com Esc devolvendo o foco (SC-006)', async ({
+    test('abrir, mudar o volume, ver cotas e o alto-falante, e fechar com Esc devolvendo o foco', async ({
         page,
     }) => {
         await page.goto('/');
@@ -349,7 +349,7 @@ test.describe('US6 — alto-falantes salvos', () => {
         await (await chooser).setFiles(file);
     }
 
-    test('salvar, abrir projeto novo e escolher em "Meus" traz os mesmos parâmetros (SC-008)', async ({
+    test('salvar, abrir projeto novo e escolher em "Meus" traz os mesmos parâmetros', async ({
         page,
     }) => {
         await page.goto('/');

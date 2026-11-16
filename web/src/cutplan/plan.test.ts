@@ -817,7 +817,7 @@ describe('bandpass (C6)', () => {
     });
 });
 
-describe('bandpass de 6ª ordem (feature 007, US5)', () => {
+describe('bandpass de 6ª ordem', () => {
     const sixth = (box: Partial<BoxInput> = {}, count = 1): ProjectInput =>
         project(
             {
@@ -906,7 +906,7 @@ describe('bandpass de 6ª ordem (feature 007, US5)', () => {
         expect(back[0]).toMatchObject({ base_m: 0.1, height_m: 0.08 });
     });
 
-    test('SC-008 — conferência por câmara dentro de 2 % da simulação, com o duto de cada uma', () => {
+    test('conferência por câmara dentro de 2 % da simulação, com o duto de cada uma', () => {
         const input = sixth({}, 2);
         const plan = ready(input, { braces_m3: 0.005 });
         const results = simulate(input).results;
@@ -1069,7 +1069,7 @@ describe('medidas do alto-falante no plano', () => {
     });
 });
 
-describe('posição manual dos recortes (feature 012, US3)', () => {
+describe('posição manual dos recortes', () => {
     const vented = project({ type: 'vented', vb_m3: 0.1, fb_hz: 35 }, 2);
     const front = (plan: Plan) =>
         plan.pieces.find((piece) => piece.role === 'front');
@@ -1173,7 +1173,7 @@ describe('posição manual dos recortes (feature 012, US3)', () => {
         );
     });
 
-    test('a posição manual não muda volumes nem medidas da caixa (FR-018)', () => {
+    test('a posição manual não muda volumes nem medidas da caixa', () => {
         const auto = ready(vented, { cutout_m: 0.2 });
         const moved = ready(vented, {
             cutout_m: 0.2,

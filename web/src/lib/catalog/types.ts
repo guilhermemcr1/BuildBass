@@ -9,10 +9,10 @@ import type { ParameterKey } from '@/lib/parameters';
 
 export type { DriverSource };
 
-// Formas da API do catálogo (specs/003-catalogo-de-drivers/contracts/catalog-api.md). Tudo em SI,
+// Formas da API do catálogo. Tudo em SI,
 // com os mesmos nomes de campo do projeto.
 
-// Imagem de um driver (feature 010): WebP ampliado e miniatura, URLs absolutas do servidor.
+// Imagem de um driver: WebP ampliado e miniatura, URLs absolutas do servidor.
 export type DriverImageRef = {
     url: string;
     thumb_url: string;

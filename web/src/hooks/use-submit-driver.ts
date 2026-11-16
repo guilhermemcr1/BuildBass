@@ -24,7 +24,7 @@ export type SubmitFailure = { error: SubmitError; retryAfterS?: number };
 
 export type ManualFailure = { error: ManualError; retryAfterS?: number };
 
-// Leitura de manual (specs/009): só pré-preenche o formulário; nunca envia nada ao catálogo.
+// Leitura de manual: só pré-preenche o formulário; nunca envia nada ao catálogo.
 export type ManualState = {
     status: 'idle' | 'reading' | 'done' | 'failed';
     // Quantos campos vazios receberam valor na última leitura.
@@ -47,8 +47,8 @@ const MANUAL_IDLE: ManualState = {
     unavailable: false,
 };
 
-// Estado do envio de driver (specs/006): o formulário vive aqui, então uma falha nunca perde o
-// que foi digitado (FR-020).
+// Estado do envio de driver: o formulário vive aqui, então uma falha nunca perde o
+// que foi digitado.
 export function useSubmitDriver(initial: SubmissionForm) {
     const locale = usePreferences((state) => state.locale);
     const offline = useOnlineStatus() === 'offline';
@@ -65,7 +65,7 @@ export function useSubmitDriver(initial: SubmissionForm) {
     autoRef.current = auto;
     const [manual, setManual] = useState<ManualState>(MANUAL_IDLE);
     const manualController = useRef<AbortController | undefined>(undefined);
-    // Campo-armadilha (FR-011): visível só para robôs.
+    // Campo-armadilha: visível só para robôs.
     const [trap, setTrap] = useState('');
     const [errors, setErrors] = useState<SubmissionErrors>({});
     const [status, setStatus] = useState<SubmitStatus>('editing');
@@ -180,7 +180,7 @@ export function useSubmitDriver(initial: SubmissionForm) {
         setStatus('sending');
         controller.current = new AbortController();
 
-        // Verificação anti-robô invisível (FR-011): um token novo a cada tentativa.
+        // Verificação anti-robô invisível: um token novo a cada tentativa.
         const captcha = await getTurnstileToken();
 
         if (!captcha.ok) {

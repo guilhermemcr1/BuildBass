@@ -11,7 +11,7 @@ import { useParameterField } from './use-parameter-field';
 
 type Mode = SignalInput['mode'];
 
-// Sinal em W ou V (o outro aparece calculado) e radiação (research.md §6).
+// Sinal em W ou V (o outro aparece calculado) e radiação.
 export function SignalFields() {
     const { t } = useTranslation('workbench');
     const { locale } = useLocale();

@@ -28,7 +28,7 @@ const BLOCK_GAP = 12;
 const SWATCH_WIDTH = 22;
 const TEXT_INDENT = SWATCH_WIDTH + 8;
 
-// Tamanhos da legenda, do mais confortável ao mais compacto (research §8).
+// Tamanhos da legenda, do mais confortável ao mais compacto.
 const LEGEND_SIZES = [
     { head: 11, detail: 10 },
     { head: 9.5, detail: 8.5 },
@@ -234,7 +234,7 @@ function legendItems(input: ExportInput, blocks: LegendBlock[]): Primitive[] {
     return placeLegend(input, blocks, sizes, 1).items;
 }
 
-// Monta a imagem do gráfico como uma lista de primitivas (specs/011, research §1): a mesma cena
+// Monta a imagem do gráfico como uma lista de primitivas: a mesma cena
 // vira SVG, PNG e PDF. Pura e determinística; a data vem em `input`.
 export function buildScene(input: ExportInput, groups: LegendGroups): Scene {
     const effective = effectiveGroups(groups, input.kind, input.limits);

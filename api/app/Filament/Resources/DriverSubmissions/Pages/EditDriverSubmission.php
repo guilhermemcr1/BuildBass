@@ -55,7 +55,7 @@ class EditDriverSubmission extends EditRecord
         return $moderator;
     }
 
-    // Salvar a revisão grava um evento com o que mudou, na mesma transação (feature 010, FR-016).
+    // Salvar a revisão grava um evento com o que mudou, na mesma transação.
     protected function handleRecordUpdate(Model $record, array $data): Model
     {
         return DB::transaction(function () use ($record, $data): Model {

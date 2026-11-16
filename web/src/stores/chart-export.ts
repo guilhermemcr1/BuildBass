@@ -28,7 +28,7 @@ type ChartExportState = {
     setGroup: (group: LegendGroup, enabled: boolean) => void;
 };
 
-// Escolhas do diálogo de exportação do gráfico (specs/011): ficam no navegador, como as demais
+// Escolhas do diálogo de exportação do gráfico: ficam no navegador, como as demais
 // preferências da bancada, e nunca entram no arquivo de projeto.
 export const useChartExport = create<ChartExportState>()(
     persist(

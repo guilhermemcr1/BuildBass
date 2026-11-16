@@ -19,7 +19,7 @@ function field(symbol: string) {
     return screen.getByRole('textbox', { name: new RegExp(`^${symbol}\\s?—`) });
 }
 
-describe('DriverPanel — consistência e calculados (US4)', () => {
+describe('DriverPanel — consistência e calculados', () => {
     beforeEach(() => {
         localStorage.clear();
         useWorkspace.setState(initialWorkspace());
@@ -65,7 +65,7 @@ async function openActions() {
     );
 }
 
-describe('DriverPanel — cabeçalho compacto (feature 008, US3)', () => {
+describe('DriverPanel — cabeçalho compacto', () => {
     beforeEach(() => {
         localStorage.clear();
         useWorkspace.setState(initialWorkspace());
@@ -107,7 +107,7 @@ describe('DriverPanel — cabeçalho compacto (feature 008, US3)', () => {
     });
 });
 
-describe('DriverPanel — enviar driver (specs/006, US4)', () => {
+describe('DriverPanel — enviar driver', () => {
     beforeEach(() => {
         localStorage.clear();
         useWorkspace.setState(initialWorkspace());
@@ -140,7 +140,7 @@ describe('DriverPanel — enviar driver (specs/006, US4)', () => {
     });
 });
 
-describe('DriverPanel — alto-falantes salvos (specs/008, US6)', () => {
+describe('DriverPanel — alto-falantes salvos', () => {
     beforeEach(() => {
         localStorage.clear();
         useWorkspace.setState(initialWorkspace());

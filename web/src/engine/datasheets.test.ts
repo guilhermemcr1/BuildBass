@@ -6,7 +6,7 @@ import type { DriverInput, ProjectInput } from './types';
 // Referência independente do motor: os dois drivers do catálogo (valores em SI, transcritos das
 // fichas técnicas públicas do fabricante, as mesmas do seeder em api/database/seeders) com a caixa
 // dutada sugerida na própria ficha. Não substitui os casos R1–R16: confere o motor contra números
-// que ele não produziu (specs/003-catalogo-de-drivers/research.md §9).
+// que ele não produziu.
 //
 // A ficha não informa o Ql de projeto, e o F3 depende dele; por isso o F3 da ficha é comparado com
 // o intervalo que o motor dá para Ql entre 7 (caixa com perdas) e 100 (quase sem perdas).

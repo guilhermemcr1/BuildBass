@@ -1,4 +1,4 @@
-// API pública do plano de corte (specs/005, contracts/cutplan.md). A interface só calcula
+// API pública do plano de corte. A interface só calcula
 // dimensões, volumes e projeções por aqui.
 export {
     CUT_PLAN_LIMITS,

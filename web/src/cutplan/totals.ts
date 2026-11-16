@@ -1,6 +1,6 @@
 import type { Plan } from './types';
 
-// Corte total (specs/008). "Sem desconto do MDF" = as seis faces pelas medidas internas, como se o
+// Corte total. "Sem desconto do MDF" = as seis faces pelas medidas internas, como se o
 // material não tivesse espessura; "com desconto" = as peças reais do plano, em que a espessura já
 // foi somada às medidas. A diferença é o que a espessura acrescenta ao corte.
 export type Basis = {

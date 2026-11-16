@@ -2,7 +2,7 @@ import type { SheetLayout } from './nesting';
 import { cutTotals } from './totals';
 import type { Cutout, PieceRole, Plan } from './types';
 
-// Lista de corte em CSV (specs/005, research.md §9). Função pura: os números e os textos já
+// Lista de corte em CSV. Função pura: os números e os textos já
 // chegam formatados na locale e na unidade ativas; aqui só se monta o arquivo.
 
 export type CsvLabels = {
@@ -62,14 +62,14 @@ export type CsvLabels = {
         utilization: string;
         waste: string;
         oversize: string;
-        // Estoque e tipo de corte (specs/012).
+        // Estoque e tipo de corte.
         stock: string;
         unplaced: string;
         cut: string;
         guillotine: string;
         free: string;
     };
-    // Centro de cada recorte (specs/012, FR-017).
+    // Centro de cada recorte.
     cutouts: {
         title: string;
         cutout: string;

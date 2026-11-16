@@ -1,14 +1,21 @@
-# Instalador original do BassBox (software comercial + seriais) — nunca versionar
+# Software comercial de referência e seus instaladores — nunca versionar
 /BassBox 6 Pro/
 
-# Fichas técnicas (PDF) dos fabricantes, só como fonte dos dados do catálogo — não versionar
+# Fichas técnicas (PDF) dos fabricantes, só como fonte dos dados do catálogo
 /alto-falantes-manuais/
 
-# Configuração local do Claude Code (skills do Spec Kit, permissões) — fica só na máquina
+# Ferramentas de IA e planejamento — ficam só na máquina
 /.claude/
+/.specify/
+/specs/
+CLAUDE.md
+AGENTS.md
 
-# Protótipos descartáveis de UI
+# Pesquisas, relatórios e rascunhos locais
+/reports/
+/research_notes/
 /prototypes/
+*.scratch.test.ts
 
 # Sistema e editores
 .DS_Store

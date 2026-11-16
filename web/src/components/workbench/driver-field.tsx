@@ -4,7 +4,7 @@ import { ParameterField } from '@/components/ui/parameter-field';
 import type { DerivedDriver, DriverKey } from '@/engine';
 import { useParameterField } from './use-parameter-field';
 
-// Status de consistência do motor (research.md §4) e valor calculado de cada campo (FR-015–017).
+// Status de consistência do motor e valor calculado de cada campo.
 export function DriverField({
     parameter,
     derived,

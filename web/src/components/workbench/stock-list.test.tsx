@@ -29,7 +29,7 @@ function renderStock() {
     );
 }
 
-describe('StockList (feature 012, US1)', () => {
+describe('StockList', () => {
     beforeEach(() => {
         localStorage.clear();
         useWorkspace.setState(initialWorkspace());

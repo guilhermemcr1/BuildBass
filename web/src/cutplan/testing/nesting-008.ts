@@ -1,5 +1,5 @@
 // Cópia fiel do encaixe da feature 008 (git b99f2f7), só para os testes da 012 compararem o
-// algoritmo novo com o antigo (FR-008, SC-001). Não é usada pelo app.
+// algoritmo novo com o antigo. Não é usada pelo app.
 import type { Piece, PieceRole } from '../types';
 
 type ResolvedSheet = {
@@ -9,7 +9,7 @@ type ResolvedSheet = {
     rotate: boolean;
 };
 
-// Encaixe das peças numa chapa que o usuário tem (specs/008, contracts/cutplan-sheet.md).
+// Encaixe das peças numa chapa que o usuário tem.
 //
 // Algoritmo: corte de guilhotina (todo corte atravessa o retângulo livre de lado a lado, como numa
 // serra de bancada) com *Best Short Side Fit* para escolher onde colocar cada peça e *Shorter

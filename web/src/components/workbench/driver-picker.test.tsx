@@ -373,7 +373,7 @@ describe('DriverPicker — falhas e estados', () => {
         expect(screen.getByRole('dialog')).toBeVisible();
     });
 
-    test('falha ao copiar deixa o projeto idêntico (FR-009)', async () => {
+    test('falha ao copiar deixa o projeto idêntico', async () => {
         detail.mockResolvedValue({ ok: false, error: 'server' });
         const input = await open();
         const before = activeProjectStore().getState().data;
@@ -447,7 +447,7 @@ describe('DriverPicker — enviar e offline', () => {
     });
 });
 
-describe('DriverPicker — Meus alto-falantes (specs/008, US6)', () => {
+describe('DriverPicker — Meus alto-falantes', () => {
     const MINE = {
         brand: 'Minha',
         model: 'Sub 15',

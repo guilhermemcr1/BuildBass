@@ -4,7 +4,7 @@ namespace App\Exceptions;
 
 use RuntimeException;
 
-/** O driver enviado já está no catálogo ou já aguarda análise (FR-009). */
+/** O driver enviado já está no catálogo ou já aguarda análise. */
 class DuplicateSubmissionException extends RuntimeException
 {
     public const IN_CATALOG = 'already_in_catalog';

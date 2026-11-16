@@ -21,7 +21,7 @@ const PARAMETER: Record<Field, ParameterKey> = {
     quantity: 'sheet_quantity',
 };
 
-// Lê e grava o estoque (specs/012). Sem chapa, a lista mostra um item vazio para digitar, como a
+// Lê e grava o estoque. Sem chapa, a lista mostra um item vazio para digitar, como a
 // chapa única da 008. Cada mudança grava a lista inteira: uma etapa do Desfazer.
 function useStock() {
     const sheet = useActiveProject((state) => state.data.cutPlan?.sheet);
@@ -188,7 +188,7 @@ export function StockList() {
     );
 }
 
-// Quantidade de cada item (vazio = sem limite): fica entre os avançados do plano (FR-024).
+// Quantidade de cada item (vazio = sem limite): fica entre os avançados do plano.
 export function StockQuantities() {
     const { t } = useTranslation('cutplan');
     const { items, field } = useStock();

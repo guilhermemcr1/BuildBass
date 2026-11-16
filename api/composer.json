@@ -1,11 +1,13 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/react-starter-kit",
+    "name": "buildbass/api",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "API do BuildBass: catálogo de drivers, envios da comunidade e painel de moderação.",
     "keywords": [
-        "laravel",
-        "framework"
+        "buildbass",
+        "thiele-small",
+        "loudspeaker",
+        "laravel"
     ],
     "license": "MIT",
     "require": {

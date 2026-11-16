@@ -202,7 +202,7 @@ describe('workspace', () => {
         expect(data.driver).toEqual({ fs_hz: 76.94, qts: 0.717 });
     });
 
-    test('o plano de corte sobrevive ao recarregar (feature 005)', async () => {
+    test('o plano de corte sobrevive ao recarregar', async () => {
         const id = workspace().activeId;
         projectStore(id)
             .getState()
@@ -231,7 +231,7 @@ describe('workspace', () => {
         });
     });
 
-    test('espaço de trabalho salvo antes do plano de corte reabre igual (feature 005)', async () => {
+    test('espaço de trabalho salvo antes do plano de corte reabre igual', async () => {
         const raw = localStorage.getItem(WORKSPACE_KEY) ?? '';
 
         useWorkspace.setState(initialWorkspace());
@@ -241,7 +241,7 @@ describe('workspace', () => {
         expect(workspace().projects[0].data).not.toHaveProperty('cutPlan');
     });
 
-    test('espaço de trabalho salvo antes da bandpass reabre igual (feature 004)', async () => {
+    test('espaço de trabalho salvo antes da bandpass reabre igual', async () => {
         const closed = {
             ...createProjectData('Selada'),
             box: {
@@ -266,7 +266,7 @@ describe('workspace', () => {
         expect('vf_m3' in data.box).toBe(false);
     });
 
-    test('projeto bandpass mantém as câmaras ao recarregar (feature 004)', async () => {
+    test('projeto bandpass mantém as câmaras ao recarregar', async () => {
         const id = workspace().activeId;
         const store = projectStore(id).getState();
         store.setBoxValue('vb_m3', 0.05);
@@ -284,7 +284,7 @@ describe('workspace', () => {
         });
     });
 
-    test('projeto bandpass 6ª ordem mantém câmaras, sintonias e dutos ao recarregar (feature 007)', async () => {
+    test('projeto bandpass 6ª ordem mantém câmaras, sintonias e dutos ao recarregar', async () => {
         const id = workspace().activeId;
         const store = projectStore(id).getState();
         store.setBoxValue('vb_m3', 0.05);
@@ -306,7 +306,7 @@ describe('workspace', () => {
         });
     });
 
-    test('espaço de trabalho salvo antes da 6ª ordem (sem os campos novos) reabre igual (feature 007)', async () => {
+    test('espaço de trabalho salvo antes da 6ª ordem (sem os campos novos) reabre igual', async () => {
         const before = {
             ...createProjectData('Bandpass 4'),
             box: {

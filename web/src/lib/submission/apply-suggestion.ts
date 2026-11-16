@@ -4,7 +4,7 @@ import type { ManualSuggestion } from './manual-schema';
 
 const TEXT_FIELDS = ['brand', 'model', 'variant'] as const;
 
-// Aplica a sugestão da leitura de manual (specs/009, FR-004a): só campos vazios recebem valor. O
+// Aplica a sugestão da leitura de manual: só campos vazios recebem valor. O
 // que a pessoa digitou ou escolheu nunca é sobrescrito, e `source` e `contact_email` não entram:
 // a origem dos dados e o contato continuam sendo dela.
 export function applySuggestion(

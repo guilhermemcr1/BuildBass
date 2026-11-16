@@ -15,7 +15,7 @@ export function emptyForm(): SubmissionForm {
     };
 }
 
-// Cópia do driver do projeto para o formulário (FR-002, FR-022): valores em SI, sem alterar o
+// Cópia do driver do projeto para o formulário: valores em SI, sem alterar o
 // projeto; a identificação (fabricante, modelo, variante, tipo) pré-preenche a identificação quando existe.
 export function formFromProject(
     driver: DriverInput,

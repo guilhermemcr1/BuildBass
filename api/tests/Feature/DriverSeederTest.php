@@ -6,7 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-// Faixas físicas do front (web/src/lib/parameters.ts); o seeder precisa caber nelas (FR-009).
+// Faixas físicas do front (web/src/lib/parameters.ts); o seeder precisa caber nelas.
 const RANGES = [
     'fs_hz' => [1, 20000],
     'qts' => [0.05, 10],

@@ -151,7 +151,7 @@ const IMG = {
         'https://api.exemplo.com/storage/driver-images/4f1c0a52-7b3e-4c1d-9f0a-1a2b3c4d5e6f_thumb.webp',
 };
 
-describe('imagens do driver (feature 010)', () => {
+describe('imagens do driver', () => {
     test('o resumo aceita cover_thumb_url http(s) e continua válido sem ela', () => {
         expect(
             searchResponseSchema.safeParse(

@@ -1,6 +1,6 @@
 <?php
 
-// Imagens de driver (feature 010, data-model.md). O upload é decodificado, reduzido e regravado em
+// Imagens de driver. O upload é decodificado, reduzido e regravado em
 // WebP (o original não é guardado). Os limites protegem a memória do GD e o disco.
 return [
 

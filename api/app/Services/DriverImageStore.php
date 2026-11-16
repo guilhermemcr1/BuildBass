@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
- * Grava e apaga as imagens de driver no disco público (feature 010). Cada imagem são dois arquivos:
+ * Grava e apaga as imagens de driver no disco público. Cada imagem são dois arquivos:
  * `{uuid}.webp` (ampliada) e `{uuid}_thumb.webp` (miniatura); o banco guarda só o caminho da
  * ampliada. Os nomes são UUID: nunca revelam o nome original e nunca se reutilizam.
  */

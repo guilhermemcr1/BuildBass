@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * `origin` diz como o driver entrou no catálogo (feature 010); `images` é a galeria (lista de
+     * `origin` diz como o driver entrou no catálogo; `images` é a galeria (lista de
      * caminhos no disco público, o primeiro é a capa). Os drivers que já existem e vieram de um
      * envio aprovado são marcados como tal; o resto fica como carga inicial.
      */

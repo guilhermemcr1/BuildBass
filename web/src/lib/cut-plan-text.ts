@@ -53,7 +53,7 @@ function sizeOf(cutout: Cutout, { t, length }: PlanText): string | undefined {
     }
 }
 
-// "Driver 1", "Duto 2": o recorte pela identidade (specs/012).
+// "Driver 1", "Duto 2": o recorte pela identidade.
 export function cutoutName(ref: CutoutRef, t: TFunction): string {
     return t(`cutplan:cutouts.ref_${ref.kind}`, { n: ref.n });
 }
@@ -80,7 +80,7 @@ export function cutoutSummary(cutouts: Cutout[], text: PlanText): string[] {
     const groups = new Map<string, { cutout: Cutout; count: number }>();
 
     for (const cutout of cutouts) {
-        // Posição e identidade (specs/012) não diferenciam recortes iguais.
+        // Posição e identidade não diferenciam recortes iguais.
         const {
             center: _center,
             ref: _ref,

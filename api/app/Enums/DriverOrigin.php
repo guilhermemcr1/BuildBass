@@ -5,7 +5,7 @@ namespace App\Enums;
 use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasLabel;
 
-/** Como o driver entrou no catálogo (feature 010). Não é editável. */
+/** Como o driver entrou no catálogo. Não é editável. */
 enum DriverOrigin: string implements HasColor, HasLabel
 {
     case InitialLoad = 'initial_load';

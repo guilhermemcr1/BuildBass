@@ -39,7 +39,7 @@ export function cutPlanOf(data: ProjectData): CutPlan {
     return plan;
 }
 
-// Plano de corte do projeto ativo (specs/005).
+// Plano de corte do projeto ativo.
 export function useCutPlan(): CutPlan {
     const data = useWorkspace(
         (state) => state.projects.find((p) => p.id === state.activeId)?.data,

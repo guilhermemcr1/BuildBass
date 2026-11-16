@@ -1,7 +1,7 @@
 import { measure } from './text';
 import type { Primitive, Scene } from './types';
 
-// PDF 1.4 de uma página escrito à mão (specs/011, research §2): fontes padrão Helvetica e
+// PDF 1.4 de uma página escrito à mão: fontes padrão Helvetica e
 // Helvetica-Bold (não precisam ser embutidas) em WinAnsi, e a cena vira operadores de caminho. O
 // texto sai vetorial, nítido ao ampliar. Todo o arquivo é Latin-1: cada caractere é um byte.
 

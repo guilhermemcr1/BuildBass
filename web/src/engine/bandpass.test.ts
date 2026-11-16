@@ -144,7 +144,7 @@ describe('bandpass — funções puras', () => {
     });
 });
 
-// Função de transferência analítica da bandpass de 4ª ordem (research.md §3), avaliada com Horner
+// Função de transferência analítica da bandpass de 4ª ordem, avaliada com Horner
 // e sem usar `solveCircuit`. Sem perdas e com Le = 0:
 //   Up/V = Bl·Sd·s / P4(s)
 //   P4(s) = (1 + a·s²)·(Re·Mms·s² + K·s + Re·(1/Cms + Sd²/Cr)) + Re·Sd²·Map·s²
@@ -508,7 +508,7 @@ describe('bandpass — resposta relativa (sem dados elétricos)', () => {
     });
 });
 
-describe('bandpass — avisos (US3)', () => {
+describe('bandpass — avisos', () => {
     const ids = (input: ProjectInput) =>
         simulate(input).warnings.map(({ id }) => id);
 

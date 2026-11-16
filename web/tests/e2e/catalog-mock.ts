@@ -1,8 +1,7 @@
 import { expect, type Page, type Route } from '@playwright/test';
 
-// A API do catálogo simulada nos testes de ponta a ponta: provam o front pelo contrato
-// (specs/003-catalogo-de-drivers/contracts/catalog-api.md), sem precisar de banco. O servidor real
-// tem os próprios testes (Pest) e o quickstart.
+// A API do catálogo simulada nos testes de ponta a ponta: provam o front pelo contrato, sem
+// precisar de banco. O servidor real tem os próprios testes (Pest).
 export const API = 'http://127.0.0.1:8010';
 
 const CORS = { 'Access-Control-Allow-Origin': '*' };

@@ -6,7 +6,7 @@ use App\Models\DriverSubmission;
 use App\Support\IpHash;
 use Illuminate\Database\Seeder;
 
-// Envios fictícios para o moderador experimentar o painel (specs/006). Só desenvolvimento: fora
+// Envios fictícios para o moderador experimentar o painel. Só desenvolvimento: fora
 // do DatabaseSeeder e sem dados reais. Marcas e valores inventados.
 class DriverSubmissionSeeder extends Seeder
 {

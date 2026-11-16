@@ -1,6 +1,6 @@
 <?php
 
-// Notice of the decision on a driver submission (specs/006, US5). Sent in the submission's language.
+// Notice of the decision on a driver submission. Sent in the submission's language.
 return [
     'approved' => [
         'subject' => 'Your driver was approved',

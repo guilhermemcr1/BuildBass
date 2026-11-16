@@ -2,7 +2,7 @@
 
 namespace App\Services\Audit;
 
-/** Diferença campo a campo entre dois estados, para os eventos de edição (feature 010). */
+/** Diferença campo a campo entre dois estados, para os eventos de edição. */
 class AuditDiff
 {
     /**

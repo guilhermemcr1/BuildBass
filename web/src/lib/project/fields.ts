@@ -24,7 +24,7 @@ import type {
     ProjectData,
 } from './types';
 
-// Onde cada campo da bancada mora dentro do projeto (data-model.md).
+// Onde cada campo da bancada mora dentro do projeto.
 type PortKey = 'diameter_m' | 'width_m' | 'height_m' | 'base_m';
 
 const BOX_KEYS = new Set<ParameterKey>([
@@ -257,7 +257,7 @@ export function writeSheetRotate(
     return sheet === undefined ? data : withSheet(data, { ...sheet, rotate });
 }
 
-// Estoque de chapas (specs/012): grava a lista inteira de uma vez (adicionar, editar, remover e
+// Estoque de chapas: grava a lista inteira de uma vez (adicionar, editar, remover e
 // reordenar são todas trocas da lista), preservando perda de serra, rotação e tipo de corte.
 export function setStock(data: ProjectData, items: StockItem[]): ProjectData {
     return withSheet(data, withStock(data.cutPlan?.sheet, items));

@@ -93,7 +93,7 @@ beforeEach(() => {
     extract.mockResolvedValue(FILLED);
 });
 
-describe('ManualFill — preencher a partir do manual (US1)', () => {
+describe('ManualFill — preencher a partir do manual', () => {
     test('o botão só liga com um PDF escolhido e mostra o aviso de privacidade', async () => {
         render();
 
@@ -200,7 +200,7 @@ describe('ManualFill — preencher a partir do manual (US1)', () => {
     });
 });
 
-describe('ManualFill — revisar com apoio (US2)', () => {
+describe('ManualFill — revisar com apoio', () => {
     test('destaca os suspeitos, lista descartados e lembra de revisar', async () => {
         render();
         await attach(pdf());
@@ -266,7 +266,7 @@ describe('ManualFill — revisar com apoio (US2)', () => {
     });
 });
 
-describe('ManualFill — falhas nunca bloqueiam o envio (US3)', () => {
+describe('ManualFill — falhas nunca bloqueiam o envio', () => {
     test.each([
         ['unreadable', /não tem texto que possa ser lido/],
         ['invalidFile', /até 10 MB e 30 páginas/],

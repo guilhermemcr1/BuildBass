@@ -5,8 +5,8 @@ namespace Database\Seeders;
 use App\Models\Driver;
 use Illuminate\Database\Seeder;
 
-// Drivers de exemplo, transcritos das fichas técnicas públicas do fabricante e convertidos para SI
-// (specs/003-catalogo-de-drivers/research.md §8). Nada vem do banco ou dos arquivos do BassBox.
+// Drivers de exemplo, transcritos das fichas técnicas públicas do fabricante e convertidos para SI.
+// Nada vem do banco ou dos arquivos do BassBox.
 class DriverSeeder extends Seeder
 {
     public function run(): void

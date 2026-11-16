@@ -51,7 +51,7 @@ function textProblem(field: TextField, value: string): Problem | undefined {
     return trimmed.length > TEXT_LIMITS[field].max ? 'tooLong' : undefined;
 }
 
-// Salvar (ou editar) um alto-falante da lista "Meus alto-falantes" (specs/008, FR-023–027).
+// Salvar (ou editar) um alto-falante da lista "Meus alto-falantes".
 // O formulário é uma cópia: não altera o projeto. Os parâmetros T/S vêm do `initial`.
 export default function SaveDriverDialog({
     initial,

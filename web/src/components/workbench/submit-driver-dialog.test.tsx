@@ -49,7 +49,7 @@ function seedDriver() {
     store.setDriverValue('vas_m3', 0.085);
 }
 
-describe('SubmitDriverDialog — enviar o driver do projeto (US1)', () => {
+describe('SubmitDriverDialog — enviar o driver do projeto', () => {
     test('abre com os parâmetros do projeto na unidade exibida e a identificação em branco', () => {
         seedDriver();
         renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
@@ -198,7 +198,7 @@ async function sendValidForm() {
     await userEvent.click(screen.getByRole('button', { name: 'Enviar' }));
 }
 
-describe('SubmitDriverDialog — recusas do servidor (US3)', () => {
+describe('SubmitDriverDialog — recusas do servidor', () => {
     test.each([
         ['alreadyInCatalog', /já está no catálogo/],
         ['alreadyPending', /já está em análise/],
@@ -352,7 +352,7 @@ describe('SubmitDriverDialog — campos calculados dos outros', () => {
     });
 });
 
-describe('SubmitDriverDialog — sem projeto e falhas (US4)', () => {
+describe('SubmitDriverDialog — sem projeto e falhas', () => {
     test('projeto sem driver abre com os campos vazios e aceita preenchimento à mão', async () => {
         renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
 

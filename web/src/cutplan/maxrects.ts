@@ -1,6 +1,6 @@
 import type { PieceRef, Placement } from './types';
 
-// Encaixe livre MaxRects (specs/012, research R3), para corte em CNC ou tupia: as peças podem ficar
+// Encaixe livre MaxRects, para corte em CNC ou tupia: as peças podem ficar
 // em posições que não formam cortes de ponta a ponta.
 //
 // Fonte: Jylänki, J. (2010). "A Thousand Ways to Pack the Bin — A Practical Approach to

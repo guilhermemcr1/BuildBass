@@ -54,7 +54,7 @@ function renderDialog() {
     );
 }
 
-describe('CutoutPositionDialog (feature 012, US3)', () => {
+describe('CutoutPositionDialog', () => {
     beforeEach(() => {
         localStorage.clear();
         useWorkspace.setState(initialWorkspace());

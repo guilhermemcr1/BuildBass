@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * Registra no painel de moderação a entrada, a falha de login e a saída (feature 010, FR-011). Só o
+ * Registra no painel de moderação a entrada, a falha de login e a saída. Só o
  * guard `moderator`. Em `Failed` lê apenas o e-mail digitado: `credentials` traz a senha, que nunca
  * é lida aqui. Falhar ao gravar não pode atrapalhar o login.
  */

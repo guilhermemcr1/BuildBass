@@ -10,7 +10,7 @@ use Tests\TestCase;
 
 pest()->extend(TestCase::class)->in('Feature', 'Unit');
 
-// Leitura de manual (feature 009): PDF mínimo, processos do poppler e OpenRouter simulados.
+// Leitura de manual: PDF mínimo, processos do poppler e OpenRouter simulados.
 function manualPdf(string $name = 'ficha.pdf', int $kilobytes = 1): File
 {
     return UploadedFile::fake()->createWithContent($name, "%PDF-1.4\n".str_repeat('0', $kilobytes * 1024));
@@ -73,7 +73,7 @@ function postManual(array $extra = [], string $ip = '203.0.113.7'): TestResponse
         ->post('/api/driver-submissions/extract', array_merge(['manual' => manualPdf()], $extra), ['Accept' => 'application/json']);
 }
 
-// Painel de moderação (feature 010): entra como moderador no guard do painel.
+// Painel de moderação: entra como moderador no guard do painel.
 function signInModerator(?Moderator $moderator = null): Moderator
 {
     $moderator ??= Moderator::factory()->create();

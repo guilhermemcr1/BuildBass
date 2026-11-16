@@ -1,6 +1,6 @@
 <?php
 
-// Auditoria do painel (feature 010, FR-018): por quanto tempo os eventos ficam guardados. A rotina
+// Auditoria do painel: por quanto tempo os eventos ficam guardados. A rotina
 // `audit:prune` apaga o que passar do prazo.
 return [
 

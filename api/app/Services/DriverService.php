@@ -17,8 +17,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Cadastro de drivers pelo painel (feature 010). Cada operação roda numa transação que inclui o
- * evento de auditoria: se o evento falhar, a mudança é desfeita (FR-016). Valida pelas mesmas
+ * Cadastro de drivers pelo painel. Cada operação roda numa transação que inclui o
+ * evento de auditoria: se o evento falhar, a mudança é desfeita. Valida pelas mesmas
  * faixas físicas do envio público (`Driver::RANGES`) e recusa duplicata.
  */
 class DriverService

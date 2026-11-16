@@ -22,7 +22,7 @@ type SuggestBoxProps = {
 };
 
 // Grupo "Volume e sintonia": título com o botão que sugere Vb (e Fb) pelos alinhamentos clássicos
-// numa só etapa de desfazer (FR-019), os campos logo abaixo e o motivo ou resultado depois deles.
+// numa só etapa de desfazer, os campos logo abaixo e o motivo ou resultado depois deles.
 export function SuggestBox({ title, children }: SuggestBoxProps) {
     const { t } = useTranslation(['workbench', 'engine']);
     const { locale } = useLocale();
@@ -45,7 +45,7 @@ export function SuggestBox({ title, children }: SuggestBoxProps) {
                       missing.map((key) => PARAMETERS[key].symbol),
                   ),
               });
-    // Não há alinhamento clássico de bandpass nesta versão (specs/004, Assumptions).
+    // Não há alinhamento clássico de bandpass nesta versão.
     const reason = twoChambers(data.box.type)
         ? t('suggest.bandpassUnavailable')
         : missingReason;

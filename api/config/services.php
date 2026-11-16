@@ -28,13 +28,13 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
-    // Captcha invisível dos envios públicos (feature 006). Desligado fora de produção.
+    // Captcha invisível dos envios públicos. Desligado fora de produção.
     'turnstile' => [
         'enabled' => (bool) env('TURNSTILE_ENABLED', false),
         'secret' => env('TURNSTILE_SECRET'),
     ],
 
-    // Leitura de manual por IA (feature 009). Sem chave ou modelo, o recurso fica indisponível.
+    // Leitura de manual por IA. Sem chave ou modelo, o recurso fica indisponível.
     'openrouter' => [
         'key' => env('OPENROUTER_API_KEY'),
         'model' => env('OPENROUTER_MODEL'),

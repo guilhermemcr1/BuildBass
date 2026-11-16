@@ -7,7 +7,7 @@ import type { Locale } from '@/i18n';
 import { usePreferences } from '@/stores/preferences';
 
 // Idioma com a bandeira ao lado do texto: BR (Brasil) e EN (Estados Unidos). A bandeira só enfeita;
-// o código no botão e o nome por extenso no menu continuam sendo o que se lê (FR-032).
+// o código no botão e o nome por extenso no menu continuam sendo o que se lê.
 const FLAGS: Record<Locale, { code: string; country: FlagCountry }> = {
     'pt-BR': { code: 'BR', country: 'br' },
     en: { code: 'EN', country: 'us' },

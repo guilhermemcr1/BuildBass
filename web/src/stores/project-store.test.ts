@@ -60,7 +60,7 @@ describe('createProjectStore', () => {
         expect(project.getState().data.box.port.shape).toBe('round');
     });
 
-    test('bandpass: câmaras nascem do Vb numa etapa só de desfazer (feature 004)', () => {
+    test('bandpass: câmaras nascem do Vb numa etapa só de desfazer', () => {
         const project = store();
         project.getState().setBoxValue('vb_m3', 0.05);
         const steps = project.temporal.getState().pastStates.length;
@@ -545,7 +545,7 @@ describe('origem do driver e edição manual', () => {
     });
 });
 
-describe('plano de corte no store (feature 005)', () => {
+describe('plano de corte no store', () => {
     test('editar um campo do plano é uma etapa de desfazer e refazer', () => {
         const project = store();
         project

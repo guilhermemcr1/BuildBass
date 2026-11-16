@@ -38,7 +38,7 @@ type HelpTipProps = {
     delay?: number;
 };
 
-// Ajuda curta de um rótulo ou símbolo (specs/008, FR-001–003): tooltip ao pairar ou focar; em
+// Ajuda curta de um rótulo ou símbolo: tooltip ao pairar ou focar; em
 // tela de toque, popover aberto por um botão. O texto também continua disponível ao leitor de tela
 // pela descrição do campo, então o tooltip é um complemento visual.
 export function HelpTip({ content, label, children, delay }: HelpTipProps) {

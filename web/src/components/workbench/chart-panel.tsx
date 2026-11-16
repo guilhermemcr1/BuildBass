@@ -283,7 +283,7 @@ export function ChartPanel({
         }
     };
 
-    // O gráfico da aba `kind` como a tela e a exportação o desenham (specs/011): uma montagem só,
+    // O gráfico da aba `kind` como a tela e a exportação o desenham: uma montagem só,
     // para a imagem exportada nunca divergir do que está na bancada.
     const viewFor = (kind: ChartKind): ChartView => {
         const series = seriesFor(kind);
@@ -313,7 +313,7 @@ export function ChartPanel({
         };
     };
 
-    // Dados do projeto que a legenda da imagem mostra (specs/011): tudo já na locale e nas unidades
+    // Dados do projeto que a legenda da imagem mostra: tudo já na locale e nas unidades
     // da bancada.
     const exportProject = (
         { project, simulation }: ProjectSimulation,
@@ -433,7 +433,7 @@ export function ChartPanel({
         ]),
     ];
 
-    // Seções "Mostrar mais" recolhidas que guardam algum campo que falta (FR-031a): a mensagem
+    // Seções "Mostrar mais" recolhidas que guardam algum campo que falta: a mensagem
     // oferece abri-las em vez de deixar o usuário procurar.
     const hiddenSections = (missing: FieldKey[]): SectionId[] => [
         ...new Set(

@@ -31,7 +31,7 @@ const frontChamber = (page: Page) =>
         exact: true,
     });
 
-// Driver de referência da quickstart da 004 (§2); a feature 007 não usa a API.
+// Driver de referência da quickstart da 004; a feature 007 não usa a API.
 async function referenceDriver(page: Page) {
     await fill(byName(page, /^Fs/), '28');
     await fill(byName(page, /^Qts/), '0,38');
@@ -58,7 +58,7 @@ async function sixthOrderBox(page: Page) {
     await fill(front.getByRole('textbox', { name: /Diâmetro/ }), '100');
 }
 
-test('bandpass 6ª ordem: escolher o tipo, preencher as duas câmaras e ver curvas e resultados (US1)', async ({
+test('bandpass 6ª ordem: escolher o tipo, preencher as duas câmaras e ver curvas e resultados', async ({
     page,
 }) => {
     await page.goto('/');
@@ -98,7 +98,7 @@ test('bandpass 6ª ordem: escolher o tipo, preencher as duas câmaras e ver curv
     }
 });
 
-test('bandpass 6ª ordem: a aba de velocidade lê o duto frontal e o traseiro (US1)', async ({
+test('bandpass 6ª ordem: a aba de velocidade lê o duto frontal e o traseiro', async ({
     page,
 }) => {
     await page.goto('/');
@@ -115,7 +115,7 @@ test('bandpass 6ª ordem: a aba de velocidade lê o duto frontal e o traseiro (U
     );
 });
 
-test('bandpass 6ª ordem: mudar a sintonia frontal atualiza os resultados sem ação extra (US1)', async ({
+test('bandpass 6ª ordem: mudar a sintonia frontal atualiza os resultados sem ação extra', async ({
     page,
 }) => {
     await page.goto('/');
@@ -133,7 +133,7 @@ test('bandpass 6ª ordem: mudar a sintonia frontal atualiza os resultados sem a�
     await expect(high).not.toHaveText(before ?? '');
 });
 
-test('bandpass 6ª ordem: Fbr vazio diz o que falta e o resto continua (US1)', async ({
+test('bandpass 6ª ordem: Fbr vazio diz o que falta e o resto continua', async ({
     page,
 }) => {
     await page.goto('/');

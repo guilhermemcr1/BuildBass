@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vite-plus/test';
 import { AIR_DENSITY, SPEED_OF_SOUND } from './constants';
 import { deriveDriver } from './driver';
 
-// Driver de referência coerente pelas relações de [S72] (quickstart.md).
+// Driver de referência coerente pelas relações de [S72].
 const FS = 28;
 const QES = 0.42;
 const QMS = 4.1;

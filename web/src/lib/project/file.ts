@@ -3,7 +3,7 @@ import { CURRENT_VERSION, migrate } from './migrate';
 import { validColor } from './types';
 import type { ProjectData, SeriesColor } from './types';
 
-// Arquivo .buildbass.json (contracts/project-file.md): entrada não confiável, validada antes de
+// Arquivo .buildbass.json: entrada não confiável, validada antes de
 // chegar ao estado (constituição, princípio IV).
 
 export const FILE_FORMAT = 'buildbass.project';
@@ -26,7 +26,7 @@ export type ParseResult =
 // A versão gravada é a menor que descreve o arquivo: enchimento, ponta do duto ou Le em 10 kHz = 8,
 // medidas do alto-falante = 6, cor do projeto ou chapa = 5, bandpass de 6ª ordem = 4,
 // plano de corte editado = 3, bandpass de 4ª ordem = 2 e os demais continuam v1 e abrem em apps
-// anteriores (specs/004, 005, 007 e 008, contracts/project-file.md).
+// anteriores.
 function versionOf(data: ProjectData, color?: SeriesColor): number {
     const sheet = data.cutPlan?.sheet;
     const ports = [data.box.port, data.box.port_rear];
@@ -98,7 +98,7 @@ function persistable(data: ProjectData): ProjectData {
         : { ...others, cutPlan: next };
 }
 
-// A cor é do projeto aberto (aba), não do `ProjectData`: vai na raiz do arquivo (specs/008, R3).
+// A cor é do projeto aberto (aba), não do `ProjectData`: vai na raiz do arquivo.
 export function serializeProject(
     project: ProjectData,
     now = new Date(),

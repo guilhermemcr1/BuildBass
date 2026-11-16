@@ -32,7 +32,7 @@ function bandpass(
 
 const DRIVER = { fs_hz: 28, qts: 0.38, vas_m3: 0.085 };
 
-describe('EngineWarnings — bandpass (US3)', () => {
+describe('EngineWarnings — bandpass', () => {
     beforeEach(() => {
         localStorage.clear();
         useWorkspace.setState(initialWorkspace());
@@ -131,7 +131,7 @@ const round = (diameter_m: number) => ({
     count: 1,
 });
 
-describe('EngineWarnings — bandpass de 6ª ordem (US3)', () => {
+describe('EngineWarnings — bandpass de 6ª ordem', () => {
     beforeEach(() => {
         localStorage.clear();
         useWorkspace.setState(initialWorkspace());

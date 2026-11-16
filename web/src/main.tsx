@@ -10,7 +10,7 @@ import '@/styles/app.css';
 initI18n(usePreferences.getState().locale);
 
 // A referência de componentes só existe no servidor de desenvolvimento: no build de produção
-// este ramo é eliminado e o código da página não entra no pacote (FR-023).
+// este ramo é eliminado e o código da página não entra no pacote.
 function resolvePage(): ComponentType {
     if (import.meta.env.DEV && window.location.pathname === '/dev/ui') {
         return lazy(() => import('@/pages/dev/ui-reference'));

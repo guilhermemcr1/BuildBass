@@ -8,8 +8,8 @@ import type {
     SearchResponse,
 } from './types';
 
-// Cliente fino da API do catálogo (contracts/catalog-api.md). Nunca lança: devolve o resultado ou
-// o motivo da falha, e `aborted` quando a própria interface cancelou o pedido (FR-003).
+// Cliente fino da API do catálogo. Nunca lança: devolve o resultado ou
+// o motivo da falha, e `aborted` quando a própria interface cancelou o pedido.
 
 type Parse<T> = (body: unknown) => Promise<T | undefined>;
 

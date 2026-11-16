@@ -52,7 +52,7 @@ function envelope(project: unknown, extra: Record<string, unknown> = {}) {
 }
 
 describe('arquivo de projeto', () => {
-    test('ida e volta reproduz todos os campos (SC-003)', async () => {
+    test('ida e volta reproduz todos os campos', async () => {
         const result = await parseProjectFile(file(serializeProject(FULL)));
 
         expect(result).toEqual({ ok: true, data: FULL });
@@ -154,7 +154,7 @@ describe('nome do arquivo exportado', () => {
     });
 });
 
-describe('origem do driver (feature 003)', () => {
+describe('origem do driver', () => {
     const SOURCE = { brand: 'Triton', model: 'TR 620 12"', variant: '4 Ω' };
 
     test('ida e volta preserva driverSource', async () => {
@@ -218,7 +218,7 @@ describe('origem do driver (feature 003)', () => {
     });
 });
 
-describe('bandpass e versão 2 (feature 004)', () => {
+describe('bandpass e versão 2', () => {
     const BANDPASS: ProjectData = {
         ...FULL,
         name: 'Sub bandpass',
@@ -451,7 +451,7 @@ describe('plano de corte no arquivo (versão 3)', () => {
     });
 });
 
-describe('bandpass de 6ª ordem e versão 4 (feature 007)', () => {
+describe('bandpass de 6ª ordem e versão 4', () => {
     const SIXTH: ProjectData = {
         ...FULL,
         name: 'Sub bandpass 6',
@@ -618,7 +618,7 @@ describe('bandpass de 6ª ordem e versão 4 (feature 007)', () => {
     });
 });
 
-describe('cor do projeto e versão 5 (feature 008)', () => {
+describe('cor do projeto e versão 5', () => {
     const versionOf = (text: string): number => JSON.parse(text).version;
 
     test('a versão atual é 8', () => {
@@ -653,7 +653,7 @@ describe('cor do projeto e versão 5 (feature 008)', () => {
         expect(result).toEqual({ ok: true, data: FULL, color: 6 });
     });
 
-    test('arquivos das versões 1 a 4 abrem sem cor (SC-011)', async () => {
+    test('arquivos das versões 1 a 4 abrem sem cor', async () => {
         for (const version of [1, 2, 3, 4]) {
             const result = await parseProjectFile(
                 file(envelope(FULL, { version })),
@@ -675,7 +675,7 @@ describe('cor do projeto e versão 5 (feature 008)', () => {
     });
 });
 
-describe('chapa do usuário no arquivo (feature 008)', () => {
+describe('chapa do usuário no arquivo', () => {
     const withSheet = (sheet: unknown) =>
         ({ ...FULL, cutPlan: { sheet } }) as ProjectData;
     const sheet = { w_m: 2.75, h_m: 1.85, kerf_m: 0.003, rotate: false };
@@ -787,7 +787,7 @@ describe('medidas do alto-falante e versão 6', () => {
     });
 });
 
-describe('estoque, tipo de corte, posições e versão 7 (feature 012)', () => {
+describe('estoque, tipo de corte, posições e versão 7', () => {
     const withPlan = (cutPlan: unknown) =>
         ({ ...FULL, cutPlan }) as ProjectData;
     const one = { w_m: 2.75, h_m: 1.85 };

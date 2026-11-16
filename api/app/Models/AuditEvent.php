@@ -11,7 +11,7 @@ use Illuminate\Support\Carbon;
 use LogicException;
 
 /**
- * Evento da trilha de auditoria (feature 010). Imutável: só se cria; a retenção apaga por consulta
+ * Evento da trilha de auditoria. Imutável: só se cria; a retenção apaga por consulta
  * direta (`audit:prune`), fora do model. Autor e objeto são copiados no instante, sem chave
  * estrangeira. `ip_hash` é o único rastro de rede.
  *

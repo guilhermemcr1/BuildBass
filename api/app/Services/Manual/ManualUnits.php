@@ -5,7 +5,7 @@ namespace App\Services\Manual;
 use function mb_strtolower;
 
 /**
- * Unidades que aparecem nos manuais de alto-falante e seus fatores para o SI (feature 009). A IA só
+ * Unidades que aparecem nos manuais de alto-falante e seus fatores para o SI. A IA só
  * devolve valor + unidade; a conta é aqui, para ser determinística. Fatores: definições do SI e das
  * unidades imperiais (1 in = 0,0254 m; 1 ft³ = 0,0283168466 m³; 1 in³ = 1,6387064e-5 m³;
  * 1 oz = 0,0283495231 kg). As chaves SI são as de Driver::RANGES.

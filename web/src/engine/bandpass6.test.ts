@@ -6,12 +6,12 @@ import { FREQUENCIES_HZ } from './frequencies';
 import { simulate } from './simulate';
 import type { BoxInput, DriverInput, ProjectInput } from './types';
 
-// Bandpass de 6ª ordem (specs/007): verificação do motor contra a função de transferência fechada
+// Bandpass de 6ª ordem: verificação do motor contra a função de transferência fechada
 // de research.md §3, avaliada aqui com polinômios e Horner, sem usar `solveCircuit`.
 //
 // T18 (exemplo numérico de livro) está PENDENTE: [D06] e [G89] não estavam acessíveis. SC-002 é
 // atendido pela verificação analítica (T1, T2, T7, T9) e pelo limite do duto traseiro fechado (T4,
-// em circuit.test.ts); a lacuna está registrada em specs/007-bandpass-6a-ordem/quickstart.md.
+// em circuit.test.ts).
 
 const LOSSLESS = Number.POSITIVE_INFINITY;
 const RHO_C2 = AIR_DENSITY * SPEED_OF_SOUND ** 2;
@@ -271,7 +271,7 @@ describe('bandpass 6ª ordem — contra a função de transferência analítica 
         expect(low ?? 0).toBeLessThan(high ?? 0);
     });
 
-    test('as bordas de −10 dB ficam fora das de −3 dB (specs/011)', () => {
+    test('as bordas de −10 dB ficam fora das de −3 dB', () => {
         const { results } = simulate(sixth());
 
         expect(results.f_low10_hz ?? 0).toBeLessThan(results.f_low_hz ?? 0);
@@ -724,7 +724,7 @@ describe('bandpass 6ª ordem — avisos por câmara (T34)', () => {
     });
 });
 
-describe('bandpass 6ª ordem — desempenho (SC-004)', () => {
+describe('bandpass 6ª ordem — desempenho', () => {
     // Completa, com os dois dutos medidos e Ql finito (todas as curvas e velocidades calculadas).
     const complete = sixth({
         ql: 7,

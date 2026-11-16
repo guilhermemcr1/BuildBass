@@ -29,7 +29,7 @@ function piece(role: PieceRole, w_m: number, h_m: number, quantity = 1): Piece {
 const total = (pieces: Piece[]) =>
     pieces.reduce((sum, { quantity }) => sum + quantity, 0);
 
-// Invariantes que valem para qualquer entrada (contracts/cutplan-sheet.md).
+// Invariantes que valem para qualquer entrada.
 function expectValid(
     layout: SheetLayout,
     pieces: Piece[],
@@ -124,7 +124,7 @@ function plan(box: Partial<BoxInput> = {}) {
     return result.plan;
 }
 
-describe('encaixe das peças na chapa (feature 008)', () => {
+describe('encaixe das peças na chapa', () => {
     test('uma peça cabe numa chapa e o aproveitamento é a área dela', () => {
         const pieces = [piece('front', 0.5, 0.4)];
         const layout = nestPieces(pieces, SHEET);

@@ -69,7 +69,7 @@ describe('PlanWarnings', () => {
     });
 });
 
-describe('PlanWarnings — bandpass de 6ª ordem (feature 007)', () => {
+describe('PlanWarnings — bandpass de 6ª ordem', () => {
     beforeEach(() => {
         usePreferences.setState({ unitSystem: 'metric' });
     });
@@ -122,7 +122,7 @@ describe('PlanWarnings — bandpass de 6ª ordem (feature 007)', () => {
     });
 });
 
-describe('PlanWarnings — posição dos recortes (feature 012)', () => {
+describe('PlanWarnings — posição dos recortes', () => {
     beforeEach(() => {
         usePreferences.setState({ unitSystem: 'metric' });
     });

@@ -1,6 +1,6 @@
 <?php
 
-// Aviso da decisão sobre um envio de driver (specs/006, US5). Sai no idioma do envio.
+// Aviso da decisão sobre um envio de driver. Sai no idioma do envio.
 return [
     'approved' => [
         'subject' => 'Seu driver foi aprovado',

@@ -6,7 +6,7 @@ import { isDriverType } from '@/lib/project/types';
 import { SAVED_DRIVER_LIMITS } from './types';
 import type { SavedDriver, SavedDriverDraft } from './types';
 
-// Validação leve, sem Zod, do que o navegador devolve (specs/008, R11): o localStorage é terreno
+// Validação leve, sem Zod, do que o navegador devolve: o localStorage é terreno
 // do usuário, então item sem a forma esperada é descartado. O arquivo de importação usa Zod
 // (carregado sob demanda), com as mesmas faixas.
 

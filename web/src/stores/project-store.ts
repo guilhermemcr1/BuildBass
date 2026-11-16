@@ -39,7 +39,7 @@ export type ProjectState = {
     setFieldUnit: (key: ParameterKey, unit: UnitId) => void;
     clearFieldUnits: () => void;
     // Copia um driver do catálogo: substitui o driver por inteiro e registra a origem, numa etapa
-    // só de desfazer (specs/003, FR-006–008).
+    // só de desfazer.
     // Quando o cadastro traz medidas físicas, elas substituem as do projeto (formato, pistão e
     // cotas A–G, com o recorte no plano de corte); sem medidas, as do projeto ficam como estão.
     applyCatalogDriver: (
@@ -50,9 +50,9 @@ export type ProjectState = {
     // Edita a identificação do driver (marca, modelo, variação, tipo); parte vazia é apagada.
     setDriverIdentity: (patch: Partial<DriverSource>) => void;
     // Aplica um alto-falante salvo pelo usuário: driver, origem e, quando o salvo traz, o recorte
-    // do plano de corte, numa etapa só de desfazer (specs/008, FR-024).
+    // do plano de corte, numa etapa só de desfazer.
     applySavedDriver: (saved: SavedDriverDraft) => void;
-    // Várias mudanças numa única etapa de desfazer (ex.: sugestão de caixa, FR-020).
+    // Várias mudanças numa única etapa de desfazer (ex.: sugestão de caixa).
     apply: (update: (data: ProjectData) => ProjectData) => void;
 };
 
@@ -105,9 +105,8 @@ export function createProjectStore(
                                     : withValue(data.box, key, si),
                         })),
                     // Ao escolher bandpass, as câmaras vazias partem do Vb já digitado (uma etapa só
-                    // de desfazer); cada tipo guarda os próprios campos (specs/004, FR-012). Na de
-                    // 6ª ordem o duto traseiro parte de uma cópia do frontal; Fbr não é semeada
-                    // (specs/007, research.md §8).
+                    // de desfazer); cada tipo guarda os próprios campos. Na de
+                    // 6ª ordem o duto traseiro parte de uma cópia do frontal; Fbr não é semeada.
                     setBoxType: (type) =>
                         update((data) => {
                             const { vb_m3 } = data.box;

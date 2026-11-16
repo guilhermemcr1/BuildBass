@@ -19,7 +19,7 @@ type StatusIndicatorProps = {
     status: FieldStatus;
     label?: string;
     className?: string;
-    // `compact` (specs/008, FR-004): texto curto e menor para os campos de parâmetro; o rótulo
+    // `compact`: texto curto e menor para os campos de parâmetro; o rótulo
     // completo continua disponível ao leitor de tela.
     size?: 'default' | 'compact';
 };

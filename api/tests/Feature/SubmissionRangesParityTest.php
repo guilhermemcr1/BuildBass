@@ -3,7 +3,7 @@
 use App\Models\Driver;
 
 // A fixture é escrita pelo teste do front (web/src/lib/submission/schema.test.ts) a partir de
-// PARAMETERS. Aqui ela precisa bater com Driver::RANGES (SC-005).
+// PARAMETERS. Aqui ela precisa bater com Driver::RANGES.
 it('tem as mesmas faixas do front', function () {
     $fixture = json_decode((string) file_get_contents(__DIR__.'/../Fixtures/submission-ranges.json'), true);
     $ranges = Driver::RANGES;

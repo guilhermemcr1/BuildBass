@@ -35,7 +35,7 @@ export type Suggestion =
 
 const NEEDS: DriverKey[] = ['fs_hz', 'qts', 'vas_m3'];
 const BUTTERWORTH_QTC = 0.707;
-// Acima disso α < 0,3: a caixa passaria de 3,3·Vas (research.md §10).
+// Acima disso α < 0,3: a caixa passaria de 3,3·Vas.
 const CLOSED_MAX_QTS = 0.62;
 const VENTED_MIN_QTS = 0.2;
 const VENTED_MAX_QTS = 0.5;
@@ -143,7 +143,7 @@ function peakDb({ a1, a2, a3 }: Coefficients, h: number): number {
     return peak;
 }
 
-// Sugestão de caixa pelos alinhamentos clássicos (research.md §10, FR-019).
+// Sugestão de caixa pelos alinhamentos clássicos.
 export function suggestBox(project: ProjectInput): Suggestion {
     const { values } = deriveDriver(project.driver);
     const missing = NEEDS.filter((key) => values[key].value === undefined);
@@ -211,8 +211,7 @@ export function suggestBox(project: ProjectInput): Suggestion {
         };
     }
 
-    // Volume bruto: o líquido mais drivers e, com a medida do duto, o volume que ele ocupa
-    // (research.md §7).
+    // Volume bruto: o líquido mais drivers e, com a medida do duto, o volume que ele ocupa.
     const gross = (volume: number, tuning: number) =>
         volume +
         drivers +

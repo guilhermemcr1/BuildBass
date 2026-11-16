@@ -4,7 +4,7 @@ import { AIR_DENSITY, SPEED_OF_SOUND } from './constants';
 import { solveCircuit } from './circuit';
 import type { CircuitParams } from './circuit';
 
-// R5 (contracts/engine.md): driver ao ar livre tem o pico de impedância em Fs com
+// R5: driver ao ar livre tem o pico de impedância em Fs com
 // |Z| = Re·(1 + Qms/Qes) ([S72]).
 test('R5 — impedância ao ar livre: pico em Fs com Re·(1 + Qms/Qes)', () => {
     const fs = 28;
@@ -157,7 +157,7 @@ test('B7 — Ud = jω·Cf·pf + pf/Ralf + Up em cada frequência', () => {
     }
 });
 
-// Bandpass de 6ª ordem (specs/007): a câmara traseira ganha um duto que irradia para fora.
+// Bandpass de 6ª ordem: a câmara traseira ganha um duto que irradia para fora.
 const tuningMap = (volume: number, tuning_hz: number) =>
     1 / ((2 * Math.PI * tuning_hz) ** 2 * compliance(volume));
 

@@ -1,7 +1,7 @@
 import type { DriverInput } from '@/engine';
 import type { DriverType } from '@/lib/project/types';
 
-// Alto-falante salvo pelo usuário (specs/008, data-model.md §4). Tudo em SI. Guardado só no
+// Alto-falante salvo pelo usuário. Tudo em SI. Guardado só no
 // navegador; não há conta nem servidor por trás.
 export type SavedDriverDraft = {
     brand: string;

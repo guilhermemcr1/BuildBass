@@ -79,7 +79,7 @@ test('com localStorage bloqueado as trocas funcionam sem erro', async ({
     await context.close();
 });
 
-// Modo Normal/Pro (feature 008, US7): os cenários partem do Normal, sem o Pro que a configuração
+// Modo Normal/Pro: os cenários partem do Normal, sem o Pro que a configuração
 // dos testes liga por padrão.
 test.describe('modo Normal e Pro', () => {
     test.use({ storageState: { cookies: [], origins: [] } });
@@ -202,7 +202,7 @@ test.describe('modo Normal e Pro', () => {
     });
 });
 
-// Idioma com bandeiras (feature 008, US8).
+// Idioma com bandeiras.
 test.describe('idioma com bandeiras', () => {
     test('mostra BR com a bandeira do Brasil e, no menu, as duas bandeiras com o nome por extenso', async ({
         page,

@@ -1,6 +1,6 @@
 <?php
 
-// Messages for the AI manual reading (feature 009).
+// Messages for the AI manual reading.
 return [
     'required' => 'Upload the manual PDF.',
     'not_pdf' => 'The file must be a PDF.',

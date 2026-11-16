@@ -42,7 +42,7 @@ describe('faixas espelhadas com o servidor', () => {
             .map((key) => [key, [rangeOf(key).min, rangeOf(key).max]]),
     );
 
-    test('a fixture de api/ é igual às faixas do app (SC-005)', () => {
+    test('a fixture de api/ é igual às faixas do app', () => {
         // UPDATE_RANGES=1 reescreve a fixture depois de mudar uma faixa de PARAMETERS.
         if (process.env.UPDATE_RANGES === '1') {
             writeFileSync(FIXTURE, `${JSON.stringify(ranges, null, 4)}\n`);
