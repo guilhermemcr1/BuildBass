@@ -77,6 +77,27 @@ describe('SuggestBox (US6)', () => {
         expect(activeProjectStore().getState().data.box).toBe(before);
     });
 
+    test('duto grande demais para a caixa explica a área máxima e não muda a caixa', async () => {
+        renderWithProviders(<SuggestBox title="Volume">{null}</SuggestBox>);
+        act(() => {
+            const store = activeProjectStore().getState();
+            store.setDriverValue('fs_hz', 30);
+            store.setDriverValue('qts', 0.25);
+            store.setDriverValue('vas_m3', 0.008);
+            store.setPort({ shape: 'round', count: 1, diameter_m: 0.07 });
+        });
+        const before = activeProjectStore().getState().data.box;
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Sugerir caixa' }),
+        );
+
+        expect(screen.getByRole('status')).toHaveTextContent(
+            /área total 38 cm²\) é grande demais.*até 18 cm²/,
+        );
+        expect(activeProjectStore().getState().data.box).toBe(before);
+    });
+
     test('bandpass: desativado, com o motivo, mesmo com Fs, Qts e Vas preenchidos', () => {
         renderWithProviders(<SuggestBox title="Volume">{null}</SuggestBox>);
         driver(0.35);

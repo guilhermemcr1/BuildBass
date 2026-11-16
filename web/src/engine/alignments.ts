@@ -1,3 +1,4 @@
+import { SPEED_OF_SOUND } from './constants';
 import { deriveDriver } from './driver';
 import { portArea, portLength } from './port';
 import type { BoxType, DriverKey, ProjectInput } from './types';
@@ -18,7 +19,15 @@ export type Suggestion =
           reason: 'qtsTooHigh' | 'qtsTooLow';
           recommend?: BoxType;
       }
-    | { ok: false; reason: 'missing'; missing: DriverKey[] };
+    | { ok: false; reason: 'missing'; missing: DriverKey[] }
+    | {
+          ok: false;
+          reason: 'portTooLarge';
+          fb_hz: number;
+          // Área total dos dutos informada e a maior que ainda serve ao alinhamento.
+          port_area_m2: number;
+          max_port_area_m2: number;
+      };
 
 const NEEDS: DriverKey[] = ['fs_hz', 'qts', 'vas_m3'];
 const BUTTERWORTH_QTC = 0.707;
@@ -72,6 +81,22 @@ export function suggestBox(project: ProjectInput): Suggestion {
     const fb = 0.42 * fs * qts ** -0.9;
     const area = portArea(project.box.port);
     const ports = Math.max(1, Math.round(project.box.port.count));
+
+    // Com Vb fixo há dois pares (volume líquido, comprimento do duto) com a mesma sintonia, e o
+    // produto dos dois volumes vale (n·a)²·c² / (4π²·Fb²) (port.ts, netVolume). A simulação fica com
+    // o maior; o do alinhamento só é ele enquanto n·a ≤ 2π·Fb·V_líq / c. Acima disso o duto ocuparia
+    // mais que o ar da caixa e o Vb sugerido simularia outra caixa.
+    const maxArea = (2 * Math.PI * fb * net) / SPEED_OF_SOUND;
+
+    if (area !== undefined && ports * area > maxArea) {
+        return {
+            ok: false,
+            reason: 'portTooLarge',
+            fb_hz: fb,
+            port_area_m2: ports * area,
+            max_port_area_m2: maxArea,
+        };
+    }
 
     // Com a medida do duto, soma o volume que ele ocupa (research.md §7).
     const portVolume =

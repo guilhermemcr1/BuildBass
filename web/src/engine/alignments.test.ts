@@ -105,6 +105,55 @@ describe('suggestBox', () => {
         expect(relative(result.results.net_volume_m3, net)).toBeLessThan(1e-6);
     });
 
+    test('duto que ocuparia mais que o ar da caixa: recusa e diz a área máxima', () => {
+        // Driver pequeno (Vas 8 L): V_líq do alinhamento ≈ 2,3 L e Fb ≈ 47 Hz.
+        const driver = { fs_hz: 30, qts: 0.25, vas_m3: 0.008 };
+        const net = 15 * 0.25 ** 2.87 * 0.008;
+        const fb = 0.42 * 30 * 0.25 ** -0.9;
+        const maxArea = (2 * Math.PI * fb * net) / 343.2;
+        const withPort = (diameter_m: number, count = 1) => {
+            const input = project(driver, 'vented');
+            input.box.port = { shape: 'round', diameter_m, count };
+            return input;
+        };
+        const tooLarge = suggestBox(withPort(0.07));
+
+        if (tooLarge.ok || tooLarge.reason !== 'portTooLarge') {
+            throw new Error('recusa esperada');
+        }
+
+        expect(relative(tooLarge.max_port_area_m2, maxArea)).toBeLessThan(
+            1e-12,
+        );
+        expect(
+            relative(tooLarge.port_area_m2, (Math.PI * 0.07 ** 2) / 4),
+        ).toBeLessThan(1e-12);
+        // Conta a área total: dois dutos que juntos passam do limite também são recusados.
+        const half = Math.sqrt((4 * 0.6 * maxArea) / Math.PI);
+        expect(suggestBox(withPort(half, 2))).toMatchObject({
+            reason: 'portTooLarge',
+        });
+
+        // Logo abaixo do limite a sugestão sai, e a simulação volta ao volume do alinhamento
+        // (antes, acima do limite, ela caía na outra raiz com duto mais curto).
+        const input = withPort(Math.sqrt((4 * 0.99 * maxArea) / Math.PI));
+        const suggestion = suggestBox(input);
+
+        if (!suggestion.ok) {
+            throw new Error('sugestão esperada');
+        }
+
+        const result = simulate({
+            ...input,
+            box: {
+                ...input.box,
+                vb_m3: suggestion.vb_m3,
+                fb_hz: suggestion.fb_hz,
+            },
+        });
+        expect(relative(result.results.net_volume_m3, net)).toBeLessThan(1e-9);
+    });
+
     test('fora da faixa explica o motivo', () => {
         expect(
             suggestBox(

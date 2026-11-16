@@ -61,6 +61,27 @@ export function SuggestBox({ title, children }: SuggestBoxProps) {
                 return;
             }
 
+            if (suggestion.reason === 'portTooLarge') {
+                const areaUnit = defaultUnitFor('area', unitSystem);
+                setMessage(
+                    t('engine:alignments.portTooLarge', {
+                        fb: formatWithUnit(suggestion.fb_hz, 'Hz', locale),
+                        area: formatWithUnit(
+                            suggestion.port_area_m2,
+                            areaUnit,
+                            locale,
+                        ),
+                        max: formatWithUnit(
+                            suggestion.max_port_area_m2,
+                            areaUnit,
+                            locale,
+                        ),
+                    }),
+                );
+
+                return;
+            }
+
             setMessage(
                 suggestion.reason === 'qtsTooLow'
                     ? t('engine:alignments.qtsTooLow', { qts })

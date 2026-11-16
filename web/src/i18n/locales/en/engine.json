@@ -43,6 +43,7 @@
         "grossNote": "The volume already includes what the drivers and ports take up.",
         "closedQtsTooHigh": "With Qts {{qts}} a sealed Butterworth box would exceed 3.3·Vas. Use a higher Qtc or an infinite baffle.",
         "ventedQtsTooHigh": "Qts {{qts}} is high for a vented box (above 0.5). Prefer a sealed box.",
-        "qtsTooLow": "Qts {{qts}} is low for the vented alignments (below 0.2): the box would be small and the response too high for a subwoofer."
+        "qtsTooLow": "Qts {{qts}} is low for the vented alignments (below 0.2): the box would be small and the response too high for a subwoofer.",
+        "portTooLarge": "The port you entered (total area {{area}}) is too large for this box: to tune to {{fb}} it would take up more volume than the air left inside. Use ports with a total area of up to {{max}}, with a smaller diameter or fewer ports."
     }
 }

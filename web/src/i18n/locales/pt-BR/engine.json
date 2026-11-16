@@ -43,6 +43,7 @@
         "grossNote": "O volume já inclui o ocupado pelos drivers e pelos dutos.",
         "closedQtsTooHigh": "Com Qts {{qts}} a selada Butterworth passaria de 3,3·Vas. Use um Qtc mais alto ou baffle infinito.",
         "ventedQtsTooHigh": "Qts {{qts}} é alto para dutada (acima de 0,5). Prefira a caixa selada.",
-        "qtsTooLow": "Qts {{qts}} é baixo para os alinhamentos dutados (abaixo de 0,2): a caixa ficaria pequena e a resposta alta demais para subwoofer."
+        "qtsTooLow": "Qts {{qts}} é baixo para os alinhamentos dutados (abaixo de 0,2): a caixa ficaria pequena e a resposta alta demais para subwoofer.",
+        "portTooLarge": "O duto informado (área total {{area}}) é grande demais para esta caixa: para sintonizar em {{fb}} ele ocuparia mais volume que o ar que sobra dentro dela. Use dutos com área total de até {{max}}, com diâmetro menor ou menos dutos."
     }
 }
