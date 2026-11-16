@@ -1,6 +1,6 @@
 {
-    "title": "Enviar driver ao catálogo",
-    "intro": "Os parâmetros abaixo seguem para a revisão de um moderador. O driver só aparece na busca depois de aprovado; seu projeto não muda.",
+    "title": "Enviar alto-falante ao catálogo",
+    "intro": "Os parâmetros abaixo seguem para a revisão de um moderador. O alto-falante só aparece na busca depois de aprovado; seu projeto não muda.",
     "sections": {
         "identification": "Identificação",
         "required": "Obrigatórios",
@@ -15,12 +15,12 @@
     "fields": {
         "brand": "Fabricante",
         "model": "Modelo",
-        "variant": "Variante · impedância (opcional)",
-        "variantHint": "Impedância da bobina, em ohms (ex.: 4).",
+        "variant": "Impedância da bobina (Ω, opcional)",
+        "variantHint": "Em ohms, por exemplo 4 ou 3,2.",
         "source": "Fonte dos dados",
         "sourceHint": "Ficha técnica do fabricante, medição própria… Cite a revisão ou a data.",
         "email": "E-mail para avisar da decisão",
-        "emailHint": "Usado só para avisar se o driver foi aprovado ou rejeitado e apagado em seguida.",
+        "emailHint": "Usado só para avisar se o alto-falante foi aprovado ou rejeitado e apagado em seguida.",
         "diameter": "Diâmetro nominal",
         "diameterHint": "Tamanho comercial do alto-falante, por exemplo 12\".",
         "trap": "Não preencha este campo",
@@ -50,8 +50,8 @@
         "impedance": "Informe só a impedância em ohms, de 0,5 a 64 (ex.: 4 ou 3,2)."
     },
     "failure": {
-        "alreadyInCatalog": "Este driver já está no catálogo (mesmo fabricante, modelo e variante). Procure-o na busca.",
-        "alreadyPending": "Este driver já está em análise. Não é preciso enviar de novo.",
+        "alreadyInCatalog": "Este alto-falante já está no catálogo (mesmo fabricante, modelo e impedância). Procure-o na busca.",
+        "alreadyPending": "Este alto-falante já está em análise. Não é preciso enviar de novo.",
         "rateLimited": "Muitos envios em pouco tempo. Tente de novo em {{minutes}} min.",
         "rateLimitedUnknown": "Muitos envios em pouco tempo. Tente mais tarde.",
         "verification": "Não foi possível confirmar que você não é um robô. Tente de novo.",
@@ -63,7 +63,7 @@
     "success": {
         "title": "Envio recebido",
         "protocol": "Código de protocolo",
-        "review": "Seu driver passa por revisão e só aparece na busca depois de aprovado.",
+        "review": "Seu alto-falante passa por revisão e só aparece na busca depois de aprovado.",
         "emailNotice": "Vamos avisar por e-mail quando houver uma decisão.",
         "projectUnchanged": "Seu projeto não foi alterado."
     },
@@ -87,7 +87,7 @@
         "suspect": "Confira no manual: este valor não bate com os demais.",
         "warnings": {
             "review": "Dados lidos automaticamente. Revise antes de enviar.",
-            "multiple_drivers": "O manual parece trazer mais de um driver; usamos o primeiro. Confira.",
+            "multiple_drivers": "O manual parece trazer mais de um alto-falante; usamos o primeiro. Confira.",
             "nothing_found": "Não encontramos parâmetros Thiele-Small neste PDF.",
             "discarded": "Alguns valores do manual estavam fora da faixa e foram deixados em branco: {{fields}}."
         },

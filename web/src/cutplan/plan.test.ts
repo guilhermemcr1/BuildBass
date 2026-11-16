@@ -287,7 +287,7 @@ describe('recortes (C9 no plano)', () => {
         expect(panel?.cutouts[0].pending).toBeUndefined();
     });
 
-    test('sem o diâmetro, o recorte do driver fica pendente e sem posição', () => {
+    test('sem o diâmetro, o recorte do alto-falante fica pendente e sem posição', () => {
         const panel = front(ready(project()));
 
         expect(panel?.cutouts[0]).toEqual({

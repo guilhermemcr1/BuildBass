@@ -110,16 +110,16 @@ describe('DriverIdentity com a galeria do catálogo', () => {
         renderWithProviders(<DriverIdentity />);
 
         expect(
-            screen.getByRole('region', { name: 'Fotos do driver' }),
+            screen.getByRole('region', { name: 'Fotos do alto-falante' }),
         ).toBeInTheDocument();
 
         await userEvent.type(
-            screen.getByRole('textbox', { name: 'Marca' }),
+            screen.getByRole('textbox', { name: 'Fabricante' }),
             'X',
         );
 
         expect(
-            screen.queryByRole('region', { name: 'Fotos do driver' }),
+            screen.queryByRole('region', { name: 'Fotos do alto-falante' }),
         ).not.toBeInTheDocument();
     });
 
@@ -127,7 +127,7 @@ describe('DriverIdentity com a galeria do catálogo', () => {
         renderWithProviders(<DriverIdentity />);
 
         expect(
-            screen.queryByRole('region', { name: 'Fotos do driver' }),
+            screen.queryByRole('region', { name: 'Fotos do alto-falante' }),
         ).not.toBeInTheDocument();
     });
 });

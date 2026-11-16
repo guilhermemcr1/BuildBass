@@ -114,7 +114,7 @@
         "absolute": "Required to calculate impedance and excursion.",
         "box": "Required to calculate the response of this box type.",
         "signal": "Required to calculate excursion.",
-        "legend": "* Required for some calculation. Hover the field to see which."
+        "legend": "* Required for some calculation. Tap or hover the field to see which."
     },
     "impedance": {
         "invalid": "Enter only the impedance in ohms, from {{min}} to {{max}} (e.g. 4 or 3.2). No text or Ω symbol."

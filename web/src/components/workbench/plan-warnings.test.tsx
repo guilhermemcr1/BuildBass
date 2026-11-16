@@ -37,7 +37,9 @@ describe('PlanWarnings', () => {
         expect(items).toHaveLength(3);
         expect(items[0]).toHaveTextContent(/não cabe no lado menor/);
         expect(items[1]).toHaveTextContent(/Sobra pouca madeira/);
-        expect(items[2]).toHaveTextContent(/diâmetro do recorte do driver/);
+        expect(items[2]).toHaveTextContent(
+            /diâmetro do recorte do alto-falante/,
+        );
     });
 
     test('cada aviso nomeia a peça ou o campo', () => {
@@ -160,7 +162,7 @@ describe('PlanWarnings — posição dos recortes', () => {
 
         expect(items).toHaveLength(3);
         expect(items[0]).toHaveTextContent('Duto 1 passa da borda de fundo');
-        expect(items[1]).toHaveTextContent(/^Driver 1 em frente encosta/);
+        expect(items[1]).toHaveTextContent(/^Alto-falante 1 em frente encosta/);
         expect(items[2]).toHaveTextContent(/^Duto 1 em frente encosta/);
     });
 });

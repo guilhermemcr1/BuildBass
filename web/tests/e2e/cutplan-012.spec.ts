@@ -34,7 +34,7 @@ async function openPlan(page: Page) {
     await expect(toggle).toHaveAttribute('aria-expanded', 'true');
 }
 
-// Selada de 60 L do quickstart da 005, com o recorte do driver informado.
+// Selada de 60 L do quickstart da 005, com o recorte do alto-falante informado.
 async function sealedBox(page: Page) {
     await page.goto('/');
     await page.getByRole('radio', { name: 'Selada' }).click();
@@ -139,28 +139,28 @@ test('posição do recorte por medida, teclado e arrasto; desfazer e CSV', async
     await expect(dialog).toBeVisible();
 
     const x = dialog.getByRole('textbox', {
-        name: /^Driver 1:.*borda esquerda/,
+        name: /^Alto-falante 1:.*borda esquerda/,
     });
     const y = dialog.getByRole('textbox', {
-        name: /^Driver 1:.*borda de baixo/,
+        name: /^Alto-falante 1:.*borda de baixo/,
     });
 
     // Por medida.
     await x.fill('150');
     await x.press('Tab');
     await expect(
-        dialog.getByRole('button', { name: 'Driver 1, posição manual' }),
+        dialog.getByRole('button', { name: 'Alto-falante 1, posição manual' }),
     ).toBeVisible();
 
     // Pelo teclado: 1 mm por toque, 10 mm com Shift.
-    const driver = dialog.getByRole('button', { name: /^Driver 1,/ });
+    const driver = dialog.getByRole('button', { name: /^Alto-falante 1,/ });
     await driver.focus();
     await page.keyboard.press('ArrowRight');
     await expect(x).toHaveValue('151,0');
     await page.keyboard.press('Shift+ArrowUp');
     const yAfterKeys = await y.inputValue();
     await expect(dialog.getByRole('status')).toHaveText(
-        /^Driver 1: 151,0 mm da esquerda, .* de baixo\.$/,
+        /^Alto-falante 1: 151,0 mm da esquerda, .* de baixo\.$/,
     );
 
     // Arrastando: o centro anda em passos de 1 mm.
@@ -186,17 +186,17 @@ test('posição do recorte por medida, teclado e arrasto; desfazer e CSV', async
     await expect(dialog).toBeHidden();
     await expect(
         planRegion(page).locator('[data-centers]').first(),
-    ).toContainText(`Driver 1: centro a ${dragged} mm da esquerda`);
+    ).toContainText(`Alto-falante 1: centro a ${dragged} mm da esquerda`);
 
     // O arrasto inteiro é uma etapa do Desfazer.
     await page.getByRole('button', { name: /^Desfazer/ }).click();
     await expect(
         planRegion(page).locator('[data-centers]').first(),
-    ).toContainText('Driver 1: centro a 151,0 mm da esquerda');
+    ).toContainText('Alto-falante 1: centro a 151,0 mm da esquerda');
 
     const csv = await download(page, 'Exportar CSV');
     expect(csv.text).toContain(
         'Recortes;Peça;Recorte;Medida;Centro da esquerda (mm);Centro de baixo (mm);Posição',
     );
-    expect(csv.text).toMatch(/;Frente;Driver 1;[^;]*;151,0;[^;]*;manual/);
+    expect(csv.text).toMatch(/;Frente;Alto-falante 1;[^;]*;151,0;[^;]*;manual/);
 });

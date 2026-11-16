@@ -117,7 +117,9 @@ describe('PortFields — pontas do duto', () => {
     const port = () => activeProjectStore().getState().data.box.port;
     const choose = async (option: string) => {
         await userEvent.click(
-            screen.getByRole('button', { name: /Pontas do duto/ }),
+            screen.getByRole('button', {
+                name: /^(?!Ajuda).*Acabamento das pontas do duto/,
+            }),
         );
         await userEvent.click(screen.getByRole('option', { name: option }));
     };
@@ -126,34 +128,36 @@ describe('PortFields — pontas do duto', () => {
         renderWithProviders(<PortFields />);
 
         expect(
-            screen.getByRole('button', { name: /Pontas do duto/ }),
-        ).toHaveTextContent('Uma flangeada, uma livre (padrão)');
+            screen.getByRole('button', {
+                name: /^(?!Ajuda).*Acabamento das pontas do duto/,
+            }),
+        ).toHaveTextContent('Uma ponta com flange, outra livre (padrão)');
         expect(port().end).toBeUndefined();
     });
 
-    test('slot na parede grava a escolha; o fator só aparece em "Fator próprio"', async () => {
+    test('slot na parede grava a escolha; o fator só aparece em "Fator personalizado"', async () => {
         renderWithProviders(<PortFields />);
 
-        await choose('Slot encostado na parede');
+        await choose('Slot colado na parede');
         expect(port().end).toBe('slotWall');
         expect(
             screen.queryByLabelText(/Fator da correção de ponta/),
         ).toBeNull();
 
-        await choose('Fator próprio');
+        await choose('Fator personalizado');
         expect(port().end).toBe('custom');
         expect(
             screen.getByLabelText(/Fator da correção de ponta/),
         ).toBeVisible();
 
-        await choose('Uma flangeada, uma livre (padrão)');
+        await choose('Uma ponta com flange, outra livre (padrão)');
         expect(port().end).toBeUndefined();
     });
 
     test('trocar o formato mantém a ponta escolhida', async () => {
         renderWithProviders(<PortFields />);
 
-        await choose('Duas livres');
+        await choose('Duas pontas livres');
         await userEvent.click(
             screen.getByRole('radio', { name: 'Retangular' }),
         );

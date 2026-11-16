@@ -76,7 +76,7 @@ describe('SubmitDriverDialog — enviar o driver do projeto', () => {
 
         expect(fill(/Fabricante/)).toHaveValue('Triton');
         expect(fill(/Modelo/)).toHaveValue('TR 620');
-        expect(fill(/Variante/)).toHaveValue('4');
+        expect(fill(/Impedância da bobina/)).toHaveValue('4');
     });
 
     test('campo obrigatório vazio mostra o erro, não chama a API e mantém o digitado', async () => {

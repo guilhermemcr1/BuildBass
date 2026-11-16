@@ -289,7 +289,7 @@ for (const theme of ['light', 'dark'] as const) {
         mode = 'empty';
         await search.fill('zzzz');
         await expect(
-            page.getByText('Nenhum driver encontrado para «zzzz»'),
+            page.getByText('Nenhum alto-falante encontrado para “zzzz”'),
         ).toBeVisible();
         expect(await axe(page, { listOpen: true })).toEqual([]);
 
@@ -443,9 +443,9 @@ for (const theme of ['light', 'dark'] as const) {
             const page = await context.newPage();
             await mockCatalog(page);
             await page.goto('/');
-            await driverAction(page, 'Enviar driver');
+            await driverAction(page, 'Enviar alto-falante');
             const dialog = page.getByRole('dialog', {
-                name: 'Enviar driver ao catálogo',
+                name: 'Enviar alto-falante ao catálogo',
             });
             await dialog.waitFor();
             await page.waitForTimeout(300);
@@ -485,7 +485,9 @@ test('o formulário de envio é operável só pelo teclado e devolve o foco ao b
     await mockCatalog(page);
     await page.goto('/');
     // O envio fica no menu "⋯" do Driver: abrir pelo teclado, ir ao último item e confirmar.
-    const trigger = page.getByRole('button', { name: 'Mais ações do driver' });
+    const trigger = page.getByRole('button', {
+        name: 'Mais ações do alto-falante',
+    });
     await trigger.focus();
     await page.keyboard.press('Enter');
     await page.getByRole('menu').waitFor();
@@ -493,7 +495,7 @@ test('o formulário de envio é operável só pelo teclado e devolve o foco ao b
     await page.keyboard.press('Enter');
 
     const dialog = page.getByRole('dialog', {
-        name: 'Enviar driver ao catálogo',
+        name: 'Enviar alto-falante ao catálogo',
     });
     await dialog.waitFor();
 
@@ -775,7 +777,9 @@ for (const theme of ['light', 'dark'] as const) {
         await driverAction(page, 'Salvar este alto-falante');
         const save = page.getByRole('dialog', { name: 'Salvar alto-falante' });
         await expect(save).toBeVisible();
-        await save.getByRole('textbox', { name: /^Marca/ }).fill('Marca X');
+        await save
+            .getByRole('textbox', { name: /^Fabricante/ })
+            .fill('Marca X');
         await save.getByRole('textbox', { name: /^Modelo/ }).fill('Sub 12');
         await page.waitForTimeout(300);
         expect(await axe(page)).toEqual([]);
@@ -880,9 +884,9 @@ for (const theme of ['light', 'dark'] as const) {
         await page.keyboard.press('Escape');
         await expect(save).toBeHidden();
 
-        await page.getByRole('button', { name: 'Buscar driver' }).click();
+        await page.getByRole('button', { name: 'Buscar alto-falante' }).click();
         await expect(
-            page.getByRole('searchbox', { name: 'Buscar driver' }),
+            page.getByRole('searchbox', { name: 'Buscar alto-falante' }),
         ).toBeVisible();
         await page.waitForTimeout(300);
         expect(await axe(page, { listOpen: true })).toEqual([]);
@@ -1002,7 +1006,9 @@ for (const theme of ['light', 'dark'] as const) {
                 name: 'Posicionar recortes — Frente',
             });
             await expect(dialog).toBeVisible();
-            await dialog.getByRole('button', { name: /^Driver 1,/ }).focus();
+            await dialog
+                .getByRole('button', { name: /^Alto-falante 1,/ })
+                .focus();
             await page.keyboard.press('ArrowRight');
             await page.waitForTimeout(300);
             expect(await axe(page)).toEqual([]);

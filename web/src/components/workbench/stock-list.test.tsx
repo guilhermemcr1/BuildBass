@@ -40,7 +40,7 @@ describe('StockList', () => {
     test('sem chapa mostra um item vazio, sem botões de mover ou remover', () => {
         renderStock();
 
-        const list = screen.getByRole('list', { name: 'Estoque de chapas' });
+        const list = screen.getByRole('list', { name: 'Chapas disponíveis' });
 
         expect(within(list).getAllByRole('listitem')).toHaveLength(1);
         expect(

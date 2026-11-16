@@ -190,7 +190,7 @@ describe('EngineWarnings — bandpass de 6ª ordem', () => {
 
         expect(
             screen.getByText(
-                /O duto dessa câmara traseira \(.+\) tem a 1ª ressonância de tubo em .+ Hz/,
+                /O duto da câmara traseira \(.+\) é tão comprido que o próprio tubo ressoa em .+ Hz/,
             ),
         ).toBeInTheDocument();
     });

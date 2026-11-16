@@ -51,17 +51,17 @@ describe('DriverPanel — consistência e calculados', () => {
 
         expect(
             screen.getAllByText(
-                /Diferença de 10,2\s?% em Qts = Qes·Qms \/ \(Qes \+ Qms\)/,
+                /Qts difere 10,2\s?% do valor calculado por Qes e Qms \(Qts = Qes·Qms \/ \(Qes \+ Qms\)\)/,
             ),
         ).toHaveLength(3);
         expect(field('Qts')).toHaveClass('text-foreground');
     });
 });
 
-// Salvar, "Meus alto-falantes" e enviar ficam no menu "⋯" ao lado de "Buscar driver".
+// Salvar, "Meus alto-falantes" e enviar ficam no menu "⋯" ao lado de "Buscar alto-falante".
 async function openActions() {
     await userEvent.click(
-        screen.getByRole('button', { name: 'Mais ações do driver' }),
+        screen.getByRole('button', { name: 'Mais ações do alto-falante' }),
     );
 }
 
@@ -72,16 +72,16 @@ describe('DriverPanel — cabeçalho compacto', () => {
         connection.status = 'online';
     });
 
-    test('sem campo de busca fixo: só "Buscar driver" e um menu com as demais ações', async () => {
+    test('sem campo de busca fixo: só "Buscar alto-falante" e um menu com as demais ações', async () => {
         renderWithProviders(<DriverPanel onSubmitDriver={() => undefined} />);
 
         expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
         expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
         expect(
-            screen.getByRole('button', { name: /^Buscar driver/ }),
+            screen.getByRole('button', { name: /^Buscar alto-falante/ }),
         ).toBeInTheDocument();
         expect(
-            screen.queryByRole('button', { name: /Enviar driver/ }),
+            screen.queryByRole('button', { name: /Enviar alto-falante/ }),
         ).not.toBeInTheDocument();
 
         await openActions();
@@ -91,7 +91,7 @@ describe('DriverPanel — cabeçalho compacto', () => {
         ).toEqual([
             'Salvar este alto-falante',
             'Meus alto-falantes',
-            'Enviar driver',
+            'Enviar alto-falante',
         ]);
     });
 
@@ -100,7 +100,7 @@ describe('DriverPanel — cabeçalho compacto', () => {
         renderWithProviders(<DriverPanel onSubmitDriver={() => undefined} />);
 
         await userEvent.click(
-            screen.getByRole('button', { name: /^Buscar driver/ }),
+            screen.getByRole('button', { name: /^Buscar alto-falante/ }),
         );
 
         expect(screen.getByRole('searchbox')).toBeEnabled();
@@ -120,7 +120,7 @@ describe('DriverPanel — enviar driver', () => {
 
         await openActions();
         await userEvent.click(
-            screen.getByRole('menuitem', { name: /Enviar driver/ }),
+            screen.getByRole('menuitem', { name: /Enviar alto-falante/ }),
         );
 
         expect(onSubmitDriver).toHaveBeenCalledTimes(1);
@@ -131,7 +131,9 @@ describe('DriverPanel — enviar driver', () => {
         const onSubmitDriver = vi.fn();
         renderWithProviders(<DriverPanel onSubmitDriver={onSubmitDriver} />);
         await openActions();
-        const item = screen.getByRole('menuitem', { name: /Enviar driver/ });
+        const item = screen.getByRole('menuitem', {
+            name: /Enviar alto-falante/,
+        });
 
         expect(item).toHaveAttribute('aria-disabled', 'true');
 
@@ -182,7 +184,7 @@ describe('DriverPanel — alto-falantes salvos', () => {
             name: 'Salvar alto-falante',
         });
         expect(
-            within(dialog).getByRole('textbox', { name: /Marca/ }),
+            within(dialog).getByRole('textbox', { name: /Fabricante/ }),
         ).toHaveValue('Triton');
         await userEvent.click(
             within(dialog).getByRole('button', { name: 'Salvar' }),

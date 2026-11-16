@@ -304,12 +304,14 @@ describe('PlanPanel — chapa e corte total', () => {
             within(table).getByRole('columnheader', { name: 'Peças' }),
         ).toBeVisible();
         for (const name of [
-            'Sem desconto do MDF',
-            'Com desconto do MDF',
-            'Diferença do MDF',
+            'Medidas internas (sem a espessura)',
+            'Peças prontas (com a espessura)',
+            'O que a espessura acrescenta',
         ]) {
             expect(
-                within(table).getByRole('row', { name: new RegExp(name) }),
+                within(table).getByRole('row', {
+                    name: new RegExp(name.replace(/[()]/g, '\\$&')),
+                }),
             ).toBeVisible();
         }
     });
@@ -407,7 +409,9 @@ describe('PlanPanel — chapa e corte total', () => {
         const group = screen.getByRole('radiogroup', { name: 'Tipo de corte' });
 
         expect(
-            within(group).getByRole('radio', { name: 'Serra (guilhotina)' }),
+            within(group).getByRole('radio', {
+                name: 'Serra (cortes de ponta a ponta)',
+            }),
         ).toBeChecked();
 
         await userEvent.click(

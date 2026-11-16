@@ -84,7 +84,9 @@ describe('PartsTable', () => {
 
         const front = screen.getByRole('row', { name: /Frente/ });
 
-        expect(within(front).getByText(/Driver Ø .*285.* ×2/)).toBeVisible();
+        expect(
+            within(front).getByText(/Alto-falante Ø .*285.* ×2/),
+        ).toBeVisible();
         expect(within(front).getByText(/Duto Ø .*100/)).toBeVisible();
     });
 

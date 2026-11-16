@@ -15,8 +15,8 @@
     "fields": {
         "brand": "Manufacturer",
         "model": "Model",
-        "variant": "Variant · impedance (optional)",
-        "variantHint": "Voice-coil impedance, in ohms (e.g. 4).",
+        "variant": "Voice-coil impedance (Ω, optional)",
+        "variantHint": "In ohms, e.g. 4 or 3.2.",
         "source": "Data source",
         "sourceHint": "Manufacturer datasheet, your own measurement… Cite the revision or date.",
         "email": "Email to notify you of the decision",
@@ -50,7 +50,7 @@
         "impedance": "Enter only the impedance in ohms, from 0.5 to 64 (e.g. 4 or 3.2)."
     },
     "failure": {
-        "alreadyInCatalog": "This driver is already in the catalog (same manufacturer, model and variant). Look it up in search.",
+        "alreadyInCatalog": "This driver is already in the catalog (same manufacturer, model and impedance). Look it up in search.",
         "alreadyPending": "This driver is already under review. There is no need to submit it again.",
         "rateLimited": "Too many submissions in a short time. Try again in {{minutes}} min.",
         "rateLimitedUnknown": "Too many submissions in a short time. Try again later.",

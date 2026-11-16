@@ -50,12 +50,13 @@
         "triangle": "Triangular",
         "titleFront": "Port (front chamber)",
         "titleRear": "Port (rear chamber)",
-        "end": "Port ends",
-        "end_flangedFree": "One flanged, one free (default)",
-        "end_free": "Both free",
-        "end_flanged": "Both flanged",
+        "end": "Port end finish",
+        "end_flangedFree": "One end flanged, the other free (default)",
+        "end_free": "Both ends free",
+        "end_flanged": "Both ends flanged",
         "end_slotWall": "Slot against a wall",
-        "end_custom": "Custom factor"
+        "end_custom": "Custom factor",
+        "endHelp": "Flanged end: the opening sits flush against a flat surface, such as the box wall. Free end: the tube ends in open air. Each finish changes the end correction and, with it, the port length needed for the same tuning."
     },
     "drivers": {
         "title": "Drivers",
@@ -73,7 +74,7 @@
         "radiation": "Radiation",
         "half": "Half space",
         "full": "Free space",
-        "abovePe": "Above N·Pe ({{limit}})."
+        "abovePe": "Above the combined thermal power of the drivers ({{limit}})."
     },
     "charts": {
         "label": "Chart type",
@@ -92,7 +93,7 @@
         "groupDelayAxis": "Group delay (ms)",
         "portVelocityAxis": "Air velocity ({{unit}})",
         "legend": "Projects on the chart",
-        "nonePlotted": "No project is shown on the chart. Use the eye on the project tab.",
+        "nonePlotted": "No project is visible on the chart. Use the eye icon on the project tab.",
         "seriesFront": "front",
         "seriesRear": "rear",
         "showField_one": "Show field",
@@ -172,11 +173,11 @@
     },
     "catalog": {
         "label": "Driver catalog",
-        "placeholder": "Search brand or model",
+        "placeholder": "Search manufacturer or model",
         "submit": "Submit driver",
         "offlineReason": "Unavailable without a connection to the server.",
         "searching": "Searching…",
-        "empty": "No driver found for «{{term}}»",
+        "empty": "No driver found for “{{term}}”",
         "error": "Could not query the catalog right now",
         "retry": "Try again",
         "more": "There are more results. Refine your search.",
@@ -208,23 +209,23 @@
     },
     "picker": {
         "label": "Find driver",
-        "placeholder": "Brand or model",
+        "placeholder": "Manufacturer or model",
         "mine": "My speakers",
         "recent": "Recent",
         "catalog": "Catalog",
-        "hint": "Type at least 2 letters of the brand or model.",
+        "hint": "Type at least 2 letters of the manufacturer or model.",
         "offline": "Offline: recent and catalog are unavailable.",
         "notFoundHelp": "Can't find it?",
         "submit": "Submit driver",
         "filters": "Filters",
-        "brand": "Brand",
-        "brandAny": "All brands",
+        "brand": "Manufacturer",
+        "brandAny": "All manufacturers",
         "diameter": "Diameter",
         "diameterAny": "Any",
         "clearFilters": "Clear filters",
         "emptyFiltered": "No drivers match these filters.",
-        "hintFilters": "Type at least 2 letters or pick a brand or a diameter.",
-        "triggerHint": "Find driver by brand or model…",
+        "hintFilters": "Type at least 2 letters or pick a manufacturer or a diameter.",
+        "triggerHint": "Find driver by manufacturer or model…",
         "clearSearch": "Clear search"
     },
     "driverDialog": {
@@ -250,9 +251,9 @@
         "manageTitle": "My speakers",
         "originSaved": "saved",
         "fields": {
-            "brand": "Brand",
+            "brand": "Manufacturer",
             "model": "Model",
-            "variant": "Variant · impedance (optional)",
+            "variant": "Voice-coil impedance (Ω, optional)",
             "diameter": "Nominal diameter",
             "cutout": "Cutout diameter",
             "depth": "Depth"
@@ -265,7 +266,7 @@
             "tooLong": "At most {{max}} characters.",
             "range": "Out of range ({{min}} – {{max}}).",
             "full": "The list reached {{max}} speakers. Delete one to save another.",
-            "duplicateOther": "Another speaker already has this brand, model and variant.",
+            "duplicateOther": "Another speaker already has this manufacturer, model and impedance.",
             "impedance": "Enter only the impedance in ohms, from 0.5 to 64 (e.g. 4 or 3.2). No text or Ω symbol."
         },
         "actions": {
@@ -300,11 +301,11 @@
             "import": "Import",
             "errors": {
                 "fileTooLarge": "The file is over 512 KB and doesn't look like a BuildBass list.",
-                "invalidJson": "The file is not valid JSON.",
+                "invalidJson": "The file is corrupted or is not a BuildBass list.",
                 "notBuildbass": "The file is not a BuildBass speaker list.",
                 "newerVersion": "The list was saved by a newer BuildBass version. Update the app to import it.",
                 "tooMany": "The file has more than {{max}} speakers.",
-                "invalidContent": "The file has an invalid value at “{{path}}”.",
+                "invalidContent": "The file has an invalid value and could not be imported. Technical detail: {{path}}.",
                 "readFailed": "Could not read the file."
             },
             "duplicates_one": "{{count}} speaker in the file is already in your list.",
@@ -344,9 +345,9 @@
     },
     "identity": {
         "title": "Identification",
-        "brand": "Brand",
+        "brand": "Manufacturer",
         "model": "Model",
-        "variant": "Variant · impedance",
+        "variant": "Voice-coil impedance (Ω)",
         "type": "Type",
         "typeNone": "Not specified",
         "brandPlaceholder": "E.g. Triton",
@@ -376,7 +377,7 @@
         "ql5": "5 (leaky)",
         "ql7": "7 (default)",
         "ql10": "10 (WinISD)",
-        "ql15": "15 (well sealed)",
+        "ql15": "15 (very well sealed)",
         "custom": "Other value",
         "fill": "Absorbent material",
         "fill_none": "None",

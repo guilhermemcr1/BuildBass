@@ -114,7 +114,7 @@
         "absolute": "Obrigatório para calcular a impedância e a excursão.",
         "box": "Obrigatório para calcular a resposta deste tipo de caixa.",
         "signal": "Obrigatório para calcular a excursão.",
-        "legend": "* Obrigatório para algum cálculo. Passe o mouse no campo para ver qual."
+        "legend": "* Obrigatório para algum cálculo. Toque ou passe o mouse no campo para ver qual."
     },
     "impedance": {
         "invalid": "Informe só a impedância em ohms, de {{min}} a {{max}} (ex.: 4 ou 3,2). Sem texto nem o símbolo Ω."

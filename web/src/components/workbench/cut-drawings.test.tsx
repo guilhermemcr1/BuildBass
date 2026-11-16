@@ -61,7 +61,7 @@ describe('CutDrawings', () => {
 
         expect(screen.getAllByRole('img')).toHaveLength(2);
         expect(front).toHaveAccessibleDescription(
-            /Frente: 436,0 mm por 636,0 mm, espessura 18,0 mm\. Recortes: Driver Ø 285,0 mm; Duto 100,0 mm × 50,0 mm\./,
+            /Frente: 436,0 mm por 636,0 mm, espessura 18,0 mm\. Recortes: Alto-falante Ø 285,0 mm; Duto 100,0 mm × 50,0 mm\./,
         );
         expect(side).toHaveAccessibleDescription(/Recortes: nenhum\./);
     });
@@ -187,7 +187,7 @@ describe('CutDrawings — posição dos recortes', () => {
             1,
         );
         expect(container.querySelector('[data-centers]')).toHaveTextContent(
-            'Driver 1: centro a 218,0 mm da esquerda e 400,0 mm de baixo (posição manual)',
+            'Alto-falante 1: centro a 218,0 mm da esquerda e 400,0 mm de baixo (posição manual)',
         );
         expect(
             container.querySelector('[data-manual="true"] path'),

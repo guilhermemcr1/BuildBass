@@ -82,7 +82,7 @@ describe('SuggestBox', () => {
         );
 
         expect(screen.getByRole('status')).toHaveTextContent(
-            'Qts 0,55 é alto para dutada',
+            'Qts 0,55 é alto para caixa dutada',
         );
         expect(activeProjectStore().getState().data.box).toBe(before);
     });

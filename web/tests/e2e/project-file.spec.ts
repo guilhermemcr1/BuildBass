@@ -69,7 +69,9 @@ test('arquivo inválido mostra o motivo e não mexe no projeto', async ({
     });
 
     const dialog = page.getByRole('dialog');
-    await expect(dialog).toContainText('O arquivo não é um JSON válido.');
+    await expect(dialog).toContainText(
+        'O arquivo está corrompido ou não é um arquivo do BuildBass.',
+    );
     await dialog.getByRole('button', { name: 'Fechar', exact: true }).click();
     await expect(field(page, /^Fs/)).toHaveValue('31,0');
 });

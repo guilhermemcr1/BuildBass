@@ -111,7 +111,7 @@
         },
         "matches": "Matches the simulation: the plan's net volume is the one the simulation used.",
         "differs": "Differs from the simulation.",
-        "unavailable": "Without the simulation's net volume, the plan has nothing to be checked against."
+        "unavailable": "Without the simulation's net volume, the plan can't be checked."
     },
     "warnings": {
         "title": "Plan warnings",
@@ -182,16 +182,16 @@
     },
     "totals": {
         "title": "Total cut",
-        "gross": "Without MDF allowance",
-        "net": "With MDF allowance",
-        "difference": "MDF difference",
+        "gross": "Inner measures (no thickness)",
+        "net": "Finished pieces (with thickness)",
+        "difference": "What the thickness adds",
         "pieces": "Pieces",
         "area": "Area",
         "cutLength": "Cut",
-        "hint": "“Without” uses the six faces by their inner measures, ignoring thickness. “With” uses the plan pieces, thickness included. The difference is what the MDF adds."
+        "hint": "“Inner measures” uses the six faces by their inner measures, ignoring thickness. “Finished pieces” uses the plan pieces, thickness included. The difference is what the MDF adds."
     },
     "sheet": {
-        "title": "Sheet you have",
+        "title": "Available sheets",
         "rotate": "Pieces may be rotated"
     },
     "sheets": {
@@ -210,10 +210,12 @@
         "waste": "Waste",
         "oversize": "Does not fit",
         "sheetOf": "Sheet {{n}} of {{total}}",
-        "summary": "{{count}} sheet(s), {{utilization}} utilization, {{waste}} waste.",
+        "summary_one": "{{count}} sheet, {{utilization}} utilization, {{waste}} waste.",
+        "summary_other": "{{count}} sheets, {{utilization}} utilization, {{waste}} waste.",
         "oversizeWarning": "Don't fit any stock sheet: {{pieces}}.",
         "rotatedMark": "rotated",
-        "drawing": "Sheet {{n}} with {{count}} piece(s), {{utilization}} utilization",
+        "drawing_one": "Sheet {{n}} with {{count}} piece, {{utilization}} utilization",
+        "drawing_other": "Sheet {{n}} with {{count}} pieces, {{utilization}} utilization",
         "empty": "No piece fits the stock you entered.",
         "origin": "{{w}} × {{h}} (stock item {{n}})",
         "usedOf": "{{used}} of {{total}}",
@@ -224,7 +226,7 @@
         "stock": "Stock item",
         "unplaced": "No stock sheet left",
         "cut": "Cut type",
-        "guillotine": "Saw (guillotine)",
+        "guillotine": "Saw (edge-to-edge cuts)",
         "free": "CNC/router (free)"
     },
     "summary": {
@@ -233,7 +235,7 @@
         "blocked": "parameters missing"
     },
     "stock": {
-        "label": "Sheet stock",
+        "label": "Available sheets",
         "item": "Item {{n}}",
         "add": "Add sheet",
         "limit": "The stock takes up to {{max}} sheets.",
@@ -245,7 +247,7 @@
     },
     "cut": {
         "label": "Cut type",
-        "guillotine": "Saw (guillotine)",
+        "guillotine": "Saw (edge-to-edge cuts)",
         "free": "CNC/router (free)",
         "help": "Saw: every cut goes from edge to edge, as on a circular or panel saw. CNC/router: pieces nest freely and some cuts stop inside the sheet; needs a CNC or a router with a jig, but usually uses less sheet."
     },

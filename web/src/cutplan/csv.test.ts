@@ -57,9 +57,9 @@ const LABELS: CsvFormat['labels'] = {
     },
     totals: {
         title: 'Corte total',
-        gross: 'Sem desconto do MDF',
-        net: 'Com desconto do MDF',
-        difference: 'Diferença do MDF',
+        gross: 'Medidas internas (sem a espessura)',
+        net: 'Peças prontas (com a espessura)',
+        difference: 'O que a espessura acrescenta',
         pieces: 'Peças',
         area: 'Área',
         cutLength: 'Corte',
@@ -82,7 +82,7 @@ const LABELS: CsvFormat['labels'] = {
         stock: 'Item do estoque',
         unplaced: 'Sem chapa no estoque',
         cut: 'Tipo de corte',
-        guillotine: 'Serra (guilhotina)',
+        guillotine: 'Serra (cortes de ponta a ponta)',
         free: 'CNC/tupia (livre)',
     },
     cutouts: {
@@ -382,9 +382,9 @@ describe('cutPlanCsv — corte total e chapas', () => {
             'Área (m²)',
             'Corte (mm)',
         ]);
-        expect(rows[at + 1][0]).toBe('Sem desconto do MDF');
-        expect(rows[at + 2][0]).toBe('Com desconto do MDF');
-        expect(rows[at + 3][0]).toBe('Diferença do MDF');
+        expect(rows[at + 1][0]).toBe('Medidas internas (sem a espessura)');
+        expect(rows[at + 2][0]).toBe('Peças prontas (com a espessura)');
+        expect(rows[at + 3][0]).toBe('O que a espessura acrescenta');
         // Peças: 1 frente + 2 laterais = 3 (com desconto).
         expect(rows[at + 2][1]).toBe('3');
     });
@@ -428,7 +428,7 @@ describe('cutPlanCsv — corte total e chapas', () => {
         expect(rows.some((row) => row[0] === 'Aproveitamento')).toBe(true);
         expect(rows.some((row) => row[0].startsWith('Sobra'))).toBe(true);
         expect(rows.find((row) => row[0] === 'Tipo de corte')?.[1]).toBe(
-            'Serra (guilhotina)',
+            'Serra (cortes de ponta a ponta)',
         );
     });
 

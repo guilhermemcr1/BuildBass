@@ -76,7 +76,7 @@ describe('PrintSheet', () => {
         ) as HTMLElement;
 
         expect(
-            within(sheet).getByText(/diâmetro do recorte do driver/),
+            within(sheet).getByText(/diâmetro do recorte do alto-falante/),
         ).toBeInTheDocument();
     });
 

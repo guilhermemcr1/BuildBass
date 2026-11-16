@@ -58,10 +58,10 @@ test('enviar o driver do projeto: pré-preenchido, protocolo e projeto intacto',
     await page.goto('/');
     await fillProjectDriver(page);
 
-    await driverAction(page, 'Enviar driver');
+    await driverAction(page, 'Enviar alto-falante');
 
     const dialog = page.getByRole('dialog', {
-        name: 'Enviar driver ao catálogo',
+        name: 'Enviar alto-falante ao catálogo',
     });
     await expect(dialog.getByRole('textbox', { name: /^Fs/ })).toHaveValue(
         '34,5',
@@ -108,9 +108,9 @@ test('sem driver no projeto: preencher à mão e enviar', async ({ page }) => {
     const received = await mockSubmission(page);
     await page.goto('/');
 
-    await driverAction(page, 'Enviar driver');
+    await driverAction(page, 'Enviar alto-falante');
     const dialog = page.getByRole('dialog', {
-        name: 'Enviar driver ao catálogo',
+        name: 'Enviar alto-falante ao catálogo',
     });
     await expect(dialog.getByRole('textbox', { name: /^Fs/ })).toHaveValue('');
 
@@ -156,9 +156,9 @@ test('falha do servidor: mantém o digitado e o reenvio funciona', async ({
     await page.goto('/');
     await fillProjectDriver(page);
 
-    await driverAction(page, 'Enviar driver');
+    await driverAction(page, 'Enviar alto-falante');
     const dialog = page.getByRole('dialog', {
-        name: 'Enviar driver ao catálogo',
+        name: 'Enviar alto-falante ao catálogo',
     });
     await dialog.getByRole('textbox', { name: /Fabricante/ }).fill('Exemplo');
     await dialog.getByRole('textbox', { name: /Modelo/ }).fill('EX-12');
@@ -194,9 +194,9 @@ test('perder a conexão com o diálogo aberto desativa o envio sem perder o digi
     await mockSubmission(page);
     await page.goto('/');
 
-    await driverAction(page, 'Enviar driver');
+    await driverAction(page, 'Enviar alto-falante');
     const dialog = page.getByRole('dialog', {
-        name: 'Enviar driver ao catálogo',
+        name: 'Enviar alto-falante ao catálogo',
     });
     await dialog.getByRole('textbox', { name: /Fabricante/ }).fill('Exemplo');
 
@@ -254,10 +254,10 @@ test('preencher a partir do manual: preenche os vazios, destaca o suspeito e nã
     });
 
     await page.goto('/');
-    await driverAction(page, 'Enviar driver');
+    await driverAction(page, 'Enviar alto-falante');
 
     const dialog = page.getByRole('dialog', {
-        name: 'Enviar driver ao catálogo',
+        name: 'Enviar alto-falante ao catálogo',
     });
 
     await dialog.locator('input[type="file"]').setInputFiles({

@@ -138,7 +138,7 @@ describe('SheetLayout', () => {
         renderWithProviders(<SheetLayout layout={layout} sheet={SHEET} />);
 
         expect(screen.getByTestId('cut-mode')).toHaveTextContent(
-            'Tipo de corte: Serra (guilhotina).',
+            'Tipo de corte: Serra (cortes de ponta a ponta).',
         );
     });
 });

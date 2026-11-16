@@ -37,7 +37,7 @@ describe('SaveDriverDialog', () => {
         });
 
         expect(
-            within(dialog).getByRole('textbox', { name: /Marca/ }),
+            within(dialog).getByRole('textbox', { name: /Fabricante/ }),
         ).toHaveValue('Marca');
         expect(
             within(dialog).getByRole('textbox', { name: /Modelo/ }),
@@ -51,7 +51,7 @@ describe('SaveDriverDialog', () => {
         const onClose = open();
 
         await userEvent.type(
-            screen.getByRole('textbox', { name: /Variação/ }),
+            screen.getByRole('textbox', { name: /Impedância da bobina/ }),
             '4 Ω',
         );
         await userEvent.type(
@@ -77,7 +77,7 @@ describe('SaveDriverDialog', () => {
         expect(screen.getByRole('button', { name: 'Salvar' })).toBeDisabled();
 
         await userEvent.type(
-            screen.getByRole('textbox', { name: /Marca/ }),
+            screen.getByRole('textbox', { name: /Fabricante/ }),
             'X',
         );
 

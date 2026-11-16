@@ -259,7 +259,9 @@ describe('SavedDriversDialog', () => {
         await act(() => upload('{ não é json'));
 
         expect(
-            await screen.findByText('O arquivo não é um JSON válido.'),
+            await screen.findByText(
+                'O arquivo está corrompido ou não é uma lista do BuildBass.',
+            ),
         ).toBeVisible();
         expect(useSavedDrivers.getState().items).toHaveLength(1);
     });

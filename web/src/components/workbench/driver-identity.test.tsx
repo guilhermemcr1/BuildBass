@@ -19,7 +19,7 @@ describe('DriverIdentity', () => {
     test('mostra marca, modelo, variação e tipo sempre, mesmo sem driver escolhido', () => {
         renderWithProviders(<DriverIdentity />);
 
-        for (const name of ['Marca', 'Modelo', /^Variação/]) {
+        for (const name of ['Fabricante', 'Modelo', /^Impedância da bobina/]) {
             expect(screen.getByRole('textbox', { name })).toHaveValue('');
         }
         expect(screen.getByRole('button', { name: /Tipo/ })).toHaveTextContent(
@@ -31,7 +31,7 @@ describe('DriverIdentity', () => {
         renderWithProviders(<DriverIdentity />);
 
         await userEvent.type(
-            screen.getByRole('textbox', { name: 'Marca' }),
+            screen.getByRole('textbox', { name: 'Fabricante' }),
             'Triton',
         );
         await userEvent.type(
@@ -41,7 +41,9 @@ describe('DriverIdentity', () => {
 
         expect(source()).toEqual({ brand: 'Triton', model: 'TR 620' });
 
-        await userEvent.clear(screen.getByRole('textbox', { name: 'Marca' }));
+        await userEvent.clear(
+            screen.getByRole('textbox', { name: 'Fabricante' }),
+        );
         await userEvent.clear(screen.getByRole('textbox', { name: 'Modelo' }));
 
         expect(source()).toBeUndefined();
@@ -83,23 +85,25 @@ describe('DriverIdentity', () => {
             ),
         );
 
-        expect(screen.getByRole('textbox', { name: 'Marca' })).toHaveValue(
+        expect(screen.getByRole('textbox', { name: 'Fabricante' })).toHaveValue(
             'Triton',
         );
-        expect(screen.getByRole('textbox', { name: /^Variação/ })).toHaveValue(
-            '4',
-        );
+        expect(
+            screen.getByRole('textbox', { name: /^Impedância da bobina/ }),
+        ).toHaveValue('4');
         expect(screen.getByRole('button', { name: /Tipo/ })).toHaveTextContent(
             'Woofer',
         );
         expect(
-            screen.getByText('Driver aplicado: Triton TR 620 12" 4 Ω'),
+            screen.getByText('Alto-falante aplicado: Triton TR 620 12" 4 Ω'),
         ).toBeInTheDocument();
 
         // Com o foco dentro do bloco (escrevendo), o aviso se cala.
         await userEvent.click(screen.getByRole('textbox', { name: 'Modelo' }));
 
-        expect(screen.queryByText(/Driver aplicado/)).not.toBeInTheDocument();
+        expect(
+            screen.queryByText(/Alto-falante aplicado/),
+        ).not.toBeInTheDocument();
     });
 
     test('avisa quando a identificação é a de um alto-falante da lista pessoal', () => {

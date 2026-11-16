@@ -69,7 +69,7 @@ describe('projeção da caixa (C15)', () => {
         expect((Math.max(...ys) + Math.min(...ys)) / 2).toBeCloseTo(0, 9);
     });
 
-    test('o recorte do driver vira polígono com id da peça e do tipo', () => {
+    test('o recorte do alto-falante vira polígono com id da peça e do tipo', () => {
         const polygons = projectBox(plan({ type: 'vented', fb_hz: 60 }), FLAT, {
             translucent: false,
         });
@@ -144,7 +144,7 @@ describe('projeção da caixa (C15)', () => {
         }
     });
 
-    test('a bandpass traz a divisória só na vista translúcida, com o recorte do driver', () => {
+    test('a bandpass traz a divisória só na vista translúcida, com o recorte do alto-falante', () => {
         const bandpass = plan({
             type: 'bandpass',
             vr_m3: 0.04,

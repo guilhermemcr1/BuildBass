@@ -41,7 +41,7 @@ describe('Tutorial', () => {
 
         await userEvent.keyboard('{ArrowRight}');
         expect(
-            screen.getByRole('dialog', { name: '1. Escolha o driver' }),
+            screen.getByRole('dialog', { name: '1. Escolha o alto-falante' }),
         ).toBeVisible();
 
         await userEvent.keyboard('{ArrowLeft}');

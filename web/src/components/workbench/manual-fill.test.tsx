@@ -242,7 +242,7 @@ describe('ManualFill — revisar com apoio', () => {
     });
 
     test.each([
-        ['multiple_drivers', /mais de um driver; usamos o primeiro/],
+        ['multiple_drivers', /mais de um alto-falante; usamos o primeiro/],
         ['nothing_found', /não encontramos parâmetros/i],
     ] as const)('aviso %s aparece sem bloquear', async (warning, text) => {
         extract.mockResolvedValue({

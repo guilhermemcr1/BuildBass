@@ -37,7 +37,7 @@ describe('VolumeCheck', () => {
         for (const name of [
             'Interno',
             'Reforços',
-            'Drivers',
+            'Alto-falantes',
             'Dutos',
             'Líquido',
             'Simulado',

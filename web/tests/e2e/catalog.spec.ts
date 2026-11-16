@@ -109,7 +109,7 @@ test('busca sem resultado mostra o termo', async ({ page }) => {
     await (await search(page)).fill('zzzz');
 
     await expect(
-        page.getByText('Nenhum driver encontrado para «zzzz»'),
+        page.getByText('Nenhum alto-falante encontrado para “zzzz”'),
     ).toBeVisible();
 });
 
@@ -167,15 +167,17 @@ test('driver que saiu do catálogo avisa e não muda o projeto', async ({
     await page.getByRole('option', { name: /Triton/ }).click();
 
     await expect(
-        page.getByText('Este driver não está mais no catálogo.'),
+        page.getByText('Este alto-falante não está mais no catálogo.'),
     ).toBeVisible();
     await expect(page.getByRole('textbox', { name: /^Fs/ })).toHaveValue('');
 });
 
 async function expectIdentity(page: Page, filled: boolean) {
-    const brand = page.getByRole('textbox', { name: /^Marca/ });
+    const brand = page.getByRole('textbox', { name: /^Fabricante/ });
     const model = page.getByRole('textbox', { name: /^Modelo/ });
-    const variant = page.getByRole('textbox', { name: /^Variação/ });
+    const variant = page.getByRole('textbox', {
+        name: /^Impedância da bobina/,
+    });
 
     await expect(brand).toHaveValue(filled ? 'Triton' : '');
     await expect(model).toHaveValue(filled ? 'TR 620 12"' : '');

@@ -114,7 +114,7 @@ test('plano da selada: dimensões, tabela, espessura, proporção e volume em fa
     await expect(page.getByRole('textbox', { name: /Espessura/ })).toBeHidden();
 });
 
-test('plano da dutada: recorte do driver aparece na frente quando o diâmetro é informado', async ({
+test('plano da dutada: recorte do alto-falante aparece na frente quando o diâmetro é informado', async ({
     page,
 }) => {
     await page.goto('/');
@@ -129,7 +129,7 @@ test('plano da dutada: recorte do driver aparece na frente quando o diâmetro é
     await expect(front).toContainText('Duto');
 
     await fillPlan(page, /^Ød/, '285');
-    await expect(front).toContainText('Driver');
+    await expect(front).toContainText('Alto-falante');
     await expect(front).not.toContainText('diâmetro a informar');
 });
 
@@ -208,7 +208,7 @@ test('plano da bandpass: sete peças, divisória, câmaras e conferência por c�
 
     const divider = parts.getByRole('row', { name: /Divisória/ });
     await expect(divider).toContainText('Entre as câmaras');
-    await expect(divider).toContainText('Driver');
+    await expect(divider).toContainText('Alto-falante');
     await expect(parts.getByRole('row', { name: /Frente/ })).toContainText(
         'Duto',
     );
@@ -377,7 +377,7 @@ test('exportar CSV: ; e vírgula decimal em pt-BR, vírgula e ponto em en', asyn
         'Peça;Posição;Qtd;Comprimento (mm);Largura (mm);Espessura (mm);Recortes',
     );
     expect(ptText).toContain(
-        'Frente;Painel da frente;1;669,4;427,5;18,0;Driver Ø 285,0 mm',
+        'Frente;Painel da frente;1;669,4;427,5;18,0;Alto-falante Ø 285,0 mm',
     );
     expect(ptText).toContain('Lateral;Lados esquerdo e direito;2;');
 
@@ -498,10 +498,12 @@ test('chapa 2,75 × 1,85 m: visão "Chapas", aproveitamento, total nas duas base
     const totals = page.getByRole('table', { name: 'Corte total' });
     await expect(totals).toBeVisible();
     await expect(
-        totals.getByRole('row', { name: /Sem desconto do MDF/ }),
+        totals.getByRole('row', {
+            name: /Medidas internas \(sem a espessura\)/,
+        }),
     ).toBeVisible();
     await expect(
-        totals.getByRole('row', { name: /Com desconto do MDF/ }),
+        totals.getByRole('row', { name: /Peças prontas \(com a espessura\)/ }),
     ).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Chapas' })).toHaveCount(0);
 
@@ -512,7 +514,7 @@ test('chapa 2,75 × 1,85 m: visão "Chapas", aproveitamento, total nas duas base
     const region = planRegion(page);
     await expect(region.getByText(/aproveitamento de/).first()).toBeVisible();
     await expect(
-        region.getByRole('img', { name: /Chapa 1 com 6 peça\(s\)/ }),
+        region.getByRole('img', { name: /Chapa 1 com 6 peças/ }),
     ).toBeVisible();
     await expect(region.locator('[data-piece]')).toHaveCount(6);
 
@@ -520,7 +522,7 @@ test('chapa 2,75 × 1,85 m: visão "Chapas", aproveitamento, total nas duas base
         'utf8',
     );
     expect(csv).toContain('Corte total;Peças;Área (cm²);Corte (mm)');
-    expect(csv).toContain('Sem desconto do MDF;');
+    expect(csv).toContain('Medidas internas (sem a espessura);');
     expect(csv).toContain(
         'Chapas;Chapa;Item do estoque;Peça;Unidade;x (mm);y (mm)',
     );
@@ -565,7 +567,7 @@ test('medidas internas editáveis na Caixa: a altura digitada vale e o plano seg
         '700,0',
     );
     await expect(
-        page.getByRole('button', { name: /^(?!Ajuda).*Própria/ }),
+        page.getByRole('button', { name: /^(?!Ajuda).*Personalizada/ }),
     ).toBeVisible();
 
     await openPlan(page);

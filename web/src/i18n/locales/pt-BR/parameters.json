@@ -49,11 +49,11 @@
     },
     "vb_m3": {
         "label": "Volume da caixa",
-        "help": "Volume interno bruto, com o duto e o driver dentro: o cálculo desconta os dois. WinISD e as calculadoras online pedem o volume líquido, que aparece nos resultados."
+        "help": "Volume interno bruto, com o duto e o alto-falante dentro: o cálculo desconta os dois. WinISD e as calculadoras online pedem o volume líquido, que aparece nos resultados."
     },
     "vr_m3": {
         "label": "Volume da câmara traseira (selada)",
-        "help": "Volume bruto da câmara fechada atrás do cone, antes de descontar o driver."
+        "help": "Volume bruto da câmara fechada atrás do cone, antes de descontar o alto-falante."
     },
     "vf_m3": {
         "label": "Volume da câmara frontal (dutada)",
@@ -116,12 +116,12 @@
         "help": "Número de dutos iguais na câmara traseira."
     },
     "driver_count": {
-        "label": "Quantidade de drivers",
-        "help": "Número de drivers iguais na mesma caixa."
+        "label": "Quantidade de alto-falantes",
+        "help": "Número de alto-falantes iguais na mesma caixa."
     },
     "power_w": {
         "label": "Potência de entrada",
-        "help": "Potência elétrica aplicada ao conjunto, referida à resistência Re."
+        "help": "Potência que o amplificador entrega ao conjunto, calculada sobre a resistência Re."
     },
     "voltage_v": {
         "label": "Tensão de entrada",

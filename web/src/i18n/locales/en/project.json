@@ -31,10 +31,10 @@
     },
     "errors": {
         "fileTooLarge": "The file is over 256 KB and does not look like a BuildBass project.",
-        "invalidJson": "The file is not valid JSON.",
+        "invalidJson": "The file is corrupted or is not a BuildBass file.",
         "notBuildbass": "The file is not a BuildBass project.",
         "newerVersion": "The project was saved by a newer BuildBass version. Update the app to open it.",
-        "invalidContent": "The project has an invalid value at “{{path}}”.",
+        "invalidContent": "The project has an invalid value and could not be opened. Technical detail: {{path}}.",
         "readFailed": "The file could not be read."
     },
     "file": {

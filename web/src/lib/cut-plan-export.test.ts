@@ -74,7 +74,7 @@ describe('csvFormatFor', () => {
         const format = csvFormatFor('pt-BR', 'metric', i18n.t);
 
         expect(format.cutouts(PLAN.pieces[0].cutouts)).toEqual([
-            'Driver Ø 285,0 mm',
+            'Alto-falante Ø 285,0 mm',
         ]);
     });
 });

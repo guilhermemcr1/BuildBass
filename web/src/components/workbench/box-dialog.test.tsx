@@ -105,7 +105,9 @@ describe('BoxDialog', () => {
         const { dialog } = await openDialog();
 
         expect(
-            await within(dialog).findByText(/O diâmetro do recorte do driver/),
+            await within(dialog).findByText(
+                /O diâmetro do recorte do alto-falante/,
+            ),
         ).toBeVisible();
         expect(dialog.querySelector('[data-part="driver"]')).toBeNull();
     });

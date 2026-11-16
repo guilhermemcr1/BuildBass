@@ -18,10 +18,10 @@
         },
         "help": {
             "panel": "Espessura da madeira dos painéis. Ela define o tamanho das peças: o volume interno do projeto é mantido e as medidas externas crescem com a espessura.",
-            "proportion": "Relação entre altura, largura e profundidade da caixa. Áurea: 2,62 : 1,62 : 1. Louden: 1,9 : 1,4 : 1, evita lados múltiplos entre si. Passos iguais: 1,59 : 1,26 : 1. Cúbica: lados iguais. Própria: você informa. São pontos de partida, não garantia de som melhor.",
-            "cutout": "Furo do driver no painel da frente. O diâmetro vem da ficha técnica; sem ele, o recorte aparece como \"a informar\".",
+            "proportion": "Relação entre altura, largura e profundidade da caixa. Áurea: 2,62 : 1,62 : 1. Louden: 1,9 : 1,4 : 1, evita lados múltiplos entre si. Passos iguais: 1,59 : 1,26 : 1. Cúbica: lados iguais. Personalizada: você informa. São pontos de partida, não garantia de som melhor.",
+            "cutout": "Furo do alto-falante no painel da frente. O diâmetro vem da ficha técnica; sem ele, o recorte aparece como \"a informar\".",
             "sheet": "Informe as chapas que você tem, inteiras e sobras (por exemplo, 2,75 × 1,85 m e uma sobra de 1,20 × 0,60 m), para ver como encaixar as peças e quantas chapas gastam. Uma sobra só entra quando economiza chapa inteira. A espessura é a do painel.",
-            "dimensions": "Internas: o volume que o driver \"vê\". Externas: as medidas da caixa pronta, com a espessura da madeira somada.",
+            "dimensions": "Internas: o volume que o alto-falante \"vê\". Externas: as medidas da caixa pronta, com a espessura da madeira somada.",
             "info": "Ajuda: {{topic}}",
             "totalsHelp": "Quanto de madeira o projeto gasta: área e comprimento de corte, com e sem a espessura do MDF.",
             "partsHelp": "Cada peça com as medidas finais e os recortes. É a lista para levar à marcenaria.",
@@ -36,7 +36,7 @@
         "louden": "Louden",
         "equalSteps": "Passos iguais",
         "cube": "Cúbica",
-        "custom": "Própria"
+        "custom": "Personalizada"
     },
     "dimensions": {
         "title": "Dimensões",
@@ -81,7 +81,7 @@
         "conventionDivider": "A divisória fica entre as laterais, o topo e a base."
     },
     "cutouts": {
-        "driver": "Driver",
+        "driver": "Alto-falante",
         "port": "Duto",
         "count": "×{{count}}",
         "round": "Ø {{size}}",
@@ -89,7 +89,7 @@
         "triangle": "base {{base}}, altura {{height}}",
         "driverPending": "diâmetro a informar",
         "portPending": "medidas do duto a informar",
-        "ref_driver": "Driver {{n}}",
+        "ref_driver": "Alto-falante {{n}}",
         "ref_port": "Duto {{n}}"
     },
     "volume": {
@@ -98,7 +98,7 @@
         "rows": {
             "internal": "Interno",
             "braces": "Reforços",
-            "drivers": "Drivers",
+            "drivers": "Alto-falantes",
             "ports": "Dutos",
             "net": "Líquido",
             "simulated": "Simulado",
@@ -111,17 +111,17 @@
         },
         "matches": "Igual à simulação: o volume líquido do plano é o que a simulação usou.",
         "differs": "Diferente da simulação.",
-        "unavailable": "Sem o volume líquido da simulação, o plano não tem com o que ser conferido."
+        "unavailable": "Sem o volume líquido da simulação, não dá para conferir o plano."
     },
     "warnings": {
         "title": "Avisos do plano",
         "cutoutTooBig": "Um recorte não cabe no lado menor de {{piece}}: reduza o diâmetro ou mude a proporção.",
-        "cutoutsDoNotFit": "Os recortes não cabem juntos em {{piece}}: reduza o diâmetro, tire um driver ou mude a proporção.",
+        "cutoutsDoNotFit": "Os recortes não cabem juntos em {{piece}}: reduza o diâmetro, tire um alto-falante ou mude a proporção.",
         "cutoutTight": "Sobra pouca madeira em {{piece}}, menos que a espessura do painel ({{thickness}}): confira se a peça aguenta.",
         "portLongerThanDepth": "O duto ({{length}}) é mais longo que a profundidade interna ({{depth}}): ele precisará de curva ou dobra.",
-        "driverCutoutUnknown": "O diâmetro do recorte do driver ({{field}}) não foi informado: o recorte aparece como a informar e as posições mudam quando ele entrar.",
+        "driverCutoutUnknown": "O diâmetro do recorte do alto-falante ({{field}}) não foi informado: o recorte aparece como a informar e as posições mudam quando ele entrar.",
         "portUnknown": "O duto está sem medidas: informe-as para ter o recorte e o volume dele.",
-        "simulationUnavailable": "Sem a simulação não há conferência de volume nem comprimento do duto: complete o driver e a caixa.",
+        "simulationUnavailable": "Sem a simulação não há conferência de volume nem comprimento do duto: complete o alto-falante e a caixa.",
         "volumeMismatch": "O volume líquido do plano difere do da simulação. Isso não deveria acontecer: confira os valores e relate o caso.",
         "portLongerThanDepth_rear": "O duto traseiro ({{length}}) é mais longo que a profundidade da câmara traseira ({{depth}}): ele precisará de curva ou dobra.",
         "portLongerThanDepth_front": "O duto frontal ({{length}}) é mais longo que a profundidade da câmara frontal ({{depth}}): ele precisará de curva ou dobra.",
@@ -182,16 +182,16 @@
     },
     "totals": {
         "title": "Corte total",
-        "gross": "Sem desconto do MDF",
-        "net": "Com desconto do MDF",
-        "difference": "Diferença do MDF",
+        "gross": "Medidas internas (sem a espessura)",
+        "net": "Peças prontas (com a espessura)",
+        "difference": "O que a espessura acrescenta",
         "pieces": "Peças",
         "area": "Área",
         "cutLength": "Corte",
-        "hint": "“Sem desconto” usa as seis faces pelas medidas internas, sem a espessura. “Com desconto” usa as peças do plano, com a espessura somada. A diferença é o que o MDF acrescenta."
+        "hint": "“Medidas internas” usa as seis faces pelas medidas internas, sem a espessura. “Peças prontas” usa as peças do plano, com a espessura somada. A diferença é o que o MDF acrescenta."
     },
     "sheet": {
-        "title": "Chapa que você tem",
+        "title": "Chapas disponíveis",
         "rotate": "Pode girar as peças"
     },
     "sheets": {
@@ -210,10 +210,12 @@
         "waste": "Sobra",
         "oversize": "Não cabe",
         "sheetOf": "Chapa {{n}} de {{total}}",
-        "summary": "{{count}} chapa(s), aproveitamento de {{utilization}}, sobra de {{waste}}.",
+        "summary_one": "{{count}} chapa, aproveitamento de {{utilization}}, sobra de {{waste}}.",
+        "summary_other": "{{count}} chapas, aproveitamento de {{utilization}}, sobra de {{waste}}.",
         "oversizeWarning": "Não cabem em nenhuma chapa do estoque: {{pieces}}.",
         "rotatedMark": "girada",
-        "drawing": "Chapa {{n}} com {{count}} peça(s), aproveitamento de {{utilization}}",
+        "drawing_one": "Chapa {{n}} com {{count}} peça, aproveitamento de {{utilization}}",
+        "drawing_other": "Chapa {{n}} com {{count}} peças, aproveitamento de {{utilization}}",
         "empty": "Nenhuma peça coube no estoque informado.",
         "origin": "{{w}} × {{h}} (item {{n}} do estoque)",
         "usedOf": "{{used}} de {{total}}",
@@ -224,7 +226,7 @@
         "stock": "Item do estoque",
         "unplaced": "Sem chapa no estoque",
         "cut": "Tipo de corte",
-        "guillotine": "Serra (guilhotina)",
+        "guillotine": "Serra (cortes de ponta a ponta)",
         "free": "CNC/tupia (livre)"
     },
     "summary": {
@@ -233,7 +235,7 @@
         "blocked": "faltam parâmetros"
     },
     "stock": {
-        "label": "Estoque de chapas",
+        "label": "Chapas disponíveis",
         "item": "Item {{n}}",
         "add": "Adicionar chapa",
         "limit": "O estoque aceita até {{max}} chapas.",
@@ -245,7 +247,7 @@
     },
     "cut": {
         "label": "Tipo de corte",
-        "guillotine": "Serra (guilhotina)",
+        "guillotine": "Serra (cortes de ponta a ponta)",
         "free": "CNC/tupia (livre)",
         "help": "Serra: todo corte atravessa a chapa de lado a lado, como na serra circular ou na esquadrejadeira. CNC/tupia: as peças se encaixam livremente e alguns cortes param no meio da chapa; exige CNC ou tupia com gabarito, mas costuma gastar menos chapa."
     },

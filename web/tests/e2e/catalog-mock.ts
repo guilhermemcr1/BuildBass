@@ -68,10 +68,12 @@ export async function openPicker(page: Page) {
     // espera os dois saírem.
     await expect(page.locator('[data-exiting]')).toHaveCount(0);
 
-    const field = page.getByRole('searchbox', { name: 'Buscar driver' });
+    const field = page.getByRole('searchbox', { name: 'Buscar alto-falante' });
 
     if (!(await field.isVisible())) {
-        await page.getByRole('button', { name: /^Buscar driver/ }).click();
+        await page
+            .getByRole('button', { name: /^Buscar alto-falante/ })
+            .click();
     }
 
     return field;
@@ -79,6 +81,8 @@ export async function openPicker(page: Page) {
 
 // Salvar, "Meus alto-falantes" e enviar ficam no menu "⋯" do painel do Driver.
 export async function driverAction(page: Page, name: string): Promise<void> {
-    await page.getByRole('button', { name: 'Mais ações do driver' }).click();
+    await page
+        .getByRole('button', { name: 'Mais ações do alto-falante' })
+        .click();
     await page.getByRole('menuitem', { name }).click();
 }

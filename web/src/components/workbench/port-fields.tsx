@@ -125,6 +125,12 @@ export function PortFields({ duct = 'front' }: Props) {
             <div className="grid grid-cols-2 items-start gap-x-3 gap-y-2">
                 <SelectField<PortEnd>
                     label={t('port.end')}
+                    help={{
+                        content: t('port.endHelp'),
+                        label: t('common:help.of', {
+                            parameter: t('port.end'),
+                        }),
+                    }}
                     selected={end}
                     onChange={(id) => setPort(withEnd(port, id))}
                     options={ENDS.map((id) => ({

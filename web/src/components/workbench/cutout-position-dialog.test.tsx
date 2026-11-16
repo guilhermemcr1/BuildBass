@@ -72,7 +72,7 @@ describe('CutoutPositionDialog', () => {
         renderDialog();
 
         const driver = screen.getByRole('button', {
-            name: /^Driver 1, posição automática/,
+            name: /^Alto-falante 1, posição automática/,
         });
         const port = screen.getByRole('button', {
             name: /^Duto 1, posição automática/,
@@ -84,7 +84,9 @@ describe('CutoutPositionDialog', () => {
         const center = front().cutouts[0].center;
 
         expect(
-            screen.getByRole('textbox', { name: /Driver 1:.*borda esquerda/ }),
+            screen.getByRole('textbox', {
+                name: /Alto-falante 1:.*borda esquerda/,
+            }),
         ).toHaveValue(((center?.x_m ?? 0) * 1000).toFixed(1).replace('.', ','));
     });
 
@@ -92,7 +94,7 @@ describe('CutoutPositionDialog', () => {
         renderDialog();
 
         const x = screen.getByRole('textbox', {
-            name: /Driver 1:.*borda esquerda/,
+            name: /Alto-falante 1:.*borda esquerda/,
         });
 
         await userEvent.clear(x);
@@ -108,7 +110,9 @@ describe('CutoutPositionDialog', () => {
             },
         ]);
         expect(
-            screen.getByRole('button', { name: /^Driver 1, posição manual/ }),
+            screen.getByRole('button', {
+                name: /^Alto-falante 1, posição manual/,
+            }),
         ).toBeVisible();
     });
 
@@ -143,7 +147,9 @@ describe('CutoutPositionDialog', () => {
         expect(reset).toBeDisabled();
         expect(all).toBeDisabled();
 
-        act(() => screen.getByRole('button', { name: /^Driver 1/ }).focus());
+        act(() =>
+            screen.getByRole('button', { name: /^Alto-falante 1/ }).focus(),
+        );
         await userEvent.keyboard('{ArrowLeft}');
         act(() => screen.getByRole('button', { name: /^Duto 1/ }).focus());
         await userEvent.keyboard('{ArrowLeft}');
@@ -253,14 +259,14 @@ describe('CutoutPositionDialog', () => {
         renderDialog();
 
         const x = screen.getByRole('textbox', {
-            name: /Driver 1:.*borda esquerda/,
+            name: /Alto-falante 1:.*borda esquerda/,
         });
 
         await userEvent.clear(x);
         await userEvent.type(x, '20{Tab}');
 
         expect(
-            screen.getByText(/Driver 1 passa da borda de frente/),
+            screen.getByText(/Alto-falante 1 passa da borda de frente/),
         ).toBeVisible();
     });
 });

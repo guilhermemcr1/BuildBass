@@ -51,7 +51,7 @@ function listing(items: DriverSummary[] = [SUMMARY], hasMore = false) {
 }
 
 function trigger() {
-    return screen.getByRole('button', { name: /^Buscar driver/ });
+    return screen.getByRole('button', { name: /^Buscar alto-falante/ });
 }
 
 async function open(props: { disabled?: boolean; onSubmit?: () => void } = {}) {
@@ -64,7 +64,7 @@ async function open(props: { disabled?: boolean; onSubmit?: () => void } = {}) {
     );
     await userEvent.click(trigger());
 
-    return screen.getByRole('searchbox', { name: 'Buscar driver' });
+    return screen.getByRole('searchbox', { name: 'Buscar alto-falante' });
 }
 
 async function typeAndWait(input: HTMLElement, text = 'tr 6') {
@@ -132,7 +132,7 @@ describe('DriverPicker — abrir e buscar', () => {
 
         expect(input).toHaveFocus();
         expect(
-            screen.getByRole('dialog', { name: 'Buscar driver' }),
+            screen.getByRole('dialog', { name: 'Buscar alto-falante' }),
         ).toBeVisible();
     });
 
@@ -160,7 +160,7 @@ describe('DriverPicker — abrir e buscar', () => {
 
         expect(
             screen.getByText(
-                'Digite ao menos 2 letras ou escolha uma marca ou um diâmetro.',
+                'Digite ao menos 2 letras ou escolha um fabricante ou um diâmetro.',
             ),
         ).toBeInTheDocument();
     });
@@ -300,7 +300,7 @@ describe('DriverPicker — falhas e estados', () => {
 
         expect(
             await screen.findByText(
-                'Nenhum driver encontrado para «zzzz»',
+                'Nenhum alto-falante encontrado para “zzzz”',
                 {},
                 { timeout: 2000 },
             ),
@@ -367,7 +367,9 @@ describe('DriverPicker — falhas e estados', () => {
         await userEvent.keyboard('{ArrowDown}{Enter}');
 
         expect(
-            await screen.findByText('Este driver não está mais no catálogo.'),
+            await screen.findByText(
+                'Este alto-falante não está mais no catálogo.',
+            ),
         ).toBeInTheDocument();
         expect(activeProjectStore().getState().data).toBe(before);
         expect(screen.getByRole('dialog')).toBeVisible();
@@ -383,7 +385,7 @@ describe('DriverPicker — falhas e estados', () => {
 
         expect(
             await screen.findByText(
-                'Não foi possível copiar este driver. O projeto não foi alterado.',
+                'Não foi possível copiar este alto-falante. O projeto não foi alterado.',
             ),
         ).toBeInTheDocument();
         expect(activeProjectStore().getState().data).toBe(before);
@@ -414,12 +416,12 @@ describe('DriverPicker — falhas e estados', () => {
 });
 
 describe('DriverPicker — enviar e offline', () => {
-    test('o rodapé "Enviar driver" chama onSubmitDriver e fecha', async () => {
+    test('o rodapé "Enviar alto-falante" chama onSubmitDriver e fecha', async () => {
         const onSubmit = vi.fn();
         await open({ onSubmit });
 
         await userEvent.click(
-            screen.getByRole('button', { name: 'Enviar driver' }),
+            screen.getByRole('button', { name: 'Enviar alto-falante' }),
         );
 
         expect(onSubmit).toHaveBeenCalled();
@@ -440,7 +442,7 @@ describe('DriverPicker — enviar e offline', () => {
 
         expect(screen.getByRole('searchbox')).toBeEnabled();
         expect(
-            screen.getByRole('button', { name: 'Enviar driver' }),
+            screen.getByRole('button', { name: 'Enviar alto-falante' }),
         ).toBeDisabled();
         expect(screen.getByText('Indisponível sem conexão.')).toBeVisible();
         expect(search).not.toHaveBeenCalled();
@@ -547,7 +549,7 @@ describe('DriverPicker — filtros e detalhes (marca, diâmetro, tipo)', () => {
         search.mockResolvedValue(listing([TYPED]));
         await open();
 
-        await pickFilter('Marca', 'Triton');
+        await pickFilter('Fabricante', 'Triton');
 
         const option = await screen.findByRole(
             'option',
@@ -586,11 +588,11 @@ describe('DriverPicker — filtros e detalhes (marca, diâmetro, tipo)', () => {
         search.mockResolvedValue(listing([]));
         await open();
 
-        await pickFilter('Marca', 'Alfa');
+        await pickFilter('Fabricante', 'Alfa');
 
         expect(
             await screen.findByText(
-                'Nenhum driver com esses filtros.',
+                'Nenhum alto-falante com esses filtros.',
                 undefined,
                 {
                     timeout: 2000,
@@ -606,7 +608,7 @@ describe('DriverPicker — filtros e detalhes (marca, diâmetro, tipo)', () => {
             screen.queryByRole('button', { name: 'Limpar filtros' }),
         ).not.toBeInTheDocument();
         expect(
-            screen.queryByText('Nenhum driver com esses filtros.'),
+            screen.queryByText('Nenhum alto-falante com esses filtros.'),
         ).not.toBeInTheDocument();
     });
 

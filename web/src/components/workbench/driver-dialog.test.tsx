@@ -8,13 +8,13 @@ import { renderWithProviders } from '@/test/render';
 import { DriverPanel } from './driver-panel';
 
 async function openDialog() {
-    const opener = screen.getByRole('button', { name: 'Ampliar driver' });
+    const opener = screen.getByRole('button', { name: 'Ampliar alto-falante' });
 
     await userEvent.click(opener);
 
     return {
         opener,
-        dialog: await screen.findByRole('dialog', { name: 'Driver' }),
+        dialog: await screen.findByRole('dialog', { name: 'Alto-falante' }),
     };
 }
 

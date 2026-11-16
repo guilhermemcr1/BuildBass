@@ -192,7 +192,7 @@ test.describe('US3 — busca compacta do Driver', () => {
         await expect(field(page, /^Fs/)).toHaveValue('76,9');
         await expect(page.getByRole('searchbox')).toHaveCount(0);
         await expect(
-            page.getByRole('button', { name: 'Buscar driver' }),
+            page.getByRole('button', { name: 'Buscar alto-falante' }),
         ).toBeFocused();
     });
 
@@ -325,7 +325,9 @@ test.describe('US6 — alto-falantes salvos', () => {
         const dialog = page.getByRole('dialog', {
             name: 'Salvar alto-falante',
         });
-        await dialog.getByRole('textbox', { name: /^Marca/ }).fill('Marca X');
+        await dialog
+            .getByRole('textbox', { name: /^Fabricante/ })
+            .fill('Marca X');
         await dialog.getByRole('textbox', { name: /^Modelo/ }).fill(model);
         await dialog
             .getByRole('textbox', { name: /^Diâmetro do recorte/ })
@@ -362,7 +364,7 @@ test.describe('US6 — alto-falantes salvos', () => {
         await page.getByRole('button', { name: 'Novo', exact: true }).click();
         await expect(field(page, /^Fs/)).toHaveValue('');
 
-        await page.getByRole('button', { name: 'Buscar driver' }).click();
+        await page.getByRole('button', { name: 'Buscar alto-falante' }).click();
         await expect(
             page.getByText('Meus alto-falantes').first(),
         ).toBeVisible();
@@ -371,9 +373,9 @@ test.describe('US6 — alto-falantes salvos', () => {
         for (const [index, [name]] of PARAMS.entries()) {
             await expect(field(page, name)).toHaveValue(before[index]);
         }
-        await expect(page.getByRole('textbox', { name: /^Marca/ })).toHaveValue(
-            'Marca X',
-        );
+        await expect(
+            page.getByRole('textbox', { name: /^Fabricante/ }),
+        ).toHaveValue('Marca X');
         await expect(
             page.getByRole('textbox', { name: /^Modelo/ }),
         ).toHaveValue('Sub 12');
@@ -391,7 +393,7 @@ test.describe('US6 — alto-falantes salvos', () => {
         await page.reload();
         await page.getByRole('button', { name: 'Novo', exact: true }).click();
         await context.setOffline(true);
-        await page.getByRole('button', { name: 'Buscar driver' }).click();
+        await page.getByRole('button', { name: 'Buscar alto-falante' }).click();
 
         await expect(
             page.getByRole('option', { name: /Marca X Sub 12/ }),

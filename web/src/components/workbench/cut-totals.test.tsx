@@ -79,9 +79,9 @@ describe('CutTotals', () => {
                 (row) => within(row).getAllByRole('rowheader')[0].textContent,
             ),
         ).toEqual([
-            'Sem desconto do MDF',
-            'Com desconto do MDF',
-            'Diferença do MDF',
+            'Medidas internas (sem a espessura)',
+            'Peças prontas (com a espessura)',
+            'O que a espessura acrescenta',
         ]);
         // 6 peças nas duas bases; a diferença de peças é zero.
         expect(within(rows[0]).getAllByRole('cell')[0]).toHaveTextContent('6');

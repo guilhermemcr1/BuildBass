@@ -10,19 +10,19 @@
     "steps": {
         "welcome": {
             "title": "Bem-vindo ao BuildBass",
-            "body": "Em poucos passos você vê como simular um alto-falante numa caixa: do driver ao gráfico e ao plano de corte. Use os botões ou as setas do teclado; Esc encerra."
+            "body": "Em poucos passos você vê como simular um alto-falante numa caixa: do alto-falante ao gráfico e ao plano de corte. Use os botões ou as setas do teclado; Esc encerra."
         },
         "tabs": {
             "title": "Seus projetos",
             "body": "Cada projeto é uma aba, com nome e cor próprios. Abra até três para comparar caixas no mesmo gráfico. Tudo fica salvo neste navegador."
         },
         "driver": {
-            "title": "1. Escolha o driver",
+            "title": "1. Escolha o alto-falante",
             "body": "Busque o alto-falante no catálogo ou digite os parâmetros Thiele-Small (Fs, Qts, Vas…). Os campos com * são indispensáveis; os demais ficam em “Mostrar mais” e valem mesmo recolhidos."
         },
         "driverExpand": {
             "title": "Todos os campos à vista",
-            "body": "Este botão abre o driver num modal grande, com identificação, parâmetros, dimensões, ligação e sinal, sem nada recolhido. O que você edita lá muda o projeto na hora."
+            "body": "Este botão abre o alto-falante numa janela grande, com identificação, parâmetros, dimensões, ligação e sinal, sem nada recolhido. O que você edita lá muda o projeto na hora."
         },
         "box": {
             "title": "2. Monte a caixa",
@@ -38,7 +38,7 @@
         },
         "plan": {
             "title": "5. Gere o plano de corte",
-            "body": "Com driver e caixa preenchidos, o plano calcula as peças, o encaixe nas chapas que você tem e a posição dos recortes. Dá para ajustar à mão e imprimir."
+            "body": "Com alto-falante e caixa preenchidos, o plano calcula as peças, o encaixe nas chapas que você tem e a posição dos recortes. Dá para ajustar à mão e imprimir."
         },
         "actions": {
             "title": "Guarde seu trabalho",
@@ -50,7 +50,7 @@
         },
         "done": {
             "title": "Pronto para simular",
-            "body": "Comece escolhendo o driver. Você pode rever este tutorial quando quiser, pelo botão “Tutorial” na barra superior."
+            "body": "Comece escolhendo o alto-falante. Você pode rever este tutorial quando quiser, pelo botão “Tutorial” na barra superior."
         }
     }
 }

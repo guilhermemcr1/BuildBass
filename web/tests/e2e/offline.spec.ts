@@ -12,8 +12,10 @@ test('sem conexão mostra o aviso, desativa o servidor e preserva os dados', asy
     await fs.press('Tab');
 
     const banner = page.getByRole('status').filter({ hasText: 'Sem conexão.' });
-    const pick = page.getByRole('button', { name: 'Buscar driver' });
-    const catalog = page.getByRole('searchbox', { name: 'Buscar driver' });
+    const pick = page.getByRole('button', { name: 'Buscar alto-falante' });
+    const catalog = page.getByRole('searchbox', {
+        name: 'Buscar alto-falante',
+    });
 
     await pick.click();
     await expect(catalog).toBeEnabled();
@@ -29,9 +31,11 @@ test('sem conexão mostra o aviso, desativa o servidor e preserva os dados', asy
         page.getByText('Indisponível sem conexão com o servidor.').first(),
     ).toBeVisible();
     await page.keyboard.press('Escape');
-    await page.getByRole('button', { name: 'Mais ações do driver' }).click();
+    await page
+        .getByRole('button', { name: 'Mais ações do alto-falante' })
+        .click();
     await expect(
-        page.getByRole('menuitem', { name: /Enviar driver/ }),
+        page.getByRole('menuitem', { name: /Enviar alto-falante/ }),
     ).toHaveAttribute('aria-disabled', 'true');
     await page.keyboard.press('Escape');
     await expect(fs).toHaveValue('28,5');

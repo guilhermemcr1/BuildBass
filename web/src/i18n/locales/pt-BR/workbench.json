@@ -1,6 +1,6 @@
 {
     "regions": {
-        "driver": "Driver",
+        "driver": "Alto-falante",
         "box": "Caixa",
         "charts": "Gráficos",
         "results": "Resultados"
@@ -50,16 +50,17 @@
         "triangle": "Triangular",
         "titleFront": "Duto (câmara frontal)",
         "titleRear": "Duto (câmara traseira)",
-        "end": "Pontas do duto",
-        "end_flangedFree": "Uma flangeada, uma livre (padrão)",
-        "end_free": "Duas livres",
-        "end_flanged": "Duas flangeadas",
-        "end_slotWall": "Slot encostado na parede",
-        "end_custom": "Fator próprio"
+        "end": "Acabamento das pontas do duto",
+        "end_flangedFree": "Uma ponta com flange, outra livre (padrão)",
+        "end_free": "Duas pontas livres",
+        "end_flanged": "Duas pontas com flange",
+        "end_slotWall": "Slot colado na parede",
+        "end_custom": "Fator personalizado",
+        "endHelp": "Ponta com flange: a abertura fica rente a uma superfície plana, como a parede da caixa. Ponta livre: o tubo termina solto no ar. Cada acabamento muda a correção de ponta e, com ela, o comprimento do duto para a mesma sintonia."
     },
     "drivers": {
-        "title": "Drivers",
-        "wiring": "Ligação dos drivers",
+        "title": "Alto-falantes",
+        "wiring": "Ligação dos alto-falantes",
         "series": "Série",
         "parallel": "Paralelo",
         "wiringShort": "Ligação"
@@ -73,7 +74,7 @@
         "radiation": "Radiação",
         "half": "Meio espaço",
         "full": "Espaço livre",
-        "abovePe": "Acima de N·Pe ({{limit}})."
+        "abovePe": "Acima da potência térmica somada dos alto-falantes ({{limit}})."
     },
     "charts": {
         "label": "Tipo de gráfico",
@@ -92,7 +93,7 @@
         "groupDelayAxis": "Atraso de grupo (ms)",
         "portVelocityAxis": "Velocidade do ar ({{unit}})",
         "legend": "Projetos no gráfico",
-        "nonePlotted": "Nenhum projeto ligado no gráfico. Use o olho na aba do projeto.",
+        "nonePlotted": "Nenhum projeto visível no gráfico. Use o ícone de olho na aba do projeto.",
         "seriesFront": "frontal",
         "seriesRear": "traseiro",
         "showField_one": "Mostrar campo",
@@ -171,25 +172,25 @@
         "portPipeRear": "Ressonância do duto traseiro"
     },
     "catalog": {
-        "label": "Catálogo de drivers",
+        "label": "Catálogo de alto-falantes",
         "placeholder": "Buscar fabricante ou modelo",
-        "submit": "Enviar driver",
+        "submit": "Enviar alto-falante",
         "offlineReason": "Indisponível sem conexão com o servidor.",
         "searching": "Buscando…",
-        "empty": "Nenhum driver encontrado para «{{term}}»",
+        "empty": "Nenhum alto-falante encontrado para “{{term}}”",
         "error": "Não foi possível consultar o catálogo agora",
         "retry": "Tentar de novo",
         "more": "Há mais resultados. Refine a busca.",
         "applying": "Copiando parâmetros…",
-        "applyFailed": "Não foi possível copiar este driver. O projeto não foi alterado.",
-        "notFound": "Este driver não está mais no catálogo.",
+        "applyFailed": "Não foi possível copiar este alto-falante. O projeto não foi alterado.",
+        "notFound": "Este alto-falante não está mais no catálogo.",
         "originLabel": "Origem",
         "resultSupport": "Fs {{fs}} · Qts {{qts}} · Vas {{vas}}",
         "resultDiameter": "Ø {{diameter}}"
     },
     "offline": {
         "title": "Sem conexão.",
-        "body": "O catálogo de drivers e o envio de parâmetros estão indisponíveis. O resto continua funcionando."
+        "body": "O catálogo de alto-falantes e o envio de parâmetros estão indisponíveis. O resto continua funcionando."
     },
     "shortcuts": {
         "title": "Atalhos de teclado",
@@ -198,7 +199,7 @@
         "hint": "As teclas 1–5, ?, desfazer e refazer valem fora dos campos de texto."
     },
     "view": {
-        "label": "Visão",
+        "label": "Exibição",
         "charts": "Gráficos",
         "plan": "Plano de corte"
     },
@@ -207,7 +208,7 @@
         "front": "Câmara frontal (dutada)"
     },
     "picker": {
-        "label": "Buscar driver",
+        "label": "Buscar alto-falante",
         "placeholder": "Fabricante ou modelo",
         "mine": "Meus alto-falantes",
         "recent": "Recentes",
@@ -215,22 +216,22 @@
         "hint": "Digite ao menos 2 letras do fabricante ou modelo.",
         "offline": "Sem conexão: recentes e catálogo ficam indisponíveis.",
         "notFoundHelp": "Não achou?",
-        "submit": "Enviar driver",
+        "submit": "Enviar alto-falante",
         "filters": "Filtros",
-        "brand": "Marca",
-        "brandAny": "Todas as marcas",
+        "brand": "Fabricante",
+        "brandAny": "Todos os fabricantes",
         "diameter": "Diâmetro",
         "diameterAny": "Qualquer",
         "clearFilters": "Limpar filtros",
-        "emptyFiltered": "Nenhum driver com esses filtros.",
-        "hintFilters": "Digite ao menos 2 letras ou escolha uma marca ou um diâmetro.",
-        "triggerHint": "Buscar driver por fabricante ou modelo…",
+        "emptyFiltered": "Nenhum alto-falante com esses filtros.",
+        "hintFilters": "Digite ao menos 2 letras ou escolha um fabricante ou um diâmetro.",
+        "triggerHint": "Buscar alto-falante por fabricante ou modelo…",
         "clearSearch": "Limpar busca"
     },
     "driverDialog": {
-        "title": "Driver",
-        "openDialog": "Ampliar driver",
-        "parameters": "Parâmetros do driver"
+        "title": "Alto-falante",
+        "openDialog": "Ampliar alto-falante",
+        "parameters": "Parâmetros do alto-falante"
     },
     "boxDialog": {
         "open3d": "Ver caixa em 3D",
@@ -250,9 +251,9 @@
         "manageTitle": "Meus alto-falantes",
         "originSaved": "salvo",
         "fields": {
-            "brand": "Marca",
+            "brand": "Fabricante",
             "model": "Modelo",
-            "variant": "Variação · impedância (opcional)",
+            "variant": "Impedância da bobina (Ω, opcional)",
             "diameter": "Diâmetro nominal",
             "cutout": "Diâmetro do recorte",
             "depth": "Profundidade"
@@ -265,7 +266,7 @@
             "tooLong": "No máximo {{max}} caracteres.",
             "range": "Fora da faixa ({{min}} – {{max}}).",
             "full": "A lista chegou a {{max}} alto-falantes. Exclua algum para salvar outro.",
-            "duplicateOther": "Já existe outro alto-falante com essa marca, modelo e variação.",
+            "duplicateOther": "Já existe outro alto-falante com esse fabricante, modelo e impedância.",
             "impedance": "Informe só a impedância em ohms, de 0,5 a 64 (ex.: 4 ou 3,2). Sem texto nem o símbolo Ω."
         },
         "actions": {
@@ -300,11 +301,11 @@
             "import": "Importar",
             "errors": {
                 "fileTooLarge": "O arquivo passa de 512 KB e não parece ser uma lista do BuildBass.",
-                "invalidJson": "O arquivo não é um JSON válido.",
+                "invalidJson": "O arquivo está corrompido ou não é uma lista do BuildBass.",
                 "notBuildbass": "O arquivo não é uma lista de alto-falantes do BuildBass.",
                 "newerVersion": "A lista foi salva numa versão mais nova do BuildBass. Atualize o app para importá-la.",
                 "tooMany": "O arquivo tem mais de {{max}} alto-falantes.",
-                "invalidContent": "O arquivo tem um valor inválido em “{{path}}”.",
+                "invalidContent": "O arquivo tem um valor inválido e não pôde ser importado. Detalhe técnico: {{path}}.",
                 "readFailed": "Não foi possível ler o arquivo."
             },
             "duplicates_one": "{{count}} alto-falante do arquivo já está na sua lista.",
@@ -317,7 +318,7 @@
         "storageOff": "Este navegador não deixa guardar dados: a lista se perde ao fechar a página. Exporte para não perder.",
         "localOnly": "A lista fica só neste navegador. Exporte um arquivo para ter uma cópia ou levar para outro aparelho."
     },
-    "driverMenu": "Mais ações do driver",
+    "driverMenu": "Mais ações do alto-falante",
     "boxGroups": {
         "volume": "Volume",
         "tuning": "Volume e sintonia",
@@ -344,15 +345,15 @@
     },
     "identity": {
         "title": "Identificação",
-        "brand": "Marca",
+        "brand": "Fabricante",
         "model": "Modelo",
-        "variant": "Variação · impedância",
+        "variant": "Impedância da bobina (Ω)",
         "type": "Tipo",
         "typeNone": "Não informado",
         "brandPlaceholder": "Ex.: Triton",
         "modelPlaceholder": "Ex.: TR 620 12\"",
         "variantPlaceholder": "Ex.: 4",
-        "applied": "Driver aplicado: {{name}}",
+        "applied": "Alto-falante aplicado: {{name}}",
         "fromMine": "Dos meus alto-falantes"
     },
     "driverType": {
@@ -363,7 +364,7 @@
         "fullrange": "Fullrange"
     },
     "gallery": {
-        "title": "Fotos do driver",
+        "title": "Fotos do alto-falante",
         "open": "Ampliar foto {{current}} de {{total}}",
         "alt": "{{name}}, foto {{current}} de {{total}}",
         "counter": "Foto {{current}} de {{total}}",
@@ -373,10 +374,10 @@
     },
     "losses": {
         "preset": "Perdas (Ql)",
-        "ql5": "5 (vazamento)",
+        "ql5": "5 (com vazamentos)",
         "ql7": "7 (padrão)",
         "ql10": "10 (WinISD)",
-        "ql15": "15 (bem vedada)",
+        "ql15": "15 (muito bem vedada)",
         "custom": "Outro valor",
         "fill": "Material de absorção",
         "fill_none": "Sem material",

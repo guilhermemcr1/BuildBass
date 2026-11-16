@@ -48,7 +48,9 @@ describe('BoxShape', () => {
         await userEvent.type(height(), '700{Enter}');
 
         expect(height()).toHaveValue('700,0');
-        expect(screen.getByRole('button', { name: /Própria/ })).toBeVisible();
+        expect(
+            screen.getByRole('button', { name: /Personalizada/ }),
+        ).toBeVisible();
         expect(mm(width())).toBeLessThan(391.5);
         expect(mm(depth())).toBeLessThan(242);
         // 60 L = 60 000 000 mm³
