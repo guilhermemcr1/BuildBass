@@ -131,6 +131,9 @@ export function PortFields({ duct = 'front' }: Props) {
                         id,
                         label: t(`port.end_${id}`),
                     }))}
+                    // Os rótulos são longos: o select ocupa a linha toda e o fator da opção
+                    // personalizada vem logo abaixo.
+                    className="col-span-2"
                 />
                 {end === 'custom' && <ParameterField {...factor} />}
             </div>
