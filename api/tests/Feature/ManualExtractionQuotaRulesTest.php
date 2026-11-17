@@ -27,7 +27,7 @@ it('armadilha preenchida não consome nenhuma cota', function () {
 
 it('anti-robô reprovado não consome nenhuma cota', function () {
     fakeManualPipeline();
-    $this->mock(TurnstileVerifier::class)->shouldReceive('verify')->andReturnFalse();
+    $this->mock(TurnstileVerifier::class)->shouldReceive('check')->andReturn(TurnstileVerifier::FAILED);
 
     postManual(['turnstile_token' => 'ruim'])->assertUnprocessable()->assertJsonPath('code', 'verification_failed');
 

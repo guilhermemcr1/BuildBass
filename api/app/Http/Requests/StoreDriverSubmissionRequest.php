@@ -5,8 +5,10 @@ namespace App\Http\Requests;
 use App\Filament\Schemas\IdentityFields;
 use App\Models\Driver;
 use App\Models\DriverSubmission;
+use App\Services\Security\SubmissionAttempts;
 use App\Support\DriverVariant;
 use Closure;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -61,6 +63,19 @@ class StoreDriverSubmissionRequest extends FormRequest
         $text = (string) preg_replace('/[\p{Cc}\p{Cf}]+/u', ' ', $text);
 
         return trim((string) preg_replace('/\s+/u', ' ', $text));
+    }
+
+    /**
+     * Recusa pela validação: vai para a trilha só com os nomes dos campos (nunca o que foi digitado)
+     * e conta falta para o IP. Depois segue o fluxo normal do Laravel (422).
+     */
+    protected function failedValidation(Validator $validator): void
+    {
+        app(SubmissionAttempts::class)->refused(SubmissionAttempts::REASON_INVALID, $this->ip(), [
+            'campos' => array_slice(array_keys($validator->errors()->messages()), 0, 20),
+        ]);
+
+        parent::failedValidation($validator);
     }
 
     /**

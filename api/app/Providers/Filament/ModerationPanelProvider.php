@@ -4,8 +4,11 @@ namespace App\Providers\Filament;
 
 use App\Filament\Widgets\ManualUsageChart;
 use App\Filament\Widgets\OperationOverview;
+use App\Filament\Widgets\SubmissionAttemptsChart;
 use App\Filament\Widgets\SubmissionsByStatusChart;
+use App\Filament\Widgets\SubmissionSecurityOverview;
 use App\Filament\Widgets\SubmissionsPerDayChart;
+use App\Filament\Widgets\SuspiciousIpsTable;
 use App\Http\Middleware\SetPanelLocale;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -54,6 +57,9 @@ class ModerationPanelProvider extends PanelProvider
                 SubmissionsPerDayChart::class,
                 SubmissionsByStatusChart::class,
                 ManualUsageChart::class,
+                SubmissionSecurityOverview::class,
+                SubmissionAttemptsChart::class,
+                SuspiciousIpsTable::class,
             ])
             ->middleware([
                 EncryptCookies::class,

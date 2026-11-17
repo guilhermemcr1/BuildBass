@@ -16,4 +16,6 @@ return [
     'duplicate_in_catalog' => 'Este driver já está no catálogo.',
     'duplicate_pending' => 'Este driver já está em análise.',
     'verification_failed' => 'Não foi possível confirmar que você não é um robô. Tente de novo.',
+    'blocked' => 'Muitas tentativas recusadas deste endereço. Tente de novo mais tarde.',
+    'throttled' => 'Muitos envios em pouco tempo. Tente de novo mais tarde.',
 ];

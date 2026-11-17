@@ -22,6 +22,7 @@ enum AuditType: string implements HasColor, HasLabel
     case ManualRead = 'manual_read';
     case ManualBlocked = 'manual_blocked';
     case BotBlocked = 'bot_blocked';
+    case SubmissionRefused = 'submission_refused';
 
     public const GROUP_MODERATION = 'Moderação';
 
@@ -53,7 +54,8 @@ enum AuditType: string implements HasColor, HasLabel
             self::SubmissionReceived,
             self::ManualRead,
             self::ManualBlocked,
-            self::BotBlocked => self::GROUP_PUBLIC_API,
+            self::BotBlocked,
+            self::SubmissionRefused => self::GROUP_PUBLIC_API,
         };
     }
 

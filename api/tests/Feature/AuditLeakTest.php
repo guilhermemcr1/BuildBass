@@ -7,12 +7,15 @@ use App\Models\Moderator;
 use Filament\Auth\Pages\Login;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
 // SC-004: depois de rodar os fluxos que gravam eventos, nada pessoal ou secreto pode estar em
+// nenhuma coluna nem em nenhum JSON da trilha; o IP em claro só na coluna `ip_address`.
+//
 // nenhuma coluna nem em nenhum JSON da trilha.
 it('nenhum evento guarda senha, e-mail de contato, IP em claro, nome de PDF, texto de manual ou nome de imagem', function () {
     $this->withoutDefer();
@@ -49,7 +52,10 @@ it('nenhum evento guarda senha, e-mail de contato, IP em claro, nome de PDF, tex
             ->call('save');
     }
 
-    $dump = AuditEvent::all()->map(fn (AuditEvent $event) => json_encode($event->getAttributes()))->implode("\n");
+    // O IP em claro só pode estar na coluna própria (`ip_address`), nunca em outra coluna ou JSON.
+    $dump = AuditEvent::all()
+        ->map(fn (AuditEvent $event) => json_encode(Arr::except($event->getAttributes(), ['ip_address'])))
+        ->implode("\n");
 
     // Sem GD o passo 5 não roda e a trilha tem só os 5 eventos dos passos 1–4.
     expect(AuditEvent::count())->toBeGreaterThan(function_exists('imagewebp') ? 5 : 4);
@@ -58,6 +64,9 @@ it('nenhum evento guarda senha, e-mail de contato, IP em claro, nome de PDF, tex
         'senha-errada-999', 'senha-certa-123', 'visitante-secreto@exemplo.com', '198.51.100.23',
         'ficha-confidencial', 'TEXTO-SECRETO-DO-MANUAL', 'IMG_9999', 'foto-do-meu-celular',
     ] as $forbidden) {
-        expect($dump)->not->toContain($forbidden, "vazou: {$forbidden}");
+        // `not->toContain($agulha, $mensagem)` trataria a mensagem como outra agulha e nunca falharia.
+        expect(str_contains($dump, $forbidden))->toBeFalse("vazou: {$forbidden}");
     }
+
+    expect(AuditEvent::whereNotNull('ip_address')->pluck('ip_address')->all())->toContain('198.51.100.23');
 });

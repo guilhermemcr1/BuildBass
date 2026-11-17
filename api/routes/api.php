@@ -3,6 +3,7 @@
 use App\Http\Controllers\DriverController;
 use App\Http\Controllers\DriverSubmissionController;
 use App\Http\Controllers\ManualExtractionController;
+use App\Http\Middleware\BlockAbusiveSenders;
 use App\Http\Middleware\RejectAutomation;
 use Illuminate\Support\Facades\Route;
 
@@ -16,12 +17,14 @@ Route::middleware(['throttle:catalog', 'cache.headers:public;max_age=60;etag'])-
     Route::get('/drivers/{id}', [DriverController::class, 'show']);
 });
 
-// Ordem: limite de frequência → armadilha e anti-robô → validação → duplicata (contrato do envio).
-Route::middleware(['throttle:submission', RejectAutomation::class])
+// Ordem: IP bloqueado por abuso → limite de frequência → armadilha e anti-robô → validação →
+// duplicata (contrato do envio). O bloqueio vem antes do limite para um robô insistente não gerar
+// uma linha de auditoria por tentativa.
+Route::middleware([BlockAbusiveSenders::class, 'throttle:submission', RejectAutomation::class])
     ->post('/driver-submissions', [DriverSubmissionController::class, 'store']);
 
 // Leitura assistida de manual: devolve uma sugestão para pré-preencher o formulário e
 // não grava nada. Os limites de uso (por hora e diário) contam dentro do service, depois da
 // validação, para que anti-robô e arquivo inválido não consumam cota.
-Route::middleware(['throttle:catalog', RejectAutomation::class])
+Route::middleware([BlockAbusiveSenders::class, 'throttle:catalog', RejectAutomation::class])
     ->post('/driver-submissions/extract', [ManualExtractionController::class, 'store']);

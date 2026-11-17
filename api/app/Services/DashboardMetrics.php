@@ -8,7 +8,9 @@ use App\Models\AuditEvent;
 use App\Models\Driver;
 use App\Models\DriverSubmission;
 use App\Services\Manual\ManualExtractionService;
+use App\Services\Security\SubmissionAttempts;
 use DateTimeInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use stdClass;
 
@@ -19,6 +21,9 @@ use stdClass;
 class DashboardMetrics
 {
     public const WINDOW_DAYS = 30;
+
+    /** Eventos que contam como tentativa barrada de um IP. */
+    private const SUSPICIOUS_TYPES = ['submission_refused', 'bot_blocked', 'manual_blocked'];
 
     public function __construct(private readonly ManualExtractionService $manual) {}
 
@@ -142,6 +147,121 @@ class DashboardMetrics
             'failed' => $this->fillDays($series['failed'], $days),
             'blocked' => $this->fillDays($series['blocked'], $days),
         ];
+    }
+
+    /**
+     * Tentativas de envio público por dia: aceitos, recusados (limite, validação, duplicata) e
+     * barrados pelo anti-robô, com dias vazios em 0.
+     *
+     * @return array{accepted: array<string, int>, refused: array<string, int>, bot: array<string, int>}
+     */
+    public function submissionAttemptsPerDay(int $days = self::WINDOW_DAYS): array
+    {
+        $types = [
+            AuditType::SubmissionReceived->value => 'accepted',
+            AuditType::SubmissionRefused->value => 'refused',
+            AuditType::BotBlocked->value => 'bot',
+        ];
+        $series = ['accepted' => [], 'refused' => [], 'bot' => []];
+
+        $rows = AuditEvent::query()
+            ->whereIn('type', array_keys($types))
+            // O início de um bloqueio por abuso não é uma tentativa, só a consequência delas.
+            ->where(fn ($query) => $query->whereNull('reason')->orWhere('reason', '!=', SubmissionAttempts::REASON_ABUSE))
+            ->where('created_at', '>=', $this->windowStart($days))
+            ->selectRaw('DATE(created_at) as day, type, COUNT(*) as total')
+            ->groupBy('day', 'type')
+            ->toBase()
+            ->get();
+
+        foreach ($rows as $row) {
+            $series[$types[(string) $row->type]][(string) $row->day] = (int) $row->total;
+        }
+
+        return array_map(fn (array $counts): array => $this->fillDays($counts, $days), $series);
+    }
+
+    /**
+     * Resumo das últimas 24 h para os cartões de segurança.
+     *
+     * @return array{accepted: int, refused: int, bot: int, abuse_blocks: int, reasons: array<string, int>, suspicious_ips: int}
+     */
+    public function submissionAttemptsLastDay(): array
+    {
+        $since = now()->subDay();
+        $types = [AuditType::SubmissionReceived->value, AuditType::SubmissionRefused->value, AuditType::BotBlocked->value];
+
+        $rows = AuditEvent::query()
+            ->whereIn('type', $types)
+            ->where('created_at', '>=', $since)
+            ->selectRaw('type, reason, COUNT(*) as total')
+            ->groupBy('type', 'reason')
+            ->toBase()
+            ->get();
+
+        $summary = ['accepted' => 0, 'refused' => 0, 'bot' => 0, 'abuse_blocks' => 0, 'reasons' => []];
+
+        foreach ($rows as $row) {
+            $total = (int) $row->total;
+            $reason = $row->reason === null ? null : (string) $row->reason;
+
+            if ($row->type === AuditType::SubmissionReceived->value) {
+                $summary['accepted'] += $total;
+            } elseif ($reason === SubmissionAttempts::REASON_ABUSE) {
+                $summary['abuse_blocks'] += $total;
+            } elseif ($row->type === AuditType::SubmissionRefused->value) {
+                $summary['refused'] += $total;
+                $summary['reasons'][(string) $reason] = ($summary['reasons'][(string) $reason] ?? 0) + $total;
+            } elseif ($row->type === AuditType::BotBlocked->value) {
+                $summary['bot'] += $total;
+            }
+        }
+
+        $summary['suspicious_ips'] = $this->suspicious()
+            ->where('created_at', '>=', $since)
+            ->whereNotNull('ip_address')
+            ->distinct()
+            ->count('ip_address');
+
+        return $summary;
+    }
+
+    /**
+     * IPs com mais tentativas barradas (anti-robô, recusa, leitura de manual bloqueada) no período,
+     * do mais insistente ao menos.
+     *
+     * @return list<array{ip: string, attempts: int, last_seen: string}>
+     */
+    public function suspiciousIps(int $days = 7, int $limit = 10): array
+    {
+        $rows = $this->suspicious()
+            ->where('created_at', '>=', now()->subDays($days))
+            ->whereNotNull('ip_address')
+            ->selectRaw('ip_address, COUNT(*) as attempts, MAX(created_at) as last_seen')
+            ->groupBy('ip_address')
+            ->orderByDesc('attempts')
+            ->orderByDesc('last_seen')
+            ->limit($limit)
+            ->toBase()
+            ->get()
+            ->map(fn (stdClass $row): array => [
+                'ip' => (string) $row->ip_address,
+                'attempts' => (int) $row->attempts,
+                'last_seen' => (string) $row->last_seen,
+            ])
+            ->all();
+
+        return array_values($rows);
+    }
+
+    /** @return Builder<AuditEvent> tentativas barradas, sem o driver repetido (engano de gente de verdade) */
+    private function suspicious(): Builder
+    {
+        return AuditEvent::query()
+            ->whereIn('type', self::SUSPICIOUS_TYPES)
+            ->where(fn (Builder $query) => $query
+                ->whereNull('reason')
+                ->orWhere('reason', '!=', SubmissionAttempts::REASON_DUPLICATE));
     }
 
     /** @return Collection<int, stdClass> */

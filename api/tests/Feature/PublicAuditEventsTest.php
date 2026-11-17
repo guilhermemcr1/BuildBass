@@ -3,6 +3,7 @@
 use App\Enums\AuditType;
 use App\Models\AuditEvent;
 use App\Models\DriverSubmission;
+use App\Services\Security\SubmissionAttempts;
 use App\Support\IpHash;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -22,7 +23,7 @@ function publicSubmission(array $overrides = []): array
     ], $overrides);
 }
 
-it('um envio recebido grava submission_received com o protocolo, sem e-mail nem IP em claro', function () {
+it('um envio recebido grava submission_received com o protocolo e o IP, sem o e-mail', function () {
     $response = $this->withServerVariables(['REMOTE_ADDR' => '203.0.113.7'])
         ->postJson('/api/driver-submissions', publicSubmission())
         ->assertCreated();
@@ -31,13 +32,61 @@ it('um envio recebido grava submission_received com o protocolo, sem e-mail nem 
     expect($event->subject_id)->toBe($response->json('data.protocol'))
         ->and($event->subject_type)->toBe('submission')
         ->and($event->ip_hash)->toBe(IpHash::make('203.0.113.7'))
-        ->and(json_encode($event->getAttributes()))->not->toContain('pessoa@exemplo.com')->not->toContain('203.0.113.7');
+        ->and($event->ip_address)->toBe('203.0.113.7')
+        ->and(str_contains((string) json_encode($event->getAttributes()), 'pessoa@exemplo.com'))->toBeFalse();
 });
 
-it('envio recusado por duplicata ou validação não grava submission_received', function () {
-    $this->postJson('/api/driver-submissions', ['brand' => ''])->assertUnprocessable();
+it('envio recusado pela validação grava submission_refused só com os nomes dos campos', function () {
+    $this->withServerVariables(['REMOTE_ADDR' => '203.0.113.7'])
+        ->postJson('/api/driver-submissions', ['brand' => '', 'model' => 'TEXTO-DIGITADO'])
+        ->assertUnprocessable();
 
-    expect(AuditEvent::count())->toBe(0);
+    $event = AuditEvent::sole();
+
+    expect($event->type)->toBe(AuditType::SubmissionRefused)
+        ->and($event->reason)->toBe('invalid')
+        ->and($event->ip_address)->toBe('203.0.113.7')
+        ->and($event->snapshot['campos'])->toContain('brand')
+        ->and(str_contains((string) json_encode($event->getAttributes()), 'TEXTO-DIGITADO'))->toBeFalse()
+        ->and(AuditEvent::where('type', AuditType::SubmissionReceived)->count())->toBe(0);
+});
+
+it('envio de driver repetido grava submission_refused duplicate', function () {
+    $this->postJson('/api/driver-submissions', publicSubmission())->assertCreated();
+    $this->postJson('/api/driver-submissions', publicSubmission())->assertStatus(409);
+
+    $event = AuditEvent::where('type', AuditType::SubmissionRefused)->sole();
+
+    expect($event->reason)->toBe('duplicate')->and($event->outcome)->toBe('failed');
+});
+
+it('envio barrado pelo limite por hora grava submission_refused throttled', function () {
+    foreach (range(1, 5) as $n) {
+        $this->postJson('/api/driver-submissions', publicSubmission(['model' => "M-{$n}"]))->assertCreated();
+    }
+
+    $this->postJson('/api/driver-submissions', publicSubmission(['model' => 'M-6']))
+        ->assertStatus(429)
+        ->assertHeader('Retry-After')
+        ->assertJsonPath('code', 'too_many_attempts');
+
+    $event = AuditEvent::where('type', AuditType::SubmissionRefused)->sole();
+
+    expect($event->reason)->toBe('throttled')->and($event->outcome)->toBe('blocked');
+});
+
+it('Cloudflare fora do ar grava bot_blocked verification_unreachable e não conta falta', function () {
+    config(['services.turnstile.enabled' => true, 'services.turnstile.secret' => 'segredo']);
+    Http::fake(['*' => Http::response('erro', 503)]);
+
+    $this->postJson('/api/driver-submissions', publicSubmission(['turnstile_token' => 'tok']))
+        ->assertUnprocessable()
+        ->assertJsonPath('code', 'verification_failed');
+
+    $event = AuditEvent::where('type', AuditType::BotBlocked)->sole();
+
+    expect($event->reason)->toBe('verification_unreachable')->and($event->outcome)->toBe('failed')
+        ->and(app(SubmissionAttempts::class)->blockedFor('127.0.0.1'))->toBe(0);
 });
 
 it('campo-armadilha grava bot_blocked honeypot e a resposta continua igual a um sucesso', function () {

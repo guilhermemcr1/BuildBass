@@ -13,7 +13,7 @@ use LogicException;
 /**
  * Evento da trilha de auditoria. Imutável: só se cria; a retenção apaga por consulta
  * direta (`audit:prune`), fora do model. Autor e objeto são copiados no instante, sem chave
- * estrangeira. `ip_hash` é o único rastro de rede.
+ * estrangeira. Rede: `ip_address` (em claro, para a moderação) e `ip_hash` (para agrupar).
  *
  * @property string $id
  * @property AuditType $type
@@ -26,6 +26,7 @@ use LogicException;
  * @property string|null $subject_id
  * @property string|null $subject_label
  * @property string|null $ip_hash
+ * @property string|null $ip_address
  * @property array<string, mixed>|null $changes
  * @property array<string, mixed>|null $snapshot
  * @property bool|null $quota_counted
@@ -51,6 +52,7 @@ class AuditEvent extends Model
         'subject_id',
         'subject_label',
         'ip_hash',
+        'ip_address',
         'changes',
         'snapshot',
         'quota_counted',
@@ -69,6 +71,40 @@ class AuditEvent extends Model
             'quota_counted' => 'boolean',
             'created_at' => 'datetime',
         ];
+    }
+
+    public function outcomeLabel(): ?string
+    {
+        return self::translated('outcomes', $this->outcome);
+    }
+
+    /** Motivo traduzido; um motivo sem tradução (ex.: código de erro do provedor) aparece cru. */
+    public function reasonLabel(): ?string
+    {
+        return self::translated('reasons', $this->reason);
+    }
+
+    /** Cor do resultado nos badges do painel. */
+    public function outcomeColor(): string
+    {
+        return match ($this->outcome) {
+            'ok' => 'success',
+            'failed' => 'danger',
+            'blocked' => 'warning',
+            default => 'gray',
+        };
+    }
+
+    private static function translated(string $group, ?string $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $key = "audit.{$group}.{$value}";
+        $label = (string) __($key);
+
+        return $label === $key ? $value : $label;
     }
 
     protected static function booted(): void

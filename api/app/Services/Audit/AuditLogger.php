@@ -17,7 +17,8 @@ use Throwable;
  *   o erro, para nunca existir mudança sem evento;
  * - `recordDeferred()`: para a API pública; roda depois da resposta e engole qualquer falha, para o
  *   visitante nunca perceber.
- * O IP entra por `ip` e só sai como hash; nada mais pessoal é aceito.
+ * O IP entra por `ip` e é guardado em claro e em hash (o hash agrupa remetentes); nada mais
+ * pessoal é aceito.
  */
 class AuditLogger
 {
@@ -34,16 +35,19 @@ class AuditLogger
             $attributes['actor_email'] = $actor->email;
         }
 
+        $ip = is_string($ip) ? filter_var($ip, FILTER_VALIDATE_IP) : false;
+
         return AuditEvent::create([
             ...$attributes,
             'type' => $type,
-            'ip_hash' => is_string($ip) && $ip !== '' ? IpHash::make($ip) : null,
+            'ip_hash' => $ip === false ? null : IpHash::make($ip),
+            'ip_address' => $ip === false ? null : $ip,
             'created_at' => now(),
         ]);
     }
 
     /**
-     * @param  array{outcome?: ?string, reason?: ?string, subject_type?: ?string, subject_id?: ?string, subject_label?: ?string, quota_counted?: ?bool}  $attributes
+     * @param  array{outcome?: ?string, reason?: ?string, subject_type?: ?string, subject_id?: ?string, subject_label?: ?string, snapshot?: ?array<string, mixed>, quota_counted?: ?bool}  $attributes
      */
     public function recordDeferred(AuditType $type, array $attributes = [], ?string $ip = null): void
     {

@@ -7,6 +7,7 @@ use App\Models\Moderator;
 use App\Services\Audit\AuditLogger;
 use App\Support\IpHash;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -45,13 +46,22 @@ it('desfaz o evento junto com a ação quando a transação falha', function () 
     expect(AuditEvent::count())->toBe(0);
 });
 
-it('grava o IP só em hash, nunca em claro', function () {
+it('grava o IP em claro na coluna própria e em hash, sem repetir em outro campo', function () {
     app(AuditLogger::class)->record(AuditType::Login, ['ip' => '203.0.113.9']);
 
     $event = AuditEvent::query()->sole();
 
     expect($event->ip_hash)->toBe(IpHash::make('203.0.113.9'))
-        ->and(json_encode($event->getAttributes()))->not->toContain('203.0.113.9');
+        ->and($event->ip_address)->toBe('203.0.113.9')
+        ->and(str_contains((string) json_encode(Arr::except($event->getAttributes(), ['ip_address'])), '203.0.113.9'))->toBeFalse();
+});
+
+it('descarta um IP malformado em vez de gravá-lo', function () {
+    app(AuditLogger::class)->record(AuditType::Login, ['ip' => '<script>']);
+
+    $event = AuditEvent::query()->sole();
+
+    expect($event->ip_address)->toBeNull()->and($event->ip_hash)->toBeNull();
 });
 
 it('grava o evento público depois da resposta, com o IP em hash', function () {

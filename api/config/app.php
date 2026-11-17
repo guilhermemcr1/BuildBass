@@ -67,6 +67,9 @@ return [
 
     'timezone' => 'UTC',
 
+    // Fuso em que o painel mostra datas e horas. O banco e as cotas diárias seguem em UTC.
+    'display_timezone' => env('APP_DISPLAY_TIMEZONE', 'America/Sao_Paulo'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration

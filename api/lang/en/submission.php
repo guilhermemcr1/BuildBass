@@ -16,4 +16,6 @@ return [
     'duplicate_in_catalog' => 'This driver is already in the catalog.',
     'duplicate_pending' => 'This driver is already under review.',
     'verification_failed' => 'We could not confirm that you are not a robot. Try again.',
+    'blocked' => 'Too many refused attempts from this address. Try again later.',
+    'throttled' => 'Too many submissions in a short time. Try again later.',
 ];

@@ -54,10 +54,13 @@ it('filtra por autor pelo e-mail guardado no evento', function () {
         ->assertCanNotSeeTableRecords([$bia]);
 });
 
-it('filtra por período, incluindo o dia final inteiro', function () {
+it('filtra por período no fuso do painel, incluindo o dia final inteiro', function () {
+    config(['app.display_timezone' => 'America/Sao_Paulo']);
+
+    // Banco em UTC: 02:30 UTC do dia 11 ainda é 23:30 do dia 10 em São Paulo; 03:10 UTC já é dia 11.
     $before = AuditEvent::factory()->create(['created_at' => '2026-10-01 10:00:00']);
-    $inside = AuditEvent::factory()->create(['created_at' => '2026-10-10 23:30:00']);
-    $after = AuditEvent::factory()->create(['created_at' => '2026-10-11 00:10:00']);
+    $inside = AuditEvent::factory()->create(['created_at' => '2026-10-11 02:30:00']);
+    $after = AuditEvent::factory()->create(['created_at' => '2026-10-11 03:10:00']);
 
     Livewire::test(ListAuditEvents::class)
         ->filterTable('period', ['from' => '2026-10-05', 'until' => '2026-10-10'])

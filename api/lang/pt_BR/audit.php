@@ -18,6 +18,7 @@ return [
         'manual_read' => 'Leitura de manual',
         'manual_blocked' => 'Leitura de manual bloqueada',
         'bot_blocked' => 'Bloqueio anti-robô',
+        'submission_refused' => 'Envio recusado',
     ],
 
     'outcomes' => [
@@ -32,6 +33,15 @@ return [
         'unavailable' => 'Recurso desativado',
         'honeypot' => 'Campo-armadilha',
         'verification' => 'Verificação anti-robô',
+        'verification_unreachable' => 'Verificação anti-robô fora do ar',
+        'throttled' => 'Limite de envios por hora',
+        'invalid' => 'Dados inválidos',
+        'duplicate' => 'Driver repetido',
+        'abuse' => 'IP bloqueado por tentativas suspeitas',
+        'provider_failed' => 'Falha no provedor de IA',
+        'unreadable' => 'PDF ilegível',
+        'too_many_pages' => 'PDF com páginas demais',
+        'rate_limited' => 'Limite de uso',
         'rejected' => 'Rejeitado pelo moderador',
     ],
 
