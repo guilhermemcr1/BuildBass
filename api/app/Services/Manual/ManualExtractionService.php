@@ -43,14 +43,15 @@ class ManualExtractionService
             $gate = 'unavailable';
             $this->assertEnabled();
 
-            $path = (string) $file->getRealPath();
-            $this->pdf->assertWithinPageLimit($path);
-
+            // Cotas antes do pdfinfo: quem já estourou o limite não faz o servidor abrir o PDF.
             $gate = 'hourly';
             $this->quota->assertVisitorAllowed($ip);
             $gate = 'daily';
             $this->quota->assertDailyAvailable();
             $gate = null;
+
+            $path = (string) $file->getRealPath();
+            $this->pdf->assertWithinPageLimit($path);
             $this->quota->hitVisitor($ip);
 
             $text = $this->pdf->extract($path);
