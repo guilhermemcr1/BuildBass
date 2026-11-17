@@ -26,4 +26,10 @@ class SearchText
 
         return $normalized === '' ? [] : explode(' ', $normalized);
     }
+
+    /** Termo já normalizado sem espaço, hífen, ponto e barra: "ts-w3010" vira "tsw3010". */
+    public static function compact(string $word): string
+    {
+        return str_replace([' ', '-', '.', '/'], '', $word);
+    }
 }

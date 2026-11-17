@@ -41,10 +41,9 @@ it('o resumo traz o tipo e o diâmetro só quando existem', function () {
         ->and($rows['B15'])->not->toHaveKeys(['type', 'nominal_diameter_m']);
 });
 
-it('recusa tipo desconhecido, diâmetro fora da faixa e busca sem nada', function () {
+it('recusa tipo desconhecido e diâmetro fora da faixa', function () {
     $this->getJson('/api/drivers?type=tuba')->assertUnprocessable()->assertJsonValidationErrors('type');
     $this->getJson('/api/drivers?diameter_min_m=5')->assertUnprocessable()->assertJsonValidationErrors('diameter_min_m');
-    $this->getJson('/api/drivers')->assertUnprocessable()->assertJsonValidationErrors('q');
 });
 
 it('lista as marcas em ordem, sem repetir', function () {

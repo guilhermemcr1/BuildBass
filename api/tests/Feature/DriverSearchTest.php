@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Driver;
+use App\Services\DriverCatalogService;
 use Database\Seeders\DriverSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
@@ -104,15 +105,45 @@ it('devolve só os campos do resultado, com variação vazia como null', functio
         ->and($row['id'])->toBeUuid();
 });
 
-it('recusa termo ausente, curto, longo ou que não é texto', function () {
-    $this->getJson('/api/drivers')->assertUnprocessable()->assertJsonValidationErrors('q');
-    search('a')->assertUnprocessable()->assertJsonValidationErrors('q');
-    search(' a ')->assertUnprocessable()->assertJsonValidationErrors('q');
+it('recusa termo longo ou que não é texto', function () {
     search(str_repeat('a', 61))->assertUnprocessable()->assertJsonValidationErrors('q');
     $this->getJson('/api/drivers?q[]=tr')->assertUnprocessable()->assertJsonValidationErrors('q');
 });
 
-it('aceita o termo com exatamente 2 e 60 caracteres', function () {
-    search('tr')->assertOk();
+it('aceita termo ausente, de 1 e de 60 caracteres', function () {
+    $this->getJson('/api/drivers')->assertOk();
+    search('a')->assertOk();
     search(str_repeat('a', 60))->assertOk();
+});
+
+it('sem termo lista o catálogo em ordem alfabética', function () {
+    Driver::factory()->create(['brand' => 'Zeta', 'model' => 'Z1']);
+    Driver::factory()->create(['brand' => 'Alfa', 'model' => 'A1']);
+
+    expect(test()->getJson('/api/drivers')->assertOk()->json('data.*.brand'))->toBe(['Alfa', 'Zeta']);
+});
+
+it('ignora pontuação e acha pelo tipo', function () {
+    Driver::factory()->create(['brand' => 'Pioneer', 'model' => 'TS-W3010', 'variant' => '', 'type' => 'subwoofer']);
+    Driver::factory()->create(['brand' => 'Pioneer', 'model' => 'TS-M800', 'variant' => '', 'type' => 'midbass']);
+
+    expect(search('tsw3010')->json('data.*.model'))->toBe(['TS-W3010'])
+        ->and(search('ts w3010')->json('data.*.model'))->toBe(['TS-W3010'])
+        ->and(search('pioneer sub')->json('data.*.model'))->toBe(['TS-W3010']);
+});
+
+it('pagina com offset', function () {
+    foreach (range(1, DriverCatalogService::LIMIT + 5) as $n) {
+        Driver::factory()->create(['brand' => 'Pagina', 'model' => sprintf('P%02d', $n)]);
+    }
+
+    $first = test()->getJson('/api/drivers?q=pagina')->assertOk();
+    $next = test()->getJson('/api/drivers?q=pagina&offset='.DriverCatalogService::LIMIT)->assertOk();
+
+    expect($first->json('meta.has_more'))->toBeTrue()
+        ->and($next->json('data.*.model'))->toBe(['P21', 'P22', 'P23', 'P24', 'P25'])
+        ->and($next->json('meta.has_more'))->toBeFalse();
+
+    test()->getJson('/api/drivers?offset=-1')->assertUnprocessable()->assertJsonValidationErrors('offset');
+    test()->getJson('/api/drivers?offset=1001')->assertUnprocessable()->assertJsonValidationErrors('offset');
 });

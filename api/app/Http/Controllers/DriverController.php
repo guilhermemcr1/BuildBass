@@ -20,6 +20,7 @@ class DriverController extends Controller
         $result = $this->catalog->search(
             isset($validated['q']) ? (string) $validated['q'] : null,
             array_intersect_key($validated, array_flip(SearchDriversRequest::FILTERS)),
+            (int) ($validated['offset'] ?? 0),
         );
 
         return DriverSummaryResource::collection($result['drivers'])->additional([

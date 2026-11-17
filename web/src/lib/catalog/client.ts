@@ -99,13 +99,18 @@ const parseBrands: Parse<BrandsResponse> = async (body) => {
     return parsed.success ? parsed.data : undefined;
 };
 
-// Texto e filtros viram a query; com filtro, o texto pode faltar (a API lista o que combina).
+// Texto e filtros viram a query; sem texto a API lista o catálogo. `offset` pede a próxima página.
 export function searchDrivers(
     term: string,
     filters: DriverFilters = {},
     signal?: AbortSignal,
+    offset = 0,
 ): Promise<CatalogResult<SearchResponse>> {
     const params: [string, string][] = term === '' ? [] : [['q', term]];
+
+    if (offset > 0) {
+        params.push(['offset', String(offset)]);
+    }
 
     for (const [key, value] of Object.entries(filters)) {
         if (value !== undefined) {

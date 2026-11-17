@@ -6,13 +6,15 @@ use App\Models\Driver;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-// Mesmas regras do front (web/src/hooks/use-driver-search.ts): termo de 2 a 60 caracteres depois
-// de aparar os espaços. Os filtros (marca, tipo, diâmetro) refinam a busca e, sozinhos, listam o
-// que combina sem precisar de texto. O servidor nunca confia no front.
+// Mesmas regras do front (web/src/hooks/use-driver-search.ts): termo opcional de até 60 caracteres
+// depois de aparar os espaços. Sem termo nem filtro, lista o catálogo (primeira página) para a
+// pessoa navegar. Os filtros (marca, tipo, diâmetro) refinam a busca. O servidor nunca confia no front.
 class SearchDriversRequest extends FormRequest
 {
-    /** Parâmetros que, sozinhos, já bastam para listar. */
+    /** Filtros opcionais que se somam ao termo. */
     public const FILTERS = ['brand', 'type', 'diameter_min_m', 'diameter_max_m'];
+
+    public const MAX_OFFSET = 1000;
 
     public function authorize(): bool
     {
@@ -42,7 +44,9 @@ class SearchDriversRequest extends FormRequest
         [$min, $max] = Driver::RANGES['nominal_diameter_m'];
 
         return [
-            'q' => ['required_without_all:'.implode(',', self::FILTERS), 'nullable', 'string', 'min:2', 'max:60'],
+            'q' => ['nullable', 'string', 'max:60'],
+            // "Mostrar mais": a partir de qual resultado. O teto evita varrer o catálogo inteiro.
+            'offset' => ['nullable', 'integer', 'between:0,'.self::MAX_OFFSET],
             'brand' => ['nullable', 'string', 'min:1', 'max:80'],
             'type' => ['nullable', 'string', Rule::in(Driver::TYPES)],
             'diameter_min_m' => ['nullable', 'numeric', "between:{$min},{$max}"],

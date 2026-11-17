@@ -16,11 +16,10 @@ import {
 } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { SelectField } from '@/components/ui/select-field';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import { useActiveProject } from '@/hooks/use-active-project';
 import { useCatalogPick } from '@/hooks/use-catalog-pick';
-import { useDriverBrands } from '@/hooks/use-driver-brands';
-import { SEARCH_MIN_LENGTH, useDriverSearch } from '@/hooks/use-driver-search';
+import { useDriverSearch } from '@/hooks/use-driver-search';
 import { DIAMETER_BANDS, filtersForBand } from '@/lib/catalog/diameter-bands';
 import type { DiameterBandId } from '@/lib/catalog/diameter-bands';
 import type { DriverFilters, DriverSummary } from '@/lib/catalog/types';
@@ -33,8 +32,8 @@ import { useSavedDrivers } from '@/stores/saved-drivers';
 import { DriverThumb } from './driver-thumb';
 
 const MINE_PREVIEW = 5;
-// Valor da opção "todas" nos filtros (o Select não aceita id vazio).
-const ALL = '__all__';
+// Opção "todos" do filtro de diâmetro.
+const ALL = 'all';
 
 type DriverPickerProps = {
     disabled?: boolean;
@@ -52,8 +51,9 @@ function displayName(driver: {
     return driver.variant == null ? name : `${name} (${driver.variant})`;
 }
 
-// Busca de drivers num botão só: abre um popover com o campo e as sugestões (recentes quando o
-// campo está vazio, catálogo a partir de 2 letras). Economiza o espaço que o campo fixo ocupava.
+// Busca de drivers num botão só: abre um diálogo que já lista o catálogo, e cada letra digitada
+// refina (fabricante, modelo ou tipo, com ou sem hífen). O diâmetro é um clique; "Mostrar mais"
+// navega pelo resto.
 export function DriverPicker({
     disabled = false,
     disabledReason,
@@ -67,18 +67,14 @@ export function DriverPicker({
     const applySaved = useActiveProject((state) => state.applySavedDriver);
     const [open, setOpen] = useState(false);
     const [term, setTerm] = useState('');
-    const [brand, setBrand] = useState<string | undefined>(undefined);
     const [band, setBand] = useState<DiameterBandId | undefined>(undefined);
-    const brands = useDriverBrands(open && !disabled);
-    const filters = useMemo<DriverFilters>(
-        () => ({
-            ...(brand === undefined ? {} : { brand }),
-            ...filtersForBand(band),
-        }),
-        [brand, band],
-    );
-    const filtered = brand !== undefined || band !== undefined;
-    const search = useDriverSearch(term, { offline: disabled, filters });
+    const filters = useMemo<DriverFilters>(() => filtersForBand(band), [band]);
+    const filtered = band !== undefined;
+    const search = useDriverSearch(term, {
+        offline: disabled,
+        filters,
+        enabled: open,
+    });
     const pick = useCatalogPick();
 
     // "/" abre a busca de qualquer lugar da bancada, menos de dentro de um campo.
@@ -110,21 +106,29 @@ export function DriverPicker({
 
         return () => window.removeEventListener('keydown', onKey);
     }, [disabled]);
-    const searching =
-        !disabled && (term.trim().length >= SEARCH_MIN_LENGTH || filtered);
-    const catalog = searching ? search.items : [];
-    // "Meus alto-falantes" é local: aparece offline e a partir da primeira letra. Sem texto, só os
-    // mais recentes; o Autocomplete filtra o resto pelo texto digitado.
+    const searching = !disabled;
     const needle = term.trim().toLowerCase();
-    // Com filtro e sem texto só o catálogo responde: "Meus alto-falantes" não tem marca nem faixa
-    // de diâmetro para cruzar.
+    // Sem texto nem filtro, os recentes vêm primeiro e saem da lista do catálogo para não repetir.
+    const showRecents = needle === '' && !filtered && recents.length > 0;
+    const recentIds = new Set(
+        showRecents ? recents.map((item) => item.id) : [],
+    );
+    const catalog = searching
+        ? search.items.filter((driver) => !recentIds.has(driver.id))
+        : [];
+    // "Meus alto-falantes" é local: aparece offline. Sem texto, só os mais recentes. Com filtro de
+    // diâmetro e sem texto só o catálogo responde: o salvo não tem faixa para cruzar.
     const mine =
         needle === ''
             ? filtered
                 ? []
                 : saved.slice(0, MINE_PREVIEW)
             : saved.filter((driver) =>
-                  displayName(driver).toLowerCase().includes(needle),
+                  needle
+                      .split(/\s+/)
+                      .every((word) =>
+                          displayName(driver).toLowerCase().includes(word),
+                      ),
               );
 
     // Alto-falante salvo pode não ter os três parâmetros; o que falta aparece como "—".
@@ -184,11 +188,6 @@ export function DriverPicker({
         ]
             .filter((part) => part !== '')
             .join(' · ');
-
-    const clearFilters = () => {
-        setBrand(undefined);
-        setBand(undefined);
-    };
 
     const choose = async (summary: DriverSummary) => {
         if (await pick.choose(summary)) {
@@ -275,18 +274,14 @@ export function DriverPicker({
         }
 
         if (searching && search.status === 'ready') {
-            if (catalog.length === 0 && mine.length === 0) {
-                return term.trim().length >= SEARCH_MIN_LENGTH
+            if (catalog.length === 0 && mine.length === 0 && !showRecents) {
+                return needle !== ''
                     ? t('catalog.empty', { term: term.trim() })
                     : t('picker.emptyFiltered');
             }
-
-            return search.hasMore ? t('catalog.more') : undefined;
         }
 
-        return !searching && recents.length === 0 && mine.length === 0
-            ? t('picker.hintFilters')
-            : undefined;
+        return undefined;
     })();
 
     const itemClass =
@@ -363,29 +358,13 @@ export function DriverPicker({
                                 )}
                             </TextField>
                             {!disabled && (
-                                <div className="flex items-end gap-2 border-b border-border bg-background/40 px-4 py-2.5">
-                                    <SelectField<string>
-                                        label={t('picker.brand')}
-                                        selected={brand ?? ALL}
-                                        onChange={(id) =>
-                                            setBrand(
-                                                id === ALL ? undefined : id,
-                                            )
-                                        }
-                                        options={[
-                                            {
-                                                id: ALL,
-                                                label: t('picker.brandAny'),
-                                            },
-                                            ...brands.map((name) => ({
-                                                id: name,
-                                                label: name,
-                                            })),
-                                        ]}
-                                        className="min-w-0 flex-1"
-                                    />
-                                    <SelectField<string>
+                                <div className="flex items-center gap-2 overflow-x-auto border-b border-border bg-background/40 px-4 py-2">
+                                    <span className="shrink-0 text-xs text-muted">
+                                        {t('picker.diameter')}
+                                    </span>
+                                    <SegmentedControl<string>
                                         label={t('picker.diameter')}
+                                        size="sm"
                                         selected={band ?? ALL}
                                         onChange={(id) =>
                                             setBand(
@@ -404,17 +383,8 @@ export function DriverPicker({
                                                 label: item.label,
                                             })),
                                         ]}
-                                        className="w-32 shrink-0"
+                                        className="shrink-0 flex-nowrap"
                                     />
-                                    {filtered && (
-                                        <Button
-                                            variant="quiet"
-                                            onPress={clearFilters}
-                                            className="shrink-0 px-2 text-xs"
-                                        >
-                                            {t('picker.clearFilters')}
-                                        </Button>
-                                    )}
                                 </div>
                             )}
                             {showSkeleton && <ResultSkeleton />}
@@ -448,7 +418,7 @@ export function DriverPicker({
                                         ))}
                                     </ListBoxSection>
                                 )}
-                                {!searching && recents.length > 0 && (
+                                {showRecents && (
                                     <ListBoxSection>
                                         <Header className={headerClass}>
                                             {t('picker.recent')}
@@ -500,6 +470,21 @@ export function DriverPicker({
                                     </ListBoxSection>
                                 )}
                             </ListBox>
+                            {searching &&
+                                search.status === 'ready' &&
+                                search.hasMore && (
+                                    <div className="flex justify-center px-4 pb-2">
+                                        <Button
+                                            variant="quiet"
+                                            disabled={search.loadingMore}
+                                            onPress={search.loadMore}
+                                        >
+                                            {search.loadingMore
+                                                ? t('catalog.searching')
+                                                : t('picker.loadMore')}
+                                        </Button>
+                                    </div>
+                                )}
                         </Autocomplete>
                         <div
                             role="status"

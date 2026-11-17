@@ -92,8 +92,9 @@ test('servidor com erro: mensagem, tentar de novo e a bancada segue editável', 
     await fs.press('Tab');
     await expect(fs).toHaveValue('28,0');
 
-    failing = false;
     await openPicker(page);
+    await expect(page.getByText(message)).toBeVisible();
+    failing = false;
     await page.getByRole('button', { name: 'Tentar de novo' }).click();
 
     await expect(page.getByRole('option', { name: /Triton/ })).toBeVisible();

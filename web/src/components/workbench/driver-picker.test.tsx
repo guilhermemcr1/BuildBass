@@ -2,8 +2,7 @@ import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { activeProjectStore } from '@/hooks/use-active-project';
-import { fetchBrands, fetchDriver, searchDrivers } from '@/lib/catalog/client';
-import { resetBrandsCache } from '@/hooks/use-driver-brands';
+import { fetchDriver, searchDrivers } from '@/lib/catalog/client';
 import type { CatalogDriver, DriverSummary } from '@/lib/catalog/types';
 import { usePreferences } from '@/stores/preferences';
 import { useRecentDrivers } from '@/stores/recent-drivers';
@@ -17,12 +16,10 @@ const DRIVER_ID = '0198a3c2-6d11-7c4e-9a52-3f1b8e0d7a10';
 vi.mock('@/lib/catalog/client', () => ({
     searchDrivers: vi.fn(),
     fetchDriver: vi.fn(),
-    fetchBrands: vi.fn(),
 }));
 
 const search = vi.mocked(searchDrivers);
 const detail = vi.mocked(fetchDriver);
-const brandsOf = vi.mocked(fetchBrands);
 
 const SUMMARY: DriverSummary = {
     id: DRIVER_ID,
@@ -69,6 +66,10 @@ async function open(props: { disabled?: boolean; onSubmit?: () => void } = {}) {
 
 async function typeAndWait(input: HTMLElement, text = 'tr 6') {
     await userEvent.type(input, text);
+    await waitFor(
+        () => expect(search.mock.calls.at(-1)?.[0]).toBe(text.trim()),
+        { timeout: 2000 },
+    );
 
     return screen.findByRole('option', { name: /Triton/ }, { timeout: 2000 });
 }
@@ -81,12 +82,6 @@ beforeEach(() => {
     usePreferences.setState({ unitSystem: 'metric' });
     search.mockReset();
     detail.mockReset();
-    brandsOf.mockReset();
-    resetBrandsCache();
-    brandsOf.mockResolvedValue({
-        ok: true,
-        data: { data: ['Alfa', 'Triton'] },
-    });
     search.mockResolvedValue(listing());
     detail.mockResolvedValue({ ok: true, data: { data: DRIVER } });
 });
@@ -136,7 +131,7 @@ describe('DriverPicker — abrir e buscar', () => {
         ).toBeVisible();
     });
 
-    test('vazio mostra a dica; com recentes mostra a seção "Recentes"', async () => {
+    test('vazio mostra os recentes antes do catálogo, sem repetir', async () => {
         useRecentDrivers.getState().add({
             id: DRIVER_ID,
             brand: 'Triton',
@@ -152,20 +147,34 @@ describe('DriverPicker — abrir e buscar', () => {
         expect(
             screen.getByRole('option', { name: /Triton TR 620 12" \(4 Ω\)/ }),
         ).toBeInTheDocument();
-        expect(search).not.toHaveBeenCalled();
+        await waitFor(() =>
+            expect(search).toHaveBeenCalledWith(
+                '',
+                {},
+                expect.any(AbortSignal),
+                0,
+            ),
+        );
+        expect(
+            screen.getAllByRole('option', { name: /Triton TR 620/ }),
+        ).toHaveLength(1);
     });
 
-    test('sem recentes mostra a dica de digitar', async () => {
+    test('ao abrir já lista o catálogo, sem precisar digitar', async () => {
         await open();
 
         expect(
-            screen.getByText(
-                'Digite ao menos 2 letras ou escolha um fabricante ou um diâmetro.',
+            await screen.findByRole(
+                'option',
+                { name: /Triton/ },
+                { timeout: 2000 },
             ),
-        ).toBeInTheDocument();
+        ).toBeVisible();
+        expect(screen.getByText('Catálogo')).toBeInTheDocument();
+        expect(search.mock.calls[0][0]).toBe('');
     });
 
-    test('a partir de 2 caracteres busca e mostra a seção "Catálogo" com a linha de apoio', async () => {
+    test('digitar busca e mostra a seção "Catálogo" com a linha de apoio', async () => {
         const input = await open();
 
         const option = await typeAndWait(input);
@@ -175,7 +184,7 @@ describe('DriverPicker — abrir e buscar', () => {
         expect(option).toHaveTextContent('Fs 76,9 Hz');
         expect(option).toHaveTextContent('Qts 0,72');
         expect(option).toHaveTextContent('Vas 26,3 L');
-        expect(search.mock.calls[0][0]).toBe('tr 6');
+        expect(search.mock.calls.at(-1)?.[0]).toBe('tr 6');
     });
 
     test('no sistema imperial a linha mostra o Vas em ft³', async () => {
@@ -309,9 +318,7 @@ describe('DriverPicker — falhas e estados', () => {
 
     test('mostra que está buscando enquanto o pedido não volta', async () => {
         search.mockReturnValue(new Promise(() => undefined));
-        const input = await open();
-
-        await userEvent.type(input, 'tr');
+        await open();
 
         expect(
             await screen.findByText('Buscando…', {}, { timeout: 2000 }),
@@ -322,9 +329,8 @@ describe('DriverPicker — falhas e estados', () => {
         search
             .mockResolvedValueOnce({ ok: false, error: 'server' })
             .mockResolvedValueOnce(listing());
-        const input = await open();
+        await open();
 
-        await userEvent.type(input, 'tr 6');
         expect(
             await screen.findByText(
                 'Não foi possível consultar o catálogo agora',
@@ -347,15 +353,37 @@ describe('DriverPicker — falhas e estados', () => {
         expect(search).toHaveBeenCalledTimes(2);
     });
 
-    test('mais resultados que o limite avisa para refinar', async () => {
-        search.mockResolvedValue(listing([SUMMARY], true));
-        const input = await open();
+    test('"Mostrar mais" busca a próxima página e acrescenta à lista', async () => {
+        const next = {
+            ...SUMMARY,
+            id: '0198a3c2-6d11-7c4e-9a52-3f1b8e0d7a11',
+            model: 'TR 800',
+        };
+        search
+            .mockResolvedValueOnce(listing([SUMMARY], true))
+            .mockResolvedValueOnce(listing([next]));
+        await open();
 
-        await typeAndWait(input);
+        await userEvent.click(
+            await screen.findByRole(
+                'button',
+                { name: 'Mostrar mais' },
+                { timeout: 2000 },
+            ),
+        );
 
         expect(
-            screen.getByText('Há mais resultados. Refine a busca.'),
-        ).toBeInTheDocument();
+            await screen.findByRole(
+                'option',
+                { name: /TR 800/ },
+                { timeout: 2000 },
+            ),
+        ).toBeVisible();
+        expect(screen.getByRole('option', { name: /TR 620/ })).toBeVisible();
+        expect(search.mock.calls.at(-1)?.[3]).toBe(1);
+        expect(
+            screen.queryByRole('button', { name: 'Mostrar mais' }),
+        ).not.toBeInTheDocument();
     });
 
     test('driver que saiu do catálogo avisa, mantém aberto e não altera o projeto', async () => {
@@ -517,14 +545,8 @@ describe('DriverPicker — filtros e detalhes (marca, diâmetro, tipo)', () => {
 
     // O menu do filtro não abre no jsdom dentro do Autocomplete (no navegador abre), mas o React
     // Aria mantém um <select> nativo escondido ao lado de cada um: é por ele que o teste escolhe.
-    async function pickFilter(label: string, option: string) {
-        const field = screen
-            .getAllByText(label, { selector: 'span, label' })
-            .map((node) => node.closest('div'))
-            .find((box) => box?.querySelector('select') !== null);
-        const native = field?.querySelector('select') as HTMLSelectElement;
-
-        await userEvent.selectOptions(native, option);
+    async function pickBand(label: string) {
+        await userEvent.click(screen.getByRole('radio', { name: label }));
     }
 
     test('cada resultado traz o tipo e o diâmetro, além de Fs, Qts e Vas', async () => {
@@ -545,31 +567,11 @@ describe('DriverPicker — filtros e detalhes (marca, diâmetro, tipo)', () => {
         expect(option).not.toHaveTextContent('Ø');
     });
 
-    test('escolher uma marca busca sem texto e lista o que combina', async () => {
-        search.mockResolvedValue(listing([TYPED]));
-        await open();
-
-        await pickFilter('Fabricante', 'Triton');
-
-        const option = await screen.findByRole(
-            'option',
-            { name: /Triton/ },
-            { timeout: 2000 },
-        );
-
-        expect(option).toBeVisible();
-        expect(search).toHaveBeenLastCalledWith(
-            '',
-            { brand: 'Triton' },
-            expect.any(AbortSignal),
-        );
-    });
-
     test('a faixa de diâmetro vira os limites em metros, somada ao texto', async () => {
         search.mockResolvedValue(listing([TYPED]));
         const input = await open();
 
-        await pickFilter('Diâmetro', '12″');
+        await pickBand('12″');
         await userEvent.type(input, 'tr');
         await screen.findByRole(
             'option',
@@ -584,15 +586,15 @@ describe('DriverPicker — filtros e detalhes (marca, diâmetro, tipo)', () => {
         expect(filters?.diameter_max_m).toBeCloseTo(0.3429, 4);
     });
 
-    test('sem resultado com filtro avisa e "Limpar filtros" volta ao estado inicial', async () => {
+    test('sem resultado no diâmetro avisa e "Todos" volta ao catálogo inteiro', async () => {
         search.mockResolvedValue(listing([]));
         await open();
 
-        await pickFilter('Fabricante', 'Alfa');
+        await pickBand('≥ 18″');
 
         expect(
             await screen.findByText(
-                'Nenhum alto-falante com esses filtros.',
+                'Nenhum alto-falante nesse diâmetro.',
                 undefined,
                 {
                     timeout: 2000,
@@ -600,16 +602,17 @@ describe('DriverPicker — filtros e detalhes (marca, diâmetro, tipo)', () => {
             ),
         ).toBeVisible();
 
-        await userEvent.click(
-            screen.getByRole('button', { name: 'Limpar filtros' }),
-        );
+        search.mockResolvedValue(listing());
+        await pickBand('Todos');
 
         expect(
-            screen.queryByRole('button', { name: 'Limpar filtros' }),
-        ).not.toBeInTheDocument();
-        expect(
-            screen.queryByText('Nenhum alto-falante com esses filtros.'),
-        ).not.toBeInTheDocument();
+            await screen.findByRole(
+                'option',
+                { name: /Triton/ },
+                { timeout: 2000 },
+            ),
+        ).toBeVisible();
+        expect(search.mock.calls.at(-1)?.[1]).toEqual({});
     });
 
     test('offline os filtros somem', async () => {

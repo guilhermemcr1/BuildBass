@@ -59,8 +59,30 @@ afterEach(() => {
 });
 
 describe('useDriverSearch', () => {
-    test('com menos de 2 caracteres depois de aparar não busca', async () => {
-        const { result } = renderHook(() => useDriverSearch(' a '));
+    test('uma letra já busca, aparada', async () => {
+        search.mockResolvedValue({ ok: true, data: response([1]) });
+        renderHook(() => useDriverSearch(' a '));
+
+        await act(() => vi.advanceTimersByTimeAsync(300));
+
+        expect(search).toHaveBeenCalledTimes(1);
+        expect(search.mock.calls[0][0]).toBe('a');
+    });
+
+    test('sem texto lista o catálogo', async () => {
+        search.mockResolvedValue({ ok: true, data: response([1, 2]) });
+        const { result } = renderHook(() => useDriverSearch(''));
+
+        await act(() => vi.advanceTimersByTimeAsync(300));
+
+        expect(search.mock.calls[0][0]).toBe('');
+        expect(result.current.items).toHaveLength(2);
+    });
+
+    test('desligado não busca e fica idle', async () => {
+        const { result } = renderHook(() =>
+            useDriverSearch('tr', { enabled: false }),
+        );
 
         await act(() => vi.advanceTimersByTimeAsync(1000));
 
@@ -92,12 +114,12 @@ describe('useDriverSearch', () => {
     test('vai de idle a loading e a ready com a lista e has_more', async () => {
         search.mockResolvedValue({ ok: true, data: response([1, 2], true) });
         const { result, rerender } = renderHook(
-            ({ term }) => useDriverSearch(term),
-            { initialProps: { term: '' } },
+            ({ enabled }) => useDriverSearch('tr', { enabled }),
+            { initialProps: { enabled: false } },
         );
         expect(result.current.status).toBe('idle');
 
-        rerender({ term: 'tr' });
+        rerender({ enabled: true });
         expect(result.current.status).toBe('loading');
 
         await act(() => vi.advanceTimersByTimeAsync(300));
@@ -170,21 +192,20 @@ describe('useDriverSearch', () => {
         expect(result.current.error).toBeUndefined();
     });
 
-    test('esvaziar o campo volta a idle e limpa a lista', async () => {
+    test('esvaziar o campo volta a listar o catálogo', async () => {
         search.mockResolvedValue({ ok: true, data: response([1]) });
-        const { result, rerender } = renderHook(
-            ({ term }) => useDriverSearch(term),
-            { initialProps: { term: 'tr' } },
-        );
+        const { rerender } = renderHook(({ term }) => useDriverSearch(term), {
+            initialProps: { term: 'tr' },
+        });
         await act(() => vi.advanceTimersByTimeAsync(300));
-        expect(result.current.items).toHaveLength(1);
 
         rerender({ term: '' });
+        await act(() => vi.advanceTimersByTimeAsync(300));
 
-        expect(result.current.status).toBe('idle');
-        expect(result.current.items).toEqual([]);
+        expect(search).toHaveBeenCalledTimes(2);
+        expect(search.mock.calls[1][0]).toBe('');
     });
-    test('só com filtro busca sem texto e manda os filtros ao cliente', async () => {
+    test('manda os filtros ao cliente', async () => {
         search.mockResolvedValue({ ok: true, data: response([1]) });
         const { result } = renderHook(() =>
             useDriverSearch('', { filters: { brand: 'Triton' } }),
@@ -211,7 +232,37 @@ describe('useDriverSearch', () => {
         expect(search).toHaveBeenCalledTimes(1);
     });
 
-    test('trocar o filtro busca de novo, e filtro vazio sem texto volta a idle', async () => {
+    test('loadMore acrescenta a próxima página e busca nova recomeça do início', async () => {
+        search
+            .mockResolvedValueOnce({ ok: true, data: response([1, 2], true) })
+            .mockResolvedValueOnce({ ok: true, data: response([3]) })
+            .mockResolvedValueOnce({ ok: true, data: response([4]) });
+        const { result, rerender } = renderHook(
+            ({ term }) => useDriverSearch(term),
+            { initialProps: { term: 'tr' } },
+        );
+        await act(() => vi.advanceTimersByTimeAsync(300));
+
+        act(() => result.current.loadMore());
+        expect(result.current.loadingMore).toBe(true);
+        await act(() => vi.advanceTimersByTimeAsync(0));
+
+        expect(search.mock.calls[1][3]).toBe(2);
+        expect(result.current.items.map((item) => item.id)).toEqual([
+            uid(1),
+            uid(2),
+            uid(3),
+        ]);
+        expect(result.current.hasMore).toBe(false);
+
+        rerender({ term: 'tri' });
+        await act(() => vi.advanceTimersByTimeAsync(300));
+
+        expect(search.mock.calls[2][3]).toBe(0);
+        expect(result.current.items.map((item) => item.id)).toEqual([uid(4)]);
+    });
+
+    test('trocar o filtro busca de novo', async () => {
         search.mockResolvedValue({ ok: true, data: response([1]) });
         const { result, rerender } = renderHook(
             ({ brand }: { brand: string | undefined }) =>
@@ -225,10 +276,6 @@ describe('useDriverSearch', () => {
 
         expect(search).toHaveBeenCalledTimes(2);
         expect(search.mock.calls[1][1]).toEqual({ brand: 'Outra' });
-
-        rerender({ brand: undefined });
-
-        expect(result.current.status).toBe('idle');
-        expect(result.current.items).toEqual([]);
+        expect(result.current.status).toBe('ready');
     });
 });

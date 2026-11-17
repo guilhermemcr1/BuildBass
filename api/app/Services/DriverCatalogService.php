@@ -13,15 +13,20 @@ class DriverCatalogService
     // Caractere de escape do LIKE: "\" muda de significado entre MySQL e SQLite, "!" não.
     private const ESCAPE = '!';
 
+    // `search_text` sem a pontuação que `SearchText::compact` tira (REPLACE existe no MySQL e no SQLite).
+    private const COMPACT_SQL = "REPLACE(REPLACE(REPLACE(REPLACE(search_text, ' ', ''), '-', ''), '.', ''), '/', '')";
+
     /**
-     * Cada palavra do termo precisa aparecer em "marca modelo variação", sem acento nem caixa.
+     * Cada palavra do termo precisa aparecer em "marca modelo variação" (sem acento, caixa nem
+     * pontuação) ou no tipo. Sem termo nem filtro, lista o catálogo em ordem alfabética.
+     * `$offset` pula os resultados já mostrados ("Mostrar mais").
      * Os filtros opcionais (marca exata, tipo e faixa de diâmetro, com o máximo exclusivo) se
      * somam ao termo. Busca uma linha a mais que o limite só para saber se há mais resultados.
      *
      * @param  array{brand?: ?string, type?: ?string, diameter_min_m?: mixed, diameter_max_m?: mixed}  $filters
      * @return array{drivers: Collection<int, Driver>, hasMore: bool}
      */
-    public function search(?string $term, array $filters = []): array
+    public function search(?string $term, array $filters = [], int $offset = 0): array
     {
         $query = Driver::query();
 
@@ -41,11 +46,23 @@ class DriverCatalogService
             $query->where('nominal_diameter_m', '<', (float) $filters['diameter_max_m']);
         }
 
+        // Busca livre: cada palavra precisa aparecer no nome (com ou sem pontuação, então
+        // "tsw3010" acha "TS-W3010") ou no tipo ("sub" acha os subwoofers).
         foreach (SearchText::words($term ?? '') as $word) {
-            $query->whereRaw(
-                'search_text LIKE ? ESCAPE \''.self::ESCAPE.'\'',
-                ['%'.$this->escapeLike($word).'%'],
-            );
+            $like = '%'.$this->escapeLike($word).'%';
+            $compact = SearchText::compact($word);
+
+            $query->where(function ($match) use ($like, $compact): void {
+                $match->whereRaw('search_text LIKE ? ESCAPE \''.self::ESCAPE.'\'', [$like])
+                    ->orWhereRaw('type LIKE ? ESCAPE \''.self::ESCAPE.'\'', [$like]);
+
+                if ($compact !== '') {
+                    $match->orWhereRaw(
+                        self::COMPACT_SQL.' LIKE ? ESCAPE \''.self::ESCAPE.'\'',
+                        ['%'.$this->escapeLike($compact).'%'],
+                    );
+                }
+            });
         }
 
         $found = $query
@@ -53,6 +70,7 @@ class DriverCatalogService
             ->orderBy('model')
             ->orderBy('variant')
             ->orderBy('id')
+            ->offset($offset)
             ->limit(self::LIMIT + 1)
             ->get();
 
