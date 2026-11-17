@@ -121,6 +121,29 @@ it('reordena e a nova primeira vira a capa', function () {
     expect(AuditEvent::where('type', AuditType::DriverImagesChanged)->count())->toBe(1);
 });
 
+it('escolher a imagem principal a leva para o começo e vira a capa', function () {
+    $driver = driverWithStoredImages(3);
+    [$a, $b, $c] = $driver->images;
+
+    Livewire::test(EditDriver::class, ['record' => $driver->getRouteKey()])
+        ->assertFormSet(['cover' => '0'])
+        ->fillForm(['cover' => '2'])
+        ->assertFormSet(['cover' => '0'])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect($driver->fresh()->images)->toBe([$c, $a, $b]);
+    $this->getJson("/api/drivers/{$driver->id}")
+        ->assertJsonPath('data.cover_thumb_url', app(DriverImageStore::class)->thumbUrl($c));
+});
+
+it('esconde a escolha da principal com uma imagem só', function () {
+    $driver = driverWithStoredImages(1);
+
+    Livewire::test(EditDriver::class, ['record' => $driver->getRouteKey()])
+        ->assertFormFieldHidden('cover');
+});
+
 it('remover uma imagem apaga os dois arquivos', function () {
     $driver = driverWithStoredImages(2);
     [$keep, $drop] = $driver->images;

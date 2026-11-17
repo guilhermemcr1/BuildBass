@@ -12,6 +12,6 @@ return [
     'too_many' => 'Cada driver aceita no máximo 5 imagens.',
     'invalid_path' => 'Imagem inválida.',
 
-    'help' => 'Até 5 imagens JPEG, PNG ou WebP de até 5 MB. Todas são convertidas para WebP e a primeira é a capa. Anexe só imagens que você tem permissão de usar.',
+    'help' => 'Até 5 imagens JPEG, PNG ou WebP de até 5 MB. Todas são convertidas para WebP. Com mais de uma, escolha abaixo a imagem principal (a capa). Anexe só imagens que você tem permissão de usar.',
 
 ];
