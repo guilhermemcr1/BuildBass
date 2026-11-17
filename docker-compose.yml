@@ -38,6 +38,8 @@ x-api: &api
     # diária da leitura de manual) sobrevivem aos deploys. Com várias instâncias, troque por redis.
     CACHE_STORE: file
     SESSION_DRIVER: file
+    # O site só é servido por HTTPS (Cloudflare): o cookie de sessão do painel nunca vai em HTTP.
+    SESSION_SECURE_COOKIE: "true"
     QUEUE_CONNECTION: ${QUEUE_CONNECTION:-sync}
 
     MAIL_MAILER: ${MAIL_MAILER:-log}
