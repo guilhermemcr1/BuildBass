@@ -49,3 +49,17 @@ it('recusa tipo desconhecido e diâmetro fora da faixa', function () {
 it('lista as marcas em ordem, sem repetir', function () {
     $this->getJson('/api/driver-brands')->assertOk()->assertExactJson(['data' => ['Alfa', 'Beta']]);
 });
+
+it('filtra por faixas de Fs, Qts e Vas, com os limites inclusivos', function () {
+    Driver::factory()->create(['brand' => 'Faixa', 'model' => 'F1', 'fs_hz' => 25, 'qts' => 0.3, 'vas_m3' => 0.05]);
+    Driver::factory()->create(['brand' => 'Faixa', 'model' => 'F2', 'fs_hz' => 35, 'qts' => 0.5, 'vas_m3' => 0.1]);
+    Driver::factory()->create(['brand' => 'Faixa', 'model' => 'F3', 'fs_hz' => 50, 'qts' => 0.7, 'vas_m3' => 0.2]);
+
+    expect(models('q=faixa&fs_min_hz=30&fs_max_hz=50'))->toBe(['F2', 'F3'])
+        ->and(models('q=faixa&qts_max=0.5'))->toBe(['F1', 'F2'])
+        ->and(models('q=faixa&vas_min_m3=0.1&qts_min=0.6'))->toBe(['F3'])
+        ->and(models('q=faixa&fs_max_hz=20'))->toBe([]);
+
+    $this->getJson('/api/drivers?fs_min_hz=0')->assertUnprocessable()->assertJsonValidationErrors('fs_min_hz');
+    $this->getJson('/api/drivers?qts_max=abc')->assertUnprocessable()->assertJsonValidationErrors('qts_max');
+});

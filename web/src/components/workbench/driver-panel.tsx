@@ -84,8 +84,8 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
     const [expanded, setExpanded] = useState(false);
     const [expandedLoaded, setExpandedLoaded] = useState(false);
 
-    // Uma ação à vista (buscar) e as demais num menu: enviar ao catálogo (depende do servidor,
-    // Princípio V), salvar e abrir a lista pessoal.
+    // A busca fica no topo do painel, em largura total. No cabeçalho, ampliar e as demais ações
+    // num menu: enviar ao catálogo (depende do servidor, Princípio V), salvar e a lista pessoal.
     const actions = (
         <div className="flex min-w-0 items-center gap-1">
             <Button
@@ -100,11 +100,6 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
             >
                 <Maximize2 aria-hidden="true" className="size-4" />
             </Button>
-            <DriverPicker
-                disabled={offline}
-                disabledReason={offlineReason}
-                onSubmitDriver={onSubmitDriver}
-            />
             <Menu<DriverAction>
                 label={t('driverMenu')}
                 triggerLabel={t('driverMenu')}
@@ -158,6 +153,11 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
             actions={actions}
             flush
         >
+            <DriverPicker
+                disabled={offline}
+                disabledReason={offlineReason}
+                onSubmitDriver={onSubmitDriver}
+            />
             <DriverIdentity />
             <div className="grid grid-cols-2 items-start gap-x-3 gap-y-2">
                 {essential.map((key) => (

@@ -1,9 +1,8 @@
-import { Loader2, Search, Send, X } from 'lucide-react';
+import { Loader2, Search, Send, SlidersHorizontal, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import {
     Autocomplete,
     Dialog,
-    DialogTrigger,
     Header,
     Input,
     ListBox,
@@ -16,24 +15,27 @@ import {
 } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { SegmentedControl } from '@/components/ui/segmented-control';
 import { useActiveProject } from '@/hooks/use-active-project';
 import { useCatalogPick } from '@/hooks/use-catalog-pick';
 import { useDriverSearch } from '@/hooks/use-driver-search';
-import { DIAMETER_BANDS, filtersForBand } from '@/lib/catalog/diameter-bands';
-import type { DiameterBandId } from '@/lib/catalog/diameter-bands';
-import type { DriverFilters, DriverSummary } from '@/lib/catalog/types';
+import type { DriverSummary } from '@/lib/catalog/types';
+import { cn } from '@/lib/utils';
 import type { DriverType } from '@/lib/project/types';
 import { formatQuantity, formatWithUnit } from '@/lib/units/format';
 import { defaultUnitFor } from '@/lib/units/quantities';
 import { usePreferences } from '@/stores/preferences';
 import { useRecentDrivers } from '@/stores/recent-drivers';
 import { useSavedDrivers } from '@/stores/saved-drivers';
+import {
+    DriverFiltersPanel,
+    NO_PICKER_FILTERS,
+    countFilters,
+    toApiFilters,
+} from './driver-filters';
+import type { PickerFilters } from './driver-filters';
 import { DriverThumb } from './driver-thumb';
 
 const MINE_PREVIEW = 5;
-// Opção "todos" do filtro de diâmetro.
-const ALL = 'all';
 
 type DriverPickerProps = {
     disabled?: boolean;
@@ -52,8 +54,8 @@ function displayName(driver: {
 }
 
 // Busca de drivers num botão só: abre um diálogo que já lista o catálogo, e cada letra digitada
-// refina (fabricante, modelo ou tipo, com ou sem hífen). O diâmetro é um clique; "Mostrar mais"
-// navega pelo resto.
+// refina (fabricante, modelo ou tipo, com ou sem hífen). O botão "Filtros" ao lado abre o painel
+// de tipo, diâmetro e faixas de Fs, Qts e Vas; "Mostrar mais" navega pelo resto.
 export function DriverPicker({
     disabled = false,
     disabledReason,
@@ -67,9 +69,15 @@ export function DriverPicker({
     const applySaved = useActiveProject((state) => state.applySavedDriver);
     const [open, setOpen] = useState(false);
     const [term, setTerm] = useState('');
-    const [band, setBand] = useState<DiameterBandId | undefined>(undefined);
-    const filters = useMemo<DriverFilters>(() => filtersForBand(band), [band]);
-    const filtered = band !== undefined;
+    const [picked, setPicked] = useState<PickerFilters>(NO_PICKER_FILTERS);
+    const [showFilters, setShowFilters] = useState(false);
+    const filters = useMemo(() => toApiFilters(picked), [picked]);
+    const activeFilters = countFilters(picked);
+    const filtered = activeFilters > 0;
+    const openWith = (withFilters: boolean) => {
+        setShowFilters(withFilters);
+        setOpen(true);
+    };
     const search = useDriverSearch(term, {
         offline: disabled,
         filters,
@@ -98,7 +106,7 @@ export function DriverPicker({
                 !event.altKey
             ) {
                 event.preventDefault();
-                setOpen(true);
+                openWith(false);
             }
         };
 
@@ -116,8 +124,8 @@ export function DriverPicker({
     const catalog = searching
         ? search.items.filter((driver) => !recentIds.has(driver.id))
         : [];
-    // "Meus alto-falantes" é local: aparece offline. Sem texto, só os mais recentes. Com filtro de
-    // diâmetro e sem texto só o catálogo responde: o salvo não tem faixa para cruzar.
+    // "Meus alto-falantes" é local: aparece offline. Sem texto, só os mais recentes. Com filtro e
+    // sem texto só o catálogo responde: o salvo não tem tipo nem faixa para cruzar.
     const mine =
         needle === ''
             ? filtered
@@ -294,25 +302,58 @@ export function DriverPicker({
         catalog.length === 0 &&
         mine.length === 0;
 
-    return (
-        <DialogTrigger isOpen={open} onOpenChange={setOpen}>
-            <Button
-                variant="secondary"
-                aria-keyshortcuts="/"
-                className="h-9 w-full min-w-0 justify-start gap-2 px-3 font-normal text-muted"
+    // Nome do botão com a contagem ("Filtros (2)"); o selo em si é só visual.
+    const filtersLabel =
+        activeFilters > 0
+            ? `${t('picker.filters')} (${activeFilters})`
+            : t('picker.filters');
+    const filterBadge =
+        activeFilters > 0 ? (
+            <span
+                aria-hidden="true"
+                className="rounded-full bg-accent px-1.5 text-[11px] leading-4 font-semibold text-accent-foreground tabular-nums"
             >
-                <Search aria-hidden="true" className="size-4 shrink-0" />
-                <span className="min-w-0 flex-1 truncate text-left">
-                    {t('picker.triggerHint')}
-                </span>
-                <kbd
-                    aria-hidden="true"
-                    className="rounded border border-border bg-background px-1.5 text-[11px] leading-5"
+                {activeFilters}
+            </span>
+        ) : null;
+
+    return (
+        <>
+            <div className="flex w-full min-w-0 items-center gap-2">
+                <Button
+                    variant="secondary"
+                    aria-keyshortcuts="/"
+                    onPress={() => openWith(false)}
+                    className="h-10 min-w-0 flex-1 justify-start gap-2 px-3 font-normal text-muted"
                 >
-                    /
-                </kbd>
-            </Button>
+                    <Search aria-hidden="true" className="size-4 shrink-0" />
+                    <span className="min-w-0 flex-1 truncate text-left">
+                        {t('picker.triggerHint')}
+                    </span>
+                    <kbd
+                        aria-hidden="true"
+                        className="rounded border border-border bg-background px-1.5 text-[11px] leading-5"
+                    >
+                        /
+                    </kbd>
+                </Button>
+                <Button
+                    variant="secondary"
+                    disabled={disabled}
+                    aria-label={filtersLabel}
+                    onPress={() => openWith(true)}
+                    className="h-10 shrink-0 gap-2 px-3"
+                >
+                    <SlidersHorizontal aria-hidden="true" className="size-4" />
+                    <span className="max-sm:sr-only">
+                        {t('picker.filters')}
+                    </span>
+                    {filterBadge}
+                </Button>
+            </div>
             <ModalOverlay
+                isOpen={open}
+                onOpenChange={setOpen}
                 isDismissable
                 className="fixed inset-0 z-50 flex overlay-motion items-start justify-center bg-black/50 p-4 pt-[10dvh]"
             >
@@ -343,6 +384,29 @@ export function DriverPicker({
                                     placeholder={t('picker.placeholder')}
                                     className="h-full w-full min-w-0 bg-transparent text-base text-foreground outline-none placeholder:text-muted [&::-webkit-search-cancel-button]:appearance-none"
                                 />
+                                {!disabled && (
+                                    <Button
+                                        variant="quiet"
+                                        aria-label={filtersLabel}
+                                        aria-expanded={showFilters}
+                                        onPress={() =>
+                                            setShowFilters((shown) => !shown)
+                                        }
+                                        className={cn(
+                                            'order-last shrink-0 gap-1.5 px-2.5',
+                                            showFilters && 'bg-raised',
+                                        )}
+                                    >
+                                        <SlidersHorizontal
+                                            aria-hidden="true"
+                                            className="size-4"
+                                        />
+                                        <span className="max-sm:sr-only">
+                                            {t('picker.filters')}
+                                        </span>
+                                        {filterBadge}
+                                    </Button>
+                                )}
                                 {term !== '' && (
                                     <button
                                         type="button"
@@ -357,35 +421,12 @@ export function DriverPicker({
                                     </button>
                                 )}
                             </TextField>
-                            {!disabled && (
-                                <div className="flex items-center gap-2 overflow-x-auto border-b border-border bg-background/40 px-4 py-2">
-                                    <span className="shrink-0 text-xs text-muted">
-                                        {t('picker.diameter')}
-                                    </span>
-                                    <SegmentedControl<string>
-                                        label={t('picker.diameter')}
-                                        size="sm"
-                                        selected={band ?? ALL}
-                                        onChange={(id) =>
-                                            setBand(
-                                                id === ALL
-                                                    ? undefined
-                                                    : (id as DiameterBandId),
-                                            )
-                                        }
-                                        options={[
-                                            {
-                                                id: ALL,
-                                                label: t('picker.diameterAny'),
-                                            },
-                                            ...DIAMETER_BANDS.map((item) => ({
-                                                id: item.id,
-                                                label: item.label,
-                                            })),
-                                        ]}
-                                        className="shrink-0 flex-nowrap"
-                                    />
-                                </div>
+                            {!disabled && showFilters && (
+                                <DriverFiltersPanel
+                                    value={picked}
+                                    onChange={setPicked}
+                                    unitSystem={unitSystem}
+                                />
                             )}
                             {showSkeleton && <ResultSkeleton />}
                             <ListBox
@@ -510,7 +551,7 @@ export function DriverPicker({
                     </Dialog>
                 </Modal>
             </ModalOverlay>
-        </DialogTrigger>
+        </>
     );
 }
 

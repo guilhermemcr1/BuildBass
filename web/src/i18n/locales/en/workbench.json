@@ -220,11 +220,16 @@
         "notFoundHelp": "Can't find it?",
         "submit": "Submit driver",
         "diameter": "Diameter",
-        "diameterAny": "All",
-        "emptyFiltered": "No drivers in this size.",
+        "emptyFiltered": "No drivers match these filters.",
         "triggerHint": "Find driver…",
         "clearSearch": "Clear search",
-        "loadMore": "Show more"
+        "loadMore": "Show more",
+        "filters": "Filters",
+        "type": "Type",
+        "any": "All",
+        "min": "min",
+        "max": "max",
+        "clearFilters": "Clear filters"
     },
     "driverDialog": {
         "title": "Driver",

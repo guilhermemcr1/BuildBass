@@ -12,7 +12,19 @@ use Illuminate\Validation\Rule;
 class SearchDriversRequest extends FormRequest
 {
     /** Filtros opcionais que se somam ao termo. */
-    public const FILTERS = ['brand', 'type', 'diameter_min_m', 'diameter_max_m'];
+    public const FILTERS = [
+        'brand', 'type', 'diameter_min_m', 'diameter_max_m',
+        ...self::PARAMETER_FILTERS_KEYS,
+    ];
+
+    /** Faixas pelos parâmetros (mínimo e máximo inclusivos), na unidade SI do campo. */
+    public const PARAMETER_FILTERS = [
+        'fs_min_hz' => 'fs_hz', 'fs_max_hz' => 'fs_hz',
+        'qts_min' => 'qts', 'qts_max' => 'qts',
+        'vas_min_m3' => 'vas_m3', 'vas_max_m3' => 'vas_m3',
+    ];
+
+    private const PARAMETER_FILTERS_KEYS = ['fs_min_hz', 'fs_max_hz', 'qts_min', 'qts_max', 'vas_min_m3', 'vas_max_m3'];
 
     public const MAX_OFFSET = 1000;
 
@@ -42,8 +54,15 @@ class SearchDriversRequest extends FormRequest
     public function rules(): array
     {
         [$min, $max] = Driver::RANGES['nominal_diameter_m'];
+        $parameters = [];
+
+        foreach (self::PARAMETER_FILTERS as $key => $field) {
+            [$low, $high] = Driver::RANGES[$field];
+            $parameters[$key] = ['nullable', 'numeric', "between:{$low},{$high}"];
+        }
 
         return [
+            ...$parameters,
             'q' => ['nullable', 'string', 'max:60'],
             // "Mostrar mais": a partir de qual resultado. O teto evita varrer o catálogo inteiro.
             'offset' => ['nullable', 'integer', 'between:0,'.self::MAX_OFFSET],

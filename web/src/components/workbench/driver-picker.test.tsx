@@ -543,10 +543,26 @@ describe('DriverPicker — filtros e detalhes (marca, diâmetro, tipo)', () => {
         nominal_diameter_m: 0.3048,
     };
 
-    // O menu do filtro não abre no jsdom dentro do Autocomplete (no navegador abre), mas o React
-    // Aria mantém um <select> nativo escondido ao lado de cada um: é por ele que o teste escolhe.
+    // Abre o painel pelo botão "Filtros" do diálogo e marca a opção no grupo (tipo ou diâmetro).
+    async function showFilters() {
+        await userEvent.click(
+            within(screen.getByRole('dialog')).getByRole('button', {
+                name: /^Filtros/,
+            }),
+        );
+    }
+
+    async function pick(group: string, label: string) {
+        await userEvent.click(
+            within(screen.getByRole('radiogroup', { name: group })).getByRole(
+                'radio',
+                { name: label },
+            ),
+        );
+    }
+
     async function pickBand(label: string) {
-        await userEvent.click(screen.getByRole('radio', { name: label }));
+        await pick('Diâmetro', label);
     }
 
     test('cada resultado traz o tipo e o diâmetro, além de Fs, Qts e Vas', async () => {
@@ -571,13 +587,12 @@ describe('DriverPicker — filtros e detalhes (marca, diâmetro, tipo)', () => {
         search.mockResolvedValue(listing([TYPED]));
         const input = await open();
 
+        await showFilters();
         await pickBand('12″');
         await userEvent.type(input, 'tr');
-        await screen.findByRole(
-            'option',
-            { name: /Triton/ },
-            { timeout: 2000 },
-        );
+        await waitFor(() => expect(search.mock.calls.at(-1)?.[0]).toBe('tr'), {
+            timeout: 2000,
+        });
 
         const [term, filters] = search.mock.calls.at(-1) ?? [];
 
@@ -586,15 +601,16 @@ describe('DriverPicker — filtros e detalhes (marca, diâmetro, tipo)', () => {
         expect(filters?.diameter_max_m).toBeCloseTo(0.3429, 4);
     });
 
-    test('sem resultado no diâmetro avisa e "Todos" volta ao catálogo inteiro', async () => {
+    test('sem resultado com filtro avisa e "Todos" volta ao catálogo inteiro', async () => {
         search.mockResolvedValue(listing([]));
         await open();
 
+        await showFilters();
         await pickBand('≥ 18″');
 
         expect(
             await screen.findByText(
-                'Nenhum alto-falante nesse diâmetro.',
+                'Nenhum alto-falante com esses filtros.',
                 undefined,
                 {
                     timeout: 2000,
@@ -619,6 +635,76 @@ describe('DriverPicker — filtros e detalhes (marca, diâmetro, tipo)', () => {
         await open({ disabled: true });
 
         expect(screen.queryByText('Diâmetro')).not.toBeInTheDocument();
+        expect(
+            within(screen.getByRole('dialog')).queryByRole('button', {
+                name: /^Filtros/,
+            }),
+        ).not.toBeInTheDocument();
+    });
+
+    test('o painel de filtros fica fechado até clicar em "Filtros"', async () => {
+        await open();
+
+        expect(
+            screen.queryByRole('group', { name: 'Filtros' }),
+        ).not.toBeInTheDocument();
+
+        await showFilters();
+
+        expect(screen.getByRole('group', { name: 'Filtros' })).toBeVisible();
+    });
+
+    test('o botão "Filtros" ao lado da busca abre o diálogo já com o painel', async () => {
+        renderWithProviders(<DriverPicker onSubmitDriver={() => undefined} />);
+
+        await userEvent.click(screen.getByRole('button', { name: /^Filtros/ }));
+
+        expect(
+            await screen.findByRole('group', { name: 'Filtros' }),
+        ).toBeVisible();
+    });
+
+    test('tipo e faixas de Fs, Qts e Vas vão em SI à busca e contam no selo', async () => {
+        await open();
+        await showFilters();
+
+        await pick('Tipo', 'Subwoofer');
+        await userEvent.type(
+            screen.getByRole('textbox', { name: 'Fs mín.' }),
+            '25',
+        );
+        await userEvent.type(
+            screen.getByRole('textbox', { name: 'Qts máx.' }),
+            '0,5',
+        );
+        await userEvent.type(
+            screen.getByRole('textbox', { name: 'Vas mín.' }),
+            '40',
+        );
+        await userEvent.tab();
+
+        await waitFor(
+            () => {
+                const filters = search.mock.calls.at(-1)?.[1];
+
+                expect(filters?.type).toBe('subwoofer');
+                expect(filters?.fs_min_hz).toBe(25);
+                expect(filters?.qts_max).toBe(0.5);
+                expect(filters?.vas_min_m3).toBeCloseTo(0.04, 6);
+            },
+            { timeout: 2000 },
+        );
+        expect(
+            within(screen.getByRole('dialog')).getByRole('button', {
+                name: 'Filtros (4)',
+            }),
+        ).toBeInTheDocument();
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Limpar filtros' }),
+        );
+
+        await waitFor(() => expect(search.mock.calls.at(-1)?.[1]).toEqual({}));
     });
 
     test('mostra a miniatura da capa no resultado do catálogo, decorativa', async () => {

@@ -57,12 +57,19 @@ export type CatalogDriver = DriverSummary &
         images: DriverImageRef[];
     };
 
-// Filtros da busca (marca exata, tipo e faixa de diâmetro com o máximo exclusivo, em metros).
+// Filtros da busca (marca exata, tipo, faixa de diâmetro com o máximo exclusivo, em metros, e
+// faixas inclusivas de Fs, Qts e Vas, em SI).
 export type DriverFilters = {
     brand?: string;
     type?: DriverType;
     diameter_min_m?: number;
     diameter_max_m?: number;
+    fs_min_hz?: number;
+    fs_max_hz?: number;
+    qts_min?: number;
+    qts_max?: number;
+    vas_min_m3?: number;
+    vas_max_m3?: number;
 };
 
 export type BrandsResponse = { data: string[] };

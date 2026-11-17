@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Http\Requests\SearchDriversRequest;
 use App\Models\Driver;
 use App\Support\SearchText;
 use Illuminate\Support\Collection;
@@ -20,10 +21,10 @@ class DriverCatalogService
      * Cada palavra do termo precisa aparecer em "marca modelo variação" (sem acento, caixa nem
      * pontuação) ou no tipo. Sem termo nem filtro, lista o catálogo em ordem alfabética.
      * `$offset` pula os resultados já mostrados ("Mostrar mais").
-     * Os filtros opcionais (marca exata, tipo e faixa de diâmetro, com o máximo exclusivo) se
-     * somam ao termo. Busca uma linha a mais que o limite só para saber se há mais resultados.
+     * Os filtros opcionais (marca exata, tipo, faixa de diâmetro com o máximo exclusivo e faixas
+     * de Fs, Qts e Vas) se somam ao termo. Busca uma linha a mais que o limite só para saber se há mais resultados.
      *
-     * @param  array{brand?: ?string, type?: ?string, diameter_min_m?: mixed, diameter_max_m?: mixed}  $filters
+     * @param  array<string, mixed>  $filters
      * @return array{drivers: Collection<int, Driver>, hasMore: bool}
      */
     public function search(?string $term, array $filters = [], int $offset = 0): array
@@ -44,6 +45,13 @@ class DriverCatalogService
 
         if (($filters['diameter_max_m'] ?? null) !== null) {
             $query->where('nominal_diameter_m', '<', (float) $filters['diameter_max_m']);
+        }
+
+        // Faixas de Fs, Qts e Vas: mínimo e máximo inclusivos.
+        foreach (SearchDriversRequest::PARAMETER_FILTERS as $key => $field) {
+            if (($filters[$key] ?? null) !== null) {
+                $query->where($field, str_contains($key, '_min') ? '>=' : '<=', (float) $filters[$key]);
+            }
         }
 
         // Busca livre: cada palavra precisa aparecer no nome (com ou sem pontuação, então

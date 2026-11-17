@@ -220,11 +220,16 @@
         "notFoundHelp": "Não achou?",
         "submit": "Enviar alto-falante",
         "diameter": "Diâmetro",
-        "diameterAny": "Todos",
-        "emptyFiltered": "Nenhum alto-falante nesse diâmetro.",
+        "emptyFiltered": "Nenhum alto-falante com esses filtros.",
         "triggerHint": "Buscar alto-falante…",
         "clearSearch": "Limpar busca",
-        "loadMore": "Mostrar mais"
+        "loadMore": "Mostrar mais",
+        "filters": "Filtros",
+        "type": "Tipo",
+        "any": "Todos",
+        "min": "mín.",
+        "max": "máx.",
+        "clearFilters": "Limpar filtros"
     },
     "driverDialog": {
         "title": "Alto-falante",
