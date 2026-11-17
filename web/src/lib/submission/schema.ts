@@ -67,6 +67,7 @@ export type SubmissionErrorCode =
     | 'tooLong'
     | 'email'
     | 'impedance'
+    | 'chars'
     | 'number'
     | 'range';
 
@@ -78,6 +79,17 @@ function text(max: number, required: boolean) {
     const base = z.string().trim().max(max);
 
     return required ? base.min(1) : base;
+}
+
+// Espelho de IdentityFields::NAME_PATTERN (API): letras, números, espaço e a pontuação de nomes
+// de produto. Fora ficam [ ] * _ : < >, que virariam link ou formatação no e-mail de decisão.
+const NAME_PATTERN = /^[\p{L}\p{N} .,\-/+()"'″&#×]+$/u;
+
+function name(max: number) {
+    return text(max, true).refine(
+        (value) => value === '' || NAME_PATTERN.test(value),
+        { message: 'chars' },
+    );
 }
 
 function numberShape(): z.ZodObject {
@@ -94,8 +106,8 @@ function numberShape(): z.ZodObject {
 }
 
 export const submissionSchema = z.object({
-    brand: text(TEXT_LIMITS.brand, true),
-    model: text(TEXT_LIMITS.model, true),
+    brand: name(TEXT_LIMITS.brand),
+    model: name(TEXT_LIMITS.model),
     // A variante é a impedância em ohms ("4 Ω"), nunca texto livre.
     variant: text(TEXT_LIMITS.variant, false).refine(isImpedance, {
         message: 'impedance',
@@ -128,7 +140,11 @@ function codeFor(issue: z.core.$ZodIssue): SubmissionErrorCode {
     }
 
     if (issue.code === 'custom') {
-        return issue.message === 'impedance' ? 'impedance' : 'email';
+        if (issue.message === 'impedance' || issue.message === 'chars') {
+            return issue.message;
+        }
+
+        return 'email';
     }
 
     return 'number';

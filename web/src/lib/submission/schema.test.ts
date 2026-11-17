@@ -64,6 +64,23 @@ describe('validateSubmission', () => {
         },
     );
 
+    test.each([
+        ['brand', '[Clique aqui](https://phish.example)'],
+        ['model', 'Veja https://phish.example'],
+        ['model', '**urgente**'],
+        ['brand', 'Marca_X'],
+    ] as const)('%s com marcação (%s) é recusado', (field, value) => {
+        expect(errorsOf(form({ [field]: value }))[field]).toBe('chars');
+    });
+
+    test('aceita a pontuação real de nomes de produto', () => {
+        expect(
+            validateSubmission(
+                form({ brand: "O'Neil & Co.", model: 'TR 620 12" (6.5-A)' }),
+            ),
+        ).toEqual({ ok: true });
+    });
+
     test.each(REQUIRED_KEYS)('%s ausente é obrigatório', (key) => {
         const numbers = { ...form().numbers };
         delete numbers[key];

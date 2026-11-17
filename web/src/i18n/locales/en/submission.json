@@ -45,6 +45,7 @@
         "required": "Fill in this field.",
         "tooLong": "Use at most {{max}} characters.",
         "email": "Enter a valid email.",
+        "chars": "Use only letters, numbers, spaces and . , - / + ( ) \" ' & #",
         "number": "Enter a valid number.",
         "range": "Value outside the allowed range.",
         "impedance": "Enter only the impedance in ohms, from 0.5 to 64 (e.g. 4 or 3.2)."

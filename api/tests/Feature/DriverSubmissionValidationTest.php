@@ -43,7 +43,7 @@ it('recusa parâmetro fora da faixa e aceita os limites exatos', function (strin
     expect(DriverSubmission::count())->toBe(0);
 
     foreach ([$min, $max] as $value) {
-        $this->postJson('/api/driver-submissions', [...baseSubmission(), $key => $value, 'model' => "EX-{$key}-{$value}"])
+        $this->postJson('/api/driver-submissions', [...baseSubmission(), $key => $value, 'model' => 'EX-'.str_replace('_', '-', $key)."-{$value}"])
             ->assertCreated();
     }
 })->with(function () {
@@ -128,4 +128,21 @@ it('exige o e-mail de contato, também direto no servidor', function () {
 
 it('aceita o envio com e-mail válido', function () {
     $this->postJson('/api/driver-submissions', baseSubmission())->assertCreated();
+});
+
+it('recusa marca e modelo com marcação que viraria link no e-mail', function (string $field, string $value) {
+    $this->postJson('/api/driver-submissions', [...baseSubmission(), $field => $value])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors($field);
+
+    expect(DriverSubmission::count())->toBe(0);
+})->with([
+    ['brand', '[Clique aqui](https://phish.example)'],
+    ['model', 'Veja https://phish.example'],
+    ['model', '**urgente**'],
+]);
+
+it('aceita a pontuação real de nomes de produto', function () {
+    $this->postJson('/api/driver-submissions', [...baseSubmission(), 'brand' => "O'Neil & Co.", 'model' => 'TR 620 12" (6.5-A)'])
+        ->assertCreated();
 });

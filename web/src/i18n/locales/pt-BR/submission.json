@@ -45,6 +45,7 @@
         "required": "Preencha este campo.",
         "tooLong": "Use no máximo {{max}} caracteres.",
         "email": "Informe um e-mail válido.",
+        "chars": "Use só letras, números, espaço e . , - / + ( ) \" ' & #",
         "number": "Informe um número válido.",
         "range": "Valor fora da faixa permitida.",
         "impedance": "Informe só a impedância em ohms, de 0,5 a 64 (ex.: 4 ou 3,2)."

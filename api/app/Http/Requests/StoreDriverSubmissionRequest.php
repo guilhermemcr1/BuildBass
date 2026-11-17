@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Filament\Schemas\IdentityFields;
 use App\Models\Driver;
 use App\Models\DriverSubmission;
 use App\Support\DriverVariant;
@@ -68,8 +69,10 @@ class StoreDriverSubmissionRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
-            'brand' => ['required', 'string', 'min:1', 'max:80'],
-            'model' => ['required', 'string', 'min:1', 'max:80'],
+            // Mesma regra do painel: sem [ ] * _ : < > o nome não vira link nem formatação no
+            // Markdown do e-mail de decisão enviado ao remetente.
+            'brand' => ['required', 'string', 'min:1', 'max:80', 'regex:'.IdentityFields::NAME_PATTERN],
+            'model' => ['required', 'string', 'min:1', 'max:80', 'regex:'.IdentityFields::NAME_PATTERN],
             'variant' => ['nullable', 'string', 'max:40', function (string $attribute, mixed $value, Closure $fail): void {
                 if (trim((string) $value) !== '' && DriverVariant::parse((string) $value) === null) {
                     $fail((string) __('submission.impedance', ['min' => DriverVariant::MIN_OHM, 'max' => DriverVariant::MAX_OHM]));
