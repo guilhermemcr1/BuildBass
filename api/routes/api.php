@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\Route;
 
 // Rotas JSON consumidas pelo front (web/). O catálogo é só leitura; a única escrita pública é o
 // envio de um driver para a fila de moderação.
-Route::middleware('throttle:catalog')->group(function () {
+// Cache de 60 s no navegador + ETag: o catálogo só muda quando um moderador aprova um driver, e
+// repetir a mesma busca não gasta a cota do `throttle:catalog` nem toca no banco.
+Route::middleware(['throttle:catalog', 'cache.headers:public;max_age=60;etag'])->group(function () {
     Route::get('/drivers', [DriverController::class, 'index']);
     Route::get('/driver-brands', [DriverController::class, 'brands']);
     Route::get('/drivers/{id}', [DriverController::class, 'show']);

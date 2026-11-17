@@ -13,7 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Atrás de um proxy reverso (Traefik): confia nele para enxergar HTTPS e o IP real do cliente
+        // (o limite por IP e o hash do remetente dependem disso).
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // A API responde sempre JSON; o painel de moderação (HTML) mantém os redirecionamentos.
