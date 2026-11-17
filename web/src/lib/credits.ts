@@ -4,6 +4,7 @@ export const CREDITS = {
     author: 'Guilherme G.',
     githubUrl: 'https://github.com/guilhermemcr1',
     portfolioUrl: 'https://galarca.dev',
+    contactEmail: 'contato@galarca.dev',
     repositoryUrl: 'https://github.com/guilhermemcr1/BuildBass',
     creditsUrl:
         'https://github.com/guilhermemcr1/BuildBass/blob/main/CREDITS.md',

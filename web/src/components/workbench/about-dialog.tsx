@@ -1,4 +1,4 @@
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Mail } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -54,6 +54,21 @@ export function AboutDialog({ open, onOpenChange }: AboutDialogProps) {
                             {' '}
                             · {t('about.authorRole')}
                         </span>
+                    </dd>
+                </div>
+                <div className="flex flex-col gap-1 py-2.5">
+                    <dt className="text-xs font-semibold text-muted">
+                        {t('about.contactLabel')}
+                    </dt>
+                    <dd className="flex flex-col gap-1">
+                        <span>{t('about.contactText')}</span>
+                        <a
+                            href={`mailto:${CREDITS.contactEmail}?subject=${encodeURIComponent(t('about.contactSubject'))}`}
+                            className={LINK_CLASS}
+                        >
+                            <Mail aria-hidden="true" className="size-3.5" />
+                            {CREDITS.contactEmail}
+                        </a>
                     </dd>
                 </div>
                 <div className="flex flex-col gap-1 py-2.5">
