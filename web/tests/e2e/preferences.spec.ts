@@ -19,8 +19,10 @@ test('o tema escolhido continua depois de recarregar', async ({ browser }) => {
     const page = await context.newPage();
     await page.goto('/');
 
-    await page.getByRole('button', { name: /^Tema:/ }).click();
-    await page.getByRole('menuitemradio', { name: 'Claro' }).click();
+    await page
+        .getByRole('radiogroup', { name: 'Tema' })
+        .getByRole('radio', { name: 'Claro' })
+        .click();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
 
     await page.reload();
@@ -71,8 +73,10 @@ test('com localStorage bloqueado as trocas funcionam sem erro', async ({
     });
 
     await page.goto('/');
-    await page.getByRole('button', { name: /^Tema:/ }).click();
-    await page.getByRole('menuitemradio', { name: 'Escuro' }).click();
+    await page
+        .getByRole('radiogroup', { name: 'Tema' })
+        .getByRole('radio', { name: 'Escuro' })
+        .click();
 
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     expect(errors).toEqual([]);

@@ -28,7 +28,6 @@
         "changeFrom": "{{unit}} — change unit of {{parameter}}"
     },
     "theme": {
-        "current": "Theme: {{name}}",
         "label": "Theme",
         "light": "Light",
         "dark": "Dark",

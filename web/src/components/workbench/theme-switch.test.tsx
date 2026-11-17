@@ -10,39 +10,24 @@ describe('ThemeSwitch', () => {
         usePreferences.setState({ theme: 'system' });
     });
 
-    test('mostra só o tema atual; as três opções aparecem ao abrir', async () => {
+    test('mostra as três opções à vista, com a atual marcada', () => {
         renderWithProviders(<ThemeSwitch />);
 
-        expect(
-            screen.getByRole('button', { name: 'Tema: Sistema' }),
-        ).toBeVisible();
-        expect(screen.queryByRole('menuitemradio')).toBeNull();
+        const group = screen.getByRole('radiogroup', { name: 'Tema' });
 
-        await userEvent.click(
-            screen.getByRole('button', { name: 'Tema: Sistema' }),
-        );
-
+        expect(group).toBeVisible();
         expect(
-            screen
-                .getAllByRole('menuitemradio')
-                .map((item) => item.textContent),
+            screen.getAllByRole('radio').map((item) => item.textContent),
         ).toEqual(['Claro', 'Escuro', 'Sistema']);
+        expect(screen.getByRole('radio', { name: 'Sistema' })).toBeChecked();
     });
 
-    test('escolher uma opção troca o tema e fecha a lista', async () => {
+    test('escolher uma opção troca o tema', async () => {
         renderWithProviders(<ThemeSwitch />);
 
-        await userEvent.click(
-            screen.getByRole('button', { name: 'Tema: Sistema' }),
-        );
-        await userEvent.click(
-            screen.getByRole('menuitemradio', { name: 'Escuro' }),
-        );
+        await userEvent.click(screen.getByRole('radio', { name: 'Escuro' }));
 
         expect(usePreferences.getState().theme).toBe('dark');
-        expect(screen.queryByRole('menuitemradio')).toBeNull();
-        expect(
-            screen.getByRole('button', { name: 'Tema: Escuro' }),
-        ).toBeVisible();
+        expect(screen.getByRole('radio', { name: 'Escuro' })).toBeChecked();
     });
 });

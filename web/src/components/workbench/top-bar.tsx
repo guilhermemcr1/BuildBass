@@ -44,40 +44,60 @@ export function TopBar({
             <nav
                 aria-label={t('common:appName')}
                 data-tour="actions"
-                className="flex flex-wrap items-center gap-1"
+                className="flex items-center gap-1"
             >
-                <Button variant="quiet" onPress={() => onAction('new')}>
+                <Button
+                    variant="quiet"
+                    onPress={() => onAction('new')}
+                    className="max-sm:px-2.5"
+                >
                     <FilePlus aria-hidden="true" className="size-4" />
-                    {t('workbench:actions.new')}
+                    <span className="max-sm:sr-only">
+                        {t('workbench:actions.new')}
+                    </span>
                 </Button>
-                <Button variant="quiet" onPress={() => onAction('open')}>
+                <Button
+                    variant="quiet"
+                    onPress={() => onAction('open')}
+                    className="max-sm:px-2.5"
+                >
                     <FolderOpen aria-hidden="true" className="size-4" />
-                    {t('workbench:actions.open')}
+                    <span className="max-sm:sr-only">
+                        {t('workbench:actions.open')}
+                    </span>
                 </Button>
                 <Button variant="primary" onPress={() => onAction('export')}>
                     <Download aria-hidden="true" className="size-4" />
                     {t('workbench:actions.export')}
                 </Button>
-                <Button
-                    variant="quiet"
-                    onPress={() => onAction('undo')}
-                    disabled={!history.canUndo}
-                    aria-label={t('workbench:actions.undo')}
-                    className="px-2.5"
-                >
-                    <Undo2 aria-hidden="true" className="size-4" />
-                </Button>
-                <Button
-                    variant="quiet"
-                    onPress={() => onAction('redo')}
-                    disabled={!history.canRedo}
-                    aria-label={t('workbench:actions.redo')}
-                    className="px-2.5"
-                >
-                    <Redo2 aria-hidden="true" className="size-4" />
-                </Button>
+                {/* Desfazer e refazer juntos: no celular não se separam em linhas diferentes. */}
+                <div className="flex shrink-0 items-center">
+                    <Button
+                        variant="quiet"
+                        onPress={() => onAction('undo')}
+                        disabled={!history.canUndo}
+                        aria-label={t('workbench:actions.undo')}
+                        className="px-2.5"
+                    >
+                        <Undo2 aria-hidden="true" className="size-4" />
+                    </Button>
+                    <Button
+                        variant="quiet"
+                        onPress={() => onAction('redo')}
+                        disabled={!history.canRedo}
+                        aria-label={t('workbench:actions.redo')}
+                        className="px-2.5"
+                    >
+                        <Redo2 aria-hidden="true" className="size-4" />
+                    </Button>
+                </div>
             </nav>
-            {projectName}
+            {/* No celular a aba do projeto, logo abaixo, já mostra e edita nome e cor. */}
+            {projectName !== undefined && (
+                <div className="hidden min-w-0 flex-1 sm:flex">
+                    {projectName}
+                </div>
+            )}
             <div className="ml-auto flex flex-wrap items-center gap-2">
                 <div
                     data-tour="preferences"

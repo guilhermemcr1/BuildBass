@@ -2,6 +2,10 @@ import type { Key, ReactNode } from 'react';
 import { ToggleButton, ToggleButtonGroup } from 'react-aria-components';
 import { useIndicator } from '@/hooks/use-indicator';
 import { cn } from '@/lib/utils';
+import { Tooltip } from './tooltip';
+
+// Dica das opções só com ícone: curta, pois sem ela o ícone sozinho pode não dizer o que faz.
+const ICON_TIP_DELAY_MS = 400;
 
 export type SegmentOption<T extends string> = {
     id: T;
@@ -77,7 +81,8 @@ export function SegmentedControl<T extends string>({
                     }}
                 />
             )}
-            {options.map((option) => (
+            {options.map((option) => {
+                const button = (
                 <ToggleButton
                     key={option.id}
                     id={option.id}
@@ -114,7 +119,20 @@ export function SegmentedControl<T extends string>({
                         </span>
                     )}
                 </ToggleButton>
-            ))}
+                );
+
+                return option.iconOnly === true ? (
+                    <Tooltip
+                        key={option.id}
+                        content={option.label}
+                        delay={ICON_TIP_DELAY_MS}
+                    >
+                        {button}
+                    </Tooltip>
+                ) : (
+                    button
+                );
+            })}
         </ToggleButtonGroup>
     );
 }

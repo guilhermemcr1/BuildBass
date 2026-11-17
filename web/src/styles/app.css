@@ -233,32 +233,13 @@
     }
 }
 
-/* Troca de tema: `app.tsx` marca o documento com `data-theme-fade` por uns 400 ms e todas as
-   cores passam suavemente de um tema ao outro. Fora desse intervalo nada transiciona. */
-[data-theme-fade],
-[data-theme-fade] *,
-[data-theme-fade] *::before,
-[data-theme-fade] *::after {
-    transition:
-        background-color 320ms ease,
-        border-color 320ms ease,
-        color 320ms ease,
-        fill 320ms ease,
-        stroke 320ms ease,
-        box-shadow 320ms ease !important;
-}
-
-/* Ícone do tema: o novo gira e aparece no lugar do antigo. */
-@keyframes spin-in {
-    from {
-        opacity: 0;
-        transform: rotate(-90deg) scale(0.5);
-    }
-}
-
-@utility spin-in {
-    @media (prefers-reduced-motion: no-preference) {
-        animation: spin-in 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+/* Troca de tema: `app.tsx` usa View Transitions; aqui só o ritmo do crossfade entre os dois
+   retratos da página. */
+@media (prefers-reduced-motion: no-preference) {
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        animation-duration: 280ms;
+        animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     }
 }
 

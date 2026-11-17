@@ -6,27 +6,37 @@ import { usePreferences } from '@/stores/preferences';
 
 const DARK_QUERY = '(prefers-color-scheme: dark)';
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
-// Um pouco mais que a transição de cor definida em `app.css` (`[data-theme-fade]`).
-const THEME_FADE_MS = 400;
 
-let fadeTimer: number | undefined;
+type ViewTransitionDocument = Document & {
+    startViewTransition?: (update: () => void) => unknown;
+};
 
-// Troca o tema com as cores passando de uma para a outra, em vez de piscar. A marca só fica no
-// documento durante a transição, para não deixar movimento nas interações normais.
+// Troca o tema com um crossfade da página inteira (View Transitions): o navegador tira um retrato
+// do tema antigo e funde com o novo na GPU, em vez de transicionar a cor de cada elemento, o que
+// travava em telas cheias (gráfico, tabelas). Sem suporte ou com movimento reduzido, troca direto.
 function applyTheme(resolved: string) {
     const root = document.documentElement;
-    const changing =
-        root.dataset.theme !== undefined && root.dataset.theme !== resolved;
 
-    if (changing && !window.matchMedia(REDUCED_MOTION_QUERY).matches) {
-        root.dataset.themeFade = '';
-        window.clearTimeout(fadeTimer);
-        fadeTimer = window.setTimeout(() => {
-            delete root.dataset.themeFade;
-        }, THEME_FADE_MS);
+    if (root.dataset.theme === resolved) {
+        return;
     }
 
-    root.dataset.theme = resolved;
+    const doc = document as ViewTransitionDocument;
+    const update = () => {
+        root.dataset.theme = resolved;
+    };
+
+    if (
+        root.dataset.theme === undefined ||
+        typeof doc.startViewTransition !== 'function' ||
+        window.matchMedia(REDUCED_MOTION_QUERY).matches
+    ) {
+        update();
+
+        return;
+    }
+
+    doc.startViewTransition(update);
 }
 
 function useThemeOnDocument() {
