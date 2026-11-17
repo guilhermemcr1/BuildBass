@@ -8,15 +8,30 @@
 # (VITE_API_URL vazio) e não há CORS nem subdomínio extra.
 #
 # Variáveis obrigatórias: APP_KEY, APP_URL, DB_PASSWORD (as demais têm padrão).
+#
+# Fuso: os containers rodam em TZ (padrão America/Sao_Paulo), então logs do nginx, do PHP e do
+# MariaDB saem na hora local. O banco continua gravando em UTC (sessão forçada em +00:00) e o
+# painel converte para APP_DISPLAY_TIMEZONE na hora de mostrar.
+#
+# DNS: resolvedores fixos (DNS_PRIMARY/DNS_SECONDARY) para as chamadas externas da API
+# (Turnstile, OpenRouter, SMTP) não dependerem do DNS do host. Nomes internos (api, mariadb)
+# continuam resolvidos pelo DNS embutido do Docker.
+
+x-dns: &dns
+  - ${DNS_PRIMARY:-1.1.1.1}
+  - ${DNS_SECONDARY:-8.8.8.8}
 
 x-api: &api
   build: ./api
   restart: unless-stopped
+  dns: *dns
   depends_on:
     mariadb:
       condition: service_healthy
   environment: &api-env
+    TZ: ${TZ:-America/Sao_Paulo}
     APP_NAME: BuildBass
+    APP_DISPLAY_TIMEZONE: ${APP_DISPLAY_TIMEZONE:-America/Sao_Paulo}
     APP_ENV: production
     APP_DEBUG: "false"
     APP_KEY: "${APP_KEY:?defina APP_KEY}"
@@ -57,6 +72,10 @@ x-api: &api
     OPENROUTER_MODEL: ${OPENROUTER_MODEL:-}
     OPENROUTER_DATA_COLLECTION: ${OPENROUTER_DATA_COLLECTION:-deny}
     AUDIT_RETENTION_DAYS: ${AUDIT_RETENTION_DAYS:-180}
+    # Bloqueio automático de IP após envios suspeitos (anti-robô, validação, limite por hora).
+    ABUSE_MAX_STRIKES: ${ABUSE_MAX_STRIKES:-10}
+    ABUSE_WINDOW_MINUTES: ${ABUSE_WINDOW_MINUTES:-60}
+    ABUSE_BLOCK_MINUTES: ${ABUSE_BLOCK_MINUTES:-360}
 
 services:
   web:
@@ -67,6 +86,9 @@ services:
         VITE_API_URL: ""
         VITE_TURNSTILE_SITE_KEY: ${VITE_TURNSTILE_SITE_KEY:-}
     restart: unless-stopped
+    dns: *dns
+    environment:
+      TZ: ${TZ:-America/Sao_Paulo}
     depends_on:
       - api
     volumes:
@@ -119,6 +141,7 @@ services:
       MARIADB_USER: ${DB_USERNAME:-buildbass}
       MARIADB_PASSWORD: "${DB_PASSWORD:?defina DB_PASSWORD}"
       MARIADB_RANDOM_ROOT_PASSWORD: "yes"
+      TZ: ${TZ:-America/Sao_Paulo}
     volumes:
       - mariadb-data:/var/lib/mysql
     healthcheck:

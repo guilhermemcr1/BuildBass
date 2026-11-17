@@ -5,10 +5,10 @@ FROM serversideup/php:8.4-fpm-nginx
 USER root
 
 # gd (com WebP) converte as imagens dos drivers, intl é exigida pelo Filament,
-# poppler-utils (pdftotext/pdfinfo) lê as fichas técnicas em PDF.
+# poppler-utils (pdftotext/pdfinfo) lê as fichas técnicas em PDF, tzdata faz valer a variável TZ.
 RUN install-php-extensions intl gd pdo_mysql \
     && apt-get update \
-    && apt-get install -y --no-install-recommends poppler-utils \
+    && apt-get install -y --no-install-recommends poppler-utils tzdata \
     && rm -rf /var/lib/apt/lists/*
 
 # Limites de upload: PDF de 10 MB e imagens de 5 MB cada (mesmos valores do serve-local.sh).

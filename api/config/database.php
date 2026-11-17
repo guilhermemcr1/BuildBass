@@ -82,6 +82,8 @@ return [
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
+            // Sessão sempre em UTC, como o app: o TZ do container do banco só muda a hora dos logs.
+            'timezone' => env('DB_TIMEZONE', '+00:00'),
         ],
 
         'pgsql' => [

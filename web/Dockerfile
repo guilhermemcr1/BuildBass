@@ -18,6 +18,8 @@ RUN npm run build \
         -exec gzip -9 -k {} +
 
 FROM nginx:1-alpine
+# tzdata: sem ele o Alpine ignora a variável TZ e os logs do nginx saem em UTC.
+RUN apk add --no-cache tzdata
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY security-headers.conf /etc/nginx/snippets/security-headers.conf
 COPY --from=build /app/dist /usr/share/nginx/html
