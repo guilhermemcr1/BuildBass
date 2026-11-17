@@ -1,0 +1,131 @@
+# BuildBass em produção: um único domínio público.
+#
+#   navegador ──► web (nginx) ─┬─ SPA estática        (/)
+#                              └─ proxy interno ──► api (/api, /up, /moderation, /storage, ...)
+#
+# Só o serviço `web` (porta 80) é exposto; api, scheduler e mariadb ficam na rede interna.
+# Como o front e a API respondem no mesmo domínio, o front chama a API por URL relativa
+# (VITE_API_URL vazio) e não há CORS nem subdomínio extra.
+#
+# Variáveis obrigatórias: APP_KEY, APP_URL, DB_PASSWORD (as demais têm padrão).
+
+x-api: &api
+  build: ./api
+  restart: unless-stopped
+  depends_on:
+    mariadb:
+      condition: service_healthy
+  environment: &api-env
+    APP_NAME: BuildBass
+    APP_ENV: production
+    APP_DEBUG: "false"
+    APP_KEY: "${APP_KEY:?defina APP_KEY}"
+    APP_URL: "${APP_URL:?defina APP_URL, ex. https://meudominio.com.br}"
+    # Mesma origem do front; só importa se um dia o front sair para outro domínio.
+    FRONTEND_URL: ${FRONTEND_URL:-${APP_URL}}
+    LOG_CHANNEL: stderr
+    LOG_LEVEL: ${LOG_LEVEL:-warning}
+
+    DB_CONNECTION: mariadb
+    DB_HOST: mariadb
+    DB_PORT: "3306"
+    DB_DATABASE: ${DB_DATABASE:-buildbass}
+    DB_USERNAME: ${DB_USERNAME:-buildbass}
+    DB_PASSWORD: "${DB_PASSWORD:?defina DB_PASSWORD}"
+
+    # Cache e sessão em arquivo, no volume `storage`: com uma única instância da API não precisa de
+    # Redis nem de escrita no banco a cada requisição, e os contadores de limite (inclusive a cota
+    # diária da leitura de manual) sobrevivem aos deploys. Com várias instâncias, troque por redis.
+    CACHE_STORE: file
+    SESSION_DRIVER: file
+    QUEUE_CONNECTION: ${QUEUE_CONNECTION:-sync}
+
+    MAIL_MAILER: ${MAIL_MAILER:-log}
+    MAIL_HOST: ${MAIL_HOST:-}
+    MAIL_PORT: ${MAIL_PORT:-587}
+    MAIL_USERNAME: ${MAIL_USERNAME:-}
+    MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+    MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-no-reply@localhost}
+
+    TURNSTILE_ENABLED: ${TURNSTILE_ENABLED:-true}
+    TURNSTILE_SECRET: ${TURNSTILE_SECRET:-}
+
+    MANUAL_EXTRACTION_ENABLED: ${MANUAL_EXTRACTION_ENABLED:-false}
+    OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+    OPENROUTER_MODEL: ${OPENROUTER_MODEL:-}
+    OPENROUTER_DATA_COLLECTION: ${OPENROUTER_DATA_COLLECTION:-deny}
+    AUDIT_RETENTION_DAYS: ${AUDIT_RETENTION_DAYS:-180}
+
+services:
+  web:
+    build:
+      context: ./web
+      args:
+        # Vazio de propósito: o front chama /api/... no próprio domínio.
+        VITE_API_URL: ""
+        VITE_TURNSTILE_SITE_KEY: ${VITE_TURNSTILE_SITE_KEY:-}
+    restart: unless-stopped
+    depends_on:
+      - api
+    volumes:
+      # Só leitura: o nginx serve as imagens dos drivers direto do disco, sem passar pelo PHP.
+      - api-storage:/srv/api-storage:ro
+    expose:
+      - "80"
+
+  api:
+    <<: *api
+    environment:
+      <<: *api-env
+      # Migrations ficam por sua conta (terminal do serviço); true migra a cada deploy.
+      AUTORUN_LARAVEL_MIGRATION: ${AUTORUN_LARAVEL_MIGRATION:-false}
+      # Pool do PHP-FPM: ajuste PHP_FPM_PM_MAX_CHILDREN à RAM do servidor (~50 MB por worker).
+      PHP_FPM_PM_CONTROL: dynamic
+      PHP_FPM_PM_MAX_CHILDREN: ${PHP_FPM_PM_MAX_CHILDREN:-10}
+      PHP_FPM_PM_START_SERVERS: "3"
+      PHP_FPM_PM_MIN_SPARE_SERVERS: "2"
+      PHP_FPM_PM_MAX_SPARE_SERVERS: "5"
+      # Recicla o worker de tempos em tempos para conter vazamento de memória.
+      PHP_FPM_PM_MAX_REQUESTS: "500"
+    volumes:
+      # Imagens dos drivers (storage/app/public) precisam sobreviver aos deploys.
+      - api-storage:/var/www/html/storage
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/up >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 40s
+      retries: 3
+
+  # Roda `schedule:run` a cada minuto (audit:prune diário). Mesma imagem da API, sem web server.
+  scheduler:
+    <<: *api
+    command: ["php", "/var/www/html/artisan", "schedule:work"]
+    environment:
+      <<: *api-env
+      AUTORUN_ENABLED: "false"
+
+  mariadb:
+    image: mariadb:11.4
+    restart: unless-stopped
+    # buffer pool: memória para índices/dados em cache (ajuste à RAM; ~25% dela é um bom teto).
+    command: ["--skip-name-resolve", "--innodb-buffer-pool-size=${DB_BUFFER_POOL_SIZE:-256M}"]
+    environment:
+      MARIADB_DATABASE: ${DB_DATABASE:-buildbass}
+      MARIADB_USER: ${DB_USERNAME:-buildbass}
+      MARIADB_PASSWORD: "${DB_PASSWORD:?defina DB_PASSWORD}"
+      MARIADB_RANDOM_ROOT_PASSWORD: "yes"
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 10
+
+volumes:
+  api-storage:
+  mariadb-data:
