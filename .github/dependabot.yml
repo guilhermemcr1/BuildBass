@@ -1,12 +1,23 @@
 version: 2
 updates:
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: "npm"
+    directory: "/web"
     schedule:
       interval: "weekly"
     cooldown:
       default-days: 5
     groups:
-      github-actions:
+      web:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "composer"
+    directory: "/api"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 5
+    groups:
+      api:
         patterns:
           - "*"
