@@ -78,6 +78,37 @@ export function portLength({
     );
 }
 
+// O inverso: a sintonia que um duto de comprimento físico conhecido dá. Com o comprimento fixo o
+// volume dos dutos é n·a·Lv, o líquido sai direto (net = Vb − drivers − n·a·Lv) e
+// Fb = √(c²·n·a / (4π²·(Lv + Δ)·net)). Sem volume líquido, não há sintonia.
+export function tuningForLength({
+    length_m,
+    vb_m3,
+    drivers_m3,
+    area_m2,
+    count,
+    end_factor,
+}: {
+    length_m: number;
+    vb_m3: number;
+    drivers_m3: number;
+    area_m2: number;
+    count: number;
+    end_factor?: number;
+}): number | undefined {
+    const total = count * area_m2;
+    const net = vb_m3 - drivers_m3 - total * length_m;
+    const effective = length_m + endCorrection(area_m2, end_factor);
+
+    if (net <= 0 || effective <= 0 || length_m <= 0) {
+        return undefined;
+    }
+
+    return Math.sqrt(
+        (SPEED_OF_SOUND ** 2 * total) / (4 * Math.PI ** 2 * effective * net),
+    );
+}
+
 type NetInput = {
     vb_m3: number;
     drivers_m3: number;

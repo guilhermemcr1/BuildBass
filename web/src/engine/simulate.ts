@@ -11,6 +11,7 @@ import {
     netVolume as solveNetVolume,
     pipeResonance,
     portArea,
+    tuningForLength,
 } from './port';
 import { twoChambers } from './types';
 import type {
@@ -372,6 +373,60 @@ function levelsOf({ driver, drivers, signal }: ProjectInput): SignalLevels {
     };
 }
 
+// Troca a sintonia gravada pela que a profundidade informada dá (duto frontal e, na 6ª ordem, o
+// traseiro). Na bandpass os drivers ficam na câmara traseira: a frontal só perde o duto.
+export function tunedByLength(
+    box: ProjectInput['box'],
+    drivers_m3: number,
+): ProjectInput['box'] {
+    const band = twoChambers(box.type);
+    const tune = (
+        port: PortInput | undefined,
+        volume: number | undefined,
+        chamberDrivers: number,
+    ): number | undefined => {
+        const area = port === undefined ? undefined : portArea(port);
+
+        if (
+            port?.length_m === undefined ||
+            volume === undefined ||
+            area === undefined
+        ) {
+            return undefined;
+        }
+
+        return tuningForLength({
+            length_m: port.length_m,
+            vb_m3: volume,
+            drivers_m3: chamberDrivers,
+            area_m2: area,
+            count: Math.max(1, Math.round(port.count)),
+            end_factor: endFactor(port),
+        });
+    };
+    let next = box;
+
+    if (box.type !== 'closed' && box.port.length_m !== undefined) {
+        const fb = tune(
+            box.port,
+            band ? box.vf_m3 : box.vb_m3,
+            band ? 0 : drivers_m3,
+        );
+        const { fb_hz: _old, ...rest } = next;
+
+        next = fb === undefined ? rest : { ...rest, fb_hz: fb };
+    }
+
+    if (box.type === 'bandpass6' && box.port_rear?.length_m !== undefined) {
+        const fb = tune(box.port_rear, box.vr_m3, drivers_m3);
+        const { fb_rear_hz: _old, ...rest } = next;
+
+        next = fb === undefined ? rest : { ...rest, fb_rear_hz: fb };
+    }
+
+    return next;
+}
+
 export function simulate(input: ProjectInput): Simulation {
     // Bobina dupla em paralelo: Re, Le e BL vistos dos terminais (voice-coils.ts).
     const project = withVoiceCoils(input);
@@ -384,7 +439,12 @@ export function simulate(input: ProjectInput): Simulation {
         }
     }
 
-    const { box, drivers, signal } = project;
+    const { drivers, signal } = project;
+    // Duto com profundidade informada: a sintonia sai dela.
+    const box = tunedByLength(
+        project.box,
+        Math.max(1, Math.round(drivers.count)) * (values.vd_m3 ?? 0),
+    );
     // Duas câmaras separadas pelo driver: bandpass de 4ª (traseira selada) e de 6ª ordem (as duas
     // dutadas).
     const band = twoChambers(box.type);

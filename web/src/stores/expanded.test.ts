@@ -15,6 +15,7 @@ describe('seções "Mostrar mais" — estado de expansão', () => {
             driverAdvanced: false,
             driverDims: false,
             planAdvanced: false,
+            portAdvanced: false,
         });
     });
 
@@ -25,6 +26,7 @@ describe('seções "Mostrar mais" — estado de expansão', () => {
             driverAdvanced: true,
             driverDims: true,
             planAdvanced: true,
+            portAdvanced: true,
         });
 
         usePreferences.getState().setMode('normal');
@@ -33,6 +35,7 @@ describe('seções "Mostrar mais" — estado de expansão', () => {
             driverAdvanced: false,
             driverDims: false,
             planAdvanced: false,
+            portAdvanced: false,
         });
     });
 
@@ -43,6 +46,7 @@ describe('seções "Mostrar mais" — estado de expansão', () => {
             driverAdvanced: true,
             driverDims: false,
             planAdvanced: false,
+            portAdvanced: false,
         });
 
         useExpanded.getState().toggle('driverAdvanced');
@@ -52,6 +56,7 @@ describe('seções "Mostrar mais" — estado de expansão', () => {
             driverAdvanced: false,
             driverDims: false,
             planAdvanced: true,
+            portAdvanced: false,
         });
         expect(usePreferences.getState().mode).toBe('normal');
     });
@@ -75,6 +80,7 @@ describe('seções "Mostrar mais" — estado de expansão', () => {
             driverAdvanced: true,
             driverDims: true,
             planAdvanced: false,
+            portAdvanced: true,
         });
     });
 });

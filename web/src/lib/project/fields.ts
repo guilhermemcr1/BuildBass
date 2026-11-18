@@ -25,7 +25,7 @@ import type {
 } from './types';
 
 // Onde cada campo da bancada mora dentro do projeto.
-type PortKey = 'diameter_m' | 'width_m' | 'height_m' | 'base_m';
+type PortKey = 'diameter_m' | 'width_m' | 'height_m' | 'base_m' | 'length_m';
 
 const BOX_KEYS = new Set<ParameterKey>([
     'vb_m3',
@@ -61,6 +61,11 @@ const PORT_KEYS = new Set<ParameterKey>([
     'height_m',
     'base_m',
 ]);
+// A profundidade é guardada no duto como `length_m`.
+const PORT_LENGTH_KEYS: Partial<Record<ParameterKey, 'front' | 'rear'>> = {
+    port_length_m: 'front',
+    rear_port_length_m: 'rear',
+};
 // Medidas do duto da câmara traseira (bandpass de 6ª ordem), guardadas em `box.port_rear` com os
 // mesmos nomes do duto frontal.
 const REAR_PORT_KEYS: Partial<Record<ParameterKey, PortKey>> = {
@@ -68,6 +73,7 @@ const REAR_PORT_KEYS: Partial<Record<ParameterKey, PortKey>> = {
     rear_width_m: 'width_m',
     rear_height_m: 'height_m',
     rear_base_m: 'base_m',
+    rear_port_length_m: 'length_m',
 };
 const EMPTY_PORT: PortInput = { shape: 'round', count: 1 };
 
@@ -131,6 +137,10 @@ export function readField(
         return (data.box.port as Partial<Record<PortKey, number>>)[
             key as PortKey
         ];
+    }
+
+    if (PORT_LENGTH_KEYS[key] === 'front') {
+        return data.box.port.length_m;
     }
 
     const rearKey = REAR_PORT_KEYS[key];
@@ -549,6 +559,16 @@ export function writeField(
         return {
             ...data,
             box: { ...data.box, port: withField(data.box.port, key, si) },
+        };
+    }
+
+    if (PORT_LENGTH_KEYS[key] === 'front') {
+        return {
+            ...data,
+            box: {
+                ...data.box,
+                port: withField(data.box.port, 'length_m', si),
+            },
         };
     }
 

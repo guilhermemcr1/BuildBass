@@ -2,10 +2,13 @@ import { useTranslation } from 'react-i18next';
 import { ParameterField } from '@/components/ui/parameter-field';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { SelectField } from '@/components/ui/select-field';
+import { ShowMore } from '@/components/ui/show-more';
 import { twoChambers } from '@/engine';
-import type { PortEnd, PortInput } from '@/engine';
+import type { PortEnd, PortInput, PortMount } from '@/engine';
+import { cornerMount } from '@/cutplan/plan';
 import { useActiveProject } from '@/hooks/use-active-project';
-import { PortPlacementFields } from './port-placement';
+import { PortDepthField } from './port-depth';
+import { PortPlacementField } from './port-placement';
 import { useParameterField } from './use-parameter-field';
 
 type PortShape = PortInput['shape'];
@@ -45,11 +48,9 @@ function reshape(port: PortInput, shape: PortShape): PortInput {
         ...(port.end === undefined ? {} : { end: port.end }),
         ...(port.end_k === undefined ? {} : { end_k: port.end_k }),
         // A posição no painel também não depende do formato.
+        ...(port.mount === undefined ? {} : { mount: port.mount }),
         ...(port.placement === undefined ? {} : { placement: port.placement }),
         ...(port.rotation === undefined ? {} : { rotation: port.rotation }),
-        ...(port.against_wall === undefined
-            ? {}
-            : { against_wall: port.against_wall }),
     };
 
     switch (shape) {
@@ -86,6 +87,7 @@ export function PortFields({ duct = 'front' }: Props) {
     const count = useParameterField(rear ? 'rear_port_count' : 'port_count');
     const factor = useParameterField(rear ? 'rear_end_k' : 'end_k');
     const end = port.end ?? 'flangedFree';
+    const corners = cornerMount(port);
     const title = rear
         ? 'port.titleRear'
         : chambered
@@ -93,7 +95,7 @@ export function PortFields({ duct = 'front' }: Props) {
           : 'port.title';
 
     return (
-        <fieldset className="flex flex-col gap-2">
+        <fieldset className="flex flex-col gap-2.5">
             <legend className="mb-1.5 text-xs font-semibold text-muted">
                 {t(title)}
             </legend>
@@ -113,52 +115,81 @@ export function PortFields({ duct = 'front' }: Props) {
                 size="sm"
                 className="w-full"
             />
-            <div className="grid grid-cols-2 items-start gap-x-3 gap-y-2">
-                {port.shape === 'round' && <ParameterField {...diameter} />}
+            {port.shape === 'triangle' && (
+                <SelectField<PortMount>
+                    label={t('port.mount')}
+                    selected={port.mount ?? 'corners'}
+                    onChange={(mount) => setPort({ ...port, mount })}
+                    options={(['corners', 'free'] as const).map((id) => ({
+                        id,
+                        label: t(`port.mount_${id}`),
+                    }))}
+                />
+            )}
+            {/* Seção do recorte e quantidade lado a lado, cada campo com o nome em cima. */}
+            <div className="grid grid-cols-3 items-start gap-2">
+                {port.shape === 'round' && (
+                    <ParameterField
+                        {...diameter}
+                        layout="stacked"
+                        className="col-span-2"
+                    />
+                )}
                 {port.shape === 'rect' && (
                     <>
-                        <ParameterField {...width} />
-                        <ParameterField {...height} />
+                        <ParameterField {...width} layout="compact" />
+                        <ParameterField {...height} layout="compact" />
                     </>
                 )}
                 {port.shape === 'triangle' && (
                     <>
-                        <ParameterField {...base} />
-                        <ParameterField {...height} />
+                        <ParameterField {...base} layout="compact" />
+                        <ParameterField {...height} layout="compact" />
                     </>
                 )}
-                <ParameterField
-                    {...count}
-                    layout="row"
-                    className="col-span-2"
-                />
+                <ParameterField {...count} layout="stacked" />
             </div>
-            <div className="grid grid-cols-2 items-start gap-x-3 gap-y-2">
-                <SelectField<PortEnd>
-                    label={t('port.end')}
-                    help={{
-                        content: t('port.endHelp'),
-                        label: t('common:help.of', {
-                            parameter: t('port.end'),
-                        }),
-                    }}
-                    selected={end}
-                    onChange={(id) => setPort(withEnd(port, id))}
-                    options={ENDS.map((id) => ({
-                        id,
-                        label: t(`port.end_${id}`),
-                    }))}
-                    // Os rótulos são longos: o select ocupa a linha toda e o fator da opção
-                    // personalizada vem logo abaixo.
-                    className="col-span-2"
+            {corners && (
+                <p className="text-[11px] leading-4 text-muted">
+                    {t('port.cornersHint')}
+                </p>
+            )}
+            {port.shape === 'triangle' &&
+                port.mount !== 'free' &&
+                Math.round(port.count) > 4 && (
+                    <p className="text-[11px] leading-4 text-muted">
+                        {t('port.cornersTooMany')}
+                    </p>
+                )}
+            {/* Nos cantos a posição já está definida. */}
+            {!corners && (
+                <PortPlacementField
+                    port={port}
+                    setPort={setPort}
+                    piece={rear ? 'back' : 'front'}
                 />
-                {end === 'custom' && <ParameterField {...factor} />}
-            </div>
-            <PortPlacementFields
-                port={port}
-                setPort={setPort}
-                piece={rear ? 'back' : 'front'}
-            />
+            )}
+            <PortDepthField port={port} rear={rear} />
+            <ShowMore id="portAdvanced" title={t('port.more')}>
+                <div className="flex flex-col gap-2">
+                    <SelectField<PortEnd>
+                        label={t('port.end')}
+                        help={{
+                            content: t('port.endHelp'),
+                            label: t('common:help.of', {
+                                parameter: t('port.end'),
+                            }),
+                        }}
+                        selected={end}
+                        onChange={(id) => setPort(withEnd(port, id))}
+                        options={ENDS.map((id) => ({
+                            id,
+                            label: t(`port.end_${id}`),
+                        }))}
+                    />
+                    {end === 'custom' && <ParameterField {...factor} />}
+                </div>
+            </ShowMore>
         </fieldset>
     );
 }

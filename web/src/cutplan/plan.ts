@@ -7,10 +7,11 @@ import type {
 } from '@/engine';
 import { portArea, twoChambers } from '@/engine';
 import { validateResolved } from './config';
-import { checkCutouts, layoutEdge } from './layout';
+import { checkCutouts, layoutEdge, trianglePoints } from './layout';
 import type { CutoutIssue, EdgeOptions } from './layout';
 import type { LayoutItem } from './layout';
 import type {
+    CornerId,
     CutPlan,
     ChamberCheck,
     Cutout,
@@ -67,7 +68,26 @@ type PortMeasure = LayoutItem & {
     pending: PlanKey[];
     // Giro do recorte; `w_m`/`h_m` já são a extensão no painel, depois do giro.
     rotation?: Cutout['rotation_deg'];
+    // Triangular de canto: o canto da caixa em que este duto encaixa.
+    corner?: CornerId;
 };
+
+// Ordem em que os dutos de canto ocupam os cantos: os de baixo primeiro.
+const CORNERS: CornerId[] = [
+    'bottomLeft',
+    'bottomRight',
+    'topLeft',
+    'topRight',
+];
+
+// Triangular de canto: é o padrão do triangular e vale até um duto por canto.
+export function cornerMount(port: PortInput): boolean {
+    return (
+        port.shape === 'triangle' &&
+        port.mount !== 'free' &&
+        Math.round(port.count) <= CORNERS.length
+    );
+}
 
 function portCutouts(port: PortInput): PortMeasure[] {
     const count = Math.max(0, Math.round(port.count));
@@ -118,6 +138,15 @@ function portCutouts(port: PortInput): PortMeasure[] {
         ? { ...one, w_m: one.h_m, h_m: one.w_m }
         : one;
 
+    // Nos cantos, base e altura são os catetos (horizontal e vertical) e não há giro.
+    if (cornerMount(port)) {
+        return Array.from({ length: count }, (_, index) => ({
+            ...one,
+            pending: [...one.pending],
+            corner: CORNERS[index],
+        }));
+    }
+
     // O retangular girado é só largura e altura trocadas; o triangular guarda o giro.
     if (port.shape === 'triangle' && rotation !== 0) {
         placed.rotation = rotation;
@@ -164,6 +193,9 @@ function cutoutOf(
             if (measure.rotation !== undefined) {
                 cutout.rotation_deg = measure.rotation;
             }
+            if (measure.corner !== undefined) {
+                cutout.corner = measure.corner;
+            }
             break;
         }
     }
@@ -200,6 +232,16 @@ const EDGE_OPTIONS: Record<PortPlacement, EdgeOptions> = {
     topRight: { side: 'top', align: 'end' },
 };
 
+export const DEFAULT_PLACEMENT: PortPlacement = 'bottomRight';
+
+// Cantos com duto em pé: encostado na lateral, a partir de baixo (ou de cima).
+const TALL_EDGE_OPTIONS: Partial<Record<PortPlacement, EdgeOptions>> = {
+    bottomLeft: { side: 'left', align: 'start' },
+    bottomRight: { side: 'right', align: 'start' },
+    topLeft: { side: 'left', align: 'end' },
+    topRight: { side: 'right', align: 'end' },
+};
+
 // Posiciona os recortes de uma peça (drivers antes dos dutos). Os que têm posição manual gravada e
 // medida conhecida usam o centro gravado; os demais seguem a fila única automática, montada só com
 // eles. `n` conta dentro do tipo, a partir de 1.
@@ -209,7 +251,7 @@ export function placeCutouts(
     web_m: number,
     piece: CutoutPiece = 'front',
     positions: CutoutPosition[] = [],
-    portLayout: Pick<PortInput, 'placement' | 'against_wall'> = {},
+    portLayout: Pick<PortInput, 'placement'> = {},
 ): PlacedCutouts {
     const seen = { driver: 0, port: 0 };
     const entries = measures.map(({ kind, measure }) => {
@@ -231,9 +273,44 @@ export function placeCutouts(
                     : undefined,
         };
     });
-    const queue = entries.filter(({ manual }) => manual === undefined);
-    const placement = portLayout.placement ?? 'auto';
-    // Automático: só retangular e triangular vão para a borda; o redondo segue a fila única.
+    // Dutos de canto: o ângulo reto fica no canto interno da caixa (a uma espessura da borda do
+    // painel), com os catetos rentes às paredes. Os alto-falantes seguem a fila, centralizados.
+    const cornerCenter = (
+        measure: PortMeasure,
+    ): { x_m: number; y_m: number } | undefined => {
+        if (
+            measure.corner === undefined ||
+            measure.w_m === undefined ||
+            measure.h_m === undefined
+        ) {
+            return undefined;
+        }
+
+        const left = measure.corner.endsWith('Left');
+        const bottom = measure.corner.startsWith('bottom');
+
+        return {
+            x_m: left
+                ? web_m + measure.w_m / 2
+                : panel.w_m - web_m - measure.w_m / 2,
+            y_m: bottom
+                ? web_m + measure.h_m / 2
+                : panel.h_m - web_m - measure.h_m / 2,
+        };
+    };
+    const queue = entries.filter(
+        ({ manual, measure }) =>
+            manual === undefined && measure.corner === undefined,
+    );
+    // Padrão: canto inferior direito. `auto` (em fila) põe o redondo na fila do alto-falante e os
+    // demais numa extremidade.
+    const placement = portLayout.placement ?? DEFAULT_PLACEMENT;
+    // No canto, duto mais alto que largo (slot em pé) corre pela lateral; senão, pela base/topo.
+    const firstPort = queue.find(({ kind }) => kind === 'port')?.measure;
+    const tall =
+        firstPort?.w_m !== undefined &&
+        firstPort.h_m !== undefined &&
+        firstPort.h_m > firstPort.w_m;
     const layout = layoutEdge(
         panel,
         queue.map(({ measure }) => measure),
@@ -243,7 +320,8 @@ export function placeCutouts(
                 (placement !== 'auto' || measure.shape !== 'round'),
         ),
         web_m,
-        { ...EDGE_OPTIONS[placement], againstWall: portLayout.against_wall },
+        (tall ? TALL_EDGE_OPTIONS[placement] : undefined) ??
+            EDGE_OPTIONS[placement],
     );
     const cutouts = entries.map((entry) => {
         if (entry.manual !== undefined) {
@@ -251,6 +329,17 @@ export function placeCutouts(
                 ...cutoutOf(entry.kind, entry.measure, entry.manual),
                 ref: entry.ref,
                 manual: true as const,
+            };
+        }
+
+        if (entry.measure.corner !== undefined) {
+            return {
+                ...cutoutOf(
+                    entry.kind,
+                    entry.measure,
+                    cornerCenter(entry.measure),
+                ),
+                ref: entry.ref,
             };
         }
 
@@ -264,14 +353,121 @@ export function placeCutouts(
         };
     });
     const manual = cutouts.some((cutout) => cutout.manual === true);
+    // Cateto maior que o vão interno: o duto de canto não cabe.
+    const cornerTooBig = entries.some(
+        ({ measure }) =>
+            measure.corner !== undefined &&
+            ((measure.w_m ?? 0) > panel.w_m - 2 * web_m ||
+                (measure.h_m ?? 0) > panel.h_m - 2 * web_m),
+    );
 
     return {
         cutouts,
         doNotFit: layout.doNotFit,
         tight: layout.tight,
-        tooBig: layout.tooBig,
-        issues: manual ? checkCutouts(panel, cutouts, web_m) : [],
+        tooBig: layout.tooBig || cornerTooBig,
+        issues: [
+            ...(manual ? checkCutouts(panel, cutouts, web_m) : []),
+            ...cornerClashes(cutouts, web_m),
+        ],
     };
+}
+
+// Tábuas diagonais dos dutos de canto: uma por duto, com a largura da hipotenusa (face de dentro;
+// as bordas são chanfradas no ângulo dos catetos) e o comprimento do duto, limitado ao vão entre a
+// frente e o fundo. Sem o comprimento do duto, ainda não há o que cortar.
+function cornerBoards(
+    cutouts: Cutout[],
+    length_m: number | undefined,
+    between_m: number,
+    thickness_m: number,
+): Piece[] {
+    const corners = cutouts.filter(
+        (cutout) =>
+            cutout.corner !== undefined &&
+            cutout.base_m !== undefined &&
+            cutout.height_m !== undefined,
+    );
+
+    if (corners.length === 0 || length_m === undefined || length_m <= 0) {
+        return [];
+    }
+
+    const first = corners[0]!;
+
+    return [
+        {
+            role: 'portBoard',
+            quantity: corners.length,
+            w_m: Math.hypot(first.base_m!, first.height_m!),
+            h_m: Math.min(length_m, between_m),
+            thickness_m,
+            cutouts: [],
+        },
+    ];
+}
+
+// Duto de canto que chega a menos de `web_m` do furo redondo de um alto-falante: medido pelo
+// triângulo de verdade (a caixa que o envolve acusaria encostos que não existem).
+function cornerClashes(cutouts: Cutout[], web_m: number): CutoutIssue[] {
+    const issues: CutoutIssue[] = [];
+
+    for (const port of cutouts) {
+        if (
+            port.corner === undefined ||
+            port.center === undefined ||
+            port.ref === undefined ||
+            port.base_m === undefined ||
+            port.height_m === undefined
+        ) {
+            continue;
+        }
+
+        const points = trianglePoints(
+            port.center.x_m,
+            port.center.y_m,
+            port.base_m,
+            port.height_m,
+            0,
+            port.corner,
+        );
+
+        for (const driver of cutouts) {
+            if (
+                driver.kind !== 'driver' ||
+                driver.shape !== 'round' ||
+                driver.center === undefined ||
+                driver.diameter_m === undefined
+            ) {
+                continue;
+            }
+
+            const { x_m: px, y_m: py } = driver.center;
+            const distance = Math.min(
+                ...points.map(([ax, ay], index) => {
+                    const [bx, by] = points[(index + 1) % points.length]!;
+                    const [dx, dy] = [bx - ax, by - ay];
+                    const k = Math.max(
+                        0,
+                        Math.min(
+                            1,
+                            ((px - ax) * dx + (py - ay) * dy) /
+                                (dx * dx + dy * dy),
+                        ),
+                    );
+
+                    return Math.hypot(px - (ax + k * dx), py - (ay + k * dy));
+                }),
+            );
+
+            if (distance < driver.diameter_m / 2 + web_m) {
+                issues.push({ ref: port.ref, id: 'cutoutOverlap' });
+                break;
+            }
+        }
+    }
+
+    return issues;
 }
 
 // Recorte do driver: redondo (Ø C), quadrado (C × C) ou retangular (C × D), conforme o formato.
@@ -507,6 +703,7 @@ export function buildCutPlan(
                       cutouts: divider.cutouts,
                   }),
               ]),
+        ...cornerBoards(front.cutouts, results.port_length_m, between, t),
     ];
 
     const portLength = results.port_length_m;

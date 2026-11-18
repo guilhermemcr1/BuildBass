@@ -21,6 +21,7 @@ const LABELS: CsvFormat['labels'] = {
         bottom: 'Base',
         side: 'Lateral',
         divider: 'Divisória',
+        portBoard: 'Tábua do duto',
     },
     positions: {
         front: 'Painel da frente',
@@ -29,6 +30,7 @@ const LABELS: CsvFormat['labels'] = {
         bottom: 'Face de baixo',
         side: 'Lados esquerdo e direito',
         divider: 'Entre as câmaras',
+        portBoard: 'Diagonal no canto',
     },
     dimensions: {
         title: 'Dimensões',

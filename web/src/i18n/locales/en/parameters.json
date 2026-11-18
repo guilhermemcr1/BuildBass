@@ -222,5 +222,13 @@
     "rear_end_k": {
         "label": "End-correction factor (rear)",
         "help": "Total end correction of the rear port, in multiples of the radius of the circle with the same area. 1.463 is flanged + free."
+    },
+    "port_length_m": {
+        "label": "Port depth",
+        "help": "Physical length of each port, from the opening to its end inside the box. When entered, the tuning (Fb) is calculated from it."
+    },
+    "rear_port_length_m": {
+        "label": "Rear port depth",
+        "help": "Physical length of each rear-chamber port. When entered, the rear tuning is calculated from it."
     }
 }

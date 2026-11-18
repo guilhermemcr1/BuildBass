@@ -66,7 +66,8 @@
             "top": "Top",
             "bottom": "Bottom",
             "side": "Side",
-            "divider": "Divider"
+            "divider": "Divider",
+            "portBoard": "Port board"
         },
         "positions": {
             "front": "Front panel",
@@ -74,7 +75,8 @@
             "top": "Upper face",
             "bottom": "Lower face",
             "side": "Left and right sides",
-            "divider": "Between the chambers"
+            "divider": "Between the chambers",
+            "portBoard": "Diagonal in each corner, closing the triangular port (bevelled edges)"
         },
         "convention": "Assembly convention: front and back cover the whole face; top and bottom sit between front and back, at full width; the sides sit between top, bottom, front and back. No saw kerf, rabbets or joints.",
         "none": "—",

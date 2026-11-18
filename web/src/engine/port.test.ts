@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vite-plus/test';
 import { SPEED_OF_SOUND } from './constants';
-import { netVolume, portArea, portLength } from './port';
+import { netVolume, portArea, portLength, tuningForLength } from './port';
 
 const ROUND_AREA = (Math.PI * 0.1 ** 2) / 4;
 
@@ -127,5 +127,34 @@ describe('netVolume', () => {
         });
 
         expect(result.net_m3).toBeLessThanOrEqual(0);
+    });
+});
+
+describe('tuningForLength — sintonia a partir da profundidade', () => {
+    test('é o inverso de netVolume: o comprimento de uma Fb devolve a mesma Fb', () => {
+        const base = {
+            vb_m3: 0.06,
+            drivers_m3: 0.002,
+            area_m2: 0.005,
+            count: 2,
+            end_factor: 0.732,
+        };
+        const solved = netVolume({ ...base, fb_hz: 35 });
+
+        expect(
+            tuningForLength({ ...base, length_m: solved.length_m }),
+        ).toBeCloseTo(35, 6);
+    });
+
+    test('duto que ocupa a caixa toda não tem sintonia', () => {
+        expect(
+            tuningForLength({
+                length_m: 10,
+                vb_m3: 0.06,
+                drivers_m3: 0,
+                area_m2: 0.01,
+                count: 1,
+            }),
+        ).toBeUndefined();
     });
 });

@@ -41,6 +41,8 @@ const ends = {
         .enum(['flangedFree', 'free', 'flanged', 'slotWall', 'custom'])
         .optional(),
     end_k: range('end_k').optional(),
+    length_m: range('port_length_m').optional(),
+    mount: z.enum(['corners', 'free']).optional(),
     placement: z
         .enum([
             'auto',

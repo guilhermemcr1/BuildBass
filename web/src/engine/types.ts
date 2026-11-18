@@ -63,11 +63,19 @@ export type PortPlacement =
 
 export type PortRotation = 0 | 90 | 180 | 270;
 
+// Montagem do triangular: `corners` (padrão) encaixa um triângulo retângulo em cada canto, com os
+// catetos nas paredes e uma tábua diagonal; `free` é o recorte solto, posicionado pela grade.
+export type PortMount = 'corners' | 'free';
+
 type PortLayout = {
+    // Profundidade (comprimento físico) informada: a sintonia passa a sair dela (`tuningForLength`)
+    // e o `fb_hz` gravado é ignorado. Ausente = o comprimento sai da sintonia.
+    length_m?: number;
+    mount?: PortMount;
     placement?: PortPlacement;
     // Giro do recorte no sentido anti-horário (retangular e triangular).
     rotation?: PortRotation;
-    // Encostado na parede: sem a folga da madeira do lado da borda (e dos lados, no canto).
+    // Obsoleto (a folga padrão já deixa o duto rente à parede); lido e ignorado.
     against_wall?: boolean;
 };
 

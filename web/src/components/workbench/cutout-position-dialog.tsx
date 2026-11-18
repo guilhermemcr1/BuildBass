@@ -93,6 +93,7 @@ function CutoutMark({
                     (cutout.base_m ?? 0) * MM,
                     (cutout.height_m ?? 0) * MM,
                     cutout.rotation_deg,
+                    cutout.corner,
                 )}
                 className={className}
                 strokeWidth={stroke}

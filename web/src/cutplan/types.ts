@@ -118,7 +118,9 @@ export type PieceRole =
     | 'top'
     | 'bottom'
     | 'side'
-    | 'divider';
+    | 'divider'
+    // Tábua diagonal que fecha o duto triangular de canto.
+    | 'portBoard';
 
 // Uma unidade de uma peça (a lateral tem 2) e onde ela foi parar numa chapa.
 export type PieceRef = { role: PieceRole; unit: number };
@@ -132,6 +134,8 @@ export type Placement = PieceRef & {
     h_m: number;
     rotated: boolean;
 };
+
+export type CornerId = 'bottomLeft' | 'bottomRight' | 'topLeft' | 'topRight';
 
 export type Cutout = {
     kind: 'driver' | 'port';
@@ -149,6 +153,9 @@ export type Cutout = {
     base_m?: number;
     // Giro anti-horário do triangular (o retangular girado já troca largura e altura).
     rotation_deg?: 90 | 180 | 270;
+    // Triangular montado no canto: triângulo retângulo com o ângulo reto neste canto da caixa e os
+    // catetos (base na horizontal, altura na vertical) encostados nas paredes.
+    corner?: CornerId;
     // Origem no canto inferior esquerdo da peça.
     center?: { x_m: number; y_m: number };
     // O que falta para medir ou posicionar.

@@ -34,6 +34,8 @@ export type ParameterKey =
     | 'rear_width_m'
     | 'rear_height_m'
     | 'rear_base_m'
+    | 'port_length_m'
+    | 'rear_port_length_m'
     | 'port_count'
     | 'rear_port_count'
     | 'end_k'
@@ -130,6 +132,16 @@ export const PARAMETERS: Record<ParameterKey, ParameterDefinition> = {
     rear_width_m: parameter('rear_width_m', 'W', 'length', 'port', 0.005, 2),
     rear_height_m: parameter('rear_height_m', 'H', 'length', 'port', 0.005, 2),
     rear_base_m: parameter('rear_base_m', 'B', 'length', 'port', 0.005, 2),
+    // Profundidade do duto informada (comprimento físico): a sintonia sai dela.
+    port_length_m: parameter('port_length_m', 'Lv', 'length', 'port', 0.01, 5),
+    rear_port_length_m: parameter(
+        'rear_port_length_m',
+        'Lv',
+        'length',
+        'port',
+        0.01,
+        5,
+    ),
     port_count: parameter('port_count', 'n', 'count', 'port', 1, 8),
     rear_port_count: parameter('rear_port_count', 'n', 'count', 'port', 1, 8),
     // Correção de ponta personalizada: fator sobre o raio do círculo de mesma área (VituixCAD aceita
@@ -283,6 +295,8 @@ export const EXAMPLES: Record<ParameterKey, number> = {
     rear_width_m: 0.1,
     rear_height_m: 0.05,
     rear_base_m: 0.1,
+    port_length_m: 0.3,
+    rear_port_length_m: 0.3,
     port_count: 1,
     rear_port_count: 1,
     end_k: 1.463,
@@ -338,12 +352,17 @@ export const ESSENTIAL_DRIVER_PARAMETERS: ParameterKey[] =
     );
 
 // Seções recolhíveis da bancada ("Mostrar mais").
-export type SectionId = 'driverAdvanced' | 'driverDims' | 'planAdvanced';
+export type SectionId =
+    | 'driverAdvanced'
+    | 'driverDims'
+    | 'planAdvanced'
+    | 'portAdvanced';
 
 export const SECTION_IDS: SectionId[] = [
     'driverAdvanced',
     'driverDims',
     'planAdvanced',
+    'portAdvanced',
 ];
 
 // Medidas físicas do alto-falante, na seção "Dimensões" do Driver: A, B, D, E, F, G e o volume do

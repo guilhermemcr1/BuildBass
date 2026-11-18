@@ -4,6 +4,7 @@ import { ParameterField } from '@/components/ui/parameter-field';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { SliderField } from '@/components/ui/slider-field';
 import { useActiveProject } from '@/hooks/use-active-project';
+import { simulationOf } from '@/hooks/use-simulation';
 import { useWorkspace } from '@/stores/workspace';
 import type { BoxType } from '@/lib/project/types';
 import { BoxShape } from './box-shape';
@@ -17,6 +18,33 @@ import { useParameterField } from './use-parameter-field';
 const VB_SLIDER = { minSi: 0.001, maxSi: 0.3, scale: 'linear' } as const;
 const FB_SLIDER = { minSi: 10, maxSi: 200, scale: 'log' } as const;
 
+// Sintonia do duto: com a profundidade informada, a Fb sai dela e o campo só mostra o valor.
+function useTuningField(key: 'fb_hz' | 'fb_rear_hz') {
+    const { t } = useTranslation('workbench');
+    const field = useParameterField(key);
+    const rear = key === 'fb_rear_hz';
+    const byLength = useActiveProject(
+        (state) =>
+            (rear ? state.data.box.port_rear : state.data.box.port)
+                ?.length_m !== undefined,
+    );
+    const derived = useActiveProject(
+        (state) => simulationOf(state.data).results[key],
+    );
+
+    if (!byLength) {
+        return field;
+    }
+
+    return {
+        ...field,
+        valueSi: derived,
+        disabled: true,
+        calculatedLabel: t('port.fbFromDepth'),
+        onChangeSi: () => undefined,
+    };
+}
+
 // Tipo de caixa e os campos de cada tipo; vale tanto no painel quanto no modal da caixa.
 export function BoxFields() {
     const { t } = useTranslation('workbench');
@@ -27,8 +55,8 @@ export function BoxFields() {
     const volume = useParameterField('vb_m3');
     const rear = useParameterField('vr_m3');
     const front = useParameterField('vf_m3');
-    const tuning = useParameterField('fb_hz');
-    const rearTuning = useParameterField('fb_rear_hz');
+    const tuning = useTuningField('fb_hz');
+    const rearTuning = useTuningField('fb_rear_hz');
     const losses = useParameterField('ql');
 
     return (

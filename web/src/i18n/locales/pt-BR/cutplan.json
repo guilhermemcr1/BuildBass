@@ -66,7 +66,8 @@
             "top": "Topo",
             "bottom": "Base",
             "side": "Lateral",
-            "divider": "Divisória"
+            "divider": "Divisória",
+            "portBoard": "Tábua do duto"
         },
         "positions": {
             "front": "Painel da frente",
@@ -74,7 +75,8 @@
             "top": "Face de cima",
             "bottom": "Face de baixo",
             "side": "Lados esquerdo e direito",
-            "divider": "Entre as câmaras"
+            "divider": "Entre as câmaras",
+            "portBoard": "Diagonal em cada canto, fechando o duto triangular (bordas chanfradas)"
         },
         "convention": "Convenção de montagem: frente e fundo cobrem a face inteira; topo e base ficam entre a frente e o fundo, com a largura total; as laterais ficam entre o topo, a base, a frente e o fundo. Sem perdas de serra, rebaixos ou encaixes.",
         "none": "—",

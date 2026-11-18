@@ -310,7 +310,7 @@ describe('layoutEdge — borda, canto e parede escolhidos', () => {
         expect(centers[1]!.x_m).toBeCloseTo(0.34 - 0.018 - 0.04);
     });
 
-    test('canto inferior esquerdo colado na parede: sem folga nos dois lados', () => {
+    test('canto inferior esquerdo: rente às paredes internas (folga da madeira)', () => {
         const { centers } = layoutEdge(
             panel,
             [driver, tri],
@@ -319,11 +319,11 @@ describe('layoutEdge — borda, canto e parede escolhidos', () => {
             {
                 side: 'bottom',
                 align: 'start',
-                againstWall: true,
             },
         );
 
-        expect(centers[1]).toEqual({ x_m: 0.04, y_m: 0.035 });
+        expect(centers[1]!.x_m).toBeCloseTo(0.018 + 0.04);
+        expect(centers[1]!.y_m).toBeCloseTo(0.018 + 0.035);
     });
 
     test('canto inferior direito: dois dutos encostados no fim da borda', () => {

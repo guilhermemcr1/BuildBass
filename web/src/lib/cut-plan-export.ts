@@ -8,7 +8,15 @@ import { formatWithUnit } from '@/lib/units/format';
 import { defaultUnitFor, findUnit } from '@/lib/units/quantities';
 import type { UnitSystem } from '@/lib/units/quantities';
 
-const ROLES = ['front', 'back', 'top', 'bottom', 'side', 'divider'] as const;
+const ROLES = [
+    'front',
+    'back',
+    'top',
+    'bottom',
+    'side',
+    'divider',
+    'portBoard',
+] as const;
 const CHAMBERS = ['main', 'rear', 'front'] as const;
 const TOTALS = [
     'title',

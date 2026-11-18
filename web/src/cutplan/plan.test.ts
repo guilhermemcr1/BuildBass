@@ -1186,3 +1186,95 @@ describe('posição manual dos recortes', () => {
         expect(moved.volume).toEqual(auto.volume);
     });
 });
+
+describe('duto triangular nos cantos', () => {
+    const corners = (count: number, mount?: 'corners' | 'free') =>
+        project({
+            type: 'vented',
+            fb_hz: 35,
+            port: {
+                shape: 'triangle',
+                base_m: 0.1,
+                height_m: 0.07,
+                count,
+                ...(mount === undefined ? {} : { mount }),
+            },
+        });
+
+    test('o padrão encaixa um triângulo retângulo por canto, rente às paredes', () => {
+        const plan = ready(corners(4), { cutout_m: 0.2 });
+        const front = plan.pieces.find(({ role }) => role === 'front')!;
+        const ports = front.cutouts.filter(({ kind }) => kind === 'port');
+        const t = front.thickness_m;
+        const { w_m, h_m } = front;
+
+        expect(ports.map(({ corner }) => corner)).toEqual([
+            'bottomLeft',
+            'bottomRight',
+            'topLeft',
+            'topRight',
+        ]);
+        expect(ports[0]!.center!.x_m).toBeCloseTo(t + 0.05);
+        expect(ports[0]!.center!.y_m).toBeCloseTo(t + 0.035);
+        expect(ports[3]!.center!.x_m).toBeCloseTo(w_m - t - 0.05);
+        expect(ports[3]!.center!.y_m).toBeCloseTo(h_m - t - 0.035);
+    });
+
+    test('o alto-falante fica no centro do painel', () => {
+        const plan = ready(corners(4), { cutout_m: 0.2 });
+        const front = plan.pieces.find(({ role }) => role === 'front')!;
+        const driver = front.cutouts.find(({ kind }) => kind === 'driver')!;
+
+        expect(driver.center!.x_m).toBeCloseTo(front.w_m / 2);
+        expect(driver.center!.y_m).toBeCloseTo(front.h_m / 2);
+    });
+
+    test('cada duto ganha uma tábua diagonal com a hipotenusa e o comprimento do duto', () => {
+        const input = corners(2);
+        const plan = ready(input, { cutout_m: 0.2 });
+        const board = plan.pieces.find(({ role }) => role === 'portBoard')!;
+
+        expect(board.quantity).toBe(2);
+        expect(board.w_m).toBeCloseTo(Math.hypot(0.1, 0.07));
+        expect(board.h_m).toBeCloseTo(
+            Math.min(
+                simulate(input).results.port_length_m!,
+                plan.dimensions.external.d_m - 2 * board.thickness_m,
+            ),
+        );
+    });
+
+    test('solto ou com mais de 4 dutos não há canto nem tábua', () => {
+        for (const input of [corners(2, 'free'), corners(5)]) {
+            const plan = ready(input, { cutout_m: 0.2 });
+
+            expect(plan.pieces.some(({ role }) => role === 'portBoard')).toBe(
+                false,
+            );
+            expect(
+                plan.pieces
+                    .flatMap(({ cutouts }) => cutouts)
+                    .some(({ corner }) => corner !== undefined),
+            ).toBe(false);
+        }
+    });
+
+    test('duto de canto que invade o alto-falante acusa encosto', () => {
+        const input = project({
+            type: 'vented',
+            fb_hz: 35,
+            port: { shape: 'triangle', base_m: 0.3, height_m: 0.4, count: 1 },
+        });
+        const plan = ready(input, { cutout_m: 0.3 });
+
+        expect(plan.warnings.some(({ id }) => id === 'cutoutOverlap')).toBe(
+            true,
+        );
+        // Com catetos pequenos o triângulo fica longe do furo.
+        expect(
+            ready(corners(4), { cutout_m: 0.3 }).warnings.some(
+                ({ id }) => id === 'cutoutOverlap',
+            ),
+        ).toBe(false);
+    });
+});

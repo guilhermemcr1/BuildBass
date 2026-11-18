@@ -113,7 +113,14 @@ function CutoutShape({
             text = `${format(cutout.base_m ?? 0)} × ${format(cutout.height_m ?? 0)}`;
             shape = (
                 <polygon
-                    points={svgTriangle(cx, cy, b, h, cutout.rotation_deg)}
+                    points={svgTriangle(
+                        cx,
+                        cy,
+                        b,
+                        h,
+                        cutout.rotation_deg,
+                        cutout.corner,
+                    )}
                     className={fill}
                     strokeWidth={size * 0.12}
                 />

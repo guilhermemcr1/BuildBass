@@ -222,5 +222,13 @@
     "rear_end_k": {
         "label": "Fator da correção de ponta (traseiro)",
         "help": "Correção de ponta total do duto traseiro, em múltiplos do raio do círculo de mesma área. 1,463 é flangeada + livre."
+    },
+    "port_length_m": {
+        "label": "Profundidade do duto",
+        "help": "Comprimento físico de cada duto, da abertura até o fim dentro da caixa. Informada, a sintonia (Fb) passa a ser calculada a partir dela."
+    },
+    "rear_port_length_m": {
+        "label": "Profundidade do duto traseiro",
+        "help": "Comprimento físico de cada duto da câmara traseira. Informada, a sintonia traseira passa a ser calculada a partir dela."
     }
 }

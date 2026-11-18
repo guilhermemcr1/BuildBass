@@ -235,6 +235,7 @@ function outline(cutout: Cutout): [number, number][] | undefined {
                 cutout.base_m,
                 cutout.height_m,
                 cutout.rotation_deg,
+                cutout.corner,
             );
         }
     }

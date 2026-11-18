@@ -328,6 +328,7 @@ describe('ChartPanel — campo faltante em seção recolhida', () => {
             driverAdvanced: true,
             driverDims: false,
             planAdvanced: false,
+            portAdvanced: false,
         });
     });
 

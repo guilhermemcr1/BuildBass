@@ -2,6 +2,7 @@ import { act, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'vite-plus/test';
 import { activeProjectStore } from '@/hooks/use-active-project';
+import { useExpanded } from '@/stores/expanded';
 import { usePreferences } from '@/stores/preferences';
 import { initialWorkspace, useWorkspace } from '@/stores/workspace';
 import { renderWithProviders } from '@/test/render';
@@ -28,6 +29,8 @@ describe('PortFields', () => {
         localStorage.clear();
         useWorkspace.setState(initialWorkspace());
         usePreferences.setState({ unitSystem: 'metric' });
+        // O acabamento das pontas fica em "Acabamento das pontas", recolhido por padrão.
+        useExpanded.getState().expand('portAdvanced');
     });
 
     test('duct="rear" tem o título e os campos do duto traseiro', () => {

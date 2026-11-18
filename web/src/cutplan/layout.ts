@@ -1,4 +1,4 @@
-import type { Cutout, CutoutRef } from './types';
+import type { CornerId, Cutout, CutoutRef } from './types';
 
 // Posição dos recortes numa peça: fila única ao longo do lado maior,
 // centralizada no lado menor, com folgas iguais entre os itens e as bordas.
@@ -35,8 +35,6 @@ export type EdgeOptions = {
     side?: EdgeSide;
     // Posição ao longo da borda: centralizado ou encostado no início/fim (canto).
     align?: 'center' | 'start' | 'end';
-    // Sem a folga da madeira entre o item e a parede (borda e, no canto, a lateral).
-    againstWall?: boolean;
 };
 
 // Dutos numa borda: como se faz na prática, os dutos ficam juntos numa borda (ou canto), lado a
@@ -47,7 +45,7 @@ export function layoutEdge(
     items: LayoutItem[],
     atEdge: boolean[],
     web_m: number,
-    { side, align = 'center', againstWall = false }: EdgeOptions = {},
+    { side, align = 'center' }: EdgeOptions = {},
 ): LayoutResult {
     const edgeItems = items
         .filter((_item, index) => atEdge[index])
@@ -64,7 +62,9 @@ export function layoutEdge(
         horizontal ? item.h_m : item.w_m;
     const runTotal = edgeItems.reduce((sum, item) => sum + runOf(item), 0);
     const deepest = Math.max(0, ...edgeItems.map(depthOf));
-    const wall = againstWall ? 0 : web_m;
+    // O painel tem a medida externa: a folga `web` (a espessura) já deixa o recorte rente à parede
+    // interna.
+    const wall = web_m;
     const centered = align === 'center';
     const gap = centered ? (run - runTotal) / (edgeItems.length + 1) : web_m;
     const used = centered
@@ -215,15 +215,45 @@ export function cutoutExtent(cutout: Cutout): { w?: number; h?: number } {
 }
 
 // Vértices do triangular em coordenadas da peça (y para cima). Sem giro, a base fica embaixo e a
-// ponta em cima; o giro é anti-horário.
+// ponta em cima; o giro é anti-horário. Com `corner`, é o triângulo retângulo com o ângulo reto
+// naquele canto do retângulo base × altura (o giro não se aplica).
 export function trianglePoints(
     cx: number,
     cy: number,
     base: number,
     height: number,
     rotation: Cutout['rotation_deg'] | 0 = 0,
+    corner?: CornerId,
 ): [number, number][] {
     const [hb, hh] = [base / 2, height / 2];
+
+    if (corner !== undefined) {
+        const right: Record<CornerId, [number, number][]> = {
+            bottomLeft: [
+                [-hb, -hh],
+                [hb, -hh],
+                [-hb, hh],
+            ],
+            bottomRight: [
+                [-hb, -hh],
+                [hb, -hh],
+                [hb, hh],
+            ],
+            topLeft: [
+                [-hb, -hh],
+                [-hb, hh],
+                [hb, hh],
+            ],
+            topRight: [
+                [hb, -hh],
+                [hb, hh],
+                [-hb, hh],
+            ],
+        };
+
+        return right[corner].map(([x, y]) => [cx + x, cy + y]);
+    }
+
     const upright: [number, number][] = [
         [-hb, -hh],
         [hb, -hh],
@@ -249,8 +279,9 @@ export function svgTriangle(
     base: number,
     height: number,
     rotation: Cutout['rotation_deg'] | 0 = 0,
+    corner?: CornerId,
 ): string {
-    return trianglePoints(0, 0, base, height, rotation)
+    return trianglePoints(0, 0, base, height, rotation, corner)
         .map(([x, y]) => `${cx + x},${cy - y}`)
         .join(' ');
 }
