@@ -626,11 +626,9 @@ describe('DriverPicker — filtros e detalhes (marca, diâmetro, tipo)', () => {
 
     async function pick(group: string, label: string) {
         await userEvent.click(
-            within(screen.getByRole('radiogroup', { name: group })).getByRole(
-                'radio',
-                { name: label },
-            ),
+            screen.getByRole('button', { name: new RegExp(group) }),
         );
+        await userEvent.click(screen.getByRole('option', { name: label }));
     }
 
     async function pickBand(label: string) {

@@ -1,9 +1,7 @@
-import type { ReactNode } from 'react';
 import { Group, Input, NumberField } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { FIELD_BOX, FIELD_INPUT } from '@/components/ui/field-box';
-import { SegmentedControl } from '@/components/ui/segmented-control';
 import { SelectField } from '@/components/ui/select-field';
 import { DIAMETER_BANDS, filtersForBand } from '@/lib/catalog/diameter-bands';
 import type { DiameterBandId } from '@/lib/catalog/diameter-bands';
@@ -106,11 +104,10 @@ export function DriverFiltersPanel({
             aria-label={t('picker.filters')}
             className="space-y-3 border-b border-border bg-background/40 px-4 py-3"
         >
-            {brands.length > 0 && (
-                <FilterRow label={t('picker.brand')}>
+            <div className="grid gap-3 sm:grid-cols-3">
+                {brands.length > 0 && (
                     <SelectField<string>
                         label={t('picker.brand')}
-                        hideLabel
                         selected={value.brand ?? ALL}
                         onChange={(id) =>
                             onChange({
@@ -125,14 +122,11 @@ export function DriverFiltersPanel({
                                 label: brand,
                             })),
                         ]}
-                        className="w-56 max-w-full"
+                        className="min-w-0"
                     />
-                </FilterRow>
-            )}
-            <FilterRow label={t('picker.type')}>
-                <SegmentedControl<string>
+                )}
+                <SelectField<string>
                     label={t('picker.type')}
-                    size="sm"
                     selected={value.type ?? ALL}
                     onChange={(id) =>
                         onChange({
@@ -147,12 +141,10 @@ export function DriverFiltersPanel({
                             label: t(`driverType.${type}`),
                         })),
                     ]}
+                    className="min-w-0"
                 />
-            </FilterRow>
-            <FilterRow label={t('picker.diameter')}>
-                <SegmentedControl<string>
+                <SelectField<string>
                     label={t('picker.diameter')}
-                    size="sm"
                     selected={value.band ?? ALL}
                     onChange={(id) =>
                         onChange({
@@ -168,8 +160,9 @@ export function DriverFiltersPanel({
                             label: item.label,
                         })),
                     ]}
+                    className="min-w-0"
                 />
-            </FilterRow>
+            </div>
             <div className="grid gap-3 sm:grid-cols-3">
                 <RangeField label="Fs" {...range('fs', 'frequency')} />
                 <RangeField label="Qts" {...range('qts', 'ratio')} />
@@ -186,21 +179,6 @@ export function DriverFiltersPanel({
                     </Button>
                 </div>
             )}
-        </div>
-    );
-}
-
-function FilterRow({
-    label,
-    children,
-}: {
-    label: string;
-    children: ReactNode;
-}) {
-    return (
-        <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
-            <span className="w-16 shrink-0 text-xs text-muted">{label}</span>
-            <div className="min-w-0 overflow-x-auto">{children}</div>
         </div>
     );
 }
