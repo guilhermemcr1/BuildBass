@@ -18,6 +18,10 @@ Parâmetros Thiele-Small entram, curvas de resposta e um plano de corte pronto p
 </p>
 
 <p>
+  <a href="https://buildbass.galarca.dev/"><img alt="Testar online" src="https://img.shields.io/badge/%E2%96%B6%20testar%20online-buildbass.galarca.dev-b8f53d?style=for-the-badge&labelColor=121212"></a>
+</p>
+
+<p>
   <a href="#-recursos">Recursos</a> ·
   <a href="#-como-funciona">Como funciona</a> ·
   <a href="#-começando">Começando</a> ·
