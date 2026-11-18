@@ -25,9 +25,10 @@ export function PreferencesBar() {
                 <LanguageSwitch />
             </div>
             <DialogTrigger>
-                <AriaButton className="flex h-8 cursor-default items-center gap-1.5 rounded-md border border-border bg-raised px-2.5 text-[13px] text-foreground outline-none data-[focus-visible]:outline-2 data-[focus-visible]:outline-offset-2 data-[focus-visible]:outline-accent data-[focus-visible]:outline-solid md:hidden">
+                <AriaButton aria-label={t('preferences')}
+                    className="flex h-8 cursor-default items-center gap-1.5 rounded-md border border-border bg-raised px-2.5 text-[13px] text-foreground outline-none data-[focus-visible]:outline-2 data-[focus-visible]:outline-offset-2 data-[focus-visible]:outline-accent data-[focus-visible]:outline-solid md:hidden">
                     <Settings2 aria-hidden="true" className="size-4" />
-                    {t('preferences')}
+                    <span className="max-sm:sr-only">{t('preferences')}</span>
                 </AriaButton>
                 <Popover
                     placement="bottom end"

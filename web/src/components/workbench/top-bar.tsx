@@ -44,7 +44,7 @@ export function TopBar({
             <nav
                 aria-label={t('common:appName')}
                 data-tour="actions"
-                className="flex items-center gap-1"
+                className="flex items-center gap-1 max-sm:order-last max-sm:w-full max-sm:justify-between max-sm:border-t max-sm:border-border max-sm:pt-2"
             >
                 <Button
                     variant="quiet"
@@ -98,14 +98,19 @@ export function TopBar({
                     {projectName}
                 </div>
             )}
-            <div className="ml-auto flex flex-wrap items-center gap-2">
+            {/* No celular: marca e utilitários na 1ª linha; as ações do projeto ocupam a 2ª inteira. */}
+            <div className="ml-auto flex items-center gap-1 sm:flex-wrap sm:gap-2">
                 <div
                     data-tour="preferences"
                     className="flex flex-wrap items-center gap-2"
                 >
                     {preferences}
                 </div>
-                <Button variant="quiet" onPress={onTutorial}>
+                <Button
+                    variant="quiet"
+                    onPress={onTutorial}
+                    className="max-sm:px-2.5"
+                >
                     <GraduationCap aria-hidden="true" className="size-4" />
                     <span className="hidden sm:inline">
                         {t('workbench:actions.tutorial')}
@@ -118,7 +123,7 @@ export function TopBar({
                     variant="quiet"
                     onPress={onHelp}
                     aria-label={t('workbench:actions.help')}
-                    className="px-2.5"
+                    className="px-2.5 max-sm:hidden"
                 >
                     <Keyboard aria-hidden="true" className="size-4" />
                 </Button>
