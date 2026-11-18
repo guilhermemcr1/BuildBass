@@ -1,3 +1,4 @@
+import { trianglePoints } from './layout';
 import type { Cutout, Piece, PieceRole, Plan } from './types';
 
 // Projeção ortográfica da caixa montada. Função pura: devolve
@@ -228,13 +229,13 @@ function outline(cutout: Cutout): [number, number][] | undefined {
                 return undefined;
             }
 
-            const [hb, hh] = [cutout.base_m / 2, cutout.height_m / 2];
-
-            return [
-                [cx - hb, cy - hh],
-                [cx + hb, cy - hh],
-                [cx, cy + hh],
-            ];
+            return trianglePoints(
+                cx,
+                cy,
+                cutout.base_m,
+                cutout.height_m,
+                cutout.rotation_deg,
+            );
         }
     }
 }

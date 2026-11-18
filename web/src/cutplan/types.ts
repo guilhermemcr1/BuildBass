@@ -147,6 +147,8 @@ export type Cutout = {
     height_m?: number;
     // triangle
     base_m?: number;
+    // Giro anti-horário do triangular (o retangular girado já troca largura e altura).
+    rotation_deg?: 90 | 180 | 270;
     // Origem no canto inferior esquerdo da peça.
     center?: { x_m: number; y_m: number };
     // O que falta para medir ou posicionar.

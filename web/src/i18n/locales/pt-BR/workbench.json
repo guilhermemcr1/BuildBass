@@ -59,7 +59,22 @@
         "end_flanged": "Duas pontas com flange",
         "end_slotWall": "Slot colado na parede",
         "end_custom": "Fator personalizado",
-        "endHelp": "Ponta com flange: a abertura fica rente a uma superfície plana, como a parede da caixa. Ponta livre: o tubo termina solto no ar. Cada acabamento muda a correção de ponta e, com ela, o comprimento do duto para a mesma sintonia."
+        "endHelp": "Ponta com flange: a abertura fica rente a uma superfície plana, como a parede da caixa. Ponta livre: o tubo termina solto no ar. Cada acabamento muda a correção de ponta e, com ela, o comprimento do duto para a mesma sintonia.",
+        "placement": "Posição do duto",
+        "placementAutoShort": "Auto",
+        "placement_auto": "Automático: retangular e triangular numa extremidade, redondo em fila com o alto-falante",
+        "placement_bottom": "Embaixo",
+        "placement_top": "Em cima",
+        "placement_left": "À esquerda",
+        "placement_right": "À direita",
+        "placement_bottomLeft": "Canto inferior esquerdo",
+        "placement_bottomRight": "Canto inferior direito",
+        "placement_topLeft": "Canto superior esquerdo",
+        "placement_topRight": "Canto superior direito",
+        "placementManual": "Personalizado: duto movido à mão no plano de corte",
+        "placementReset": "Voltar ao automático",
+        "againstWall": "Colado na parede",
+        "rotation": "Orientação do recorte"
     },
     "drivers": {
         "title": "Alto-falantes",

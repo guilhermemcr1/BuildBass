@@ -4,6 +4,7 @@ import type { ReactElement } from 'react';
 import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+import { svgTriangle } from '@/cutplan';
 import type { Cutout, CutoutPiece, Piece, Plan } from '@/cutplan';
 import { cutoutName, cutoutSummary, pieceName } from '@/lib/cut-plan-text';
 import { formatWithUnit } from '@/lib/units/format';
@@ -108,11 +109,11 @@ function CutoutShape({
         case 'triangle': {
             const b = (cutout.base_m ?? 0) * MM;
             const h = (cutout.height_m ?? 0) * MM;
-            radius = h / 2;
+            radius = (cutout.rotation_deg ?? 0) % 180 === 0 ? h / 2 : b / 2;
             text = `${format(cutout.base_m ?? 0)} × ${format(cutout.height_m ?? 0)}`;
             shape = (
                 <polygon
-                    points={`${cx - b / 2},${cy + h / 2} ${cx + b / 2},${cy + h / 2} ${cx},${cy - h / 2}`}
+                    points={svgTriangle(cx, cy, b, h, cutout.rotation_deg)}
                     className={fill}
                     strokeWidth={size * 0.12}
                 />

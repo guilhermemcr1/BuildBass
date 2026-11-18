@@ -5,6 +5,7 @@ import { SelectField } from '@/components/ui/select-field';
 import { twoChambers } from '@/engine';
 import type { PortEnd, PortInput } from '@/engine';
 import { useActiveProject } from '@/hooks/use-active-project';
+import { PortPlacementFields } from './port-placement';
 import { useParameterField } from './use-parameter-field';
 
 type PortShape = PortInput['shape'];
@@ -43,6 +44,12 @@ function reshape(port: PortInput, shape: PortShape): PortInput {
     const ends = {
         ...(port.end === undefined ? {} : { end: port.end }),
         ...(port.end_k === undefined ? {} : { end_k: port.end_k }),
+        // A posição no painel também não depende do formato.
+        ...(port.placement === undefined ? {} : { placement: port.placement }),
+        ...(port.rotation === undefined ? {} : { rotation: port.rotation }),
+        ...(port.against_wall === undefined
+            ? {}
+            : { against_wall: port.against_wall }),
     };
 
     switch (shape) {
@@ -120,7 +127,11 @@ export function PortFields({ duct = 'front' }: Props) {
                         <ParameterField {...height} />
                     </>
                 )}
-                <ParameterField {...count} />
+                <ParameterField
+                    {...count}
+                    layout="row"
+                    className="col-span-2"
+                />
             </div>
             <div className="grid grid-cols-2 items-start gap-x-3 gap-y-2">
                 <SelectField<PortEnd>
@@ -143,6 +154,11 @@ export function PortFields({ duct = 'front' }: Props) {
                 />
                 {end === 'custom' && <ParameterField {...factor} />}
             </div>
+            <PortPlacementFields
+                port={port}
+                setPort={setPort}
+                piece={rear ? 'back' : 'front'}
+            />
         </fieldset>
     );
 }

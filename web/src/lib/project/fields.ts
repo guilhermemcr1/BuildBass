@@ -356,6 +356,25 @@ export function clearPiecePositions(
     );
 }
 
+// Tira as posições manuais dos dutos de uma peça: eles voltam a seguir a posição escolhida.
+export function clearPortPositions(
+    data: ProjectData,
+    piece: CutoutPiece,
+): ProjectData {
+    const positions = data.cutPlan?.positions;
+
+    if (positions === undefined) {
+        return data;
+    }
+
+    return withPositions(
+        data,
+        positions.filter(
+            (item) => !(item.piece === piece && item.kind === 'port'),
+        ),
+    );
+}
+
 type Axis = 'h' | 'w' | 'd';
 
 // Define uma medida interna da caixa e ajusta as outras duas para o volume continuar o mesmo: as

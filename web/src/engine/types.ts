@@ -47,12 +47,37 @@ export type PortEnd =
 
 type PortEnds = { end?: PortEnd; end_k?: number };
 
+// Onde os dutos ficam no painel (plano de corte e 3D; não muda a acústica). `auto`: retangular e
+// triangular numa extremidade, redondo em fila com o alto-falante. Borda: lado a lado ao longo
+// dela; canto: encostados naquele canto.
+export type PortPlacement =
+    | 'auto'
+    | 'bottom'
+    | 'top'
+    | 'left'
+    | 'right'
+    | 'bottomLeft'
+    | 'bottomRight'
+    | 'topLeft'
+    | 'topRight';
+
+export type PortRotation = 0 | 90 | 180 | 270;
+
+type PortLayout = {
+    placement?: PortPlacement;
+    // Giro do recorte no sentido anti-horário (retangular e triangular).
+    rotation?: PortRotation;
+    // Encostado na parede: sem a folga da madeira do lado da borda (e dos lados, no canto).
+    against_wall?: boolean;
+};
+
 export type PortInput = (
     | { shape: 'round'; diameter_m?: number; count: number }
     | { shape: 'rect'; width_m?: number; height_m?: number; count: number }
     | { shape: 'triangle'; base_m?: number; height_m?: number; count: number }
 ) &
-    PortEnds;
+    PortEnds &
+    PortLayout;
 
 // Material de absorção nas câmaras, como o "Fill" do BassBox: vira as perdas por absorção QA de
 // Small (simulate.ts). Ausente = sem material.

@@ -59,7 +59,22 @@
         "end_flanged": "Both ends flanged",
         "end_slotWall": "Slot against a wall",
         "end_custom": "Custom factor",
-        "endHelp": "Flanged end: the opening sits flush against a flat surface, such as the box wall. Free end: the tube ends in open air. Each finish changes the end correction and, with it, the port length needed for the same tuning."
+        "endHelp": "Flanged end: the opening sits flush against a flat surface, such as the box wall. Free end: the tube ends in open air. Each finish changes the end correction and, with it, the port length needed for the same tuning.",
+        "placement": "Port position",
+        "placementAutoShort": "Auto",
+        "placement_auto": "Automatic: slot and triangular ports at one end, round ports in a row with the driver",
+        "placement_bottom": "Bottom",
+        "placement_top": "Top",
+        "placement_left": "Left",
+        "placement_right": "Right",
+        "placement_bottomLeft": "Bottom-left corner",
+        "placement_bottomRight": "Bottom-right corner",
+        "placement_topLeft": "Top-left corner",
+        "placement_topRight": "Top-right corner",
+        "placementManual": "Custom: port moved by hand in the cut plan",
+        "placementReset": "Back to automatic",
+        "againstWall": "Against the wall",
+        "rotation": "Cutout orientation"
     },
     "drivers": {
         "title": "Drivers",

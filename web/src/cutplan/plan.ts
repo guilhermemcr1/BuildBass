@@ -1,13 +1,14 @@
 import type {
     BoxType,
     PortInput,
+    PortPlacement,
     ProjectInput,
     SimulationResults,
 } from '@/engine';
 import { portArea, twoChambers } from '@/engine';
 import { validateResolved } from './config';
-import { checkCutouts, layoutRow } from './layout';
-import type { CutoutIssue } from './layout';
+import { checkCutouts, layoutEdge } from './layout';
+import type { CutoutIssue, EdgeOptions } from './layout';
 import type { LayoutItem } from './layout';
 import type {
     CutPlan,
@@ -61,7 +62,12 @@ function projectVolumes(
     return { volumes: { main: values[0] as number } };
 }
 
-type PortMeasure = LayoutItem & { shape: Cutout['shape']; pending: PlanKey[] };
+type PortMeasure = LayoutItem & {
+    shape: Cutout['shape'];
+    pending: PlanKey[];
+    // Giro do recorte; `w_m`/`h_m` já são a extensão no painel, depois do giro.
+    rotation?: Cutout['rotation_deg'];
+};
 
 function portCutouts(port: PortInput): PortMeasure[] {
     const count = Math.max(0, Math.round(port.count));
@@ -106,9 +112,20 @@ function portCutouts(port: PortInput): PortMeasure[] {
         }
     })();
 
+    const rotation = port.shape === 'round' ? 0 : (port.rotation ?? 0);
+    const turned = rotation === 90 || rotation === 270;
+    const placed: PortMeasure = turned
+        ? { ...one, w_m: one.h_m, h_m: one.w_m }
+        : one;
+
+    // O retangular girado é só largura e altura trocadas; o triangular guarda o giro.
+    if (port.shape === 'triangle' && rotation !== 0) {
+        placed.rotation = rotation;
+    }
+
     return Array.from({ length: count }, () => ({
-        ...one,
-        pending: [...one.pending],
+        ...placed,
+        pending: [...placed.pending],
     }));
 }
 
@@ -133,14 +150,22 @@ function cutoutOf(
                 cutout.height_m = measure.h_m;
             }
             break;
-        case 'triangle':
-            if (measure.w_m !== undefined) {
-                cutout.base_m = measure.w_m;
+        case 'triangle': {
+            const turned = measure.rotation === 90 || measure.rotation === 270;
+            const base = turned ? measure.h_m : measure.w_m;
+            const height = turned ? measure.w_m : measure.h_m;
+
+            if (base !== undefined) {
+                cutout.base_m = base;
             }
-            if (measure.h_m !== undefined) {
-                cutout.height_m = measure.h_m;
+            if (height !== undefined) {
+                cutout.height_m = height;
+            }
+            if (measure.rotation !== undefined) {
+                cutout.rotation_deg = measure.rotation;
             }
             break;
+        }
     }
 
     if (center !== undefined) {
@@ -163,6 +188,18 @@ export type PlacedCutouts = {
     issues: CutoutIssue[];
 };
 
+const EDGE_OPTIONS: Record<PortPlacement, EdgeOptions> = {
+    auto: {},
+    bottom: { side: 'bottom' },
+    top: { side: 'top' },
+    left: { side: 'left' },
+    right: { side: 'right' },
+    bottomLeft: { side: 'bottom', align: 'start' },
+    bottomRight: { side: 'bottom', align: 'end' },
+    topLeft: { side: 'top', align: 'start' },
+    topRight: { side: 'top', align: 'end' },
+};
+
 // Posiciona os recortes de uma peça (drivers antes dos dutos). Os que têm posição manual gravada e
 // medida conhecida usam o centro gravado; os demais seguem a fila única automática, montada só com
 // eles. `n` conta dentro do tipo, a partir de 1.
@@ -172,6 +209,7 @@ export function placeCutouts(
     web_m: number,
     piece: CutoutPiece = 'front',
     positions: CutoutPosition[] = [],
+    portLayout: Pick<PortInput, 'placement' | 'against_wall'> = {},
 ): PlacedCutouts {
     const seen = { driver: 0, port: 0 };
     const entries = measures.map(({ kind, measure }) => {
@@ -194,10 +232,18 @@ export function placeCutouts(
         };
     });
     const queue = entries.filter(({ manual }) => manual === undefined);
-    const layout = layoutRow(
+    const placement = portLayout.placement ?? 'auto';
+    // Automático: só retangular e triangular vão para a borda; o redondo segue a fila única.
+    const layout = layoutEdge(
         panel,
         queue.map(({ measure }) => measure),
+        queue.map(
+            ({ kind, measure }) =>
+                kind === 'port' &&
+                (placement !== 'auto' || measure.shape !== 'round'),
+        ),
         web_m,
+        { ...EDGE_OPTIONS[placement], againstWall: portLayout.against_wall },
     );
     const cutouts = entries.map((entry) => {
         if (entry.manual !== undefined) {
@@ -407,9 +453,17 @@ export function buildCutPlan(
         t,
         'front',
         positions,
+        project.box.port,
     );
     const back = sixth
-        ? placeCutouts(frontPanel, portMeasures(rearPort), t, 'back', positions)
+        ? placeCutouts(
+              frontPanel,
+              portMeasures(rearPort),
+              t,
+              'back',
+              positions,
+              rearPort,
+          )
         : undefined;
     const divider = bandpass
         ? placeCutouts(

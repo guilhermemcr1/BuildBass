@@ -10,7 +10,13 @@ export {
     validateResolved,
 } from './config';
 export type * from './types';
-export { checkCutouts, layoutRow } from './layout';
+export {
+    checkCutouts,
+    cutoutExtent,
+    layoutRow,
+    svgTriangle,
+    trianglePoints,
+} from './layout';
 export { MAX_STOCK_ITEMS, stockItems, stockOf, withStock } from './stock';
 export { buildCutPlan } from './plan';
 export { DEFAULT_VIEW, dimensionLines, projectBox } from './projection';

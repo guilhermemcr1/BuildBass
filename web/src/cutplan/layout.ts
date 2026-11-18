@@ -28,6 +28,111 @@ function sized(item: LayoutItem): item is Required<LayoutItem> {
     return item.w_m !== undefined && item.h_m !== undefined;
 }
 
+export type EdgeSide = 'bottom' | 'top' | 'left' | 'right';
+
+export type EdgeOptions = {
+    // Borda em que os itens marcados ficam; ausente = a extremidade de baixo/esquerda do lado maior.
+    side?: EdgeSide;
+    // Posição ao longo da borda: centralizado ou encostado no início/fim (canto).
+    align?: 'center' | 'start' | 'end';
+    // Sem a folga da madeira entre o item e a parede (borda e, no canto, a lateral).
+    againstWall?: boolean;
+};
+
+// Dutos numa borda: como se faz na prática, os dutos ficam juntos numa borda (ou canto), lado a
+// lado ao longo dela, e os demais itens (alto-falantes) seguem a fila única centralizada no espaço
+// que sobra. Se os dutos não cabem lado a lado, volta à fila única de tudo.
+export function layoutEdge(
+    panel: { w_m: number; h_m: number },
+    items: LayoutItem[],
+    atEdge: boolean[],
+    web_m: number,
+    { side, align = 'center', againstWall = false }: EdgeOptions = {},
+): LayoutResult {
+    const edgeItems = items
+        .filter((_item, index) => atEdge[index])
+        .filter(sized);
+    const resolved: EdgeSide =
+        side ?? (panel.w_m >= panel.h_m ? 'left' : 'bottom');
+    // Borda de baixo/de cima: os itens correm na horizontal e a profundidade é vertical.
+    const horizontal = resolved === 'bottom' || resolved === 'top';
+    const run = horizontal ? panel.w_m : panel.h_m;
+    const depth = horizontal ? panel.h_m : panel.w_m;
+    const runOf = (item: Required<LayoutItem>) =>
+        horizontal ? item.w_m : item.h_m;
+    const depthOf = (item: Required<LayoutItem>) =>
+        horizontal ? item.h_m : item.w_m;
+    const runTotal = edgeItems.reduce((sum, item) => sum + runOf(item), 0);
+    const deepest = Math.max(0, ...edgeItems.map(depthOf));
+    const wall = againstWall ? 0 : web_m;
+    const centered = align === 'center';
+    const gap = centered ? (run - runTotal) / (edgeItems.length + 1) : web_m;
+    const used = centered
+        ? run
+        : wall + runTotal + web_m * (edgeItems.length - 1);
+
+    if (
+        edgeItems.length === 0 ||
+        (centered && gap < web_m - EPSILON) ||
+        used > run + EPSILON ||
+        wall + deepest > depth + EPSILON
+    ) {
+        return layoutRow(panel, items, web_m);
+    }
+
+    const centers: (Center | undefined)[] = items.map(() => undefined);
+    // Posição ao longo da borda, a partir do início (esquerda ou baixo).
+    let cursor = centered ? gap : align === 'start' ? wall : run - used;
+    const fromEdge = wall + deepest / 2;
+    const depthPos =
+        resolved === 'bottom' || resolved === 'left'
+            ? fromEdge
+            : depth - fromEdge;
+
+    items.forEach((item, index) => {
+        if (!atEdge[index] || !sized(item)) {
+            return;
+        }
+
+        const middle = cursor + runOf(item) / 2;
+        cursor += runOf(item) + gap;
+        centers[index] = horizontal
+            ? { x_m: middle, y_m: depthPos }
+            : { x_m: depthPos, y_m: middle };
+    });
+
+    // O resto (alto-falantes) fica centralizado no trecho depois do bloco de dutos.
+    const taken = wall + deepest + web_m;
+    const offset = resolved === 'bottom' || resolved === 'left' ? taken : 0;
+    const restIdx = items.flatMap((_item, index) =>
+        atEdge[index] ? [] : [index],
+    );
+    const rest = layoutRow(
+        horizontal
+            ? { w_m: run, h_m: depth - taken }
+            : { w_m: depth - taken, h_m: run },
+        restIdx.map((index) => items[index]!),
+        web_m,
+    );
+
+    restIdx.forEach((index, k) => {
+        const c = rest.centers[k];
+
+        if (c !== undefined) {
+            centers[index] = horizontal
+                ? { x_m: c.x_m, y_m: c.y_m + offset }
+                : { x_m: c.x_m + offset, y_m: c.y_m };
+        }
+    });
+
+    return {
+        centers,
+        doNotFit: rest.doNotFit,
+        tight: rest.tight,
+        tooBig: rest.tooBig,
+    };
+}
+
 export function layoutRow(
     panel: { w_m: number; h_m: number },
     items: LayoutItem[],
@@ -91,15 +196,68 @@ type Box = {
     y1: number;
 };
 
+// Largura e altura do retângulo que envolve o recorte no painel, já com o giro do triangular.
+export function cutoutExtent(cutout: Cutout): { w?: number; h?: number } {
+    switch (cutout.shape) {
+        case 'round':
+            return { w: cutout.diameter_m, h: cutout.diameter_m };
+        case 'rect':
+            return { w: cutout.width_m, h: cutout.height_m };
+        case 'triangle': {
+            const turned =
+                cutout.rotation_deg === 90 || cutout.rotation_deg === 270;
+
+            return turned
+                ? { w: cutout.height_m, h: cutout.base_m }
+                : { w: cutout.base_m, h: cutout.height_m };
+        }
+    }
+}
+
+// Vértices do triangular em coordenadas da peça (y para cima). Sem giro, a base fica embaixo e a
+// ponta em cima; o giro é anti-horário.
+export function trianglePoints(
+    cx: number,
+    cy: number,
+    base: number,
+    height: number,
+    rotation: Cutout['rotation_deg'] | 0 = 0,
+): [number, number][] {
+    const [hb, hh] = [base / 2, height / 2];
+    const upright: [number, number][] = [
+        [-hb, -hh],
+        [hb, -hh],
+        [0, hh],
+    ];
+    const turns = (rotation ?? 0) / 90;
+
+    return upright.map(([x, y]) => {
+        let [px, py] = [x, y];
+
+        for (let k = 0; k < turns; k++) {
+            [px, py] = [-py, px];
+        }
+
+        return [cx + px, cy + py];
+    });
+}
+
+// O mesmo triângulo como `points` de SVG, com centro em (cx, cy) no desenho (y para baixo).
+export function svgTriangle(
+    cx: number,
+    cy: number,
+    base: number,
+    height: number,
+    rotation: Cutout['rotation_deg'] | 0 = 0,
+): string {
+    return trianglePoints(0, 0, base, height, rotation)
+        .map(([x, y]) => `${cx + x},${cy - y}`)
+        .join(' ');
+}
+
 // Retângulo que envolve o recorte (inclusive o triangular); sem medida ou sem centro, nada.
 function boxOf(cutout: Cutout): Box | undefined {
-    const w =
-        cutout.shape === 'round'
-            ? cutout.diameter_m
-            : cutout.shape === 'rect'
-              ? cutout.width_m
-              : cutout.base_m;
-    const h = cutout.shape === 'round' ? cutout.diameter_m : cutout.height_m;
+    const { w, h } = cutoutExtent(cutout);
 
     if (
         cutout.ref === undefined ||

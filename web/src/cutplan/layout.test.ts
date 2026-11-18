@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vite-plus/test';
-import { checkCutouts, layoutRow } from './layout';
+import { checkCutouts, layoutEdge, layoutRow, trianglePoints } from './layout';
 import type { Cutout } from './types';
 
 const round = (diameter: number) => ({ w_m: diameter, h_m: diameter });
@@ -230,5 +230,123 @@ describe('checkCutouts', () => {
                 id: 'cutoutInGlueBand',
             },
         ]);
+    });
+});
+
+describe('layoutEdge — dutos retangulares/triangulares numa extremidade', () => {
+    const panel = { w_m: 0.34, h_m: 0.55 };
+    const driver = { w_m: 0.28, h_m: 0.28 };
+    const slot = { w_m: 0.25, h_m: 0.05 };
+
+    test('duto embaixo, encostado na folga, e alto-falante centrado no resto', () => {
+        const { centers, doNotFit } = layoutEdge(
+            panel,
+            [driver, slot],
+            [false, true],
+            0.018,
+        );
+
+        expect(doNotFit).toBe(false);
+        expect(centers[1]).toEqual({ x_m: 0.17, y_m: 0.018 + 0.025 });
+        expect(centers[0]!.x_m).toBeCloseTo(0.17);
+        expect(centers[0]!.y_m).toBeGreaterThan(0.036 + 0.05 + 0.14 - 1e-9);
+    });
+
+    test('vários dutos ficam lado a lado no lado menor', () => {
+        const tri = { w_m: 0.08, h_m: 0.07 };
+        const { centers } = layoutEdge(
+            panel,
+            [driver, tri, tri],
+            [false, true, true],
+            0.018,
+        );
+
+        expect(centers[1]!.y_m).toBeCloseTo(centers[2]!.y_m);
+        expect(centers[1]!.x_m).toBeLessThan(centers[2]!.x_m);
+    });
+
+    test('dutos que não cabem lado a lado voltam à fila única', () => {
+        const wide = { w_m: 0.11, h_m: 0.11 };
+        const items = [driver, wide, wide, wide, wide];
+        const edge = [false, true, true, true, true];
+
+        expect(layoutEdge(panel, items, edge, 0.018)).toEqual(
+            layoutRow(panel, items, 0.018),
+        );
+    });
+});
+
+describe('layoutEdge — borda, canto e parede escolhidos', () => {
+    const panel = { w_m: 0.34, h_m: 0.55 };
+    const driver = { w_m: 0.28, h_m: 0.28 };
+    const tri = { w_m: 0.08, h_m: 0.07 };
+
+    test('em cima: o duto encosta na borda de cima e o alto-falante fica abaixo', () => {
+        const { centers } = layoutEdge(
+            panel,
+            [driver, tri],
+            [false, true],
+            0.018,
+            {
+                side: 'top',
+            },
+        );
+
+        expect(centers[1]!.y_m).toBeCloseTo(0.55 - 0.018 - 0.035);
+        expect(centers[0]!.y_m).toBeLessThan(centers[1]!.y_m);
+    });
+
+    test('à direita: dutos em pé na lateral direita', () => {
+        const { centers } = layoutEdge(
+            panel,
+            [driver, tri],
+            [false, true],
+            0.018,
+            {
+                side: 'right',
+            },
+        );
+
+        expect(centers[1]!.x_m).toBeCloseTo(0.34 - 0.018 - 0.04);
+    });
+
+    test('canto inferior esquerdo colado na parede: sem folga nos dois lados', () => {
+        const { centers } = layoutEdge(
+            panel,
+            [driver, tri],
+            [false, true],
+            0.018,
+            {
+                side: 'bottom',
+                align: 'start',
+                againstWall: true,
+            },
+        );
+
+        expect(centers[1]).toEqual({ x_m: 0.04, y_m: 0.035 });
+    });
+
+    test('canto inferior direito: dois dutos encostados no fim da borda', () => {
+        const { centers } = layoutEdge(
+            panel,
+            [driver, tri, tri],
+            [false, true, true],
+            0.018,
+            { side: 'bottom', align: 'end' },
+        );
+
+        expect(centers[2]!.x_m).toBeCloseTo(0.34 - 0.018 - 0.04);
+        expect(centers[1]!.x_m).toBeCloseTo(0.34 - 0.018 - 0.08 - 0.018 - 0.04);
+    });
+});
+
+describe('trianglePoints — giro do triangular', () => {
+    test('sem giro a ponta fica em cima; a 90° aponta para a esquerda', () => {
+        const up = trianglePoints(0, 0, 0.1, 0.08);
+        const left = trianglePoints(0, 0, 0.1, 0.08, 90);
+
+        expect(up[2]).toEqual([0, 0.04]);
+        expect(left[2]![0]).toBeCloseTo(-0.04);
+        expect(left[2]![1]).toBeCloseTo(0);
     });
 });

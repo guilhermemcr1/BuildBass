@@ -41,6 +41,23 @@ const ends = {
         .enum(['flangedFree', 'free', 'flanged', 'slotWall', 'custom'])
         .optional(),
     end_k: range('end_k').optional(),
+    placement: z
+        .enum([
+            'auto',
+            'bottom',
+            'top',
+            'left',
+            'right',
+            'bottomLeft',
+            'bottomRight',
+            'topLeft',
+            'topRight',
+        ])
+        .optional(),
+    rotation: z
+        .union([z.literal(0), z.literal(90), z.literal(180), z.literal(270)])
+        .optional(),
+    against_wall: z.boolean().optional(),
 };
 
 const port = z.discriminatedUnion('shape', [

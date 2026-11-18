@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { ParameterField } from '@/components/ui/parameter-field';
 import { StatusIndicator } from '@/components/ui/status-indicator';
+import { cutoutExtent, svgTriangle } from '@/cutplan';
 import type { Cutout, CutoutPiece, CutoutRef, Piece } from '@/cutplan';
 import { useActiveProject } from '@/hooks/use-active-project';
 import { useCutPlan } from '@/hooks/use-cut-plan';
@@ -39,16 +40,11 @@ const sameRef = (a: CutoutRef | undefined, b: CutoutRef | undefined) =>
 
 const refKey = (ref: CutoutRef) => `${ref.kind}-${ref.n}`;
 
-// Retângulo que envolve o recorte, em metros.
+// Retângulo que envolve o recorte, em metros (com o giro do triangular).
 function extent(cutout: Cutout): { w: number; h: number } {
-    switch (cutout.shape) {
-        case 'round':
-            return { w: cutout.diameter_m ?? 0, h: cutout.diameter_m ?? 0 };
-        case 'rect':
-            return { w: cutout.width_m ?? 0, h: cutout.height_m ?? 0 };
-        case 'triangle':
-            return { w: cutout.base_m ?? 0, h: cutout.height_m ?? 0 };
-    }
+    const { w, h } = cutoutExtent(cutout);
+
+    return { w: w ?? 0, h: h ?? 0 };
 }
 
 const roundMm = (meters: number) => Math.round(meters / STEP_M) * STEP_M;
@@ -91,7 +87,13 @@ function CutoutMark({
     if (cutout.shape === 'triangle') {
         return (
             <polygon
-                points={`${cx - (w * MM) / 2},${cy + (h * MM) / 2} ${cx + (w * MM) / 2},${cy + (h * MM) / 2} ${cx},${cy - (h * MM) / 2}`}
+                points={svgTriangle(
+                    cx,
+                    cy,
+                    (cutout.base_m ?? 0) * MM,
+                    (cutout.height_m ?? 0) * MM,
+                    cutout.rotation_deg,
+                )}
                 className={className}
                 strokeWidth={stroke}
             />
