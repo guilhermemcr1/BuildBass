@@ -16,7 +16,7 @@ import type { OpenProject } from '@/stores/workspace';
 import { RING_SWATCH, SWATCH } from './swatch';
 
 type ProjectTabsProps = {
-    // Fechar passa pela bancada, que pede confirmação quando há alterações não exportadas.
+    // Fechar passa pela bancada, que pede confirmação quando há alterações não salvas.
     onClose: (id: string) => void;
 };
 

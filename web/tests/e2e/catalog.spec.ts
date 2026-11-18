@@ -203,7 +203,7 @@ test('a origem vai no arquivo exportado e volta ao reabrir', async ({
     await expectIdentity(page, true);
 
     const downloading = page.waitForEvent('download');
-    await page.getByRole('button', { name: 'Exportar', exact: true }).click();
+    await page.getByRole('button', { name: 'Salvar', exact: true }).click();
     const path = await (await downloading).path();
     const saved = JSON.parse(await readFile(path, 'utf-8'));
     expect(saved.project.driverSource).toEqual({

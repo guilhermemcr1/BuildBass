@@ -10,7 +10,7 @@ type CloseProjectDialogProps = {
     onCancel: () => void;
 };
 
-// Fechar um projeto com alterações não exportadas.
+// Fechar um projeto com alterações não salvas.
 export function CloseProjectDialog({
     name,
     onExportAndClose,

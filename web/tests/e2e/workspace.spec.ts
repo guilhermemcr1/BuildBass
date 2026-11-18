@@ -42,7 +42,7 @@ test('dois projetos plotados: legenda, tabela e recarregar', async ({
     // O navegador mantém o espaço antes do aviso de não exportado no nome acessível.
     await expect(
         tabs(page).getByRole('button', {
-            name: 'Grande (alterações não exportadas)',
+            name: 'Grande (alterações não salvas)',
         }),
     ).toHaveAttribute('aria-current', 'true');
 
@@ -114,6 +114,6 @@ test('fechar alterado pede confirmação e o quarto projeto avisa o limite', asy
     await tabs(page)
         .getByRole('button', { name: 'Fechar Projeto sem nome', exact: true })
         .click();
-    await confirm.getByRole('button', { name: 'Fechar sem exportar' }).click();
+    await confirm.getByRole('button', { name: 'Fechar sem salvar' }).click();
     await expect(tabs(page).getByRole('listitem')).toHaveCount(1);
 });

@@ -118,7 +118,7 @@ describe('ProjectTabs', () => {
         expect(
             screen.getByRole('button', {
                 // O jsdom junta os textos sem o espaço; o navegador mantém (e2e).
-                name: /^Projeto sem nome ?\(alterações não exportadas\)$/,
+                name: /^Projeto sem nome ?\(alterações não salvas\)$/,
             }),
         ).toBeInTheDocument();
     });
@@ -166,11 +166,11 @@ describe('diálogos de projeto', () => {
 
         expect(dialog).toHaveTextContent('“Sub” tem alterações');
         await userEvent.click(
-            within(dialog).getByRole('button', { name: 'Fechar sem exportar' }),
+            within(dialog).getByRole('button', { name: 'Fechar sem salvar' }),
         );
         expect(onDiscard).toHaveBeenCalled();
         await userEvent.click(
-            within(dialog).getByRole('button', { name: 'Exportar e fechar' }),
+            within(dialog).getByRole('button', { name: 'Salvar e fechar' }),
         );
         expect(onExportAndClose).toHaveBeenCalled();
     });

@@ -6,7 +6,7 @@
         "close": "Close {{name}}",
         "namePlaceholder": "Project name",
         "rename": "Rename {{name}}",
-        "unsaved": "unexported changes",
+        "unsaved": "unsaved changes",
         "color": "Project color",
         "colorOption": "Color {{n}}",
         "colorOf": "Color of {{name}}"
@@ -14,9 +14,9 @@
     "dialogs": {
         "close": {
             "title": "Close project?",
-            "body": "“{{name}}” has changes that were not exported and will be lost.",
-            "export": "Export and close",
-            "discard": "Close without exporting",
+            "body": "“{{name}}” has changes that were not saved and will be lost.",
+            "export": "Save and close",
+            "discard": "Close without saving",
             "cancel": "Cancel"
         },
         "limit": {
@@ -41,7 +41,7 @@
         "dropHere": "Drop to open the project"
     },
     "storage": {
-        "unavailable": "The browser does not allow saving data: open projects will not be remembered after reloading. Export to keep your work."
+        "unavailable": "The browser does not allow saving data: open projects will not be remembered after reloading. Save the project to a file to keep your work."
     },
     "name": {
         "label": "Project name",

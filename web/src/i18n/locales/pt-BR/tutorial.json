@@ -42,7 +42,7 @@
         },
         "actions": {
             "title": "Guarde seu trabalho",
-            "body": "Exporte o projeto para um arquivo e abra de novo quando quiser. Desfazer e refazer ficam ao lado. O projeto só fica neste navegador, então exporte para não perdê-lo."
+            "body": "Salve o projeto em um arquivo e abra de novo quando quiser. Desfazer e refazer ficam ao lado. O projeto só fica neste navegador, então salve para não perdê-lo."
         },
         "preferences": {
             "title": "Ajuste a bancada",

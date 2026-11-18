@@ -33,7 +33,7 @@ test('exportar, criar novo e abrir o arquivo reproduz os valores', async ({
     await fill(page, /Altura do duto/, '300');
 
     const downloading = page.waitForEvent('download');
-    await page.getByRole('button', { name: 'Exportar', exact: true }).click();
+    await page.getByRole('button', { name: 'Salvar', exact: true }).click();
     const download = await downloading;
     expect(download.suggestedFilename()).toBe('projeto.buildbass.json');
     const path = await download.path();
@@ -99,7 +99,7 @@ test('desfazer, refazer e recarregar', async ({ page }) => {
 
 async function exportedFile(page: Page) {
     const downloading = page.waitForEvent('download');
-    await page.getByRole('button', { name: 'Exportar', exact: true }).click();
+    await page.getByRole('button', { name: 'Salvar', exact: true }).click();
     const path = await (await downloading).path();
 
     return (await import('node:fs/promises')).readFile(path, 'utf8');
@@ -473,7 +473,7 @@ test('dimensões do alto-falante: formato e medidas valem no plano e voltam do a
     await fill(page, /^D —/, '200');
 
     const downloading = page.waitForEvent('download');
-    await page.getByRole('button', { name: 'Exportar', exact: true }).click();
+    await page.getByRole('button', { name: 'Salvar', exact: true }).click();
     const download = await downloading;
     const path = await download.path();
     const saved = JSON.parse(

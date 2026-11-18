@@ -42,7 +42,7 @@
         },
         "actions": {
             "title": "Keep your work",
-            "body": "Export the project to a file and open it again any time. Undo and redo sit next to it. The project only lives in this browser, so export to avoid losing it."
+            "body": "Save the project to a file and open it again any time. Undo and redo sit next to it. The project only lives in this browser, so save it to avoid losing it."
         },
         "preferences": {
             "title": "Tune the workbench",

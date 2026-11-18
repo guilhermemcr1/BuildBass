@@ -97,7 +97,7 @@ test('a ajuda lista todos os atalhos do mapa', () => {
     for (const label of [
         'Novo',
         'Abrir',
-        'Exportar',
+        'Salvar',
         'Desfazer',
         'Refazer',
         'Trocar aba de gráfico',

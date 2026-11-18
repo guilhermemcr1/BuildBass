@@ -8,7 +8,7 @@
     "actions": {
         "new": "Novo",
         "open": "Abrir",
-        "export": "Exportar",
+        "export": "Salvar",
         "undo": "Desfazer",
         "redo": "Refazer",
         "tutorial": "Tutorial",
@@ -382,7 +382,7 @@
         "typeNone": "Não informado",
         "brandPlaceholder": "Ex.: Triton",
         "modelPlaceholder": "Ex.: TR 620 12\"",
-        "variantPlaceholder": "Ex.: 4 ou 4+4",
+        "variantPlaceholder": "Ex.: 4",
         "applied": "Alto-falante aplicado: {{name}}",
         "fromMine": "Dos meus alto-falantes",
         "dvcHint": "Bobina dupla: escolha a ligação das bobinas no bloco Alto-falantes."

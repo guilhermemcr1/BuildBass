@@ -96,7 +96,7 @@ export default function Workbench() {
         }
     };
 
-    // Projeto com alterações não exportadas pede confirmação antes de fechar.
+    // Projeto com alterações não salvas pede confirmação antes de fechar.
     const requestClose = (id: string) => {
         const project = useWorkspace
             .getState()

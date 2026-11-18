@@ -96,7 +96,7 @@ test('estoque com sobra, quantidade, corte livre e arquivo v7 que volta igual', 
     );
     expect(csv.text).toContain('Tipo de corte;CNC/tupia (livre)');
 
-    const file = await download(page, 'Exportar', true);
+    const file = await download(page, 'Salvar', true);
     const saved = JSON.parse(file.text);
     expect(saved.version).toBe(7);
     expect(saved.project.cutPlan.sheet).toMatchObject({

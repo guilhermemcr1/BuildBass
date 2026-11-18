@@ -6,7 +6,7 @@
         "close": "Fechar {{name}}",
         "namePlaceholder": "Nome do projeto",
         "rename": "Renomear {{name}}",
-        "unsaved": "alterações não exportadas",
+        "unsaved": "alterações não salvas",
         "color": "Cor do projeto",
         "colorOption": "Cor {{n}}",
         "colorOf": "Cor de {{name}}"
@@ -14,9 +14,9 @@
     "dialogs": {
         "close": {
             "title": "Fechar projeto?",
-            "body": "“{{name}}” tem alterações que não foram exportadas e serão perdidas.",
-            "export": "Exportar e fechar",
-            "discard": "Fechar sem exportar",
+            "body": "“{{name}}” tem alterações que não foram salvas e serão perdidas.",
+            "export": "Salvar e fechar",
+            "discard": "Fechar sem salvar",
             "cancel": "Cancelar"
         },
         "limit": {
@@ -41,7 +41,7 @@
         "dropHere": "Solte para abrir o projeto"
     },
     "storage": {
-        "unavailable": "O navegador não permite salvar dados: os projetos abertos não serão lembrados ao recarregar. Exporte para não perder o trabalho."
+        "unavailable": "O navegador não permite salvar dados: os projetos abertos não serão lembrados ao recarregar. Salve o projeto em arquivo para não perder o trabalho."
     },
     "name": {
         "label": "Nome do projeto",
