@@ -54,8 +54,8 @@ function displayName(driver: {
 }
 
 // Busca de drivers num botão só: abre um diálogo que já lista o catálogo, e cada letra digitada
-// refina (fabricante, modelo ou tipo, com ou sem hífen). O botão "Filtros" ao lado abre o painel
-// de tipo, diâmetro e faixas de Fs, Qts e Vas; "Mostrar mais" navega pelo resto.
+// refina (fabricante, modelo ou tipo, com ou sem hífen). O botão "Filtros" do diálogo abre o
+// painel de tipo, diâmetro e faixas de Fs, Qts e Vas; "Mostrar mais" navega pelo resto.
 export function DriverPicker({
     disabled = false,
     disabledReason,
@@ -74,10 +74,6 @@ export function DriverPicker({
     const filters = useMemo(() => toApiFilters(picked), [picked]);
     const activeFilters = countFilters(picked);
     const filtered = activeFilters > 0;
-    const openWith = (withFilters: boolean) => {
-        setShowFilters(withFilters);
-        setOpen(true);
-    };
     const search = useDriverSearch(term, {
         offline: disabled,
         filters,
@@ -106,7 +102,7 @@ export function DriverPicker({
                 !event.altKey
             ) {
                 event.preventDefault();
-                openWith(false);
+                setOpen(true);
             }
         };
 
@@ -319,38 +315,23 @@ export function DriverPicker({
 
     return (
         <>
-            <div className="flex w-full min-w-0 items-center gap-2">
-                <Button
-                    variant="secondary"
-                    aria-keyshortcuts="/"
-                    onPress={() => openWith(false)}
-                    className="h-10 min-w-0 flex-1 justify-start gap-2 px-3 font-normal text-muted"
+            <Button
+                variant="secondary"
+                aria-keyshortcuts="/"
+                onPress={() => setOpen(true)}
+                className="h-10 w-full min-w-0 justify-start gap-2 px-3 font-normal text-muted"
+            >
+                <Search aria-hidden="true" className="size-4 shrink-0" />
+                <span className="min-w-0 flex-1 truncate text-left">
+                    {t('picker.triggerHint')}
+                </span>
+                <kbd
+                    aria-hidden="true"
+                    className="rounded border border-border bg-background px-1.5 text-[11px] leading-5"
                 >
-                    <Search aria-hidden="true" className="size-4 shrink-0" />
-                    <span className="min-w-0 flex-1 truncate text-left">
-                        {t('picker.triggerHint')}
-                    </span>
-                    <kbd
-                        aria-hidden="true"
-                        className="rounded border border-border bg-background px-1.5 text-[11px] leading-5"
-                    >
-                        /
-                    </kbd>
-                </Button>
-                <Button
-                    variant="secondary"
-                    disabled={disabled}
-                    aria-label={filtersLabel}
-                    onPress={() => openWith(true)}
-                    className="h-10 shrink-0 gap-2 px-3"
-                >
-                    <SlidersHorizontal aria-hidden="true" className="size-4" />
-                    <span className="max-sm:sr-only">
-                        {t('picker.filters')}
-                    </span>
-                    {filterBadge}
-                </Button>
-            </div>
+                    /
+                </kbd>
+            </Button>
             <ModalOverlay
                 isOpen={open}
                 onOpenChange={setOpen}

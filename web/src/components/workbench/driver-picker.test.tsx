@@ -654,16 +654,6 @@ describe('DriverPicker — filtros e detalhes (marca, diâmetro, tipo)', () => {
         expect(screen.getByRole('group', { name: 'Filtros' })).toBeVisible();
     });
 
-    test('o botão "Filtros" ao lado da busca abre o diálogo já com o painel', async () => {
-        renderWithProviders(<DriverPicker onSubmitDriver={() => undefined} />);
-
-        await userEvent.click(screen.getByRole('button', { name: /^Filtros/ }));
-
-        expect(
-            await screen.findByRole('group', { name: 'Filtros' }),
-        ).toBeVisible();
-    });
-
     test('tipo e faixas de Fs, Qts e Vas vão em SI à busca e contam no selo', async () => {
         await open();
         await showFilters();

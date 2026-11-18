@@ -84,8 +84,51 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
     const [expanded, setExpanded] = useState(false);
     const [expandedLoaded, setExpandedLoaded] = useState(false);
 
-    // A busca fica no topo do painel, em largura total. No cabeçalho, ampliar e as demais ações
-    // num menu: enviar ao catálogo (depende do servidor, Princípio V), salvar e a lista pessoal.
+    // No cabeçalho, só ampliar. A busca fica no topo do painel, com o menu das demais ações ao
+    // lado: salvar, a lista pessoal e enviar ao catálogo (depende do servidor, Princípio V).
+    const menu = (
+        <Menu<DriverAction>
+            label={t('driverMenu')}
+            triggerLabel={t('driverMenu')}
+            trigger={
+                <span className="flex size-10 items-center justify-center rounded-md text-foreground data-[hovered]:bg-raised">
+                    <Ellipsis aria-hidden="true" className="size-4" />
+                </span>
+            }
+            triggerClassName="rounded-md hover:bg-raised"
+            items={[
+                {
+                    id: 'save',
+                    label: t('saved.saveButton'),
+                    icon: (
+                        <BookmarkPlus aria-hidden="true" className="size-4" />
+                    ),
+                    disabled: Object.keys(driver).length === 0,
+                },
+                {
+                    id: 'mine',
+                    label: t('saved.manageButton'),
+                    icon: <Library aria-hidden="true" className="size-4" />,
+                },
+                {
+                    id: 'submit',
+                    label: t('catalog.submit'),
+                    icon: <Send aria-hidden="true" className="size-4" />,
+                    disabled: offline,
+                },
+            ]}
+            onAction={(action) => {
+                if (action === 'save') {
+                    setSaving(draftFromProject());
+                } else if (action === 'mine') {
+                    setManaging(true);
+                } else {
+                    onSubmitDriver();
+                }
+            }}
+        />
+    );
+
     const actions = (
         <div className="flex min-w-0 items-center gap-1">
             <Button
@@ -100,49 +143,6 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
             >
                 <Maximize2 aria-hidden="true" className="size-4" />
             </Button>
-            <Menu<DriverAction>
-                label={t('driverMenu')}
-                triggerLabel={t('driverMenu')}
-                trigger={
-                    <span className="flex size-[34px] items-center justify-center rounded-md text-foreground data-[hovered]:bg-raised">
-                        <Ellipsis aria-hidden="true" className="size-4" />
-                    </span>
-                }
-                triggerClassName="rounded-md hover:bg-raised"
-                items={[
-                    {
-                        id: 'save',
-                        label: t('saved.saveButton'),
-                        icon: (
-                            <BookmarkPlus
-                                aria-hidden="true"
-                                className="size-4"
-                            />
-                        ),
-                        disabled: Object.keys(driver).length === 0,
-                    },
-                    {
-                        id: 'mine',
-                        label: t('saved.manageButton'),
-                        icon: <Library aria-hidden="true" className="size-4" />,
-                    },
-                    {
-                        id: 'submit',
-                        label: t('catalog.submit'),
-                        icon: <Send aria-hidden="true" className="size-4" />,
-                        disabled: offline,
-                    },
-                ]}
-                onAction={(action) => {
-                    if (action === 'save') {
-                        setSaving(draftFromProject());
-                    } else if (action === 'mine') {
-                        setManaging(true);
-                    } else {
-                        onSubmitDriver();
-                    }
-                }}
-            />
         </div>
     );
 
@@ -153,11 +153,16 @@ export function DriverPanel({ onSubmitDriver }: DriverPanelProps) {
             actions={actions}
             flush
         >
-            <DriverPicker
-                disabled={offline}
-                disabledReason={offlineReason}
-                onSubmitDriver={onSubmitDriver}
-            />
+            <div className="flex min-w-0 items-center gap-1">
+                <div className="min-w-0 flex-1">
+                    <DriverPicker
+                        disabled={offline}
+                        disabledReason={offlineReason}
+                        onSubmitDriver={onSubmitDriver}
+                    />
+                </div>
+                {menu}
+            </div>
             <DriverIdentity />
             <div className="grid grid-cols-2 items-start gap-x-3 gap-y-2">
                 {essential.map((key) => (
