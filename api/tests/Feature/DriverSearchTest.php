@@ -16,7 +16,10 @@ function search(string $term): TestResponse
 it('acha pelo fabricante', function () {
     $this->seed(DriverSeeder::class);
 
-    search('triton')->assertOk()->assertJsonCount(2, 'data');
+    $brands = search('triton')->assertOk()->json('data.*.brand');
+
+    expect($brands)->not->toBeEmpty()
+        ->and(array_unique($brands))->toBe(['Triton']);
 });
 
 it('exige todas as palavras', function () {

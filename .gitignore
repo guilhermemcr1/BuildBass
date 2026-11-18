@@ -23,3 +23,6 @@ AGENTS.md
 /.vscode
 /.zed
 /.fleet
+
+# Fotos do catálogo inicial: ficam locais e vão para produção por pacote (data/drivers/README.md)
+/api/database/seeders/data/drivers/images/
