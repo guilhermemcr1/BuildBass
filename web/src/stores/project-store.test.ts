@@ -329,13 +329,48 @@ describe('applyCatalogDriver com medidas físicas', () => {
         expect(project.getState().data.driverDims?.shape).toBe('round');
     });
 
-    test('sem medidas no cadastro, as do projeto ficam como estão', () => {
+    test('sem medidas no cadastro, as do anterior saem em vez de ficar', () => {
         const project = store();
         project.getState().applyCatalogDriver(CATALOG, SOURCE, DIMS);
 
         project.getState().applyCatalogDriver(CATALOG, SOURCE);
 
-        expect(project.getState().data.driverDims?.a_m).toBe(0.32);
+        expect(project.getState().data.driverDims).toBeUndefined();
+        expect(project.getState().data.cutPlan?.cutout_m).toBeUndefined();
+    });
+
+    test('o recorte do anterior sai quando o novo traz cotas sem recorte', () => {
+        const project = store();
+        project.getState().applyCatalogDriver(CATALOG, SOURCE, DIMS);
+
+        project.getState().applyCatalogDriver(CATALOG, SOURCE, {
+            measures: { drv_a_m: 0.4 },
+        });
+
+        expect(project.getState().data.cutPlan?.cutout_m).toBeUndefined();
+        expect(project.getState().data.driverDims).toEqual({ a_m: 0.4 });
+    });
+
+    test('parâmetro que falta no novo fica em branco, sem herdar do anterior', () => {
+        const project = store();
+        project
+            .getState()
+            .applyCatalogDriver({ ...CATALOG, re_ohm: 3, bl_tm: 10.9 }, SOURCE);
+
+        project.getState().applyCatalogDriver(CATALOG, SOURCE);
+
+        expect(project.getState().data.driver).toEqual(CATALOG);
+    });
+
+    test('a ligação das bobinas do anterior não passa para o novo', () => {
+        const project = store();
+        project.getState().setDrivers({ coil_wiring: 'parallel' });
+
+        project.getState().applyCatalogDriver(CATALOG, SOURCE);
+
+        expect(project.getState().data.drivers).not.toHaveProperty(
+            'coil_wiring',
+        );
     });
 
     test('é uma etapa só de desfazer', () => {
@@ -441,7 +476,7 @@ describe('applySavedDriver', () => {
         expect(project.getState().data.cutPlan).toBeUndefined();
     });
 
-    test('sem recorte salvo, mantém o recorte que o projeto já tinha', () => {
+    test('sem recorte salvo, o recorte anterior sai em vez de ficar', () => {
         const project = store();
         project.getState().apply((data) => ({
             ...data,
@@ -451,7 +486,7 @@ describe('applySavedDriver', () => {
 
         project.getState().applySavedDriver(withoutCutout);
 
-        expect(project.getState().data.cutPlan?.cutout_m).toBe(0.2);
+        expect(project.getState().data.cutPlan?.cutout_m).toBeUndefined();
         expect(project.getState().data.driverSource).toEqual({
             brand: 'Marca',
             model: 'Sub 12',

@@ -5,6 +5,7 @@ import type { CatalogDims } from '@/lib/catalog/to-driver-input';
 import type { ParameterKey } from '@/lib/parameters';
 import {
     applyCatalogDims,
+    clearDriverSpecifics,
     withDriver,
     withIdentity,
     writeField,
@@ -40,8 +41,8 @@ export type ProjectState = {
     clearFieldUnits: () => void;
     // Copia um driver do catálogo: substitui o driver por inteiro e registra a origem, numa etapa
     // só de desfazer.
-    // Quando o cadastro traz medidas físicas, elas substituem as do projeto (formato, pistão e
-    // cotas A–G, com o recorte no plano de corte); sem medidas, as do projeto ficam como estão.
+    // As medidas físicas do cadastro substituem as do projeto (formato, pistão e cotas A–G, com o
+    // recorte no plano de corte); o que o cadastro não traz fica em branco, nunca herdado do anterior.
     applyCatalogDriver: (
         driver: DriverInput,
         source: DriverSource,
@@ -180,9 +181,10 @@ export function createProjectStore(
                                 driverSource: source,
                             };
 
-                            return dims === undefined
-                                ? applied
-                                : applyCatalogDims(applied, dims);
+                            return applyCatalogDims(
+                                applied,
+                                dims ?? { measures: {} },
+                            );
                         }),
                     applySavedDriver: (saved) =>
                         update((data) => {
@@ -211,12 +213,13 @@ export function createProjectStore(
                                 ['drv_g_m', saved.depth_m],
                             ];
 
+                            // Sai tudo do anterior; entra só o que o salvo traz.
                             return measures.reduce<ProjectData>(
                                 (next, [key, si]) =>
                                     si === undefined
                                         ? next
                                         : writeField(next, key, si),
-                                applied,
+                                clearDriverSpecifics(applied),
                             );
                         }),
                     apply: update,

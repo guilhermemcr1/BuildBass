@@ -429,11 +429,23 @@ export function writeDriverChoice(
 
 // Medidas físicas vindas do catálogo: substituem as do projeto por inteiro (formato, pistão e
 // cotas A–G; o recorte C mora no plano de corte), para não sobrar cota de outro alto-falante.
+// Troca de alto-falante: tudo o que é do driver anterior sai (formato, pistão, cotas A–G, o recorte
+// do plano de corte e a ligação das bobinas). O que o novo não trouxer fica em branco, nunca herdado.
+export function clearDriverSpecifics(data: ProjectData): ProjectData {
+    const { coil_wiring: _coilWiring, ...drivers } = data.drivers;
+
+    return writeField(
+        withDriverDims({ ...data, drivers }, {}),
+        'cutout_m',
+        undefined,
+    );
+}
+
 export function applyCatalogDims(
     data: ProjectData,
     dims: CatalogDims,
 ): ProjectData {
-    let next = withDriverDims(data, {});
+    let next = clearDriverSpecifics(data);
 
     if (dims.shape !== undefined) {
         next = writeDriverChoice(next, 'shape', dims.shape);
