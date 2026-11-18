@@ -84,7 +84,8 @@ class DriverCatalogService
 
         return [
             'drivers' => $found->take(self::LIMIT)->values(),
-            'hasMore' => $found->count() > self::LIMIT,
+            // Para no teto do offset: o próximo pedido seria recusado (SearchDriversRequest::MAX_OFFSET).
+            'hasMore' => $found->count() > self::LIMIT && $offset + self::LIMIT <= SearchDriversRequest::MAX_OFFSET,
         ];
     }
 

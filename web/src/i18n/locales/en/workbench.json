@@ -66,7 +66,10 @@
         "wiring": "Driver wiring",
         "series": "Series",
         "parallel": "Parallel",
-        "wiringShort": "Wiring"
+        "wiringShort": "Wiring",
+        "coils": "Voice coils ({{variant}})",
+        "coilsLabel": "Voice coil wiring of the dual voice coil driver ({{variant}})",
+        "load": "Nominal load on the amplifier:"
     },
     "signal": {
         "title": "Signal",
@@ -223,10 +226,12 @@
         "emptyFiltered": "No drivers match these filters.",
         "triggerHint": "Find driver…",
         "clearSearch": "Clear search",
-        "loadMore": "Show more",
+        "loadingMore": "Loading more…",
         "filters": "Filters",
         "type": "Type",
         "any": "All",
+        "brand": "Brand",
+        "anyBrand": "All brands",
         "min": "min",
         "max": "max",
         "clearFilters": "Clear filters"
@@ -355,9 +360,10 @@
         "typeNone": "Not specified",
         "brandPlaceholder": "E.g. Triton",
         "modelPlaceholder": "E.g. TR 620 12\"",
-        "variantPlaceholder": "E.g. 4",
+        "variantPlaceholder": "E.g. 4 or 4+4",
         "applied": "Driver applied: {{name}}",
-        "fromMine": "From my speakers"
+        "fromMine": "From my speakers",
+        "dvcHint": "Dual voice coil: choose the coil wiring in the Drivers section."
     },
     "driverType": {
         "subwoofer": "Subwoofer",
@@ -386,5 +392,8 @@
         "fill_none": "None",
         "fill_lined": "Lined walls",
         "fill_stuffed": "Stuffed chamber"
+    },
+    "dvc": {
+        "badge": "Dual voice coil"
     }
 }

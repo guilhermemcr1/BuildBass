@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { FIELD_BOX, FIELD_INPUT } from '@/components/ui/field-box';
 import { SegmentedControl } from '@/components/ui/segmented-control';
+import { SelectField } from '@/components/ui/select-field';
 import { DIAMETER_BANDS, filtersForBand } from '@/lib/catalog/diameter-bands';
 import type { DiameterBandId } from '@/lib/catalog/diameter-bands';
 import type { DriverFilters } from '@/lib/catalog/types';
@@ -18,6 +19,7 @@ import type { QuantityId, UnitId, UnitSystem } from '@/lib/units/quantities';
 type Range = { min?: number; max?: number };
 
 export type PickerFilters = {
+    brand?: string;
     type?: DriverType;
     band?: DiameterBandId;
     fs: Range;
@@ -41,6 +43,7 @@ export function countFilters(filters: PickerFilters): number {
     ]);
 
     return (
+        (filters.brand === undefined ? 0 : 1) +
         (filters.type === undefined ? 0 : 1) +
         (filters.band === undefined ? 0 : 1) +
         ends.filter((value) => value !== undefined).length
@@ -50,6 +53,7 @@ export function countFilters(filters: PickerFilters): number {
 // Filtros da tela → parâmetros da API (tudo em SI).
 export function toApiFilters(filters: PickerFilters): DriverFilters {
     const out: DriverFilters = {
+        ...(filters.brand === undefined ? {} : { brand: filters.brand }),
         ...(filters.type === undefined ? {} : { type: filters.type }),
         ...filtersForBand(filters.band),
     };
@@ -76,14 +80,17 @@ type DriverFiltersPanelProps = {
     value: PickerFilters;
     onChange: (value: PickerFilters) => void;
     unitSystem: UnitSystem;
+    // Marcas do catálogo (GET /api/driver-brands); vazio enquanto carrega ou se falhar.
+    brands: string[];
 };
 
-// Painel do botão "Filtros" do buscador: tipo e diâmetro num clique, Fs, Qts e Vas por faixa
+// Painel do botão "Filtros" do buscador: marca numa lista, tipo e diâmetro num clique, Fs, Qts e Vas por faixa
 // (mínimo e máximo, na unidade da bancada).
 export function DriverFiltersPanel({
     value,
     onChange,
     unitSystem,
+    brands,
 }: DriverFiltersPanelProps) {
     const { t } = useTranslation('workbench');
     const active = countFilters(value) > 0;
@@ -99,6 +106,29 @@ export function DriverFiltersPanel({
             aria-label={t('picker.filters')}
             className="space-y-3 border-b border-border bg-background/40 px-4 py-3"
         >
+            {brands.length > 0 && (
+                <FilterRow label={t('picker.brand')}>
+                    <SelectField<string>
+                        label={t('picker.brand')}
+                        hideLabel
+                        selected={value.brand ?? ALL}
+                        onChange={(id) =>
+                            onChange({
+                                ...value,
+                                brand: id === ALL ? undefined : id,
+                            })
+                        }
+                        options={[
+                            { id: ALL, label: t('picker.anyBrand') },
+                            ...brands.map((brand) => ({
+                                id: brand,
+                                label: brand,
+                            })),
+                        ]}
+                        className="w-56 max-w-full"
+                    />
+                </FilterRow>
+            )}
             <FilterRow label={t('picker.type')}>
                 <SegmentedControl<string>
                     label={t('picker.type')}

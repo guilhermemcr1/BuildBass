@@ -3,6 +3,7 @@ import type { Simulation } from '@/engine';
 import type { ProjectData } from '@/lib/project/types';
 import { useWorkspace } from '@/stores/workspace';
 import type { OpenProject } from '@/stores/workspace';
+import { engineInput } from '@/lib/project/engine-input';
 
 // Um resultado por versão dos dados: o mesmo objeto `data` nunca é simulado duas vezes.
 const cache = new WeakMap<ProjectData, Simulation>();
@@ -14,7 +15,7 @@ export function simulationOf(data: ProjectData): Simulation {
         return cached;
     }
 
-    const result = simulate(data);
+    const result = simulate(engineInput(data));
     cache.set(data, result);
 
     return result;

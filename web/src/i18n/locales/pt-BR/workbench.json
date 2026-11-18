@@ -66,7 +66,10 @@
         "wiring": "Ligação dos alto-falantes",
         "series": "Série",
         "parallel": "Paralelo",
-        "wiringShort": "Ligação"
+        "wiringShort": "Ligação",
+        "coils": "Bobinas ({{variant}})",
+        "coilsLabel": "Ligação das bobinas do alto-falante de bobina dupla ({{variant}})",
+        "load": "Carga nominal no amplificador:"
     },
     "signal": {
         "title": "Sinal",
@@ -223,10 +226,12 @@
         "emptyFiltered": "Nenhum alto-falante com esses filtros.",
         "triggerHint": "Buscar alto-falante…",
         "clearSearch": "Limpar busca",
-        "loadMore": "Mostrar mais",
+        "loadingMore": "Carregando mais…",
         "filters": "Filtros",
         "type": "Tipo",
         "any": "Todos",
+        "brand": "Marca",
+        "anyBrand": "Todas as marcas",
         "min": "mín.",
         "max": "máx.",
         "clearFilters": "Limpar filtros"
@@ -355,9 +360,10 @@
         "typeNone": "Não informado",
         "brandPlaceholder": "Ex.: Triton",
         "modelPlaceholder": "Ex.: TR 620 12\"",
-        "variantPlaceholder": "Ex.: 4",
+        "variantPlaceholder": "Ex.: 4 ou 4+4",
         "applied": "Alto-falante aplicado: {{name}}",
-        "fromMine": "Dos meus alto-falantes"
+        "fromMine": "Dos meus alto-falantes",
+        "dvcHint": "Bobina dupla: escolha a ligação das bobinas no bloco Alto-falantes."
     },
     "driverType": {
         "subwoofer": "Subwoofer",
@@ -386,5 +392,8 @@
         "fill_none": "Sem material",
         "fill_lined": "Paredes revestidas",
         "fill_stuffed": "Câmara preenchida"
+    },
+    "dvc": {
+        "badge": "Bobina dupla"
     }
 }

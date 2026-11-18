@@ -3,13 +3,17 @@ import { useEffect, useMemo, useState } from 'react';
 import {
     Autocomplete,
     Dialog,
+    FieldInputContext,
     Header,
     Input,
     ListBox,
     ListBoxItem,
+    ListBoxLoadMoreItem,
     ListBoxSection,
     Modal,
     ModalOverlay,
+    Provider,
+    SelectableCollectionContext,
     TextField,
     useLocale,
 } from 'react-aria-components';
@@ -18,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { useActiveProject } from '@/hooks/use-active-project';
 import { useCatalogPick } from '@/hooks/use-catalog-pick';
 import { useDriverSearch } from '@/hooks/use-driver-search';
+import { fetchBrands } from '@/lib/catalog/client';
 import type { DriverSummary } from '@/lib/catalog/types';
 import { cn } from '@/lib/utils';
 import type { DriverType } from '@/lib/project/types';
@@ -34,6 +39,8 @@ import {
 } from './driver-filters';
 import type { PickerFilters } from './driver-filters';
 import { DriverThumb } from './driver-thumb';
+import { DvcBadge } from './dvc-badge';
+import { voiceCoils } from '@/lib/impedance';
 
 const MINE_PREVIEW = 5;
 
@@ -55,7 +62,8 @@ function displayName(driver: {
 
 // Busca de drivers num botão só: abre um diálogo que já lista o catálogo, e cada letra digitada
 // refina (fabricante, modelo ou tipo, com ou sem hífen). O botão "Filtros" do diálogo abre o
-// painel de tipo, diâmetro e faixas de Fs, Qts e Vas; "Mostrar mais" navega pelo resto.
+// painel de marca, tipo, diâmetro e faixas de Fs, Qts e Vas. Rolar até o fim da lista carrega a
+// próxima página (scroll infinito).
 export function DriverPicker({
     disabled = false,
     disabledReason,
@@ -80,6 +88,25 @@ export function DriverPicker({
         enabled: open,
     });
     const pick = useCatalogPick();
+    // Marcas para o filtro: buscadas na primeira vez que o diálogo abre. Se falhar, o filtro de
+    // marca some e tenta de novo na próxima abertura.
+    const [brands, setBrands] = useState<string[]>([]);
+
+    useEffect(() => {
+        if (!open || disabled || brands.length > 0) {
+            return;
+        }
+
+        const controller = new AbortController();
+
+        void fetchBrands(controller.signal).then((result) => {
+            if (result.ok) {
+                setBrands(result.data.data);
+            }
+        });
+
+        return () => controller.abort();
+    }, [open, disabled, brands.length]);
 
     // "/" abre a busca de qualquer lugar da bancada, menos de dentro de um campo.
     useEffect(() => {
@@ -402,13 +429,25 @@ export function DriverPicker({
                                     </button>
                                 )}
                             </TextField>
-                            {!disabled && showFilters && (
-                                <DriverFiltersPanel
-                                    value={picked}
-                                    onChange={setPicked}
-                                    unitSystem={unitSystem}
-                                />
-                            )}
+                            {!disabled &&
+                                showFilters && (
+                                    // O painel fica dentro do Autocomplete só pela posição na tela: sem
+                                    // limpar os contextos, o Autocomplete tomaria a lista do Select de
+                                    // marca e os campos de Fs, Qts e Vas como se fossem a busca.
+                                    <Provider
+                                        values={[
+                                            [SelectableCollectionContext, null],
+                                            [FieldInputContext, null],
+                                        ]}
+                                    >
+                                        <DriverFiltersPanel
+                                            value={picked}
+                                            onChange={setPicked}
+                                            unitSystem={unitSystem}
+                                            brands={brands}
+                                        />
+                                    </Provider>
+                                )}
                             {showSkeleton && <ResultSkeleton />}
                             <ListBox
                                 aria-label={t('picker.label')}
@@ -431,6 +470,12 @@ export function DriverPicker({
                                                     name={displayName(driver)}
                                                     term={term}
                                                     meta={meta(driver)}
+                                                    dvc={
+                                                        voiceCoils(
+                                                            driver.variant ??
+                                                                undefined,
+                                                        ) === 2
+                                                    }
                                                     pills={support(
                                                         driver.driver,
                                                     )}
@@ -457,6 +502,12 @@ export function DriverPicker({
                                                     name={displayName(driver)}
                                                     term={term}
                                                     meta={meta(driver)}
+                                                    dvc={
+                                                        voiceCoils(
+                                                            driver.variant ??
+                                                                undefined,
+                                                        ) === 2
+                                                    }
                                                     pills={support(driver)}
                                                     thumb={{
                                                         url: driver.cover_thumb_url,
@@ -482,6 +533,12 @@ export function DriverPicker({
                                                     name={displayName(driver)}
                                                     term={term}
                                                     meta={meta(driver)}
+                                                    dvc={
+                                                        voiceCoils(
+                                                            driver.variant ??
+                                                                undefined,
+                                                        ) === 2
+                                                    }
                                                     pills={support(driver)}
                                                     thumb={{
                                                         url: driver.cover_thumb_url,
@@ -491,22 +548,24 @@ export function DriverPicker({
                                         ))}
                                     </ListBoxSection>
                                 )}
-                            </ListBox>
-                            {searching &&
-                                search.status === 'ready' &&
-                                search.hasMore && (
-                                    <div className="flex justify-center px-4 pb-2">
-                                        <Button
-                                            variant="quiet"
-                                            disabled={search.loadingMore}
-                                            onPress={search.loadMore}
+                                {searching &&
+                                    search.status === 'ready' &&
+                                    search.hasMore && (
+                                        // Sentinela no fim da lista: ao aparecer na rolagem, pede a
+                                        // próxima página. Se a primeira não enche a lista, já dispara.
+                                        <ListBoxLoadMoreItem
+                                            onLoadMore={search.loadMore}
+                                            isLoading={search.loadingMore}
+                                            className="flex items-center justify-center gap-2 py-3 text-xs text-muted"
                                         >
-                                            {search.loadingMore
-                                                ? t('catalog.searching')
-                                                : t('picker.loadMore')}
-                                        </Button>
-                                    </div>
-                                )}
+                                            <Loader2
+                                                aria-hidden="true"
+                                                className="size-4 animate-spin text-accent"
+                                            />
+                                            {t('picker.loadingMore')}
+                                        </ListBoxLoadMoreItem>
+                                    )}
+                            </ListBox>
                         </Autocomplete>
                         <div
                             role="status"
@@ -574,6 +633,7 @@ function Entry({
     meta,
     pills,
     thumb,
+    dvc = false,
 }: {
     name: string;
     term: string;
@@ -582,6 +642,8 @@ function Entry({
     // Só o catálogo tem miniatura; sem imagem, o quadro reservado mantém o alinhamento. A imagem
     // é decorativa: o nome está ao lado.
     thumb?: { url: string | undefined };
+    // Bobina dupla ("4+4 Ω"): selo ao lado do nome.
+    dvc?: boolean;
 }) {
     return (
         <>
@@ -593,8 +655,11 @@ function Entry({
                 />
             )}
             <span className="block min-w-0 flex-1">
-                <span className="block truncate text-sm font-medium">
-                    <Highlight text={name} term={term} />
+                <span className="flex min-w-0 items-center gap-2">
+                    <span className="truncate text-sm font-medium">
+                        <Highlight text={name} term={term} />
+                    </span>
+                    {dvc && <DvcBadge />}
                 </span>
                 {meta !== '' && (
                     <span className="block truncate text-xs text-muted">

@@ -7,7 +7,7 @@ import {
     IMPEDANCE_SYMBOL,
     formatImpedance,
     isImpedance,
-    parseOhms,
+    parseVariant,
 } from '@/lib/impedance';
 import { cn } from '@/lib/utils';
 import { FIELD_BOX, FIELD_INPUT, UnitAddon } from './field-box';
@@ -26,7 +26,8 @@ type ImpedanceFieldProps = {
 };
 
 // Campo da variação do driver: só o número em ohms, com o Ω fixo ao lado (como os demais campos
-// com unidade). Letras e o símbolo são barrados ao digitar, e o valor é guardado como "4 Ω". Um
+// com unidade); bobina dupla se digita "4+4". Letras e o símbolo são barrados ao digitar, e o valor
+// é guardado como "4 Ω" ou "4+4 Ω". Um
 // texto antigo fora desse padrão aparece como está e é apontado, para ser corrigido.
 export function ImpedanceField({
     label,
@@ -42,12 +43,16 @@ export function ImpedanceField({
     const { locale } = useLocale();
     // Enquanto digita, vale o texto digitado ("4," ainda não é um número); ao sair, o guardado.
     const [draft, setDraft] = useState<string | undefined>();
-    const ohms = parseOhms(value);
+    const variant = parseVariant(value);
+    const number = (ohms: number) =>
+        ohms.toLocaleString(locale, { maximumFractionDigits: 2 });
     const shown =
         draft ??
-        (ohms === null
+        (variant === null
             ? value
-            : ohms.toLocaleString(locale, { maximumFractionDigits: 2 }));
+            : variant.coils === 2
+              ? `${number(variant.ohms)}+${number(variant.ohms)}`
+              : number(variant.ohms));
     const message =
         error ??
         (draft === undefined && !isImpedance(value)
@@ -58,8 +63,8 @@ export function ImpedanceField({
         <TextField
             value={shown}
             onChange={(text) => {
-                // Só dígitos e separador: letras e o Ω nunca entram.
-                const clean = text.replace(/[^\d.,]/g, '');
+                // Só dígitos, separador e o "+" da bobina dupla: letras e o Ω nunca entram.
+                const clean = text.replace(/[^\d.,+]/g, '');
 
                 setDraft(clean);
                 onChange(formatImpedance(clean));
@@ -68,9 +73,9 @@ export function ImpedanceField({
             isInvalid={message !== undefined}
             isDisabled={disabled}
             validationBehavior="aria"
-            inputMode="decimal"
+            inputMode="text"
             autoComplete="off"
-            maxLength={6}
+            maxLength={13}
             className={cn('group flex flex-col gap-1', className)}
         >
             <Label className="text-xs font-semibold text-muted">{label}</Label>

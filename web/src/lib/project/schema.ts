@@ -170,6 +170,8 @@ export const projectSchema = z.object({
     drivers: z.object({
         count,
         wiring: z.enum(['series', 'parallel']),
+        // Ligação das duas bobinas de um driver de bobina dupla; ausente = série.
+        coil_wiring: z.enum(['series', 'parallel']).optional(),
     }),
     box: z.object({
         type: z.enum(['closed', 'vented', 'bandpass', 'bandpass6']),

@@ -24,7 +24,15 @@ export type DriverInput = Partial<Record<DriverKey, number>>;
 
 export type Wiring = 'series' | 'parallel';
 
-export type DriversInput = { count: number; wiring: Wiring };
+// `wiring`: como os `count` drivers iguais se ligam entre si. `voice_coils`: bobinas por driver (2 =
+// bobina dupla, vem da variação "4+4 Ω"); `coil_wiring`: como as duas bobinas de cada driver se
+// ligam (ausente = série, que é como a ficha mede). Ver voice-coils.ts.
+export type DriversInput = {
+    count: number;
+    wiring: Wiring;
+    voice_coils?: number;
+    coil_wiring?: Wiring;
+};
 
 export type PortShape = 'round' | 'rect' | 'triangle';
 

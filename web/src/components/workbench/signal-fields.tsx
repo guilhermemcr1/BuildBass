@@ -8,6 +8,7 @@ import { useActiveProject } from '@/hooks/use-active-project';
 import { useActiveSimulation } from '@/hooks/use-simulation';
 import { formatWithUnit } from '@/lib/units/format';
 import { useParameterField } from './use-parameter-field';
+import { engineInput } from '@/lib/project/engine-input';
 
 type Mode = SignalInput['mode'];
 
@@ -21,7 +22,7 @@ export function SignalFields() {
     const power = useParameterField('power_w');
     const voltage = useParameterField('voltage_v');
     const { mode, radiation } = data.signal;
-    const levels = signalLevels(data);
+    const levels = signalLevels(engineInput(data));
     const thermal = warnings.find(({ id }) => id === 'aboveThermalPower');
 
     // Ao trocar o modo, o campo novo recebe o valor equivalente (sem Re, fica o que já havia).

@@ -1,3 +1,4 @@
+import { withVoiceCoils } from './voice-coils';
 import { bandEdges, rearLossReferenceHz, rearNetVolume } from './bandpass';
 import { solveCircuit } from './circuit';
 import type { CircuitParams } from './circuit';
@@ -331,11 +332,12 @@ export type SignalLevels = {
 
 // Sinal: watts e volts se convertem pela resistência DC do conjunto,
 // V = √(P·Re_tot). O modo diz qual dos dois foi digitado.
-export function signalLevels({
-    driver,
-    drivers,
-    signal,
-}: ProjectInput): SignalLevels {
+export function signalLevels(project: ProjectInput): SignalLevels {
+    return levelsOf(withVoiceCoils(project));
+}
+
+// Igual a `signalLevels`, com as bobinas já ligadas (o `simulate` transforma uma vez só).
+function levelsOf({ driver, drivers, signal }: ProjectInput): SignalLevels {
     const count = Math.max(1, Math.round(drivers.count));
     const re = driver.re_ohm;
     const reTotal =
@@ -370,7 +372,9 @@ export function signalLevels({
     };
 }
 
-export function simulate(project: ProjectInput): Simulation {
+export function simulate(input: ProjectInput): Simulation {
+    // Bobina dupla em paralelo: Re, Le e BL vistos dos terminais (voice-coils.ts).
+    const project = withVoiceCoils(input);
     const derived = deriveDriver(project.driver);
     const values: Partial<Record<DriverKey, number>> = {};
 
@@ -405,7 +409,7 @@ export function simulate(project: ProjectInput): Simulation {
     const count = Math.max(1, Math.round(drivers.count));
     const series = drivers.wiring === 'series';
 
-    const levels = signalLevels(project);
+    const levels = levelsOf(project);
     const reTotal = levels.re_total_ohm;
     const voltage = levels.voltage_v;
 

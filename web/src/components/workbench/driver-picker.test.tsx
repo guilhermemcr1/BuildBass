@@ -2,7 +2,7 @@ import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 import { activeProjectStore } from '@/hooks/use-active-project';
-import { fetchDriver, searchDrivers } from '@/lib/catalog/client';
+import { fetchBrands, fetchDriver, searchDrivers } from '@/lib/catalog/client';
 import type { CatalogDriver, DriverSummary } from '@/lib/catalog/types';
 import { usePreferences } from '@/stores/preferences';
 import { useRecentDrivers } from '@/stores/recent-drivers';
@@ -16,10 +16,38 @@ const DRIVER_ID = '0198a3c2-6d11-7c4e-9a52-3f1b8e0d7a10';
 vi.mock('@/lib/catalog/client', () => ({
     searchDrivers: vi.fn(),
     fetchDriver: vi.fn(),
+    fetchBrands: vi.fn(),
 }));
 
 const search = vi.mocked(searchDrivers);
 const detail = vi.mocked(fetchDriver);
+const brands = vi.mocked(fetchBrands);
+
+// O jsdom não tem IntersectionObserver: guarda os observadores para o teste simular o sentinela
+// do scroll infinito entrando na tela.
+const observers: IntersectionObserverCallback[] = [];
+
+class FakeIntersectionObserver {
+    constructor(callback: IntersectionObserverCallback) {
+        observers.push(callback);
+    }
+
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+    takeRecords() {
+        return [];
+    }
+}
+
+function scrollToEnd() {
+    for (const callback of observers) {
+        callback(
+            [{ isIntersecting: true } as IntersectionObserverEntry],
+            {} as IntersectionObserver,
+        );
+    }
+}
 
 const SUMMARY: DriverSummary = {
     id: DRIVER_ID,
@@ -84,6 +112,10 @@ beforeEach(() => {
     detail.mockReset();
     search.mockResolvedValue(listing());
     detail.mockResolvedValue({ ok: true, data: { data: DRIVER } });
+    brands.mockReset();
+    brands.mockResolvedValue({ ok: true, data: { data: [] } });
+    observers.length = 0;
+    vi.stubGlobal('IntersectionObserver', FakeIntersectionObserver);
 });
 
 describe('DriverPicker — abrir e buscar', () => {
@@ -353,7 +385,7 @@ describe('DriverPicker — falhas e estados', () => {
         expect(search).toHaveBeenCalledTimes(2);
     });
 
-    test('"Mostrar mais" busca a próxima página e acrescenta à lista', async () => {
+    test('rolar até o fim busca a próxima página e acrescenta à lista', async () => {
         const next = {
             ...SUMMARY,
             id: '0198a3c2-6d11-7c4e-9a52-3f1b8e0d7a11',
@@ -363,14 +395,13 @@ describe('DriverPicker — falhas e estados', () => {
             .mockResolvedValueOnce(listing([SUMMARY], true))
             .mockResolvedValueOnce(listing([next]));
         await open();
-
-        await userEvent.click(
-            await screen.findByRole(
-                'button',
-                { name: 'Mostrar mais' },
-                { timeout: 2000 },
-            ),
+        await screen.findByRole(
+            'option',
+            { name: /TR 620/ },
+            { timeout: 2000 },
         );
+
+        act(scrollToEnd);
 
         expect(
             await screen.findByRole(
@@ -381,9 +412,50 @@ describe('DriverPicker — falhas e estados', () => {
         ).toBeVisible();
         expect(screen.getByRole('option', { name: /TR 620/ })).toBeVisible();
         expect(search.mock.calls.at(-1)?.[3]).toBe(1);
+        expect(search).toHaveBeenCalledTimes(2);
+    });
+
+    test('marca o alto-falante de bobina dupla com um selo', async () => {
+        search.mockResolvedValue(listing([{ ...SUMMARY, variant: '4+4 Ω' }]));
+        await open();
+
+        const option = await screen.findByRole(
+            'option',
+            { name: /Triton/ },
+            { timeout: 2000 },
+        );
+
+        expect(within(option).getByText('Bobina dupla')).toBeInTheDocument();
+    });
+
+    test('filtra por marca com a lista vinda do catálogo', async () => {
+        brands.mockResolvedValue({
+            ok: true,
+            data: { data: ['Bomber', 'Triton'] },
+        });
+        search.mockResolvedValue(listing());
+        await open();
+
+        await userEvent.click(screen.getByRole('button', { name: 'Filtros' }));
+        await userEvent.click(
+            await screen.findByRole(
+                'button',
+                { name: /Marca/ },
+                { timeout: 2000 },
+            ),
+        );
+        await userEvent.click(screen.getByRole('option', { name: 'Triton' }));
+
+        await waitFor(
+            () =>
+                expect(search.mock.calls.at(-1)?.[1]).toMatchObject({
+                    brand: 'Triton',
+                }),
+            { timeout: 2000 },
+        );
         expect(
-            screen.queryByRole('button', { name: 'Mostrar mais' }),
-        ).not.toBeInTheDocument();
+            screen.getByRole('button', { name: 'Filtros (1)' }),
+        ).toBeInTheDocument();
     });
 
     test('driver que saiu do catálogo avisa, mantém aberto e não altera o projeto', async () => {

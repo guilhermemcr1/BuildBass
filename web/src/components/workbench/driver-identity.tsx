@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ImpedanceField } from '@/components/ui/impedance-field';
 import { TextInput } from '@/components/ui/text-field';
 import { useActiveProject } from '@/hooks/use-active-project';
+import { voiceCoils } from '@/lib/impedance';
 import { identityOf } from '@/lib/saved-drivers/types';
 import { useCatalogGallery } from '@/stores/catalog-gallery';
 import { useSavedDrivers } from '@/stores/saved-drivers';
@@ -11,8 +12,9 @@ import { DriverTypeSelect } from './driver-type-select';
 
 // Quem é o driver do projeto: marca, modelo, variação e tipo. Preenchido ao
 // copiar do catálogo ou de "Meus alto-falantes" e editável à mão, para o driver que não está em
-// nenhum dos dois. É só informação: não muda os cálculos, e o que se escreve aqui vai junto no
-// "Salvar alto-falante" e no "Enviar driver".
+// nenhum dos dois. É informação, com uma exceção: a variação "4+4 Ω" marca bobina dupla, que libera a
+// ligação das bobinas no bloco Alto-falantes. O que se escreve aqui vai junto no "Salvar
+// alto-falante" e no "Enviar driver".
 export function DriverIdentity() {
     const { t } = useTranslation('workbench');
     const source = useActiveProject((state) => state.data.driverSource);
@@ -80,6 +82,11 @@ export function DriverIdentity() {
                     value={source?.variant ?? ''}
                     onChange={(variant) => setIdentity({ variant })}
                     placeholder={t('identity.variantPlaceholder')}
+                    hint={
+                        voiceCoils(source?.variant) === 2
+                            ? t('identity.dvcHint')
+                            : undefined
+                    }
                 />
                 <DriverTypeSelect
                     value={source?.type}
