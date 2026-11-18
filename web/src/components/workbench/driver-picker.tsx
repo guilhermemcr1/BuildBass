@@ -374,7 +374,7 @@ export function DriverPicker({
                             <TextField
                                 aria-label={t('picker.label')}
                                 autoFocus
-                                className="flex h-12 items-center gap-3 border-b border-border px-4 focus-within:bg-raised"
+                                className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-surface pr-2 pl-4"
                             >
                                 {search.status === 'loading' && searching ? (
                                     <Loader2
@@ -401,7 +401,7 @@ export function DriverPicker({
                                             setShowFilters((shown) => !shown)
                                         }
                                         className={cn(
-                                            'order-last shrink-0 gap-1.5 px-2.5',
+                                            'order-last h-9 shrink-0 gap-1.5 border-l border-border rounded-none pl-3 pr-2.5',
                                             showFilters && 'bg-raised',
                                         )}
                                     >
