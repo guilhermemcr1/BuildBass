@@ -3,19 +3,25 @@
 #   navegador ──► web (nginx) ─┬─ SPA estática        (/)
 #                              └─ proxy interno ──► api (/api, /up, /moderation, /storage, ...)
 #
-# Só o serviço `web` (porta 80) é exposto; api, scheduler e mariadb ficam na rede interna.
+# Só o serviço `web` (porta 80) é exposto; api e scheduler ficam na rede interna.
+#
+# Banco: fica FORA deste projeto, no MariaDB compartilhado criado no Dokploy. A api e o
+# scheduler entram na rede do Dokploy (`dokploy-network`) e usam como DB_HOST o "Internal Host"
+# (App Name) que o Dokploy mostra na tela do banco. Nessa rede há serviços de outros projetos,
+# então o nginx chama a API por um nome único (`buildbass-api`), nunca por `api`.
 # Como o front e a API respondem no mesmo domínio, o front chama a API por URL relativa
 # (VITE_API_URL vazio) e não há CORS nem subdomínio extra.
 #
-# Variáveis obrigatórias: APP_KEY, APP_URL, DB_PASSWORD (as demais têm padrão).
+# Variáveis obrigatórias: APP_KEY, APP_URL, DB_HOST, DB_PASSWORD (as demais têm padrão).
+# Do banco, opcionais: DB_PORT, DB_DATABASE, DB_USERNAME, DB_NETWORK.
 #
 # Fuso: os containers rodam em TZ (padrão America/Sao_Paulo), então logs do nginx, do PHP e do
-# MariaDB saem na hora local. O banco continua gravando em UTC (sessão forçada em +00:00) e o
+# banco geral saem na hora local. O banco continua gravando em UTC (sessão forçada em +00:00) e o
 # painel converte para APP_DISPLAY_TIMEZONE na hora de mostrar.
 #
 # DNS: resolvedores fixos (DNS_PRIMARY/DNS_SECONDARY) para as chamadas externas da API
-# (Turnstile, OpenRouter, SMTP) não dependerem do DNS do host. Nomes internos (api, mariadb)
-# continuam resolvidos pelo DNS embutido do Docker.
+# (Turnstile, OpenRouter, SMTP) não dependerem do DNS do host. Nomes internos (buildbass-api e o
+# host do banco) continuam resolvidos pelo DNS embutido do Docker.
 
 x-dns: &dns
   - ${DNS_PRIMARY:-1.1.1.1}
@@ -25,9 +31,11 @@ x-api: &api
   build: ./api
   restart: unless-stopped
   dns: *dns
-  depends_on:
-    mariadb:
-      condition: service_healthy
+  # `default` fala com o web; `banco` é a rede do Dokploy, onde está o MariaDB compartilhado
+  # (outro projeto, por isso sem depends_on: se o banco cair, a API responde erro até ele voltar).
+  networks:
+    - default
+    - banco
   environment: &api-env
     TZ: ${TZ:-America/Sao_Paulo}
     APP_NAME: BuildBass
@@ -42,8 +50,9 @@ x-api: &api
     LOG_LEVEL: ${LOG_LEVEL:-warning}
 
     DB_CONNECTION: mariadb
-    DB_HOST: mariadb
-    DB_PORT: "3306"
+    # Internal Host do banco no Dokploy (ex.: mariadb-geral-a1b2c3).
+    DB_HOST: "${DB_HOST:?defina DB_HOST (Internal Host do MariaDB no Dokploy)}"
+    DB_PORT: ${DB_PORT:-3306}
     DB_DATABASE: ${DB_DATABASE:-buildbass}
     DB_USERNAME: ${DB_USERNAME:-buildbass}
     DB_PASSWORD: "${DB_PASSWORD:?defina DB_PASSWORD}"
@@ -99,6 +108,12 @@ services:
 
   api:
     <<: *api
+    networks:
+      default:
+        # Nome único para o nginx do `web`; `api` pode colidir com outro projeto na rede do Dokploy.
+        aliases:
+          - buildbass-api
+      banco: {}
     environment:
       <<: *api-env
       # Migrations ficam por sua conta (terminal do serviço); true migra a cada deploy.
@@ -131,26 +146,11 @@ services:
       <<: *api-env
       AUTORUN_ENABLED: "false"
 
-  mariadb:
-    image: mariadb:11.4
-    restart: unless-stopped
-    # buffer pool: memória para índices/dados em cache (ajuste à RAM; ~25% dela é um bom teto).
-    command: ["--skip-name-resolve", "--innodb-buffer-pool-size=${DB_BUFFER_POOL_SIZE:-256M}"]
-    environment:
-      MARIADB_DATABASE: ${DB_DATABASE:-buildbass}
-      MARIADB_USER: ${DB_USERNAME:-buildbass}
-      MARIADB_PASSWORD: "${DB_PASSWORD:?defina DB_PASSWORD}"
-      MARIADB_RANDOM_ROOT_PASSWORD: "yes"
-      TZ: ${TZ:-America/Sao_Paulo}
-    volumes:
-      - mariadb-data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
-      interval: 10s
-      timeout: 5s
-      start_period: 30s
-      retries: 10
-
 volumes:
   api-storage:
-  mariadb-data:
+
+networks:
+  # Rede do Dokploy (já existe no servidor); aqui só se usa.
+  banco:
+    external: true
+    name: ${DB_NETWORK:-dokploy-network}
