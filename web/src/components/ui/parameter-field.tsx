@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 import {
     FieldError,
     Focusable,
@@ -7,22 +7,22 @@ import {
     NumberField,
     Text,
     useLocale,
-} from 'react-aria-components';
-import { useTranslation } from 'react-i18next';
-import { useNumberEntry } from '@/hooks/use-number-entry';
-import { EXAMPLES, PARAMETERS, withinRange } from '@/lib/parameters';
-import type { Requirement } from '@/lib/requirements';
-import type { ParameterKey } from '@/lib/parameters';
-import { fromSi, toSi } from '@/lib/units/convert';
-import { formatOptionsFor, formatQuantity } from '@/lib/units/format';
-import { QUANTITIES, findUnit } from '@/lib/units/quantities';
-import type { UnitId } from '@/lib/units/quantities';
-import { cn } from '@/lib/utils';
-import { Menu } from './menu';
-import { StatusIndicator } from './status-indicator';
-import type { FieldStatus } from './status-indicator';
-import { HelpTip, useHoverless } from './help-tip';
-import { Tooltip } from './tooltip';
+} from "react-aria-components";
+import { useTranslation } from "react-i18next";
+import { useNumberEntry } from "@/hooks/use-number-entry";
+import { EXAMPLES, PARAMETERS, withinRange } from "@/lib/parameters";
+import type { Requirement } from "@/lib/requirements";
+import type { ParameterKey } from "@/lib/parameters";
+import { fromSi, toSi } from "@/lib/units/convert";
+import { formatOptionsFor, formatQuantity } from "@/lib/units/format";
+import { QUANTITIES, findUnit } from "@/lib/units/quantities";
+import type { UnitId } from "@/lib/units/quantities";
+import { cn } from "@/lib/utils";
+import { Menu } from "./menu";
+import { StatusIndicator } from "./status-indicator";
+import type { FieldStatus } from "./status-indicator";
+import { HelpTip, useHoverless } from "./help-tip";
+import { Tooltip } from "./tooltip";
 
 type ParameterFieldProps = {
     parameter: ParameterKey;
@@ -42,7 +42,7 @@ type ParameterFieldProps = {
     // configuração); `stacked`: nome curto em cima e caixa embaixo, para três campos lado a lado;
     // `compact`: o mesmo, com o símbolo (Vb, Fb, Ql) no lugar do nome;
     // `symbol` (padrão): símbolo curto, para as grades do driver e da caixa.
-    layout?: 'symbol' | 'row' | 'stacked' | 'compact';
+    layout?: "symbol" | "row" | "stacked" | "compact";
     // Campo indispensável para algum cálculo: ganha um asterisco e a explicação na ajuda.
     requirement?: Requirement;
     disabled?: boolean;
@@ -52,11 +52,11 @@ type ParameterFieldProps = {
 };
 
 const BORDER: Record<FieldStatus, string> = {
-    none: 'border-border',
-    ok: 'border-border',
-    unchecked: 'border-border',
-    warn: 'border-status-warn',
-    error: 'border-status-error',
+    none: "border-border",
+    ok: "border-border",
+    unchecked: "border-border",
+    warn: "border-status-warn",
+    error: "border-status-error",
 };
 
 export function ParameterField({
@@ -65,18 +65,18 @@ export function ParameterField({
     onChangeSi,
     unit,
     onUnitChange,
-    status = 'none',
+    status = "none",
     statusMessage,
     derivedSi,
     derivedLabel,
     calculatedLabel,
-    layout = 'symbol',
+    layout = "symbol",
     requirement,
     disabled = false,
     labelContext,
     className,
 }: ParameterFieldProps) {
-    const { t } = useTranslation(['parameters', 'common']);
+    const { t } = useTranslation(["parameters", "common"]);
     const { locale } = useLocale();
     const [outOfRange, setOutOfRange] = useState(false);
     const hoverless = useHoverless();
@@ -84,24 +84,25 @@ export function ParameterField({
     const definition = PARAMETERS[parameter];
     const units = QUANTITIES[definition.quantity].units;
     const symbol = findUnit(unit).symbol;
-    const row = layout === 'row';
-    const compact = layout === 'compact';
-    const stacked = layout === 'stacked' || compact;
+    const row = layout === "row";
+    const compact = layout === "compact";
+    const stacked = layout === "stacked" || compact;
     const bareExample = !row;
     // "Proporção — altura" → mostra só "altura"; o nome acessível mantém o texto inteiro.
     const fullLabel = t(`${parameter}.label`);
-    const cut = fullLabel.lastIndexOf('—');
+    const cut = fullLabel.lastIndexOf("—");
     const shortLabel = cut < 0 ? fullLabel : fullLabel.slice(cut + 1).trim();
-    const labelPrefix = cut < 0 ? '' : fullLabel.slice(0, cut + 1) + ' ';
+    const labelPrefix = cut < 0 ? "" : fullLabel.slice(0, cut + 1) + " ";
     const help = [
         t(`${parameter}.help`),
-        requirement === undefined ? '' : t(`common:required.${requirement}`),
+        requirement === undefined ? "" : t(`common:required.${requirement}`),
     ]
-        .filter((part) => part !== '')
-        .join(' ');
+        .filter((part) => part !== "")
+        .join(" ");
     const derived = valueSi === undefined && derivedSi !== undefined;
     const shownSi = valueSi ?? derivedSi;
-    const displayed = shownSi === undefined ? Number.NaN : fromSi(shownSi, unit);
+    const displayed =
+        shownSi === undefined ? Number.NaN : fromSi(shownSi, unit);
 
     // A ajuda abre também pelo campo numérico (hover ou foco); a descrição abaixo continua
     // `sr-only` para o leitor de tela, então o campo nunca muda de tamanho ao receber foco.
@@ -113,14 +114,18 @@ export function ParameterField({
                 // número; o "Ex." tomaria o lugar dele.
                 bareExample
                     ? formatQuantity(EXAMPLES[parameter], unit, locale)
-                    : t('common:placeholder.example', {
-                          value: formatQuantity(EXAMPLES[parameter], unit, locale),
+                    : t("common:placeholder.example", {
+                          value: formatQuantity(
+                              EXAMPLES[parameter],
+                              unit,
+                              locale,
+                          ),
                       })
             }
             className={cn(
-                'num h-full w-full min-w-0 bg-transparent text-left text-sm outline-none',
-                stacked ? 'px-2' : 'px-2.5',
-                derived ? 'text-muted' : 'text-foreground',
+                "num h-full w-full min-w-0 bg-transparent text-left text-sm outline-none",
+                stacked ? "px-2" : "px-2.5",
+                derived ? "text-muted" : "text-foreground",
             )}
         />
     );
@@ -164,24 +169,24 @@ export function ParameterField({
             isDisabled={disabled}
             isRequired={requirement !== undefined}
             validationBehavior="aria"
-            className={cn('group flex min-w-0 flex-col gap-0.5', className)}
+            className={cn("group flex min-w-0 flex-col gap-0.5", className)}
         >
             {/* Linha compacta: símbolo à esquerda, valor e unidade à direita, numa caixa só. */}
             <div
                 className={cn(
-                    'flex gap-2',
-                    stacked ? 'flex-col gap-1' : 'items-center',
+                    "flex gap-2",
+                    stacked ? "flex-col gap-1" : "items-center",
                 )}
             >
                 <Label
                     className={cn(
                         row &&
-                            'min-w-0 flex-1 text-[13px] leading-tight text-foreground',
+                            "min-w-0 flex-1 text-[13px] leading-tight text-foreground",
                         stacked &&
-                            'truncate text-[11px] leading-4 font-semibold text-muted first-letter:uppercase',
+                            "truncate text-[11px] leading-4 font-semibold text-muted first-letter:uppercase",
                         !row &&
                             !stacked &&
-                            'w-11 shrink-0 truncate text-[13px] font-semibold text-muted',
+                            "w-11 shrink-0 truncate text-[13px] font-semibold text-muted",
                     )}
                 >
                     {labelContext !== undefined && (
@@ -189,7 +194,7 @@ export function ParameterField({
                     )}
                     <HelpTip
                         content={help}
-                        label={t('common:help.of', {
+                        label={t("common:help.of", {
                             parameter: definition.symbol,
                         })}
                     >
@@ -198,7 +203,8 @@ export function ParameterField({
                                 <>
                                     {/* O nome acessível continua começando pelo símbolo. */}
                                     <span className="sr-only">
-                                        {definition.symbol} — {stacked && labelPrefix}
+                                        {definition.symbol} —{" "}
+                                        {stacked && labelPrefix}
                                     </span>
                                     {row ? fullLabel : shortLabel}
                                 </>
@@ -218,16 +224,20 @@ export function ParameterField({
                     )}
                     {(compact || (!row && !stacked)) && (
                         <span className="sr-only">
-                            {' '}
+                            {" "}
                             — {t(`${parameter}.label`)}
                         </span>
                     )}
                 </Label>
                 <div
                     className={cn(
-                        'flex h-8 items-stretch overflow-hidden rounded-md border bg-raised motion-safe:transition-colors group-data-[disabled]:border-dashed group-data-[disabled]:bg-transparent group-focus-within:border-accent group-focus-within:bg-surface',
-                        row ? 'w-32 shrink-0' : stacked ? 'w-full' : 'min-w-0 flex-1',
-                        outOfRange ? 'border-status-error' : BORDER[status],
+                        "flex h-8 items-stretch overflow-hidden rounded-md border bg-raised motion-safe:transition-colors group-data-[disabled]:border-dashed group-data-[disabled]:bg-transparent group-focus-within:border-accent group-focus-within:bg-surface",
+                        row
+                            ? "w-32 shrink-0"
+                            : stacked
+                              ? "w-full"
+                              : "min-w-0 flex-1",
+                        outOfRange ? "border-status-error" : BORDER[status],
                     )}
                 >
                     {hoverless ? (
@@ -237,35 +247,37 @@ export function ParameterField({
                             <Focusable>{input}</Focusable>
                         </Tooltip>
                     )}
-                    {units.length > 1 && onUnitChange !== undefined && !disabled ? (
+                    {units.length > 1 &&
+                    onUnitChange !== undefined &&
+                    !disabled ? (
                         <div className="flex shrink-0 items-center border-l border-border bg-background/60">
-                        <Menu<UnitId>
-                            label={t('common:units.change', {
-                                parameter: definition.symbol,
-                            })}
-                            triggerLabel={t('common:units.changeFrom', {
-                                unit: symbol,
-                                parameter: definition.symbol,
-                            })}
-                            trigger={symbol}
-                            items={units.map((item) => ({
-                                id: item.id,
-                                label: item.symbol,
-                            }))}
-                            selected={unit}
-                            onAction={onUnitChange}
-                            triggerClassName={cn(
-                                'flex h-full items-center justify-center text-xs text-muted motion-safe:transition-colors data-[hovered]:bg-raised data-[hovered]:text-foreground',
-                                stacked ? 'min-w-8 px-1.5' : 'min-w-9 px-2',
-                            )}
-                                                    />
+                            <Menu<UnitId>
+                                label={t("common:units.change", {
+                                    parameter: definition.symbol,
+                                })}
+                                triggerLabel={t("common:units.changeFrom", {
+                                    unit: symbol,
+                                    parameter: definition.symbol,
+                                })}
+                                trigger={symbol}
+                                items={units.map((item) => ({
+                                    id: item.id,
+                                    label: item.symbol,
+                                }))}
+                                selected={unit}
+                                onAction={onUnitChange}
+                                triggerClassName={cn(
+                                    "flex h-full items-center justify-center text-xs text-muted motion-safe:transition-colors data-[hovered]:bg-raised data-[hovered]:text-foreground",
+                                    stacked ? "min-w-8 px-1.5" : "min-w-9 px-2",
+                                )}
+                            />
                         </div>
                     ) : (
-                        symbol !== '' && (
+                        symbol !== "" && (
                             <span
                                 className={cn(
-                                    'flex shrink-0 items-center justify-center border-l border-border bg-background/60 text-xs text-muted',
-                                    stacked ? 'min-w-8 px-1.5' : 'min-w-9 px-2',
+                                    "flex shrink-0 items-center justify-center border-l border-border bg-background/60 text-xs text-muted",
+                                    stacked ? "min-w-8 px-1.5" : "min-w-9 px-2",
                                 )}
                             >
                                 {symbol}
@@ -278,14 +290,17 @@ export function ParameterField({
                 neutro "sem verificação" não aparece (repaginação da bancada). */}
             {(derived ||
                 calculatedLabel !== undefined ||
-                (status !== 'none' && status !== 'unchecked')) && (
-                <div className={row || stacked ? '' : 'pl-13'}>
+                (status !== "none" && status !== "unchecked")) && (
+                <div className={row || stacked ? "" : "pl-13"}>
                     {derived || calculatedLabel !== undefined ? (
                         <span className="text-[11px] leading-4 text-muted">
                             {derived ? derivedLabel : calculatedLabel}
                         </span>
                     ) : (
-                        <StatusIndicator status={status} size="compact" />
+                        <ConsistencyStatus
+                            status={status}
+                            message={statusMessage}
+                        />
                     )}
                 </div>
             )}
@@ -294,26 +309,52 @@ export function ParameterField({
             </Text>
             <FieldError
                 className={cn(
-                    'text-[11px] text-status-error',
-                    !row && !stacked && 'pl-13',
+                    "text-[11px] text-status-error",
+                    !row && !stacked && "pl-13",
                 )}
             >
-                {t('common:validation.outOfRange', {
+                {t("common:validation.outOfRange", {
                     min: formatQuantity(definition.min, unit, locale),
                     max: formatQuantity(definition.max, unit, locale),
-                    unit: symbol === '' ? '' : ` ${symbol}`,
+                    unit: symbol === "" ? "" : ` ${symbol}`,
                 })}
             </FieldError>
-            {statusMessage !== undefined && (
-                <p
-                    className={cn(
-                        'text-[11px] leading-4 text-muted',
-                        !row && !stacked && 'pl-13',
-                    )}
-                >
-                    {statusMessage}
-                </p>
-            )}
         </NumberField>
+    );
+}
+
+// Desvio de consistência é aviso para conferir, não erro: "Verificar", com o detalhe num
+// tooltip (popover no toque) em vez de um parágrafo que alarga o campo.
+function ConsistencyStatus({
+    status,
+    message,
+}: {
+    status: FieldStatus;
+    message?: string;
+}) {
+    const { t } = useTranslation("common");
+    const flagged = status === "warn" || status === "error";
+    const indicator = (
+        <StatusIndicator
+            status={status}
+            size="compact"
+            label={flagged ? t(`consistency.${status}`) : undefined}
+            shortLabel={flagged ? t("consistency.short") : undefined}
+        />
+    );
+
+    if (message === undefined) {
+        return indicator;
+    }
+
+    return (
+        <>
+            <HelpTip content={message} label={t("consistency.details")}>
+                <span tabIndex={0} className="cursor-help">
+                    {indicator}
+                </span>
+            </HelpTip>
+            <span className="sr-only">{message}</span>
+        </>
     );
 }

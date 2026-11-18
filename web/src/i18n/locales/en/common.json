@@ -117,5 +117,11 @@
     },
     "impedance": {
         "invalid": "Enter only the impedance in ohms, from {{min}} to {{max}} (e.g. 4 or 3.2). No text or Ω symbol."
+    },
+    "consistency": {
+        "short": "Check",
+        "warn": "Check: small difference from the calculated value",
+        "error": "Check: differs from the calculated value",
+        "details": "Check details"
     }
 }

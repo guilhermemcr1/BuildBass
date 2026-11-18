@@ -292,7 +292,7 @@ describe('ParameterField', () => {
         );
 
         expect(
-            screen.getByText('Atenção', { selector: ':not(.sr-only)' }),
+            screen.getByText('Verificar', { selector: ':not(.sr-only)' }),
         ).toBeVisible();
     });
 

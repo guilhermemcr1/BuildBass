@@ -18,6 +18,8 @@ const APPEARANCE: Record<
 type StatusIndicatorProps = {
     status: FieldStatus;
     label?: string;
+    // Texto visível do modo `compact`, no lugar do curto padrão.
+    shortLabel?: string;
     className?: string;
     // `compact`: texto curto e menor para os campos de parâmetro; o rótulo
     // completo continua disponível ao leitor de tela.
@@ -28,6 +30,7 @@ type StatusIndicatorProps = {
 export function StatusIndicator({
     status,
     label,
+    shortLabel,
     className,
     size = 'default',
 }: StatusIndicatorProps) {
@@ -57,7 +60,7 @@ export function StatusIndicator({
             />
             {compact ? (
                 <>
-                    <span aria-hidden="true">{t(`status.short.${status}`)}</span>
+                    <span aria-hidden="true">{shortLabel ?? t(`status.short.${status}`)}</span>
                     <span className="sr-only">{full}</span>
                 </>
             ) : (
