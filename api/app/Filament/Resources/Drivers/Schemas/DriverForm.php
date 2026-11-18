@@ -72,9 +72,17 @@ class DriverForm
                                 ->hiddenLabel()
                                 ->multiple()
                                 ->reorderable()
+                                // Na ordem gravada (a 1ª é a capa); sem isto o FilePond inverte, e o
+                                // envio novo entra no fim.
+                                ->appendFiles()
                                 ->image()
                                 ->panelLayout('grid')
-                                ->imagePreviewHeight('140')
+                                // Blocos compactos e sem o nome (é um UUID): o estilo está em
+                                // resources/views/filament/driver-images.blade.php.
+                                ->extraFieldWrapperAttributes(['class' => 'bb-driver-images'])
+                                ->imagePreviewHeight('160')
+                                // Botão no bloco que abre a imagem em tamanho real.
+                                ->openable()
                                 ->acceptedFileTypes(config('driver_images.mimes'))
                                 ->maxFiles((int) config('driver_images.max_files'))
                                 ->maxSize((int) config('driver_images.max_kb'))
@@ -140,34 +148,50 @@ class DriverForm
 
         foreach ($images as $index => $file) {
             $position = $index + 1;
-            $url = self::previewUrl($file);
-            $thumb = $url === null
-                ? ''
-                : '<img src="'.e($url).'" alt="" style="height:56px;width:56px;object-fit:cover;border-radius:6px;margin-bottom:4px">';
+            [$thumb, $full] = self::previewUrls($file);
+            $name = e("Imagem {$position}");
+            $html = $thumb === null
+                ? $name
+                // A lupa abre a ampliada sobre a página (script em driver-images.blade.php).
+                : '<span class="bb-cover-option">'
+                    .'<img src="'.e($thumb).'" alt="">'
+                    .'<button type="button" class="bb-cover-zoom" data-bb-zoom="'.e($full).'" aria-label="'.e("Ampliar imagem {$position}").'">'
+                    .'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5M11 8v6M8 11h6"/></svg>'
+                    .'</button>'
+                    .'<span>'.$name.'</span>'
+                    .'</span>';
 
-            $options[$index] = new HtmlString($thumb.e("Imagem {$position}"));
+            $options[$index] = new HtmlString($html);
         }
 
         return $options;
     }
 
-    private static function previewUrl(mixed $file): ?string
+    /**
+     * Miniatura e ampliada de uma imagem: gravada (os dois WebP) ou recém-enviada (o arquivo
+     * temporário serve para as duas até salvar).
+     *
+     * @return array{0: ?string, 1: ?string}
+     */
+    private static function previewUrls(mixed $file): array
     {
         if (is_string($file)) {
             $store = app(DriverImageStore::class);
 
-            return $store->validPath($file) ? $store->thumbUrl($file) : null;
+            return $store->validPath($file) ? [$store->thumbUrl($file), $store->url($file)] : [null, null];
         }
 
         if ($file instanceof TemporaryUploadedFile && $file->isPreviewable()) {
             try {
-                return $file->temporaryUrl();
+                $url = $file->temporaryUrl();
+
+                return [$url, $url];
             } catch (Throwable) {
-                return null;
+                return [null, null];
             }
         }
 
-        return null;
+        return [null, null];
     }
 
     /** Campos da aba Identificação (para o selo de erro). */

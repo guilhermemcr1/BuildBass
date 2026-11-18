@@ -44,6 +44,8 @@ class ModerationPanelProvider extends PanelProvider
             ->unsavedChangesAlerts()
             // Aviso de alterações não salvas em Dialog (o do Filament é o popup do navegador).
             ->renderHook(PanelsRenderHook::BODY_END, fn (): View => view('filament.unsaved-guard'))
+            // Upload compacto, escolha da principal e ampliação das imagens do driver.
+            ->renderHook(PanelsRenderHook::BODY_END, fn (): View => view('filament.driver-images'))
             ->sidebarCollapsibleOnDesktop()
             // Idioma do painel também nas requisições do Livewire (salvar, filtrar, validar).
             ->middleware([SetPanelLocale::class], isPersistent: true)

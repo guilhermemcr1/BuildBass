@@ -138,3 +138,31 @@ it('aplica a orientação EXIF do JPEG', function () {
 
     expect(webpSize($result['full']))->toBe([200, 400, IMAGETYPE_WEBP]);
 });
+
+it('otimiza o tamanho: foto grande vira WebP bem menor que o original', function (string $format) {
+    // Gradiente com ruído, perto de uma foto real (cor lisa comprimiria bem em qualquer formato).
+    $image = imagecreatetruecolor(2400, 1600);
+    mt_srand(7);
+    for ($y = 0; $y < 1600; $y += 4) {
+        for ($x = 0; $x < 2400; $x += 4) {
+            $noise = mt_rand(0, 40);
+            imagefilledrectangle($image, $x, $y, $x + 3, $y + 3, imagecolorallocate(
+                $image,
+                (int) ($x / 2400 * 200) + $noise,
+                (int) ($y / 1600 * 200) + $noise,
+                120 + $noise,
+            ));
+        }
+    }
+    ob_start();
+    $format === 'jpeg' ? imagejpeg($image, null, 95) : imagepng($image);
+    $original = (string) ob_get_clean();
+
+    $webp = app(DriverImageProcessor::class)->process($original);
+
+    expect(substr($webp['full'], 0, 4))->toBe('RIFF')
+        ->and(substr($webp['full'], 8, 4))->toBe('WEBP')
+        ->and(webpSize($webp['full'])[0])->toBe(1280)
+        ->and(strlen($webp['full']))->toBeLessThan((int) (strlen($original) * 0.5))
+        ->and(strlen($webp['thumb']))->toBeLessThan(30 * 1024);
+})->with(['jpeg', 'png']);
