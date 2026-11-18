@@ -401,7 +401,7 @@ export function DriverPicker({
                                             setShowFilters((shown) => !shown)
                                         }
                                         className={cn(
-                                            'order-last h-9 shrink-0 gap-1.5 border-l border-border rounded-none pl-3 pr-2.5',
+                                            'order-last h-9 shrink-0 gap-1.5 rounded-none border-l border-border pr-2.5 pl-3',
                                             showFilters && 'bg-raised',
                                         )}
                                     >
