@@ -116,6 +116,11 @@
         "legend": "* Obrigatório para algum cálculo. Toque ou passe o mouse no campo para ver qual."
     },
     "impedance": {
+        "singleShort": "Simples",
+        "dualShort": "Dupla",
+        "coils": "Bobinas",
+        "single": "Bobina simples",
+        "dual": "Bobina dupla",
         "invalid": "Informe só a impedância em ohms, de {{min}} a {{max}} (ex.: 4 ou 3,2). Sem texto nem o símbolo Ω."
     },
     "consistency": {

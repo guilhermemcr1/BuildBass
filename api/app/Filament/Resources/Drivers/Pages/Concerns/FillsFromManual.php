@@ -88,9 +88,13 @@ trait FillsFromManual
             // A sugestão vem em SI; os campos mostram a unidade das fichas (mH, mm, L…).
             $this->data[$key] = match (true) {
                 is_float($value) => DriverParameterFields::toDisplay($key, $value),
-                $key === 'variant' => DriverVariant::forInput((string) $value),
+                $key === 'variant' => DriverVariant::ohmsForInput((string) $value),
                 default => $value,
             };
+        }
+
+        if (isset($filled['variant'])) {
+            $this->data['variant_dual'] = DriverVariant::coils((string) $filled['variant']) === 2;
         }
 
         // Com os valores do manual no lugar, o que dá para calcular dos outros entra sozinho.

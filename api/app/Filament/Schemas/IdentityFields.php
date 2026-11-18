@@ -5,7 +5,11 @@ namespace App\Filament\Schemas;
 use App\Models\Driver;
 use App\Support\DriverVariant;
 use Closure;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Group;
+use Filament\Schemas\Components\Utilities\Get;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Campos de texto da identificação do driver, sem texto livre onde não faz sentido: a variante é a
@@ -50,8 +54,11 @@ class IdentityFields
         return FieldTip::on($field, 'Como na ficha do fabricante. Sem a impedância: ela vai na variante.');
     }
 
-    /** A variante: impedância em ohms. O campo guarda "4 Ω" a partir de "4". */
-    public static function variant(?Closure $disabled = null): TextInput
+    /**
+     * A variante: impedância em ohms de uma bobina, mais a caixa "Bobina dupla". O banco continua
+     * guardando "4 Ω" ou "4+4 Ω" (chave única e arquivos dependem disso), sempre montado pelo sistema.
+     */
+    public static function variant(?Closure $disabled = null): Group
     {
         $field = TextInput::make('variant')
             ->label('Variante · impedância')
@@ -60,17 +67,27 @@ class IdentityFields
             ->inputMode('decimal')
             ->autocomplete(false)
             ->datalist(DriverVariant::COMMON)
-            ->formatStateUsing(fn (?string $state): string => DriverVariant::forInput($state))
-            ->dehydrateStateUsing(fn (?string $state): string => DriverVariant::format($state))
+            ->formatStateUsing(fn (?string $state): string => DriverVariant::ohmsForInput($state))
+            ->dehydrateStateUsing(fn (?string $state, Get $get): string => DriverVariant::compose($state, (bool) $get('variant_dual')))
             ->rule(fn (): Closure => function (string $attribute, mixed $value, Closure $fail): void {
                 if (trim((string) $value) !== '' && DriverVariant::parse((string) $value) === null) {
                     $fail('Informe só a impedância em ohms, de '.DriverVariant::MIN_OHM.' a '.DriverVariant::MAX_OHM.' (ex.: 4 ou 3.2). Sem texto nem o símbolo Ω.');
                 }
             });
 
-        FieldTip::on($field, 'Impedância da bobina, em ohms (Ω), de '.DriverVariant::MIN_OHM.' a '.DriverVariant::MAX_OHM.'. Digite só o número: 4 vira "4 Ω". Deixe vazio se o modelo tem uma versão só.');
+        FieldTip::on($field, 'Impedância de uma bobina, em ohms (Ω), de '.DriverVariant::MIN_OHM.' a '.DriverVariant::MAX_OHM.'. Digite só o número: 4 vira "4 Ω". Bobina dupla: marque a caixa abaixo (vira "4+4 Ω"). Deixe vazio se o modelo tem uma versão só.');
 
-        return $disabled === null ? $field : $field->disabled($disabled);
+        $dual = Checkbox::make('variant_dual')
+            ->label('Bobina dupla')
+            ->dehydrated(false)
+            ->afterStateHydrated(fn (Checkbox $component, ?Model $record) => $component->state(DriverVariant::coils($record?->getAttribute('variant')) === 2));
+
+        if ($disabled !== null) {
+            $field->disabled($disabled);
+            $dual->disabled($disabled);
+        }
+
+        return Group::make([$field, $dual]);
     }
 
     public static function source(): TextInput

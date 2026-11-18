@@ -17,7 +17,7 @@ final class DriverVariant
     public const SYMBOL = 'Ω';
 
     /** Valores comuns, oferecidos como sugestão no campo. */
-    public const COMMON = ['1', '2', '4', '6', '8', '16', '1+1', '2+2', '4+4'];
+    public const COMMON = ['1', '2', '4', '6', '8', '16'];
 
     private const NUMBER = '\\d{1,3}(?:\\.\\d{1,2})?';
 
@@ -89,5 +89,21 @@ final class DriverVariant
         $number = rtrim(rtrim(number_format($ohms, 2, '.', ''), '0'), '.');
 
         return $coils === 2 ? $number.'+'.$number : $number;
+    }
+
+    /** Só a impedância de uma bobina, para o campo numérico ("4+4 Ω" vira "4"); a bobina dupla é a caixa ao lado. */
+    public static function ohmsForInput(?string $stored): string
+    {
+        $read = self::read($stored);
+
+        return $read === null ? trim((string) $stored) : explode('+', self::forInput($stored))[0];
+    }
+
+    /** Monta o valor guardado a partir do número e da caixa: ("4", true) vira "4+4 Ω". */
+    public static function compose(?string $ohms, bool $dual): string
+    {
+        $ohms = trim((string) $ohms);
+
+        return self::format($dual && $ohms !== '' && self::read($ohms)[1] === 1 ? $ohms.'+'.$ohms : $ohms);
     }
 }
