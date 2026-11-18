@@ -9,7 +9,6 @@
 Parâmetros Thiele-Small entram, curvas de resposta e um plano de corte pronto para a marcenaria saem.</p>
 
 <p>
-  <a href="https://github.com/guilhermemcr1/BuildBass/actions/workflows/tests.yml"><img alt="Testes" src="https://github.com/guilhermemcr1/BuildBass/actions/workflows/tests.yml/badge.svg"></a>
   <a href="LICENSE"><img alt="Licença MIT" src="https://img.shields.io/badge/licen%C3%A7a-MIT-b8f53d?labelColor=121212"></a>
   <img alt="React 19" src="https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white&labelColor=121212">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=white&labelColor=121212">
@@ -109,7 +108,7 @@ Todo o cálculo acontece **no navegador**. O motor acústico é um módulo TypeS
 |---|---|
 | [`web/`](web) | SPA em React 19 + TypeScript: bancada, motor (`src/engine`), plano de corte (`src/cutplan`), i18n e testes |
 | [`api/`](api) | API em Laravel 13: catálogo, envios, leitura de manual por IA e painel de moderação em Filament |
-| [`.github/`](.github) | CI (testes do front e da API), Dependabot e imagens deste README |
+| [`.github/`](.github) | Dependabot e imagens deste README |
 
 ### Stack
 
@@ -181,7 +180,6 @@ cd api
 composer test         # Pint, Larastan e Pest (SQLite em memória)
 ```
 
-O CI roda tudo isso a cada push na `main` e em cada pull request.
 
 ## 📐 O motor de cálculo
 
