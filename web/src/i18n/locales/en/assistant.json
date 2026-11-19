@@ -130,8 +130,7 @@
         },
         "tuning": {
             "title": "What frequency to tune to?",
-            "hint": "The tuning (Fb) sets how deep the bass goes. The port length is calculated from it.",
-            "otherShape": "This project's port is not round: adjust its size in the workbench."
+            "hint": "The tuning (Fb) sets how deep the bass goes. The port length is calculated from it."
         },
         "power": {
             "title": "How powerful is the amplifier?",
@@ -143,6 +142,20 @@
             "net": "Net volume",
             "portLength": "Port length",
             "velocity": "Air speed"
+        },
+        "port": {
+            "title": "What will the port be like?",
+            "hint": "Round (PVC tube) or rectangular (made from board, slot style). A wider port blows less air; the length comes from the tuning.",
+            "shape": "Port shape",
+            "round": "Round",
+            "rect": "Rectangular",
+            "otherShape": "This project's port is triangular: pick round or rectangular, or adjust the sizes in the workbench."
+        },
+        "ai": {
+            "title": "Want help from the AI?",
+            "button": "Ask the AI for a box suggestion",
+            "hint": "Describe the use (car, home, music style) and the AI proposes up to three boxes, each checked by the simulator before it shows up.",
+            "offline": "Offline: the AI suggestion needs the server."
         }
     },
     "review": {
@@ -155,9 +168,6 @@
         "port": "Port",
         "portValue": "{{count}} × Ø {{diameter}}, {{length}}",
         "power": "Power",
-        "aiTitle": "Want a second opinion?",
-        "aiButton": "Ask AI for a box suggestion",
-        "aiHint": "AI proposes up to three boxes for your use, and each one is checked by the simulator before it shows up.",
         "edit": "Edit",
         "empty": "not set"
     },

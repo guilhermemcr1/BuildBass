@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
-import { Wand2 } from 'lucide-react';
+import { Bot, Wand2 } from 'lucide-react';
 import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { Banner } from '@/components/ui/banner';
@@ -8,7 +8,9 @@ import { ParameterField } from '@/components/ui/parameter-field';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { SliderField } from '@/components/ui/slider-field';
 import { ValueTile } from '@/components/ui/value-tile';
+import { AiSuggestDialog } from '@/components/workbench/ai-suggest-dialog';
 import { EngineWarnings } from '@/components/workbench/engine-warnings';
+import { reshape } from '@/components/workbench/port-fields';
 import { useParameterField } from '@/components/workbench/use-parameter-field';
 import { resolveCutPlan } from '@/cutplan';
 import { suggestBox } from '@/engine';
@@ -18,6 +20,7 @@ import {
     useActiveProject,
 } from '@/hooks/use-active-project';
 import { useCutPlan } from '@/hooks/use-cut-plan';
+import { useOnlineStatus } from '@/hooks/use-online-status';
 import { simulationOf } from '@/hooks/use-simulation';
 import { PARAMETERS } from '@/lib/parameters';
 import { writeInternalSize } from '@/lib/project/fields';
@@ -31,6 +34,7 @@ const BoxThumbnail = lazy(() => import('@/components/workbench/box-thumbnail'));
 
 type SimpleType = 'closed' | 'vented';
 type SizeMode = 'volume' | 'size';
+type PortShape = 'round' | 'rect';
 
 const VB_SLIDER = { minSi: 0.005, maxSi: 0.25, scale: 'linear' } as const;
 const FB_SLIDER = { minSi: 20, maxSi: 80, scale: 'log' } as const;
@@ -71,7 +75,8 @@ export function StepBox() {
     const hasVolume = useActiveProject(
         (state) => state.data.box.vb_m3 !== undefined,
     );
-    const portShape = useActiveProject((state) => state.data.box.port.shape);
+    const port = useActiveProject((state) => state.data.box.port);
+    const setPort = useActiveProject((state) => state.setPort);
     const apply = useActiveProject((state) => state.apply);
     const setBoxType = useActiveProject((state) => state.setBoxType);
     const [mode, setMode] = useState<SizeMode>('volume');
@@ -80,6 +85,9 @@ export function StepBox() {
     const volume = useParameterField('vb_m3');
     const tuning = useParameterField('fb_hz');
     const diameter = useParameterField('diameter_m');
+    const portWidth = useParameterField('width_m');
+    const portHeight = useParameterField('height_m');
+    const portCount = useParameterField('port_count');
     const power = useParameterField('power_w');
     const seeded = useRef(false);
     const simple = boxType === 'closed' || boxType === 'vented';
@@ -188,25 +196,111 @@ export function StepBox() {
                             {t('box.tuning.hint')}
                         </p>
                         <SliderField {...tuning} {...FB_SLIDER} />
-                        {portShape === 'round' ? (
-                            <ParameterField {...diameter} layout="row" />
-                        ) : (
+                    </Question>
+                )}
+                {boxType === 'vented' && (
+                    <Question number={5} title={t('box.port.title')}>
+                        <p className="text-xs text-muted">
+                            {t('box.port.hint')}
+                        </p>
+                        <SegmentedControl<PortShape>
+                            label={t('box.port.shape')}
+                            selected={port.shape === 'rect' ? 'rect' : 'round'}
+                            onChange={(shape) => {
+                                if (shape !== port.shape) {
+                                    setPort(reshape(port, shape));
+                                }
+                            }}
+                            size="sm"
+                            className="w-full"
+                            options={[
+                                { id: 'round', label: t('box.port.round') },
+                                { id: 'rect', label: t('box.port.rect') },
+                            ]}
+                        />
+                        {port.shape === 'triangle' ? (
                             <p className="text-xs text-muted">
-                                {t('box.tuning.otherShape')}
+                                {t('box.port.otherShape')}
                             </p>
+                        ) : (
+                            <div className="grid grid-cols-3 items-start gap-2">
+                                {port.shape === 'round' ? (
+                                    <ParameterField
+                                        {...diameter}
+                                        layout="stacked"
+                                        className="col-span-2"
+                                    />
+                                ) : (
+                                    <>
+                                        <ParameterField
+                                            {...portWidth}
+                                            layout="stacked"
+                                        />
+                                        <ParameterField
+                                            {...portHeight}
+                                            layout="stacked"
+                                        />
+                                    </>
+                                )}
+                                <ParameterField
+                                    {...portCount}
+                                    layout="stacked"
+                                />
+                            </div>
                         )}
                     </Question>
                 )}
                 <Question
-                    number={boxType === 'vented' ? 5 : 4}
+                    number={boxType === 'vented' ? 6 : 4}
                     title={t('box.power.title')}
                 >
                     <p className="text-xs text-muted">{t('box.power.hint')}</p>
                     <ParameterField {...power} layout="row" />
                 </Question>
             </div>
-            <BoxPreview />
+            <div className="flex min-w-0 flex-col gap-4 lg:sticky lg:top-0 lg:self-start">
+                <AiBox enabled={simple} />
+                <BoxPreview />
+            </div>
         </div>
+    );
+}
+
+// Sugestão por IA já no passo da caixa: propõe até três caixas para o uso descrito, cada uma
+// conferida pelo simulador; aplicar troca tipo, volume, sintonia e duto aqui mesmo.
+function AiBox({ enabled }: { enabled: boolean }) {
+    const { t } = useTranslation('assistant');
+    const offline = useOnlineStatus() === 'offline';
+    const [open, setOpen] = useState(false);
+    const [message, setMessage] = useState<string | null>(null);
+
+    return (
+        <section
+            aria-labelledby="assistant-ai-box"
+            className="flex flex-col gap-2 rounded-lg border border-accent/30 bg-accent/5 p-4"
+        >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 id="assistant-ai-box" className="text-sm font-semibold">
+                    {t('box.ai.title')}
+                </h3>
+                <Button
+                    onPress={() => setOpen(true)}
+                    disabled={offline || !enabled}
+                >
+                    <Bot aria-hidden="true" className="size-4" />
+                    {t('box.ai.button')}
+                </Button>
+            </div>
+            <p className="text-xs text-muted">
+                {offline ? t('box.ai.offline') : t('box.ai.hint')}
+            </p>
+            {message !== null && <Banner>{message}</Banner>}
+            <AiSuggestDialog
+                open={open}
+                onOpenChange={setOpen}
+                onApplied={setMessage}
+            />
+        </section>
     );
 }
 
@@ -358,7 +452,7 @@ function BoxPreview() {
     return (
         <aside
             aria-label={t('assistant:box.previewTitle')}
-            className="flex min-w-0 flex-col gap-3 lg:sticky lg:top-0 lg:self-start"
+            className="flex min-w-0 flex-col gap-3"
         >
             <Suspense fallback={<div className="h-48" aria-hidden="true" />}>
                 <BoxThumbnail onPress={() => {}} className="h-48" />

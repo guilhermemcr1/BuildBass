@@ -44,8 +44,8 @@ Parâmetros Thiele-Small entram, curvas de resposta e um plano de corte pronto p
 Na primeira visita, um assistente guia o projeto em três passos, editando o mesmo projeto da bancada:
 
 1. **Alto-falante:** abre direto no catálogo. Se o seu não estiver lá, dá para anexar o manual em PDF ou colar o texto da ficha e deixar a IA preencher, ou digitar os valores. Fs, Qts e Vas já bastam para seguir.
-2. **Caixa:** poucas perguntas (tipo, quantidade, tamanho, sintonia e potência), com a sugestão clássica, o desenho da caixa e os números mudando na hora.
-3. **Conferência:** tudo o que foi preenchido, o gráfico de resposta e o pedido de uma segunda opinião à IA.
+2. **Caixa:** poucas perguntas (tipo, quantidade, tamanho, sintonia, duto redondo ou retangular e potência), com a sugestão clássica ou a sugestão por IA, o desenho da caixa e os números mudando na hora.
+3. **Conferência:** tudo o que foi preenchido e os gráficos, com um atalho para voltar e ajustar cada passo.
 
 <table>
   <tr>
@@ -54,10 +54,10 @@ Na primeira visita, um assistente guia o projeto em três passos, editando o mes
   </tr>
   <tr>
     <td align="center"><sub>1. Alto-falante: catálogo primeiro, alternativas sempre à vista</sub></td>
-    <td align="center"><sub>2. Caixa: perguntas simples com a prévia ao lado</sub></td>
+    <td align="center"><sub>2. Caixa: perguntas simples, sugestão por IA e prévia ao lado</sub></td>
   </tr>
   <tr>
-    <td width="50%"><img alt="Assistente na conferência: resumo do alto-falante e da caixa com botões de editar e pedido de sugestão à IA" src=".github/assets/screenshot-assistant-review.png"></td>
+    <td width="50%"><img alt="Assistente na conferência: resumo do alto-falante e da caixa com botões de editar e o gráfico de resposta" src=".github/assets/screenshot-assistant-review.png"></td>
     <td width="50%" align="center"><img alt="Assistente no celular, em tela cheia, com o catálogo e as alternativas empilhadas" src=".github/assets/screenshot-assistant-mobile.png" width="60%"></td>
   </tr>
   <tr>

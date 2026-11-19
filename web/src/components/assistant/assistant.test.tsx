@@ -164,7 +164,10 @@ describe('Assistente', () => {
             'fetch',
             vi.fn((input: RequestInfo | URL) =>
                 Promise.resolve(
-                    String(input).includes('/extract-text')
+                    (input instanceof Request
+                        ? input.url
+                        : input.toString()
+                    ).includes('/extract-text')
                         ? new Response(
                               JSON.stringify({
                                   data: {

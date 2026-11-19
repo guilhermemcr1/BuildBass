@@ -41,7 +41,7 @@ const EMPTY_PORT: PortInput = { shape: 'round', count: 1 };
 
 // Troca de formato: a quantidade fica e a altura passa entre retangular e triangular; as demais
 // medidas não têm equivalente direto e ficam vazias.
-function reshape(port: PortInput, shape: PortShape): PortInput {
+export function reshape(port: PortInput, shape: PortShape): PortInput {
     const height = 'height_m' in port ? port.height_m : undefined;
     // A correção de ponta é da saída do duto, não do formato: passa adiante.
     const ends = {

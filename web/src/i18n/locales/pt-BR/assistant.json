@@ -130,8 +130,7 @@
         },
         "tuning": {
             "title": "Em que frequência sintonizar?",
-            "hint": "A sintonia (Fb) define até onde vai o grave. O comprimento do duto é calculado a partir dela.",
-            "otherShape": "O duto deste projeto não é redondo: ajuste as medidas dele na bancada."
+            "hint": "A sintonia (Fb) define até onde vai o grave. O comprimento do duto é calculado a partir dela."
         },
         "power": {
             "title": "Qual a potência do amplificador?",
@@ -143,6 +142,20 @@
             "net": "Volume líquido",
             "portLength": "Comprimento do duto",
             "velocity": "Velocidade do ar"
+        },
+        "port": {
+            "title": "Como vai ser o duto?",
+            "hint": "Redondo (tubo de PVC) ou retangular (de chapa, tipo slot). Duto mais largo sopra menos ar; o comprimento sai da sintonia.",
+            "shape": "Formato do duto",
+            "round": "Redondo",
+            "rect": "Retangular",
+            "otherShape": "O duto deste projeto é triangular: escolha redondo ou retangular, ou ajuste as medidas na bancada."
+        },
+        "ai": {
+            "title": "Quer uma ajuda da IA?",
+            "button": "Pedir sugestão de caixa à IA",
+            "hint": "Conte o uso (carro, casa, estilo de som) e a IA propõe até três caixas, cada uma conferida pelo simulador antes de aparecer.",
+            "offline": "Sem conexão: a sugestão por IA precisa do servidor."
         }
     },
     "review": {
@@ -155,9 +168,6 @@
         "port": "Duto",
         "portValue": "{{count}} × Ø {{diameter}}, {{length}}",
         "power": "Potência",
-        "aiTitle": "Quer uma segunda opinião?",
-        "aiButton": "Pedir sugestão de caixa à IA",
-        "aiHint": "A IA propõe até três caixas para o seu uso, e cada uma é conferida pelo simulador antes de aparecer.",
         "edit": "Editar",
         "empty": "não informado"
     },

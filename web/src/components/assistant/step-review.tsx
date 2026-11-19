@@ -1,10 +1,9 @@
-import { Bot, ClipboardCheck, Pencil } from 'lucide-react';
+import { ClipboardCheck, Pencil } from 'lucide-react';
 import { useState } from 'react';
 import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { Banner } from '@/components/ui/banner';
 import { Button } from '@/components/ui/button';
-import { AiSuggestDialog } from '@/components/workbench/ai-suggest-dialog';
 import { ChartPanel } from '@/components/workbench/chart-panel';
 import type { ChartKind } from '@/components/workbench/chart-panel';
 import { EngineWarnings } from '@/components/workbench/engine-warnings';
@@ -13,7 +12,6 @@ import { deriveDriver } from '@/engine';
 import type { DriverKey } from '@/engine';
 import { useActiveProject } from '@/hooks/use-active-project';
 import { useCutPlan } from '@/hooks/use-cut-plan';
-import { useOnlineStatus } from '@/hooks/use-online-status';
 import { simulationOf } from '@/hooks/use-simulation';
 import { PARAMETERS } from '@/lib/parameters';
 import { formatQuantity, formatWithUnit } from '@/lib/units/format';
@@ -38,17 +36,14 @@ type StepReviewProps = {
 };
 
 // Passo 3: tudo o que foi preenchido, os números principais e o gráfico, com o pedido de conferir
-// antes de cortar. Daqui dá para pedir uma sugestão de caixa à IA ou voltar a um passo.
+// antes de cortar. Daqui dá para voltar a um passo e ajustar.
 export function StepReview({ onEdit }: StepReviewProps) {
     const { t } = useTranslation(['assistant', 'workbench']);
     const { locale } = useLocale();
     const unitSystem = usePreferences((state) => state.unitSystem);
     const data = useActiveProject((state) => state.data);
-    const offline = useOnlineStatus() === 'offline';
     const cutPlan = useCutPlan();
     const [chart, setChart] = useState<ChartKind>('response');
-    const [aiOpen, setAiOpen] = useState(false);
-    const [aiMessage, setAiMessage] = useState<string | null>(null);
     const { values } = deriveDriver(data.driver);
     const { results } = simulationOf(data);
     const unitOf = (key: keyof typeof PARAMETERS): UnitId =>
@@ -145,36 +140,10 @@ export function StepReview({ onEdit }: StepReviewProps) {
                     onEdit={() => onEdit('box')}
                 />
             </div>
-            <section
-                aria-labelledby="assistant-ai-box"
-                className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-4"
-            >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                    <h2 id="assistant-ai-box" className="text-sm font-semibold">
-                        {t('assistant:review.aiTitle')}
-                    </h2>
-                    <Button
-                        onPress={() => setAiOpen(true)}
-                        disabled={
-                            offline || !(data.box.type === 'closed' || vented)
-                        }
-                    >
-                        <Bot aria-hidden="true" className="size-4" />
-                        {t('assistant:review.aiButton')}
-                    </Button>
-                </div>
-                <p className="text-xs text-muted">
-                    {t('assistant:review.aiHint')}
-                </p>
-                {aiMessage !== null && <Banner>{aiMessage}</Banner>}
-            </section>
-            <AiSuggestDialog
-                open={aiOpen}
-                onOpenChange={setAiOpen}
-                onApplied={setAiMessage}
-            />
             <EngineWarnings />
-            <div className="flex min-h-[26rem] flex-col [&>section]:flex-1">
+            {/* Altura definida: o gráfico mede o contêiner ao montar, e no modal não há coluna
+                de altura fixa como na bancada para o flex esticar. */}
+            <div className="flex h-[28rem] flex-col [&>section]:flex-1">
                 <ChartPanel selected={chart} onSelectedChange={setChart} />
             </div>
         </div>
