@@ -39,6 +39,56 @@ Parâmetros Thiele-Small entram, curvas de resposta e um plano de corte pronto p
 
 ## ✨ Recursos
 
+### 🧙 Assistente passo a passo
+
+Na primeira visita, um assistente guia o projeto em três passos, editando o mesmo projeto da bancada:
+
+1. **Alto-falante:** abre direto no catálogo. Se o seu não estiver lá, dá para anexar o manual em PDF ou colar o texto da ficha e deixar a IA preencher, ou digitar os valores. Fs, Qts e Vas já bastam para seguir.
+2. **Caixa:** poucas perguntas (tipo, quantidade, tamanho, sintonia e potência), com a sugestão clássica, o desenho da caixa e os números mudando na hora.
+3. **Conferência:** tudo o que foi preenchido, o gráfico de resposta e o pedido de uma segunda opinião à IA.
+
+<table>
+  <tr>
+    <td width="50%"><img alt="Assistente no passo do alto-falante: busca no catálogo e, ao lado, as opções de manual em PDF, texto colado e digitação" src=".github/assets/screenshot-assistant-catalog.png"></td>
+    <td width="50%"><img alt="Assistente no passo da caixa: perguntas à esquerda e prévia da caixa com volume, F3 e comprimento do duto à direita" src=".github/assets/screenshot-assistant-box.png"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>1. Alto-falante: catálogo primeiro, alternativas sempre à vista</sub></td>
+    <td align="center"><sub>2. Caixa: perguntas simples com a prévia ao lado</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img alt="Assistente na conferência: resumo do alto-falante e da caixa com botões de editar e pedido de sugestão à IA" src=".github/assets/screenshot-assistant-review.png"></td>
+    <td width="50%" align="center"><img alt="Assistente no celular, em tela cheia, com o catálogo e as alternativas empilhadas" src=".github/assets/screenshot-assistant-mobile.png" width="60%"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>3. Conferência antes de cortar a madeira</sub></td>
+    <td align="center"><sub>No celular, em tela cheia</sub></td>
+  </tr>
+</table>
+
+### 📄 Leitura de manual por IA
+
+O alto-falante não está no catálogo? Anexe o PDF da ficha técnica ou cole o texto da loja e a IA preenche os campos vazios, já convertidos para o SI. Antes de qualquer coisa ir para a IA, um **filtro** no navegador e outro no servidor deixam passar só as linhas com parâmetros (sem links, e-mails nem propaganda), com limite de caracteres, de linhas e de páginas. O arquivo não fica guardado, e valores fora da faixa ou incoerentes entre si voltam marcados para conferência.
+
+<table>
+  <tr>
+    <td width="50%"><img alt="Manual em PDF anexado no assistente, com a IA lendo o arquivo" src=".github/assets/screenshot-assistant-pdf.png"></td>
+    <td width="50%"><img alt="Dados do alto-falante preenchidos pela IA a partir do manual, com Fs, Qts e Vas conferidos" src=".github/assets/screenshot-assistant-pdf-result.png"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Anexe o PDF e a IA lê a ficha técnica</sub></td>
+    <td align="center"><sub>Os campos vazios voltam preenchidos para conferir</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img alt="Texto colado com parâmetros e propaganda, com o aviso de quantas linhas vão para a IA e quantas são ignoradas" src=".github/assets/screenshot-assistant-text.png"></td>
+    <td width="50%"><img alt="Envio de alto-falante ao catálogo com os campos preenchidos a partir do manual em PDF" src=".github/assets/screenshot-submit-filled.png"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Texto colado: só as linhas com parâmetros são enviadas</sub></td>
+    <td align="center"><sub>O mesmo leitor preenche o envio ao catálogo</sub></td>
+  </tr>
+</table>
+
 ### 🔊 Simulação acústica
 
 - **Quatro tipos de caixa:** selada, dutada, bandpass de 4ª ordem e bandpass de 6ª ordem.
@@ -58,15 +108,22 @@ Parâmetros Thiele-Small entram, curvas de resposta e um plano de corte pronto p
 - **Recortes** do alto-falante e do duto posicionados automaticamente ou à mão, digitando a medida ou arrastando no desenho.
 - **Conferência de volume** por câmara, **vista 3D** da caixa montada, exportação em **CSV** e uma **folha de impressão** só com o plano.
 
-<div align="center">
-  <img alt="Plano de corte com peças, dimensões e corte total" src=".github/assets/screenshot-cutplan.png" width="100%">
-</div>
+<table>
+  <tr>
+    <td width="50%"><img alt="Plano de corte com peças, recortes do alto-falante e do duto, e corte total" src=".github/assets/screenshot-cutplan.png"></td>
+    <td width="50%"><img alt="Vista 3D da caixa montada, com cotas de largura, altura e profundidade, recorte do alto-falante e duto" src=".github/assets/screenshot-box-3d.png"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Plano de corte com peças, recortes e conferência de volume</sub></td>
+    <td align="center"><sub>Caixa em 3D, cotada, para girar com o mouse ou o teclado</sub></td>
+  </tr>
+</table>
 
 ### 📚 Catálogo de drivers
 
 - **Busca** por fabricante ou modelo. Ao escolher um driver, os parâmetros são copiados para o projeto, que continua editável.
 - **Envio de drivers** para a comunidade, com moderação antes de entrar no catálogo e proteção anti-robô (Cloudflare Turnstile).
-- **Preenchimento por manual:** anexe o PDF da ficha técnica e a IA sugere os campos, já convertidos para o SI. O PDF não fica guardado.
+- **Preenchimento por manual:** anexe o PDF da ficha técnica e a IA sugere os campos (veja [Leitura de manual por IA](#-leitura-de-manual-por-ia)).
 - **Meus alto-falantes:** guarde os seus drivers no navegador e exporte ou importe a lista.
 
 ### 🛡️ Painel de moderação
@@ -97,7 +154,7 @@ flowchart LR
     subgraph Servidor["🖥️ API (api/)"]
         API["Laravel 13<br/>API JSON"] --> DB[("MySQL")]
         Panel["Painel Filament<br/>/moderation"] --> DB
-        API --> AI["OpenRouter<br/>(leitura de PDF)"]
+        API --> AI["OpenRouter<br/>(leitura de PDF e texto)"]
     end
     UI -- "catálogo e envios" --> API
 ```
@@ -174,6 +231,7 @@ npm run check         # formatação e lint
 npm run types:check   # TypeScript
 npm run test          # testes unitários e de componentes (Vitest)
 npm run test:e2e      # ponta a ponta com Playwright, incluindo acessibilidade (axe)
+npm run screenshots   # regrava as imagens deste README em .github/assets (API simulada)
 
 # API
 cd api
@@ -212,7 +270,7 @@ Idealizado e desenvolvido por **Guilherme G.**
 [![GitHub](https://img.shields.io/badge/GitHub-guilhermemcr1-121212?logo=github&logoColor=white&labelColor=121212)](https://github.com/guilhermemcr1)
 [![Portfólio](https://img.shields.io/badge/portf%C3%B3lio-galarca.dev-b8f53d?labelColor=121212)](https://galarca.dev)
 
-O BuildBass se apoia na teoria publicada por Thiele, Small, Keele, Leach, Dickason e Beranek e em software livre de terceiros. A lista completa de referências, dados, bibliotecas, fontes e agradecimentos está em [CREDITS.md](CREDITS.md). No app, o botão ⓘ da barra do topo abre a tela **Sobre**.
+O BuildBass se apoia na teoria publicada por Thiele, Small, Keele, Leach, Dickason e Beranek e em software livre de terceiros. A lista completa de referências, dados, bibliotecas, fontes e agradecimentos está em [CREDITS.md](CREDITS.md). No app, o menu **Ajuda** da barra do topo abre a tela **Sobre**.
 
 Usou o BuildBass em um trabalho? O GitHub gera a citação pelo botão **Cite this repository**, a partir do [CITATION.cff](CITATION.cff).
 
