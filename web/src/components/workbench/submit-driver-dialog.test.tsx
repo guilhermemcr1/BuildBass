@@ -42,46 +42,62 @@ async function paste(label: RegExp, text: string) {
     await userEvent.paste(text);
 }
 
-function seedDriver() {
-    const store = activeProjectStore().getState();
-    store.setDriverValue('fs_hz', 34.5);
-    store.setDriverValue('qts', 0.41);
-    store.setDriverValue('vas_m3', 0.085);
+// Abre o diálogo e escolhe o caminho; por padrão, preencher os campos à mão.
+async function open(
+    onClose: () => void = () => undefined,
+    path = /manualmente/,
+) {
+    renderWithProviders(<SubmitDriverDialog onClose={onClose} />);
+    await userEvent.click(screen.getByRole('button', { name: path }));
+}
+
+async function fillDriver() {
+    await paste(/^Fs/, '34,5');
+    await paste(/^Qts/, '0,41');
+    await paste(/^Vas/, '85');
+    await userEvent.tab();
 }
 
 describe('SubmitDriverDialog — enviar o driver do projeto', () => {
-    test('abre com os parâmetros do projeto na unidade exibida e a identificação em branco', () => {
-        seedDriver();
+    test('abre na escolha e os campos começam vazios, mesmo com driver no projeto', async () => {
+        const store = activeProjectStore().getState();
+        store.setDriverValue('fs_hz', 34.5);
+        store.setDriverValue('vas_m3', 0.085);
         renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
 
-        expect(fill(/^Fs/)).toHaveValue('34,5');
-        expect(fill(/^Vas/)).toHaveValue('85,0');
+        expect(screen.queryByRole('textbox', { name: /^Fs/ })).toBeNull();
+        await userEvent.click(
+            screen.getByRole('button', { name: /manualmente/ }),
+        );
+
+        expect(fill(/^Fs/)).toHaveValue('');
+        expect(fill(/^Vas/)).toHaveValue('');
         expect(fill(/Fabricante/)).toHaveValue('');
-        expect(fill(/Fonte dos dados/)).toHaveValue('');
+        expect(screen.queryByText(/Preencher a partir do manual/)).toBeNull();
     });
 
-    test('a origem do driver pré-preenche fabricante e modelo', () => {
-        seedDriver();
-        activeProjectStore()
-            .getState()
-            .apply((data) => ({
-                ...data,
-                driverSource: {
-                    brand: 'Triton',
-                    model: 'TR 620',
-                    variant: '4 Ω',
-                },
-            }));
-        renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
+    test('anexar o manual mostra o anexo do PDF acima dos campos vazios', async () => {
+        await open(undefined, /Anexar o manual/);
 
-        expect(fill(/Fabricante/)).toHaveValue('Triton');
-        expect(fill(/Modelo/)).toHaveValue('TR 620');
-        expect(fill(/Impedância da bobina/)).toHaveValue('4');
+        expect(
+            screen.getAllByText(/Preencher a partir do manual/)[0],
+        ).toBeInTheDocument();
+        expect(fill(/^Fs/)).toHaveValue('');
+    });
+
+    test('cancelar na escolha fecha sem enviar', async () => {
+        const onClose = vi.fn();
+        renderWithProviders(<SubmitDriverDialog onClose={onClose} />);
+
+        await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+
+        expect(onClose).toHaveBeenCalledTimes(1);
+        expect(submit).not.toHaveBeenCalled();
     });
 
     test('campo obrigatório vazio mostra o erro, não chama a API e mantém o digitado', async () => {
-        seedDriver();
-        renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
+        await open();
+        await fillDriver();
 
         await paste(/Fabricante/, 'Exemplo');
         await userEvent.click(screen.getByRole('button', { name: 'Enviar' }));
@@ -94,8 +110,8 @@ describe('SubmitDriverDialog — enviar o driver do projeto', () => {
     });
 
     test('envio válido mostra a confirmação com protocolo e não altera o projeto', async () => {
-        seedDriver();
-        renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
+        await open();
+        await fillDriver();
         const before = structuredClone(activeProjectStore().getState().data);
 
         await paste(/Fabricante/, 'Exemplo');
@@ -126,8 +142,8 @@ describe('SubmitDriverDialog — enviar o driver do projeto', () => {
     });
 
     test('o e-mail é obrigatório: vazio ou inválido não envia e aponta o campo', async () => {
-        seedDriver();
-        renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
+        await open();
+        await fillDriver();
 
         await paste(/Fabricante/, 'Exemplo');
         await paste(/Modelo/, 'EX-1');
@@ -150,9 +166,8 @@ describe('SubmitDriverDialog — enviar o driver do projeto', () => {
     });
 
     test('fechar sem alterações não pergunta nem envia', async () => {
-        seedDriver();
         const onClose = vi.fn();
-        renderWithProviders(<SubmitDriverDialog onClose={onClose} />);
+        await open(onClose);
 
         await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
 
@@ -161,9 +176,9 @@ describe('SubmitDriverDialog — enviar o driver do projeto', () => {
     });
 
     test('fechar com alterações pede confirmação antes de descartar', async () => {
-        seedDriver();
         const onClose = vi.fn();
-        renderWithProviders(<SubmitDriverDialog onClose={onClose} />);
+        await open(onClose);
+        await fillDriver();
 
         await paste(/Fabricante/, 'Exemplo');
         await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
@@ -180,8 +195,8 @@ describe('SubmitDriverDialog — enviar o driver do projeto', () => {
         expect(submit).not.toHaveBeenCalled();
     });
 
-    test('o campo-armadilha não é alcançável pelo teclado nem anunciado', () => {
-        renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
+    test('o campo-armadilha não é alcançável pelo teclado nem anunciado', async () => {
+        await open();
 
         const trap = document.querySelector('input[name="website"]');
 
@@ -206,11 +221,9 @@ describe('SubmitDriverDialog — recusas do servidor', () => {
     ] as const)(
         '%s mostra a mensagem e preserva o formulário',
         async (error, message) => {
-            seedDriver();
             submit.mockResolvedValue({ ok: false, error });
-            renderWithProviders(
-                <SubmitDriverDialog onClose={() => undefined} />,
-            );
+            await open();
+            await fillDriver();
 
             await sendValidForm();
 
@@ -221,13 +234,13 @@ describe('SubmitDriverDialog — recusas do servidor', () => {
     );
 
     test('limite de envios mostra os minutos do Retry-After', async () => {
-        seedDriver();
         submit.mockResolvedValue({
             ok: false,
             error: 'rateLimited',
             retryAfterS: 1800,
         });
-        renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
+        await open();
+        await fillDriver();
 
         await sendValidForm();
 
@@ -237,9 +250,9 @@ describe('SubmitDriverDialog — recusas do servidor', () => {
     });
 
     test('limite sem Retry-After pede para tentar mais tarde', async () => {
-        seedDriver();
         submit.mockResolvedValue({ ok: false, error: 'rateLimited' });
-        renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
+        await open();
+        await fillDriver();
 
         await sendValidForm();
 
@@ -249,9 +262,9 @@ describe('SubmitDriverDialog — recusas do servidor', () => {
     });
 
     test('verificação reprovada oferece tentar de novo e o reenvio funciona', async () => {
-        seedDriver();
         submit.mockResolvedValueOnce({ ok: false, error: 'verification' });
-        renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
+        await open();
+        await fillDriver();
 
         await sendValidForm();
         await userEvent.click(
@@ -263,9 +276,9 @@ describe('SubmitDriverDialog — recusas do servidor', () => {
     });
 
     test('duplicata não oferece tentar de novo (reenviar não resolve)', async () => {
-        seedDriver();
         submit.mockResolvedValue({ ok: false, error: 'alreadyInCatalog' });
-        renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
+        await open();
+        await fillDriver();
 
         await sendValidForm();
         await screen.findByRole('alert');
@@ -276,8 +289,8 @@ describe('SubmitDriverDialog — recusas do servidor', () => {
     });
 
     test('o campo-armadilha preenchido segue no corpo para o servidor decidir', async () => {
-        seedDriver();
-        renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
+        await open();
+        await fillDriver();
         const trap = document.querySelector<HTMLInputElement>(
             'input[name="website"]',
         );
@@ -298,7 +311,7 @@ describe('SubmitDriverDialog — recusas do servidor', () => {
 
 describe('SubmitDriverDialog — campos calculados dos outros', () => {
     test('Qes e Qms inserem o Qts no campo, marcado como calculado e editável', async () => {
-        renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
+        await open();
 
         await userEvent.click(
             screen.getByRole('button', { name: /Opcionais/ }),
@@ -319,7 +332,7 @@ describe('SubmitDriverDialog — campos calculados dos outros', () => {
     });
 
     test('o valor calculado vai no envio, como se tivesse sido digitado', async () => {
-        renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
+        await open();
 
         await userEvent.click(
             screen.getByRole('button', { name: /Opcionais/ }),
@@ -334,27 +347,11 @@ describe('SubmitDriverDialog — campos calculados dos outros', () => {
         expect(await screen.findByText(PROTOCOL)).toBeInTheDocument();
         expect(submit.mock.calls[0][0]).toMatchObject({ qts: 0.418 });
     });
-
-    test('um driver do projeto que já permite o cálculo abre com o campo preenchido, sem contar como edição', async () => {
-        const store = activeProjectStore().getState();
-        store.setDriverValue('fs_hz', 34.5);
-        store.setDriverValue('vas_m3', 0.085);
-        store.setDriverValue('qes', 0.44);
-        store.setDriverValue('qms', 8.37);
-        const onClose = vi.fn();
-        renderWithProviders(<SubmitDriverDialog onClose={onClose} />);
-
-        expect(fill(/^Qts/)).toHaveValue('0,42');
-
-        await userEvent.keyboard('{Escape}');
-
-        expect(onClose).toHaveBeenCalled();
-    });
 });
 
 describe('SubmitDriverDialog — sem projeto e falhas', () => {
     test('projeto sem driver abre com os campos vazios e aceita preenchimento à mão', async () => {
-        renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
+        await open();
 
         expect(fill(/^Fs/)).toHaveValue('');
         expect(fill(/^Qts/)).toHaveValue('');
@@ -375,7 +372,7 @@ describe('SubmitDriverDialog — sem projeto e falhas', () => {
     });
 
     test('vazio, os campos obrigatórios (com o e-mail) são apontados e nada é enviado', async () => {
-        renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
+        await open();
 
         await userEvent.click(screen.getByRole('button', { name: 'Enviar' }));
 
@@ -391,11 +388,9 @@ describe('SubmitDriverDialog — sem projeto e falhas', () => {
     ] as const)(
         '%s mostra a mensagem, mantém o digitado e o reenvio funciona',
         async (error, message) => {
-            seedDriver();
             submit.mockResolvedValueOnce({ ok: false, error });
-            renderWithProviders(
-                <SubmitDriverDialog onClose={() => undefined} />,
-            );
+            await open();
+            await fillDriver();
 
             await sendValidForm();
 
@@ -414,9 +409,9 @@ describe('SubmitDriverDialog — sem projeto e falhas', () => {
     );
 
     test('offline desativa o envio com o motivo visível e reativa ao voltar', async () => {
-        seedDriver();
         connection.status = 'offline';
-        renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
+        await open();
+        await fillDriver();
 
         const send = screen.getByRole('button', { name: 'Enviar' });
         expect(send).toBeDisabled();
@@ -441,9 +436,9 @@ describe('SubmitDriverDialog — sem projeto e falhas', () => {
     });
 
     test('offline não envia nem com Enter no formulário', async () => {
-        seedDriver();
         connection.status = 'offline';
-        renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
+        await open();
+        await fillDriver();
 
         await paste(/Fabricante/, 'Exemplo');
         await paste(/Modelo/, 'EX-1');

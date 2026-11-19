@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
-import { useActiveProject } from '@/hooks/use-active-project';
 import { useSubmitDriver } from '@/hooks/use-submit-driver';
-import { formFromProject } from '@/lib/submission/from-project';
+import { emptyForm } from '@/lib/submission/from-project';
+import { SubmitChoice } from './submit-choice';
+import type { SubmitPath } from './submit-choice';
 import { SubmitConfirmation } from './submit-confirmation';
 import { SubmitDriverForm } from './submit-driver-form';
 
@@ -12,16 +13,14 @@ type SubmitDriverDialogProps = {
     onClose: () => void;
 };
 
-// Envio de driver ao catálogo. Montado só enquanto aberto, então o
-// formulário sempre parte do driver do projeto ativo naquele momento.
+// Envio de driver ao catálogo. Primeiro a pessoa escolhe entre anexar o manual ou preencher à mão;
+// o formulário sempre começa vazio (nunca copia o driver do projeto).
 export default function SubmitDriverDialog({
     onClose,
 }: SubmitDriverDialogProps) {
     const { t } = useTranslation('submission');
-    const driver = useActiveProject((state) => state.data.driver);
-    const driverSource = useActiveProject((state) => state.data.driverSource);
-    // O formulário é uma cópia: editá-lo nunca altera o projeto.
-    const [initial] = useState(() => formFromProject(driver, driverSource));
+    const [initial] = useState(emptyForm);
+    const [path, setPath] = useState<SubmitPath | undefined>();
     const submission = useSubmitDriver(initial);
     const [confirmingDiscard, setConfirmingDiscard] = useState(false);
     const done = submission.status === 'done';
@@ -53,9 +52,12 @@ export default function SubmitDriverDialog({
                     emailNotice
                     onClose={onClose}
                 />
+            ) : path === undefined ? (
+                <SubmitChoice onChoose={setPath} onCancel={onClose} />
             ) : (
                 <>
                     <SubmitDriverForm
+                        withManual={path === 'manual'}
                         form={submission.form}
                         onChange={submission.setForm}
                         trap={submission.trap}

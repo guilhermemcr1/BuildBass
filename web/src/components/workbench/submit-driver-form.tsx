@@ -51,6 +51,8 @@ type SubmitDriverFormProps = {
     errors: SubmissionErrors;
     failure: SubmitFailure | undefined;
     manual: ManualState;
+    // Mostra o anexo do manual (caminho "anexar manual" da tela de escolha).
+    withManual?: boolean;
     // Campos com valor calculado dos outros (inserido sozinho, editável).
     auto: AutoKeys;
     onFillManual: (file: File) => void;
@@ -142,6 +144,7 @@ export function SubmitDriverForm({
     errors,
     failure,
     manual,
+    withManual = false,
     auto,
     onFillManual,
     sending,
@@ -291,12 +294,14 @@ export function SubmitDriverForm({
         >
             <p className="text-sm text-muted">{t('intro')}</p>
 
-            <ManualFill
-                manual={manual}
-                offline={offline}
-                sending={sending}
-                onFill={onFillManual}
-            />
+            {withManual && (
+                <ManualFill
+                    manual={manual}
+                    offline={offline}
+                    sending={sending}
+                    onFill={onFillManual}
+                />
+            )}
 
             {section(
                 1,

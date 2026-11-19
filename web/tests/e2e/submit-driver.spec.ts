@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import type { Page, Route } from '@playwright/test';
+import type { Locator, Page, Route } from '@playwright/test';
 import { API, driverAction, mockCatalog } from './catalog-mock';
 
 test.use({ viewport: { width: 1440, height: 900 } });
@@ -43,6 +43,18 @@ async function mockSubmission(
     return received;
 }
 
+async function chooseFields(dialog: Locator) {
+    await dialog
+        .getByRole('button', { name: /Preencher os campos manualmente/ })
+        .click();
+}
+
+async function fillDialogDriver(dialog: Locator) {
+    await dialog.getByRole('textbox', { name: /^Fs/ }).fill('34,5');
+    await dialog.getByRole('textbox', { name: /^Qts/ }).fill('0,41');
+    await dialog.getByRole('textbox', { name: /^Vas/ }).fill('85');
+}
+
 async function fillProjectDriver(page: Page) {
     await page.getByRole('textbox', { name: /^Fs/ }).fill('34,5');
     await page.getByRole('textbox', { name: /^Qts/ }).fill('0,41');
@@ -50,7 +62,7 @@ async function fillProjectDriver(page: Page) {
     await page.keyboard.press('Tab');
 }
 
-test('enviar o driver do projeto: pré-preenchido, protocolo e projeto intacto', async ({
+test('enviar alto-falante: escolha, campos vazios mesmo com driver no projeto, protocolo e projeto intacto', async ({
     page,
 }) => {
     await mockCatalog(page);
@@ -63,12 +75,12 @@ test('enviar o driver do projeto: pré-preenchido, protocolo e projeto intacto',
     const dialog = page.getByRole('dialog', {
         name: 'Enviar alto-falante ao catálogo',
     });
-    await expect(dialog.getByRole('textbox', { name: /^Fs/ })).toHaveValue(
-        '34,5',
-    );
-    await expect(dialog.getByRole('textbox', { name: /^Qts/ })).toHaveValue(
-        '0,41',
-    );
+    // Primeiro a escolha; o formulário não copia o driver do projeto.
+    await expect(dialog.getByRole('textbox', { name: /^Fs/ })).toHaveCount(0);
+    await chooseFields(dialog);
+    await expect(dialog.getByRole('textbox', { name: /^Fs/ })).toHaveValue('');
+    await expect(dialog.getByRole('textbox', { name: /^Qts/ })).toHaveValue('');
+    await fillDialogDriver(dialog);
 
     await dialog.getByRole('textbox', { name: /Fabricante/ }).fill('Exemplo');
     await dialog.getByRole('textbox', { name: /Modelo/ }).fill('EX-12');
@@ -112,6 +124,7 @@ test('sem driver no projeto: preencher à mão e enviar', async ({ page }) => {
     const dialog = page.getByRole('dialog', {
         name: 'Enviar alto-falante ao catálogo',
     });
+    await chooseFields(dialog);
     await expect(dialog.getByRole('textbox', { name: /^Fs/ })).toHaveValue('');
 
     await dialog.getByRole('textbox', { name: /Fabricante/ }).fill('Exemplo');
@@ -154,12 +167,13 @@ test('falha do servidor: mantém o digitado e o reenvio funciona', async ({
               });
     });
     await page.goto('/');
-    await fillProjectDriver(page);
 
     await driverAction(page, 'Enviar alto-falante');
     const dialog = page.getByRole('dialog', {
         name: 'Enviar alto-falante ao catálogo',
     });
+    await chooseFields(dialog);
+    await fillDialogDriver(dialog);
     await dialog.getByRole('textbox', { name: /Fabricante/ }).fill('Exemplo');
     await dialog.getByRole('textbox', { name: /Modelo/ }).fill('EX-12');
     await dialog
@@ -198,6 +212,7 @@ test('perder a conexão com o diálogo aberto desativa o envio sem perder o digi
     const dialog = page.getByRole('dialog', {
         name: 'Enviar alto-falante ao catálogo',
     });
+    await chooseFields(dialog);
     await dialog.getByRole('textbox', { name: /Fabricante/ }).fill('Exemplo');
 
     await context.setOffline(true);
@@ -260,6 +275,7 @@ test('preencher a partir do manual: preenche os vazios, destaca o suspeito e nã
         name: 'Enviar alto-falante ao catálogo',
     });
 
+    await dialog.getByRole('button', { name: /Anexar o manual/ }).click();
     await dialog.locator('input[type="file"]').setInputFiles({
         name: 'ficha.pdf',
         mimeType: 'application/pdf',

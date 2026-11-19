@@ -54,8 +54,12 @@ function pdf(name = 'ficha.pdf', size?: number) {
     return file;
 }
 
-function render() {
+// O anexo do manual fica no caminho "Anexar o manual" da tela de escolha.
+async function render() {
     renderWithProviders(<SubmitDriverDialog onClose={() => undefined} />);
+    await userEvent.click(
+        screen.getByRole('button', { name: /Anexar o manual/ }),
+    );
 }
 
 async function attach(file: File) {
@@ -95,7 +99,7 @@ beforeEach(() => {
 
 describe('ManualFill — preencher a partir do manual', () => {
     test('o botão só liga com um PDF escolhido e mostra o aviso de privacidade', async () => {
-        render();
+        await render();
 
         expect(fillButton()).toBeDisabled();
         expect(
@@ -109,7 +113,7 @@ describe('ManualFill — preencher a partir do manual', () => {
     });
 
     test('arquivo que não é PDF ou passa de 10 MB é recusado no cliente, sem chamar o servidor', async () => {
-        render();
+        await render();
 
         await attach(new File(['x'], 'foto.png', { type: 'image/png' }));
         expect(await screen.findByRole('alert')).toHaveTextContent(
@@ -126,7 +130,7 @@ describe('ManualFill — preencher a partir do manual', () => {
     });
 
     test('remover tira o arquivo e desliga o botão', async () => {
-        render();
+        await render();
         await attach(pdf());
 
         await user.click(screen.getByRole('button', { name: /Remover/ }));
@@ -136,7 +140,7 @@ describe('ManualFill — preencher a partir do manual', () => {
     });
 
     test('preenche os campos vazios, mostra o resumo e não envia nada ao catálogo', async () => {
-        render();
+        await render();
         await attach(pdf());
         await user.click(fillButton());
 
@@ -154,7 +158,7 @@ describe('ManualFill — preencher a partir do manual', () => {
     });
 
     test('mantém o que a pessoa já digitou', async () => {
-        render();
+        await render();
         await user.click(field(/Fabricante/));
         await user.paste('Minha marca');
 
@@ -172,7 +176,7 @@ describe('ManualFill — preencher a partir do manual', () => {
                 finish = resolve;
             }),
         );
-        render();
+        await render();
         await attach(pdf());
 
         await user.click(fillButton());
@@ -189,7 +193,7 @@ describe('ManualFill — preencher a partir do manual', () => {
 
     test('offline desativa o bloco com o aviso', async () => {
         connection.status = 'offline';
-        render();
+        await render();
 
         expect(
             screen.getByText(/leitura do manual precisa do servidor/),
@@ -202,7 +206,7 @@ describe('ManualFill — preencher a partir do manual', () => {
 
 describe('ManualFill — revisar com apoio', () => {
     test('destaca os suspeitos, lista descartados e lembra de revisar', async () => {
-        render();
+        await render();
         await attach(pdf());
         await user.click(fillButton());
 
@@ -222,7 +226,7 @@ describe('ManualFill — revisar com apoio', () => {
     });
 
     test('editar um campo suspeito tira só o destaque dele', async () => {
-        render();
+        await render();
         await attach(pdf());
         await user.click(fillButton());
         await waitFor(() => expect(valueOf(/^Qts/)).toMatch(/^0,9/));
@@ -254,7 +258,7 @@ describe('ManualFill — revisar com apoio', () => {
                 warnings: ['review', warning],
             },
         });
-        render();
+        await render();
         await attach(pdf());
         await user.click(fillButton());
 
@@ -278,7 +282,7 @@ describe('ManualFill — falhas nunca bloqueiam o envio', () => {
         '%s mostra a mensagem e mantém o formulário',
         async (error, message) => {
             extract.mockResolvedValue({ ok: false, error });
-            render();
+            await render();
             await user.click(field(/Fabricante/));
             await user.paste('Minha marca');
             await attach(pdf());
@@ -299,7 +303,7 @@ describe('ManualFill — falhas nunca bloqueiam o envio', () => {
             error: 'rateLimited',
             retryAfterS: 1800,
         });
-        render();
+        await render();
         await attach(pdf());
         await user.click(fillButton());
 
@@ -310,7 +314,7 @@ describe('ManualFill — falhas nunca bloqueiam o envio', () => {
 
     test('indisponível trava o botão do manual até fechar, sem tocar no resto', async () => {
         extract.mockResolvedValue({ ok: false, error: 'unavailable' });
-        render();
+        await render();
         await attach(pdf());
         await user.click(fillButton());
 

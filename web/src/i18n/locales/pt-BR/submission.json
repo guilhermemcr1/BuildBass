@@ -111,5 +111,12 @@
         "dropTitle": "Arraste o PDF do manual até aqui",
         "dropOr": "ou",
         "dropHint": "PDF de até 10 MB e 30 páginas"
+    },
+    "choice": {
+        "title": "Como você quer enviar?",
+        "manual": "Anexar o manual (PDF)",
+        "manualHint": "A IA lê o manual e preenche os campos; você confere antes de enviar.",
+        "fields": "Preencher os campos manualmente",
+        "fieldsHint": "Os campos começam vazios para você digitar os parâmetros."
     }
 }

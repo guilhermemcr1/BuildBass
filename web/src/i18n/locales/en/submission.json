@@ -111,5 +111,12 @@
         "dropTitle": "Drag the manual PDF here",
         "dropOr": "or",
         "dropHint": "PDF up to 10 MB and 30 pages"
+    },
+    "choice": {
+        "title": "How do you want to submit?",
+        "manual": "Attach the manual (PDF)",
+        "manualHint": "AI reads the manual and fills in the fields; you review before sending.",
+        "fields": "Fill in the fields manually",
+        "fieldsHint": "The fields start empty for you to type the parameters."
     }
 }
