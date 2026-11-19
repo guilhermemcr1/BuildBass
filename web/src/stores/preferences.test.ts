@@ -31,8 +31,16 @@ describe('preferências', () => {
             locale: 'en',
             unitSystem: 'imperial',
             mode: 'pro',
+            sidebarCollapsed: false,
         });
         expect(saved.version).toBe(2);
+    });
+
+    test('a lateral começa aberta e lembra quando foi recolhida', () => {
+        expect(usePreferences.getState().sidebarCollapsed).toBe(false);
+        usePreferences.getState().setSidebarCollapsed(true);
+        expect(usePreferences.getState().sidebarCollapsed).toBe(true);
+        usePreferences.getState().setSidebarCollapsed(false);
     });
 
     test('o modo padrão é Normal', () => {

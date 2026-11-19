@@ -21,10 +21,13 @@ type PreferencesState = {
     locale: Locale;
     unitSystem: UnitSystem;
     mode: Mode;
+    // Lateral da bancada (≥ 1280 px) recolhida num trilho estreito, deixando espaço ao conteúdo.
+    sidebarCollapsed: boolean;
     setTheme: (theme: ThemeChoice) => void;
     setLocale: (locale: Locale) => void;
     setUnitSystem: (unitSystem: UnitSystem) => void;
     setMode: (mode: Mode) => void;
+    setSidebarCollapsed: (sidebarCollapsed: boolean) => void;
 };
 
 // Janela privada ou cookies bloqueados fazem o localStorage lançar erro; nesse caso as escolhas
@@ -70,20 +73,30 @@ export const usePreferences = create<PreferencesState>()(
             ),
             unitSystem: 'metric',
             mode: 'normal',
+            sidebarCollapsed: false,
             setTheme: (theme) => set({ theme }),
             setLocale: (locale) => set({ locale }),
             setUnitSystem: (unitSystem) => set({ unitSystem }),
             setMode: (mode) => set({ mode }),
+            setSidebarCollapsed: (sidebarCollapsed) =>
+                set({ sidebarCollapsed }),
         }),
         {
             name: PREFERENCES_KEY,
             version: 2,
             storage: createJSONStorage(() => createSafeStorage()),
-            partialize: ({ theme, locale, unitSystem, mode }) => ({
+            partialize: ({
                 theme,
                 locale,
                 unitSystem,
                 mode,
+                sidebarCollapsed,
+            }) => ({
+                theme,
+                locale,
+                unitSystem,
+                mode,
+                sidebarCollapsed,
             }),
             // v1 não tinha modo: quem já tinha preferências entra no Normal.
             migrate: (persisted, version) =>
@@ -98,6 +111,10 @@ export const usePreferences = create<PreferencesState>()(
                     ...current,
                     ...saved,
                     mode: validMode(saved.mode) ? saved.mode : current.mode,
+                    sidebarCollapsed:
+                        typeof saved.sidebarCollapsed === 'boolean'
+                            ? saved.sidebarCollapsed
+                            : current.sidebarCollapsed,
                 };
             },
         },

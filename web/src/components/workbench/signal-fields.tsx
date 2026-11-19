@@ -1,5 +1,6 @@
 import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
+import { InfoTip } from '@/components/ui/help-tip';
 import { ParameterField } from '@/components/ui/parameter-field';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { signalLevels } from '@/engine';
@@ -98,17 +99,37 @@ export function SignalFields() {
                         .join(' ') || undefined
                 }
             />
-            <SegmentedControl<Radiation>
-                label={t('signal.radiation')}
-                selected={radiation}
-                onChange={(next) => setSignal({ radiation: next })}
-                options={[
-                    { id: 'half', label: t('signal.half') },
-                    { id: 'full', label: t('signal.full') },
-                ]}
-                size="sm"
-                className="col-span-2 w-full"
-            />
+            {/* Os nomes técnicos sozinhos confundiam: título com ajuda e, embaixo, o que a escolha
+                atual quer dizer na prática. */}
+            <div className="col-span-2 flex flex-col gap-1.5 pt-1">
+                <div className="flex items-center gap-1">
+                    <span className="text-xs font-medium text-muted">
+                        {t('signal.radiation')}
+                    </span>
+                    <InfoTip
+                        content={t('signal.radiationHelp')}
+                        label={t('signal.radiationInfo')}
+                    />
+                </div>
+                <SegmentedControl<Radiation>
+                    label={t('signal.radiation')}
+                    selected={radiation}
+                    onChange={(next) => setSignal({ radiation: next })}
+                    options={[
+                        { id: 'half', label: t('signal.half') },
+                        { id: 'full', label: t('signal.full') },
+                    ]}
+                    size="sm"
+                    className="w-full"
+                />
+                <p className="text-xs leading-snug text-muted">
+                    {t(
+                        radiation === 'half'
+                            ? 'signal.halfHint'
+                            : 'signal.fullHint',
+                    )}
+                </p>
+            </div>
         </fieldset>
     );
 }

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
 import { Button as AriaButton } from 'react-aria-components';
 import type { ButtonProps as AriaButtonProps } from 'react-aria-components';
 import { cn } from '@/lib/utils';
@@ -10,6 +10,8 @@ type ButtonProps = Omit<AriaButtonProps, 'isDisabled' | 'className' | 'children'
     disabled?: boolean;
     className?: string;
     children: ReactNode;
+    // React 19: `ref` chega como prop e segue para o botão do React Aria pelo spread.
+    ref?: Ref<HTMLButtonElement>;
 };
 
 const VARIANTS: Record<ButtonVariant, string> = {

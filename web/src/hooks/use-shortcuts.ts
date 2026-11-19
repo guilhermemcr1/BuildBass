@@ -8,6 +8,7 @@ export type ShortcutId =
     | 'undo'
     | 'redo'
     | 'chartTabs'
+    | 'sidebar'
     | 'help';
 
 export type Shortcut = {
@@ -29,6 +30,7 @@ export const SHORTCUTS: Shortcut[] = [
     { id: 'undo', keys: ['z'], mod: true, outsideFields: true },
     { id: 'redo', keys: ['z'], mod: true, shift: true, outsideFields: true },
     { id: 'chartTabs', keys: ['1', '2', '3', '4', '5'], outsideFields: true },
+    { id: 'sidebar', keys: ['['], outsideFields: true },
     { id: 'help', keys: ['?'], outsideFields: true },
 ];
 

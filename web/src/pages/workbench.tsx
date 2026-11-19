@@ -1,9 +1,12 @@
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BoxPanel } from '@/components/workbench/box-panel';
 import { CHART_KINDS, ChartPanel } from '@/components/workbench/chart-panel';
 import type { ChartKind } from '@/components/workbench/chart-panel';
 import { Banner } from '@/components/ui/banner';
+import { Button } from '@/components/ui/button';
+import { Tooltip } from '@/components/ui/tooltip';
 import { CloseProjectDialog } from '@/components/workbench/close-project-dialog';
 import { DriverPanel } from '@/components/workbench/driver-panel';
 import { FileDrop } from '@/components/workbench/file-drop';
@@ -24,6 +27,7 @@ import {
     useActiveHistory,
 } from '@/hooks/use-active-project';
 import { useShortcuts } from '@/hooks/use-shortcuts';
+import { usePreferences } from '@/stores/preferences';
 import { downloadProject, parseProjectFile } from '@/lib/project/file';
 import { displayName } from '@/lib/project/names';
 import {
@@ -70,6 +74,20 @@ export default function Workbench() {
     const [printing, setPrinting] = useState(false);
     const fileInput = useRef<HTMLInputElement>(null);
     const history = useActiveHistory();
+    const sidebarCollapsed = usePreferences((state) => state.sidebarCollapsed);
+    const setSidebarCollapsed = usePreferences(
+        (state) => state.setSidebarCollapsed,
+    );
+    const collapseButton = useRef<HTMLButtonElement>(null);
+    const expandButton = useRef<HTMLButtonElement>(null);
+
+    // Pelo botão, o foco passa ao botão do outro estado: o que foi apertado fica oculto.
+    const toggleSidebar = (collapse: boolean) => {
+        setSidebarCollapsed(collapse);
+        requestAnimationFrame(() =>
+            (collapse ? expandButton : collapseButton).current?.focus(),
+        );
+    };
 
     useEffect(() => {
         if (!printing) {
@@ -148,6 +166,11 @@ export default function Workbench() {
             setChart(CHART_KINDS[Number(key) - 1] ?? chart);
         } else if (id === 'help') {
             setHelpOpen(true);
+        } else if (id === 'sidebar') {
+            // A lateral só existe em ≥ 1280 px; abaixo disso o atalho não faz nada.
+            if (window.matchMedia('(min-width: 1280px)').matches) {
+                setSidebarCollapsed(!sidebarCollapsed);
+            }
         } else {
             runAction(id);
         }
@@ -163,7 +186,11 @@ export default function Workbench() {
                     projectName={<ProjectName />}
                     onHelp={() => setHelpOpen(true)}
                     onAbout={() => setAboutOpen(true)}
-                    onTutorial={() => setTutorialOpen(true)}
+                    onTutorial={() => {
+                        // O tutorial aponta para itens da lateral: ela precisa estar aberta.
+                        setSidebarCollapsed(false);
+                        setTutorialOpen(true);
+                    }}
                     preferences={<PreferencesBar />}
                 />
                 <OfflineBanner />
@@ -172,15 +199,52 @@ export default function Workbench() {
                         {t('project:storage.unavailable')}
                     </Banner>
                 )}
-                <main className="grid flex-1 grid-cols-1 gap-3 p-3 md:grid-cols-2 xl:min-h-0 xl:grid-cols-[23rem_minmax(0,1fr)] xl:gap-0 xl:p-0">
+                <main
+                    data-sidebar={sidebarCollapsed ? 'collapsed' : 'open'}
+                    className="sidebar-grid grid flex-1 grid-cols-1 gap-3 p-3 md:grid-cols-2 xl:min-h-0 xl:gap-0 xl:p-0"
+                >
+                    {/* Recolhida, a lateral vira um trilho estreito só com o botão de expandir. Trilho e
+                        lateral dividem a mesma célula: a coluna encolhe e os dois se cruzam. */}
+                    <div className="sidebar-rail hidden xl:col-start-1 xl:row-start-1 xl:flex xl:flex-col xl:items-center xl:border-r xl:border-border xl:bg-surface xl:py-2.5">
+                        <Tooltip content={t('sidebar.expand')}>
+                            <Button
+                                ref={expandButton}
+                                variant="quiet"
+                                aria-label={t('sidebar.expand')}
+                                aria-expanded={false}
+                                onPress={() => toggleSidebar(false)}
+                                className="px-2"
+                            >
+                                <PanelLeftOpen
+                                    aria-hidden="true"
+                                    className="size-4"
+                                />
+                            </Button>
+                        </Tooltip>
+                    </div>
                     {/* Em ≥ 1280 px uma lateral fixa (abas, driver e caixa) com rolagem própria; abaixo
-                        disso o wrapper some e cada bloco vira item da grade. */}
-                    <div className="contents xl:relative xl:flex xl:min-h-0 xl:[scrollbar-gutter:stable] xl:flex-col xl:overflow-y-auto xl:border-r xl:border-border xl:bg-surface">
-                        <div
-                            data-tour="tabs"
-                            className="md:col-span-2 xl:col-span-1 xl:px-3 xl:py-2.5"
-                        >
-                            <ProjectTabs onClose={requestClose} />
+                        disso o wrapper some e cada bloco vira item da grade. Recolhida, continua
+                        montada (sem perder estado), só oculta. */}
+                    <div className="sidebar-content contents xl:relative xl:col-start-1 xl:row-start-1 xl:flex xl:min-h-0 xl:[scrollbar-gutter:stable] xl:flex-col xl:overflow-x-hidden xl:overflow-y-auto xl:border-r xl:border-border xl:bg-surface">
+                        <div className="flex items-center gap-1 md:col-span-2 xl:col-span-1 xl:px-3 xl:py-2.5">
+                            <div data-tour="tabs" className="min-w-0 flex-1">
+                                <ProjectTabs onClose={requestClose} />
+                            </div>
+                            <Tooltip content={t('sidebar.collapse')}>
+                                <Button
+                                    variant="quiet"
+                                    ref={collapseButton}
+                                    aria-label={t('sidebar.collapse')}
+                                    aria-expanded={true}
+                                    onPress={() => toggleSidebar(true)}
+                                    className="hidden shrink-0 px-2 xl:inline-flex"
+                                >
+                                    <PanelLeftClose
+                                        aria-hidden="true"
+                                        className="size-4"
+                                    />
+                                </Button>
+                            </Tooltip>
                         </div>
                         <DriverPanel
                             onSubmitDriver={() => setSubmitting(true)}

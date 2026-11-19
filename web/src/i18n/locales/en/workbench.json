@@ -104,8 +104,12 @@
         "voltage": "Voltage",
         "equivalent": "≈ {{value}} into the total Re ({{re}})",
         "radiation": "Radiation",
+        "radiationInfo": "Help: Radiation",
+        "radiationHelp": "Only changes the predicted level (SPL), not the box tuning. Half space (2π) assumes the box sits against a large surface that reflects sound forward: the level is 6 dB above free space (4π), where the box hangs in the air away from everything. For car audio or a box on the floor, use half space.",
         "half": "Half space",
         "full": "Free space",
+        "halfHint": "Box on the floor, in a trunk or against a wall (+6 dB level).",
+        "fullHint": "Box hanging in the air, away from surfaces, like a lab measurement.",
         "abovePe": "Above the combined thermal power of the drivers ({{limit}})."
     },
     "charts": {
@@ -230,8 +234,9 @@
     "shortcuts": {
         "title": "Keyboard shortcuts",
         "chartTabs": "Switch chart tab",
+        "sidebar": "Collapse or expand the sidebar",
         "help": "Show this help",
-        "hint": "Keys 1–5, ?, undo and redo work outside text fields."
+        "hint": "Keys 1–5, [, ?, undo and redo work outside text fields."
     },
     "view": {
         "label": "View",
@@ -471,5 +476,9 @@
             "providerFailed": "The AI did not answer properly this time. Try again in a moment.",
             "verification": "We could not confirm you are not a robot. Reload the page and try again."
         }
+    },
+    "sidebar": {
+        "collapse": "Collapse sidebar",
+        "expand": "Expand sidebar"
     }
 }

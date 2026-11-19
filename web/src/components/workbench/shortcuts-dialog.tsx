@@ -16,6 +16,7 @@ const LABEL_KEYS: Record<ShortcutId, string> = {
     undo: 'actions.undo',
     redo: 'actions.redo',
     chartTabs: 'shortcuts.chartTabs',
+    sidebar: 'shortcuts.sidebar',
     help: 'shortcuts.help',
 };
 

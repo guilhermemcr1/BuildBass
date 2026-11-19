@@ -104,8 +104,12 @@
         "voltage": "Tensão",
         "equivalent": "≈ {{value}} sobre Re do conjunto ({{re}})",
         "radiation": "Radiação",
+        "radiationInfo": "Ajuda: Radiação",
+        "radiationHelp": "Muda só o nível previsto (SPL), não a sintonia da caixa. Meio espaço (2π) supõe a caixa junto a uma superfície grande, que reflete o som para a frente: o nível fica 6 dB acima do espaço livre (4π), em que a caixa está suspensa, longe de tudo. Para som automotivo ou caixa no chão, use meio espaço.",
         "half": "Meio espaço",
         "full": "Espaço livre",
+        "halfHint": "Caixa no chão, no porta-malas ou encostada numa parede (+6 dB no nível).",
+        "fullHint": "Caixa suspensa no ar, longe de superfícies, como numa medição de laboratório.",
         "abovePe": "Acima da potência térmica somada dos alto-falantes ({{limit}})."
     },
     "charts": {
@@ -230,8 +234,9 @@
     "shortcuts": {
         "title": "Atalhos de teclado",
         "chartTabs": "Trocar aba de gráfico",
+        "sidebar": "Recolher ou expandir a lateral",
         "help": "Mostrar esta ajuda",
-        "hint": "As teclas 1–5, ?, desfazer e refazer valem fora dos campos de texto."
+        "hint": "As teclas 1–5, [, ?, desfazer e refazer valem fora dos campos de texto."
     },
     "view": {
         "label": "Exibição",
@@ -471,5 +476,9 @@
             "providerFailed": "A IA não respondeu direito desta vez. Tente de novo em instantes.",
             "verification": "Não foi possível confirmar que você não é um robô. Recarregue a página e tente de novo."
         }
+    },
+    "sidebar": {
+        "collapse": "Recolher lateral",
+        "expand": "Expandir lateral"
     }
 }

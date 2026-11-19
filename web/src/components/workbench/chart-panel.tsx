@@ -542,29 +542,35 @@ export function ChartPanel({
                     );
 
                     return (
-                        <div className="flex h-full flex-col">
+                        // Só a aba escolhida fica montada: cada troca remonta o painel e reapresenta a
+                        // entrada (legenda em fade, gráfico em varredura).
+                        <div className="flex h-full swap flex-col">
                             <ChartLegend
                                 items={plotted.length > 1 ? legend : []}
                             />
                             <div className="relative h-80 pt-3 xl:h-auto xl:min-h-72 xl:flex-1">
-                                <Suspense>
-                                    <ChartFrame
-                                        xLabel={view.xLabel}
-                                        yLabel={view.yLabel}
-                                        label={view.title}
-                                        formatValue={view.formatValue}
-                                        formatFrequency={view.formatFrequency}
-                                        frequencies={view.frequencies}
-                                        series={view.series}
-                                        limits={view.limits}
-                                        yRange={view.yRange}
-                                        yIncrs={view.yIncrs}
-                                        xRange={view.xRange}
-                                        onZoom={setZoom}
-                                        onZoomReset={() => setZoom(null)}
-                                        peakLabel={t('charts.peak')}
-                                    />
-                                </Suspense>
+                                <div className="h-full chart-sweep">
+                                    <Suspense>
+                                        <ChartFrame
+                                            xLabel={view.xLabel}
+                                            yLabel={view.yLabel}
+                                            label={view.title}
+                                            formatValue={view.formatValue}
+                                            formatFrequency={
+                                                view.formatFrequency
+                                            }
+                                            frequencies={view.frequencies}
+                                            series={view.series}
+                                            limits={view.limits}
+                                            yRange={view.yRange}
+                                            yIncrs={view.yIncrs}
+                                            xRange={view.xRange}
+                                            onZoom={setZoom}
+                                            onZoomReset={() => setZoom(null)}
+                                            peakLabel={t('charts.peak')}
+                                        />
+                                    </Suspense>
+                                </div>
                                 {series.length === 0 && (
                                     <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-6">
                                         <div className="max-w-xs rounded-lg border border-border bg-surface/90 px-4 py-3 text-center">
