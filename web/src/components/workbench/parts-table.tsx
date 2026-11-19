@@ -89,7 +89,13 @@ export function PartsTable({ plan, name }: { plan: Plan; name: string }) {
                                         ) : (
                                             <ul className="flex flex-col gap-0.5">
                                                 {cutouts.map((line) => (
-                                                    <li key={line}>{line}</li>
+                                                    // O número não se separa da unidade na quebra de linha.
+                                                    <li key={line}>
+                                                        {line.replace(
+                                                            /(\d) (?=\S)/g,
+                                                            '$1\u00a0',
+                                                        )}
+                                                    </li>
                                                 ))}
                                             </ul>
                                         )}

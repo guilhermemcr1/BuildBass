@@ -75,16 +75,19 @@ export function describeCutout(cutout: Cutout, text: PlanText): string {
     )}`;
 }
 
-// Recortes iguais viram um item com a quantidade ("Driver ×2 Ø 285,0 mm").
+// Recortes iguais viram um item com a quantidade ("Duto Ø 100,0 mm ×2"). Dutos triangulares nos
+// cantos têm o mesmo recorte girado: o canto e o giro não os diferenciam.
 export function cutoutSummary(cutouts: Cutout[], text: PlanText): string[] {
     const groups = new Map<string, { cutout: Cutout; count: number }>();
 
     for (const cutout of cutouts) {
-        // Posição e identidade não diferenciam recortes iguais.
+        // Posição, orientação e identidade não diferenciam recortes iguais.
         const {
             center: _center,
             ref: _ref,
             manual: _manual,
+            corner: _corner,
+            rotation_deg: _rotation,
             ...shape
         } = cutout;
         const key = JSON.stringify(shape);
