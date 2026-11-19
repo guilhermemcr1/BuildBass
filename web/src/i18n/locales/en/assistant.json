@@ -18,7 +18,10 @@
     "blocked": {
         "driver": "Fs, Qts or Vas is missing.",
         "box": "Enter the box size (and the tuning, for a vented box) to continue.",
-        "find": "Pick a driver from the catalog or another way to fill in."
+        "find": "Pick a driver from the catalog or another way to fill in.",
+        "missing_one": "Just 1 value missing to continue. Tap it to go to the field:",
+        "missing_other": "{{count}} values missing to continue. Tap one to go to the field:",
+        "goTo": "Go to the {{field}} field"
     },
     "driver": {
         "sources": {
@@ -64,11 +67,16 @@
             "intro": "Attach the manual or datasheet as a PDF. The AI finds the parameters and fills in the fields.",
             "notPdf": "The file must be a PDF.",
             "tooLarge": "The PDF is larger than 10 MB.",
-            "drop": "Drag the PDF here",
+            "drop": "Drag the PDF here or choose the file: reading starts on its own",
             "choose": "Choose PDF…",
             "hint": "PDF up to 10 MB and 30 pages",
-            "read": "Read with AI",
-            "privacy": "Only the PDF text goes to an external AI service. The file is not stored."
+            "privacy": "Only the PDF text goes to an external AI service. The file is not stored.",
+            "reading": "The AI is reading the manual…",
+            "failed": "Could not read it",
+            "attached": "Attached",
+            "retry": "Try again",
+            "remove": "Remove file",
+            "cancel": "Cancel reading and remove file"
         },
         "text": {
             "intro": "Paste the text with the parameters (from a store, the manual, a message). Only lines with values, like \"Fs 35 Hz\", are sent to AI.",
@@ -117,7 +125,13 @@
             "needed": "Enter the volume or the size to see the response.",
             "external": "External size",
             "externalHint": "Outside measurements, including the wood. The internal volume comes from them minus the thickness.",
-            "invalid": "These measurements don't make a valid box. Check the values and the thickness."
+            "invalid": "With these sizes the box does not close. The value was not applied; check the sizes and the thickness.",
+            "tooSmall": "The outer {{axis}} must be more than {{min}} (two board thicknesses). The value was not applied; increase it or reduce the thickness.",
+            "axis": {
+                "w_m": "width",
+                "h_m": "height",
+                "d_m": "depth"
+            }
         },
         "classic": "Use classic suggestion",
         "classicApplied": "Volume and tuning from the classic alignment for this driver. Adjust as you like.",
@@ -145,11 +159,12 @@
         },
         "port": {
             "title": "What will the port be like?",
-            "hint": "Round (PVC tube) or rectangular (made from board, slot style). A wider port blows less air; the length comes from the tuning.",
+            "hint": "Round (PVC tube), rectangular (made from board, slot style) or triangular (in the corners). A wider port blows less air; the length comes from the tuning.",
             "shape": "Port shape",
             "round": "Round",
             "rect": "Rectangular",
-            "otherShape": "This project's port is triangular: pick round or rectangular, or adjust the sizes in the workbench."
+            "triangle": "Triangular",
+            "triangleHint": "Triangular: boards across the box corners form the port (up to 4, one per corner). Position and mounting can be adjusted in the workbench."
         },
         "ai": {
             "title": "Want help from the AI?",

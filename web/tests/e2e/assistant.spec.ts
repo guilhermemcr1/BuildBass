@@ -15,7 +15,6 @@ test('primeira visita: catálogo → caixa → conferência → bancada', async 
         page.getByRole('heading', { name: 'Qual alto-falante você vai usar?' }),
     ).toBeVisible();
     const next = page.getByRole('button', { name: /Avançar/ });
-    await expect(next).toBeDisabled();
 
     // Abre direto no catálogo.
     await page.getByRole('button', { name: /Triton TR 620/ }).click();
@@ -36,8 +35,11 @@ test('primeira visita: catálogo → caixa → conferência → bancada', async 
     await expect(
         page.getByText(/alto demais para uma sugestão clássica/),
     ).toBeVisible();
-    await expect(next).toBeDisabled();
+    // Avançar sem volume avisa o que falta e leva ao campo.
+    await next.click();
+    await expect(dialog.getByRole('alert')).toContainText(/para seguir/);
     const vb = dialog.getByRole('textbox', { name: /^Vb/ });
+    await expect(vb).toBeFocused();
     await vb.fill('40');
     await vb.press('Tab');
     await next.click();
@@ -108,7 +110,9 @@ test('texto colado: só as linhas com parâmetro vão ao servidor', async ({
     await expect(page.getByText(/3 campos preenchidos pela IA/)).toBeVisible();
     expect(sent).toContain('Fs 32 Hz');
     expect(sent).not.toContain('loja.com');
-    await expect(page.getByRole('button', { name: /Avançar/ })).toBeEnabled();
+    await expect(
+        page.getByText(/Tudo certo: já dá para simular/),
+    ).toBeVisible();
 });
 
 for (const theme of ['light', 'dark'] as const) {

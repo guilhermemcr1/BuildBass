@@ -1,5 +1,5 @@
 import { RESPONSE_NEEDS, deriveDriver } from '@/engine';
-import type { DriverKey } from '@/engine';
+import type { DriverKey, FieldKey } from '@/engine';
 import { simulationOf } from '@/hooks/use-simulation';
 import type { ProjectData } from '@/lib/project/types';
 
@@ -16,4 +16,17 @@ export function driverReady(data: ProjectData): boolean {
 // A caixa tem o que o motor precisa para desenhar a resposta (volume e, na dutada, a sintonia).
 export function boxReady(data: ProjectData): boolean {
     return driverReady(data) && simulationOf(data).missing.spl_db.length === 0;
+}
+
+// O que falta em cada passo, na ordem dos campos: o assistente lista e leva até o primeiro.
+export function driverMissing(data: ProjectData): DriverKey[] {
+    const { values } = deriveDriver(data.driver);
+
+    return DRIVER_MINIMUM.filter((key) => values[key].value === undefined);
+}
+
+export function boxMissing(data: ProjectData): FieldKey[] {
+    return [...new Set(simulationOf(data).missing.spl_db)].filter(
+        (key) => !(DRIVER_MINIMUM as string[]).includes(key),
+    );
 }

@@ -3,7 +3,10 @@ import {
     FileText,
     FileUp,
     Loader2,
+    RotateCcw,
     Sparkles,
+    WifiOff,
+    X,
 } from 'lucide-react';
 import { useId, useState } from 'react';
 import { DropZone, FileTrigger, Text } from 'react-aria-components';
@@ -100,7 +103,11 @@ function Unavailable({ fill }: { fill: DriverAiFill }) {
     const { t } = useTranslation('assistant');
 
     if (fill.offline) {
-        return <Banner tone="warn">{t('driver.ai.offline')}</Banner>;
+        return (
+            <Banner tone="warn" icon={WifiOff}>
+                {t('driver.ai.offline')}
+            </Banner>
+        );
     }
 
     return fill.unavailable ? (
@@ -112,13 +119,15 @@ function looksLikePdf(file: File): boolean {
     return file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
 }
 
-// Manual em PDF: arrastar ou escolher, e a IA lê os parâmetros (só os campos vazios recebem valor).
+// Manual em PDF: arrastar ou escolher. Arquivo válido já começa a ser lido; o cartão do arquivo
+// mostra o andamento e deixa remover (cancelando a leitura, se ainda estiver lendo) ou tentar de novo.
 export function PdfSource({ fill }: { fill: DriverAiFill }) {
     const { t } = useTranslation('assistant');
     const [file, setFile] = useState<File>();
     const [fileError, setFileError] = useState<string>();
     const reading = fill.state.status === 'reading';
-    const locked = fill.offline || fill.unavailable || reading;
+    const failed = fill.state.status === 'failed';
+    const locked = fill.offline || fill.unavailable;
 
     const accept = (chosen: File | null | undefined) => {
         if (chosen == null) {
@@ -126,86 +135,162 @@ export function PdfSource({ fill }: { fill: DriverAiFill }) {
         }
 
         if (!looksLikePdf(chosen)) {
-            setFile(undefined);
             setFileError(t('driver.pdf.notPdf'));
         } else if (chosen.size > MANUAL_MAX_BYTES) {
-            setFile(undefined);
             setFileError(t('driver.pdf.tooLarge'));
         } else {
             setFileError(undefined);
             setFile(chosen);
+            void fill.fromPdf(chosen);
         }
+    };
+
+    const remove = () => {
+        fill.reset();
+        setFile(undefined);
     };
 
     return (
         <div className="flex flex-col gap-3">
             <p className="text-sm text-muted">{t('driver.pdf.intro')}</p>
             <Unavailable fill={fill} />
-            <DropZone
-                isDisabled={locked}
-                onDrop={async (event) => {
-                    const item = event.items.find(
-                        (entry) => entry.kind === 'file',
-                    );
+            {file === undefined ? (
+                <DropZone
+                    isDisabled={locked}
+                    onDrop={async (event) => {
+                        const item = event.items.find(
+                            (entry) => entry.kind === 'file',
+                        );
 
-                    if (item !== undefined && item.kind === 'file') {
-                        accept(await item.getFile());
-                    }
-                }}
-                className={cn(
-                    'flex flex-col items-center gap-2 rounded-lg border border-dashed border-border bg-background/40 px-4 py-6 text-center outline-none',
-                    'data-[drop-target]:border-accent data-[drop-target]:bg-accent/10 data-[focus-visible]:outline-2 data-[focus-visible]:outline-accent',
-                )}
-            >
-                <FileUp aria-hidden="true" className="size-6 text-muted" />
-                <Text slot="label" className="text-sm font-medium">
-                    {t('driver.pdf.drop')}
-                </Text>
-                <FileTrigger
-                    acceptedFileTypes={['application/pdf']}
-                    onSelect={(files) => accept(files?.[0])}
+                        if (item !== undefined && item.kind === 'file') {
+                            accept(await item.getFile());
+                        }
+                    }}
+                    className={cn(
+                        'flex flex-col items-center gap-2 rounded-lg border border-dashed border-border bg-background/40 px-4 py-8 text-center outline-none motion-safe:transition-[border-color,background-color] motion-safe:duration-200',
+                        'data-[drop-target]:border-accent data-[drop-target]:bg-accent/10 data-[focus-visible]:outline-2 data-[focus-visible]:outline-accent',
+                    )}
                 >
-                    <Button disabled={locked}>{t('driver.pdf.choose')}</Button>
-                </FileTrigger>
-                <span className="text-xs text-muted">
-                    {t('driver.pdf.hint')}
-                </span>
-            </DropZone>
+                    <span
+                        aria-hidden="true"
+                        className="grid size-11 place-items-center rounded-full bg-accent/12 text-accent-soft"
+                    >
+                        <FileUp className="size-5" />
+                    </span>
+                    <Text slot="label" className="text-sm font-medium">
+                        {t('driver.pdf.drop')}
+                    </Text>
+                    <FileTrigger
+                        acceptedFileTypes={['application/pdf']}
+                        onSelect={(files) => accept(files?.[0])}
+                    >
+                        <Button disabled={locked}>
+                            {t('driver.pdf.choose')}
+                        </Button>
+                    </FileTrigger>
+                    <span className="text-xs text-muted">
+                        {t('driver.pdf.hint')}
+                    </span>
+                </DropZone>
+            ) : (
+                <AttachedFile
+                    file={file}
+                    reading={reading}
+                    failed={failed}
+                    onRemove={remove}
+                    onRetry={locked ? undefined : () => void fill.fromPdf(file)}
+                />
+            )}
             {fileError !== undefined && (
                 <div role="alert">
                     <Banner tone="warn">{fileError}</Banner>
                 </div>
             )}
-            {file !== undefined && (
-                <div className="flex flex-wrap items-center gap-2">
-                    <span className="flex min-w-0 flex-1 items-center gap-2 text-sm">
-                        <FileText
-                            aria-hidden="true"
-                            className="size-4 shrink-0 text-muted"
-                        />
-                        <span className="truncate">{file.name}</span>
-                    </span>
-                    <Button
-                        variant="primary"
-                        disabled={locked}
-                        onPress={() => void fill.fromPdf(file)}
-                    >
-                        {reading ? (
-                            <Loader2
-                                aria-hidden="true"
-                                className="size-4 animate-spin"
-                            />
-                        ) : (
-                            <Sparkles aria-hidden="true" className="size-4" />
-                        )}
-                        {reading
-                            ? t('driver.ai.reading')
-                            : t('driver.pdf.read')}
-                    </Button>
-                </div>
-            )}
             <AiOutcome fill={fill} />
             <p className="text-[11px] text-muted">{t('driver.pdf.privacy')}</p>
+        </div>
+    );
+}
+
+// Cartão do PDF anexado: nome, tamanho e andamento da leitura, com remover e tentar de novo.
+function AttachedFile({
+    file,
+    reading,
+    failed,
+    onRemove,
+    onRetry,
+}: {
+    file: File;
+    reading: boolean;
+    failed: boolean;
+    onRemove: () => void;
+    onRetry?: () => void;
+}) {
+    const { t, i18n } = useTranslation('assistant');
+    const size = new Intl.NumberFormat(i18n.language, {
+        style: 'unit',
+        unit: 'megabyte',
+        maximumFractionDigits: 1,
+    }).format(Math.max(file.size / 1_000_000, 0.1));
+
+    return (
+        <div
+            className={cn(
+                'relative flex swap items-center gap-3 overflow-hidden rounded-lg border bg-surface px-3 py-3',
+                failed ? 'border-status-warn/60' : 'border-border',
+            )}
+        >
+            <span
+                aria-hidden="true"
+                className="grid size-10 shrink-0 place-items-center rounded-md bg-accent/12 text-accent-soft"
+            >
+                <FileText className="size-5" />
+            </span>
+            <span className="flex min-w-0 flex-1 flex-col">
+                <span className="truncate text-sm font-medium">
+                    {file.name}
+                </span>
+                <span
+                    aria-live="polite"
+                    className="flex items-center gap-1.5 text-xs text-muted"
+                >
+                    {reading && (
+                        <Loader2
+                            aria-hidden="true"
+                            className="size-3.5 animate-spin text-accent-soft"
+                        />
+                    )}
+                    {size} ·{' '}
+                    {reading
+                        ? t('driver.pdf.reading')
+                        : failed
+                          ? t('driver.pdf.failed')
+                          : t('driver.pdf.attached')}
+                </span>
+            </span>
+            {failed && onRetry !== undefined && (
+                <Button onPress={onRetry} className="shrink-0">
+                    <RotateCcw aria-hidden="true" className="size-4" />
+                    {t('driver.pdf.retry')}
+                </Button>
+            )}
+            <Button
+                variant="quiet"
+                onPress={onRemove}
+                aria-label={`${t(reading ? 'driver.pdf.cancel' : 'driver.pdf.remove')}: ${file.name}`}
+                className="size-8 shrink-0 px-0"
+            >
+                <X aria-hidden="true" className="size-4" />
+            </Button>
+            {/* Barra indeterminada na base do cartão enquanto a IA lê. */}
+            {reading && (
+                <span
+                    aria-hidden="true"
+                    className="absolute inset-x-0 bottom-0 h-0.5 overflow-hidden bg-accent/15"
+                >
+                    <span className="block h-full reading-bar w-1/3 bg-accent" />
+                </span>
+            )}
         </div>
     );
 }

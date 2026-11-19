@@ -1,3 +1,4 @@
+import { WifiOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Banner } from '@/components/ui/banner';
 import { useOnlineStatus } from '@/hooks/use-online-status';
@@ -10,7 +11,7 @@ export function OfflineBanner() {
     }
 
     return (
-        <Banner tone="warn" className="mx-3 mt-3">
+        <Banner tone="warn" icon={WifiOff} className="mx-3 mt-3">
             <strong>{t('offline.title')}</strong> {t('offline.body')}
         </Banner>
     );

@@ -1,4 +1,4 @@
-import { Check, Loader2, Search } from 'lucide-react';
+import { Check, Loader2, Search, WifiOff } from 'lucide-react';
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
 import { Input, SearchField, useLocale } from 'react-aria-components';
@@ -65,7 +65,11 @@ export function CatalogList({
     };
 
     if (offline) {
-        return <Banner tone="warn">{t('driver.catalog.offline')}</Banner>;
+        return (
+            <Banner tone="warn" icon={WifiOff}>
+                {t('driver.catalog.offline')}
+            </Banner>
+        );
     }
 
     return (

@@ -46,12 +46,11 @@ describe('Assistente', () => {
         vi.unstubAllGlobals();
     });
 
-    test('só avança do alto-falante com Fs, Qts e Vas', async () => {
+    test('só avança do alto-falante com Fs, Qts e Vas, e diz o que falta', async () => {
         const user = userEvent.setup();
         renderWithProviders(<Assistant onClose={() => undefined} />);
 
         const next = screen.getByRole('button', { name: /Avançar/ });
-        expect(next).toBeDisabled();
         expect(
             screen.getByText(
                 'Escolha um alto-falante do catálogo ou outra forma de preencher.',
@@ -67,10 +66,29 @@ describe('Assistente', () => {
         expect(
             screen.getByText(/Falta informar: Fs, Qts, Vas/),
         ).toBeInTheDocument();
-        expect(next).toBeDisabled();
+
+        // Avançar sem o mínimo não muda de passo: lista o que falta e leva ao primeiro campo.
+        await user.click(next);
+        expect(screen.getByRole('alert')).toHaveTextContent(
+            /Faltam 3 valores para seguir/,
+        );
+        expect(
+            screen.getByRole('heading', {
+                name: 'Qual alto-falante você vai usar?',
+            }),
+        ).toBeInTheDocument();
+        expect(document.activeElement).toBe(
+            screen.getByRole('textbox', { name: /^Fs/ }),
+        );
+        await user.click(
+            screen.getByRole('button', { name: 'Ir ao campo Vas' }),
+        );
+        expect(document.activeElement).toBe(
+            screen.getByRole('textbox', { name: /^Vas/ }),
+        );
 
         typeMinimum();
-        expect(next).toBeEnabled();
+        expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 
         await user.click(next);
         expect(
@@ -221,5 +239,99 @@ describe('Assistente', () => {
         const { data } = activeProjectStore().getState();
         expect(data.driver).toEqual({ fs_hz: 32, qts: 0.4, vas_m3: 0.06 });
         expect(data.driverSource).toEqual({ brand: 'Marca', model: 'SW12' });
+    });
+
+    test('PDF válido começa a ser lido sozinho e o arquivo pode ser removido', async () => {
+        const user = userEvent.setup();
+        let release: () => void = () => undefined;
+        const held = new Promise<void>((resolve) => (release = resolve));
+        const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+            const url = input instanceof Request ? input.url : input.toString();
+
+            if (url.includes('/extract')) {
+                await held;
+            }
+
+            return new Response(JSON.stringify({ data: [], meta: {} }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' },
+            });
+        });
+        vi.stubGlobal('fetch', fetchMock);
+        const { container } = renderWithProviders(
+            <Assistant onClose={() => undefined} />,
+        );
+
+        await user.click(screen.getByRole('button', { name: /^Manual/ }));
+        const input = container.ownerDocument.querySelector<HTMLInputElement>(
+            'input[type="file"][accept="application/pdf"]',
+        );
+        expect(input).not.toBeNull();
+        await user.upload(
+            input as HTMLInputElement,
+            new File(['%PDF-1.4'], 'ficha.pdf', { type: 'application/pdf' }),
+        );
+
+        // Sem botão de "Ler": anexou, já está lendo.
+        expect(
+            await screen.findByText(/A IA está lendo o manual/),
+        ).toBeInTheDocument();
+        expect(
+            fetchMock.mock.calls.some(([url]) =>
+                String(url instanceof Request ? url.url : url).includes(
+                    '/extract',
+                ),
+            ),
+        ).toBe(true);
+
+        // Remover cancela a leitura e volta à área de soltar o arquivo.
+        await user.click(
+            screen.getByRole('button', {
+                name: 'Cancelar leitura e remover arquivo: ficha.pdf',
+            }),
+        );
+        expect(screen.queryByText('ficha.pdf')).not.toBeInTheDocument();
+        expect(screen.getByText(/Arraste o PDF até aqui/)).toBeInTheDocument();
+        release();
+    });
+
+    test('o duto da dutada pode ser redondo, retangular ou triangular', async () => {
+        const user = userEvent.setup();
+        typeMinimum();
+        renderWithProviders(<Assistant onClose={() => undefined} />);
+
+        await user.click(screen.getByRole('radio', { name: 'Dutada' }));
+        expect(
+            screen.getByRole('textbox', { name: /Diâmetro do duto/ }),
+        ).toBeInTheDocument();
+
+        await user.click(screen.getByRole('radio', { name: 'Triangular' }));
+        expect(activeProjectStore().getState().data.box.port.shape).toBe(
+            'triangle',
+        );
+        expect(
+            screen.getByRole('textbox', { name: /Base do duto/ }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole('textbox', { name: /Altura do duto/ }),
+        ).toBeInTheDocument();
+        expect(screen.getByText(/tábuas na diagonal/)).toBeInTheDocument();
+    });
+
+    test('medida externa pequena demais explica o mínimo e não é aplicada', async () => {
+        const user = userEvent.setup();
+        typeMinimum();
+        renderWithProviders(<Assistant onClose={() => undefined} />);
+
+        await user.click(screen.getByRole('radio', { name: 'Sei as medidas' }));
+        const width = screen.getAllByRole('textbox', {
+            name: /^Medida externa/,
+        })[0];
+        await user.clear(width);
+        await user.type(width, '30{tab}');
+
+        expect(screen.getByRole('alert')).toHaveTextContent(
+            /A largura externa precisa passar de 36,0 mm/,
+        );
     });
 });

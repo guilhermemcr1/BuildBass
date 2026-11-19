@@ -1,11 +1,11 @@
-import { Info, WifiOff } from 'lucide-react';
+import { Info, TriangleAlert } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
 type BannerProps = {
     tone?: 'info' | 'warn';
-    // Ícone no lugar do padrão do tom.
+    // Ícone no lugar do padrão do tom (aviso: triângulo; sem conexão passa WifiOff).
     icon?: LucideIcon;
     className?: string;
     children: ReactNode;
@@ -17,7 +17,7 @@ export function Banner({
     className,
     children,
 }: BannerProps) {
-    const Icon = icon ?? (tone === 'warn' ? WifiOff : Info);
+    const Icon = icon ?? (tone === 'warn' ? TriangleAlert : Info);
 
     return (
         <div

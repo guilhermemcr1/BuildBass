@@ -251,8 +251,8 @@ test('assistente: manual em PDF lido pela IA', async ({ browser }) => {
         .getByRole('region', { name: 'Manual (PDF)' })
         .locator('input[type="file"]')
         .setInputFiles(PDF);
-    await page.getByRole('button', { name: 'Ler com IA' }).click();
-    await expect(page.getByRole('button', { name: /Lendo/ })).toBeVisible();
+    // A leitura começa sozinha ao anexar um PDF válido.
+    await expect(page.getByText('A IA está lendo o manual…')).toBeVisible();
     await shot(page, 'screenshot-assistant-pdf');
 
     release();

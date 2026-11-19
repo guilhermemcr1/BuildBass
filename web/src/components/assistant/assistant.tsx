@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, Check, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, CircleAlert, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import {
     Dialog as AriaDialog,
@@ -10,7 +10,9 @@ import { Button } from '@/components/ui/button';
 import { useActiveProject } from '@/hooks/use-active-project';
 import { useOnlineStatus } from '@/hooks/use-online-status';
 import { cn } from '@/lib/utils';
-import { boxReady, driverReady } from './readiness';
+import { PARAMETERS } from '@/lib/parameters';
+import type { ParameterKey } from '@/lib/parameters';
+import { boxMissing, boxReady, driverMissing, driverReady } from './readiness';
 import { StepBox } from './step-box';
 import { StepDriver } from './step-driver';
 import type { DriverPhase } from './step-driver';
@@ -42,6 +44,9 @@ export default function Assistant({ onClose }: AssistantProps) {
     // Sentido da última troca de passo: decide de que lado o conteúdo novo entra.
     const [direction, setDirection] = useState<'forward' | 'back'>('forward');
     const heading = useRef<HTMLHeadingElement>(null);
+    const content = useRef<HTMLDivElement>(null);
+    // Quantas vezes a pessoa tentou avançar sem o mínimo: mostra o que falta (e reanima o aviso).
+    const [attempt, setAttempt] = useState(0);
     const index = STEPS.indexOf(step);
     const ready = {
         driver: driverPhase === 'data' && driverReady(data),
@@ -68,7 +73,50 @@ export default function Assistant({ onClose }: AssistantProps) {
 
     const go = (target: AssistantStep) => {
         setDirection(STEPS.indexOf(target) < index ? 'back' : 'forward');
+        setAttempt(0);
         setStep(target);
+    };
+
+    // Campos que faltam no passo atual (só com os dados à vista: na escolha não há campo ainda).
+    const missing: ParameterKey[] =
+        step === 'driver'
+            ? driverPhase === 'data'
+                ? driverMissing(data)
+                : []
+            : step === 'box'
+              ? (boxMissing(data).filter(
+                    (key) => key in PARAMETERS,
+                ) as ParameterKey[])
+              : [];
+
+    // Leva ao campo: rola até ele e põe o cursor, para a pessoa já digitar.
+    const focusField = (key: ParameterKey) => {
+        const input = content.current?.querySelector<HTMLInputElement>(
+            `[data-parameter="${key}"] input`,
+        );
+
+        input?.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
+        input?.focus({ preventScroll: true });
+    };
+
+    // Avançar sem o mínimo não fica mudo: diz o que falta e leva ao primeiro campo.
+    const advance = () => {
+        const target = STEPS[index + 1];
+
+        if (target === undefined) {
+            return;
+        }
+
+        if (ready[step]) {
+            go(target);
+            return;
+        }
+
+        setAttempt((count) => count + 1);
+
+        if (missing[0] !== undefined) {
+            focusField(missing[0]);
+        }
     };
 
     const next = STEPS[index + 1];
@@ -201,7 +249,10 @@ export default function Assistant({ onClose }: AssistantProps) {
                             </nav>
                         </div>
                     </header>
-                    <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6">
+                    <div
+                        ref={content}
+                        className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6"
+                    >
                         <div
                             key={step}
                             className={cn(
@@ -214,6 +265,53 @@ export default function Assistant({ onClose }: AssistantProps) {
                             <p className="text-sm text-muted">
                                 {t(`steps.${step}Intro`)}
                             </p>
+                            {attempt > 0 && !ready[step] && (
+                                <div
+                                    key={attempt}
+                                    role="alert"
+                                    className="flex nudge flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-status-warn/40 bg-warn-bg px-3 py-2.5 text-sm text-warn-foreground"
+                                >
+                                    <CircleAlert
+                                        aria-hidden="true"
+                                        className="size-4 shrink-0"
+                                    />
+                                    <span className="min-w-0 flex-1">
+                                        {missing.length === 0
+                                            ? t(
+                                                  step === 'driver'
+                                                      ? 'blocked.find'
+                                                      : `blocked.${step}`,
+                                              )
+                                            : t('blocked.missing', {
+                                                  count: missing.length,
+                                              })}
+                                    </span>
+                                    {missing.length > 0 && (
+                                        <span className="flex flex-wrap gap-1.5">
+                                            {missing.map((key) => (
+                                                <Button
+                                                    key={key}
+                                                    variant="secondary"
+                                                    onPress={() =>
+                                                        focusField(key)
+                                                    }
+                                                    aria-label={t(
+                                                        'blocked.goTo',
+                                                        {
+                                                            field: PARAMETERS[
+                                                                key
+                                                            ].symbol,
+                                                        },
+                                                    )}
+                                                    className="h-7 px-2.5 num text-xs"
+                                                >
+                                                    {PARAMETERS[key].symbol}
+                                                </Button>
+                                            ))}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
                             {step === 'driver' && (
                                 <StepDriver
                                     offline={offline}
@@ -271,8 +369,7 @@ export default function Assistant({ onClose }: AssistantProps) {
                                 ) : (
                                     <Button
                                         variant="primary"
-                                        disabled={!ready[step]}
-                                        onPress={() => go(next)}
+                                        onPress={advance}
                                         className="group h-9 px-4"
                                     >
                                         {t('next')}

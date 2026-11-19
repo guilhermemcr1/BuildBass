@@ -164,6 +164,8 @@ export function ParameterField({
             isDisabled={disabled}
             isRequired={requirement !== undefined}
             validationBehavior="aria"
+            // Âncora para "ir ao campo" (o assistente leva a pessoa ao que falta preencher).
+            data-parameter={parameter}
             className={cn('group flex min-w-0 flex-col gap-0.5', className)}
         >
             {/* Linha compacta: símbolo à esquerda, valor e unidade à direita, numa caixa só. */}

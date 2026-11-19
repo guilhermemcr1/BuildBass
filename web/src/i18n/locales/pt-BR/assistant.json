@@ -18,7 +18,10 @@
     "blocked": {
         "driver": "Falta Fs, Qts ou Vas para seguir.",
         "box": "Informe o tamanho da caixa (e a sintonia, na dutada) para seguir.",
-        "find": "Escolha um alto-falante do catálogo ou outra forma de preencher."
+        "find": "Escolha um alto-falante do catálogo ou outra forma de preencher.",
+        "missing_one": "Falta só 1 valor para seguir. Toque nele para ir ao campo:",
+        "missing_other": "Faltam {{count}} valores para seguir. Toque em um para ir ao campo:",
+        "goTo": "Ir ao campo {{field}}"
     },
     "driver": {
         "sources": {
@@ -64,11 +67,16 @@
             "intro": "Anexe o manual ou a ficha técnica em PDF. A IA procura os parâmetros e preenche os campos.",
             "notPdf": "O arquivo precisa ser um PDF.",
             "tooLarge": "O PDF passa de 10 MB.",
-            "drop": "Arraste o PDF até aqui",
+            "drop": "Arraste o PDF até aqui ou escolha o arquivo: a leitura começa sozinha",
             "choose": "Escolher PDF…",
             "hint": "PDF de até 10 MB e 30 páginas",
-            "read": "Ler com IA",
-            "privacy": "Só o texto do PDF vai para um serviço de IA externo. O arquivo não é guardado."
+            "privacy": "Só o texto do PDF vai para um serviço de IA externo. O arquivo não é guardado.",
+            "reading": "A IA está lendo o manual…",
+            "failed": "Não deu para ler",
+            "attached": "Anexado",
+            "retry": "Tentar de novo",
+            "remove": "Remover arquivo",
+            "cancel": "Cancelar leitura e remover arquivo"
         },
         "text": {
             "intro": "Cole o texto com os parâmetros (da loja, do manual, de uma mensagem). Só as linhas com valores, como \"Fs 35 Hz\", são enviadas à IA.",
@@ -117,7 +125,13 @@
             "needed": "Informe o volume ou as medidas para ver a resposta.",
             "external": "Medida externa",
             "externalHint": "Medidas por fora, com a madeira. O volume interno sai delas descontando a espessura.",
-            "invalid": "Essas medidas não formam uma caixa válida. Confira os valores e a espessura."
+            "invalid": "Com essas medidas a caixa não fecha. O valor não foi aplicado; confira as medidas e a espessura.",
+            "tooSmall": "A {{axis}} externa precisa passar de {{min}} (duas espessuras de chapa). O valor não foi aplicado; aumente a medida ou diminua a espessura.",
+            "axis": {
+                "w_m": "largura",
+                "h_m": "altura",
+                "d_m": "profundidade"
+            }
         },
         "classic": "Usar sugestão clássica",
         "classicApplied": "Volume e sintonia do alinhamento clássico para este alto-falante. Ajuste à vontade.",
@@ -145,11 +159,12 @@
         },
         "port": {
             "title": "Como vai ser o duto?",
-            "hint": "Redondo (tubo de PVC) ou retangular (de chapa, tipo slot). Duto mais largo sopra menos ar; o comprimento sai da sintonia.",
+            "hint": "Redondo (tubo de PVC), retangular (de chapa, tipo slot) ou triangular (nos cantos). Duto mais largo sopra menos ar; o comprimento sai da sintonia.",
             "shape": "Formato do duto",
             "round": "Redondo",
             "rect": "Retangular",
-            "otherShape": "O duto deste projeto é triangular: escolha redondo ou retangular, ou ajuste as medidas na bancada."
+            "triangle": "Triangular",
+            "triangleHint": "Triangular: tábuas na diagonal dos cantos da caixa formam o duto (até 4, um por canto). A posição e o encaixe se ajustam na bancada."
         },
         "ai": {
             "title": "Quer uma ajuda da IA?",

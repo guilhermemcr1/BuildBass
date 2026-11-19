@@ -34,7 +34,7 @@ const BoxThumbnail = lazy(() => import('@/components/workbench/box-thumbnail'));
 
 type SimpleType = 'closed' | 'vented';
 type SizeMode = 'volume' | 'size';
-type PortShape = 'round' | 'rect';
+type PortShape = 'round' | 'rect' | 'triangle';
 
 const VB_SLIDER = { minSi: 0.005, maxSi: 0.25, scale: 'linear' } as const;
 const FB_SLIDER = { minSi: 20, maxSi: 80, scale: 'log' } as const;
@@ -87,6 +87,7 @@ export function StepBox() {
     const diameter = useParameterField('diameter_m');
     const portWidth = useParameterField('width_m');
     const portHeight = useParameterField('height_m');
+    const portBase = useParameterField('base_m');
     const portCount = useParameterField('port_count');
     const power = useParameterField('power_w');
     const seeded = useRef(false);
@@ -205,7 +206,7 @@ export function StepBox() {
                         </p>
                         <SegmentedControl<PortShape>
                             label={t('box.port.shape')}
-                            selected={port.shape === 'rect' ? 'rect' : 'round'}
+                            selected={port.shape}
                             onChange={(shape) => {
                                 if (shape !== port.shape) {
                                     setPort(reshape(port, shape));
@@ -216,37 +217,50 @@ export function StepBox() {
                             options={[
                                 { id: 'round', label: t('box.port.round') },
                                 { id: 'rect', label: t('box.port.rect') },
+                                {
+                                    id: 'triangle',
+                                    label: t('box.port.triangle'),
+                                },
                             ]}
                         />
-                        {port.shape === 'triangle' ? (
-                            <p className="text-xs text-muted">
-                                {t('box.port.otherShape')}
-                            </p>
-                        ) : (
-                            <div className="grid grid-cols-3 items-start gap-2">
-                                {port.shape === 'round' ? (
-                                    <ParameterField
-                                        {...diameter}
-                                        layout="stacked"
-                                        className="col-span-2"
-                                    />
-                                ) : (
-                                    <>
-                                        <ParameterField
-                                            {...portWidth}
-                                            layout="stacked"
-                                        />
-                                        <ParameterField
-                                            {...portHeight}
-                                            layout="stacked"
-                                        />
-                                    </>
-                                )}
+                        <div className="grid grid-cols-3 items-start gap-2">
+                            {port.shape === 'round' && (
                                 <ParameterField
-                                    {...portCount}
+                                    {...diameter}
                                     layout="stacked"
+                                    className="col-span-2"
                                 />
-                            </div>
+                            )}
+                            {port.shape === 'rect' && (
+                                <>
+                                    <ParameterField
+                                        {...portWidth}
+                                        layout="stacked"
+                                    />
+                                    <ParameterField
+                                        {...portHeight}
+                                        layout="stacked"
+                                    />
+                                </>
+                            )}
+                            {port.shape === 'triangle' && (
+                                <>
+                                    <ParameterField
+                                        {...portBase}
+                                        layout="stacked"
+                                    />
+                                    <ParameterField
+                                        {...portHeight}
+                                        layout="stacked"
+                                    />
+                                </>
+                            )}
+                            <ParameterField {...portCount} layout="stacked" />
+                        </div>
+                        {port.shape === 'triangle' && (
+                            <p className="text-xs text-muted">
+                                {t('box.port.triangleHint')}
+                            </p>
                         )}
                     </Question>
                 )}
@@ -366,6 +380,7 @@ const AXES = [
 // a espessura nas duas paredes de cada eixo, vira o Vb.
 function ExternalSize() {
     const { t } = useTranslation('assistant');
+    const { locale } = useLocale();
     const unitSystem = usePreferences((state) => state.unitSystem);
     const fieldUnits = useActiveProject((state) => state.data.fieldUnits);
     const setFieldUnit = useActiveProject((state) => state.setFieldUnit);
@@ -373,7 +388,12 @@ function ExternalSize() {
     const apply = useActiveProject((state) => state.apply);
     const thickness = useParameterField('thickness_m');
     const cutPlan = useCutPlan();
-    const [error, setError] = useState(false);
+    // Por que a medida não entrou: o eixo pequeno demais (com o mínimo) ou uma caixa que não fecha.
+    const [error, setError] = useState<
+        | { kind: 'tooSmall'; axis: 'w_m' | 'h_m' | 'd_m'; min_m: number }
+        | { kind: 'invalid' }
+        | undefined
+    >();
     const external =
         cutPlan.status === 'ready'
             ? cutPlan.plan.dimensions.external
@@ -387,19 +407,27 @@ function ExternalSize() {
             h_m: next.h_m - wall,
             d_m: next.d_m - wall,
         };
-        let changed = false;
+        const small = (['w_m', 'h_m', 'd_m'] as const).find(
+            (key) => internal[key] <= 0,
+        );
 
-        if (internal.w_m > 0 && internal.h_m > 0 && internal.d_m > 0) {
-            apply((data) => {
-                const result = writeInternalSize(data, internal);
-                changed = result !== data;
-
-                return result;
-            });
+        if (small !== undefined) {
+            setError({ kind: 'tooSmall', axis: small, min_m: wall });
+            return;
         }
 
-        setError(!changed);
+        let changed = false;
+
+        apply((data) => {
+            const result = writeInternalSize(data, internal);
+            changed = result !== data;
+
+            return result;
+        });
+        setError(changed ? undefined : { kind: 'invalid' });
     };
+    const lengthUnit: UnitId =
+        fieldUnits.dim_w_m ?? defaultUnitFor('length', unitSystem);
 
     return (
         <div className="flex flex-col gap-2.5">
@@ -429,7 +457,18 @@ function ExternalSize() {
             </div>
             <ParameterField {...thickness} layout="row" />
             <p className="text-xs text-muted">{t('box.size.externalHint')}</p>
-            {error && <Banner tone="warn">{t('box.size.invalid')}</Banner>}
+            {error !== undefined && (
+                <div role="alert">
+                    <Banner tone="warn">
+                        {error.kind === 'tooSmall'
+                            ? t('box.size.tooSmall', {
+                                  axis: t(`box.size.axis.${error.axis}`),
+                                  min: `${formatQuantity(error.min_m, lengthUnit, locale)} ${findUnit(lengthUnit).symbol}`,
+                              })
+                            : t('box.size.invalid')}
+                    </Banner>
+                </div>
+            )}
         </div>
     );
 }
