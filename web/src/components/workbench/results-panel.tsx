@@ -258,6 +258,27 @@ export function ResultsPanel() {
                             )}
                         </>
                     )}
+                    {/* Volume que a simulação usa: o digitado menos alto-falante e dutos. */}
+                    {boxType === 'bandpass' || sixth ? (
+                        <>
+                            <ValueTile
+                                label={t('results.netRear')}
+                                valueSi={results.net_rear_m3}
+                                unit={defaultUnitFor('volume', unitSystem)}
+                            />
+                            <ValueTile
+                                label={t('results.netFront')}
+                                valueSi={results.net_front_m3}
+                                unit={defaultUnitFor('volume', unitSystem)}
+                            />
+                        </>
+                    ) : (
+                        <ValueTile
+                            label={t('results.net')}
+                            valueSi={results.net_volume_m3}
+                            unit={defaultUnitFor('volume', unitSystem)}
+                        />
+                    )}
                     <ValueTile
                         label={t('results.xmaxPower')}
                         valueSi={results.xmax_power_w}

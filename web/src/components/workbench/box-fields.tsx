@@ -12,21 +12,23 @@ import { LossFields } from './loss-fields';
 import { PortFields } from './port-fields';
 import { SuggestBox } from './suggest-box';
 import { useParameterField } from './use-parameter-field';
+import { VolumeBreakdown } from './volume-breakdown';
 
 // Faixas dos sliders (SI): de caixas pequenas de carro a subwoofers grandes; o campo numérico
 // continua aceitando toda a faixa física de PARAMETERS.
 const VB_SLIDER = { minSi: 0.001, maxSi: 0.3, scale: 'linear' } as const;
 const FB_SLIDER = { minSi: 10, maxSi: 200, scale: 'log' } as const;
 
-// Sintonia do duto: com a profundidade informada, a Fb sai dela e o campo só mostra o valor.
+// Sintonia do duto: sempre editável. Com a trava no comprimento, o campo mostra a Fb que ele dá;
+// digitar uma Fb passa a trava para a sintonia (o comprimento volta a sair dela).
 function useTuningField(key: 'fb_hz' | 'fb_rear_hz') {
     const { t } = useTranslation('workbench');
     const field = useParameterField(key);
+    const apply = useActiveProject((state) => state.apply);
     const rear = key === 'fb_rear_hz';
+    const portKey = rear ? 'port_rear' : 'port';
     const byLength = useActiveProject(
-        (state) =>
-            (rear ? state.data.box.port_rear : state.data.box.port)
-                ?.length_m !== undefined,
+        (state) => state.data.box[portKey]?.length_m !== undefined,
     );
     const derived = useActiveProject(
         (state) => simulationOf(state.data).results[key],
@@ -39,9 +41,22 @@ function useTuningField(key: 'fb_hz' | 'fb_rear_hz') {
     return {
         ...field,
         valueSi: derived,
-        disabled: true,
         calculatedLabel: t('port.fbFromDepth'),
-        onChangeSi: () => undefined,
+        onChangeSi: (si: number | undefined) =>
+            apply((data) => {
+                const port = data.box[portKey];
+
+                if (port === undefined || si === undefined) {
+                    return data;
+                }
+
+                const { length_m: _length, ...rest } = port;
+
+                return {
+                    ...data,
+                    box: { ...data.box, [portKey]: rest, [key]: si },
+                };
+            }),
     };
 }
 
@@ -87,6 +102,7 @@ export function BoxFields() {
                             <SliderField {...rear} {...VB_SLIDER} />
                             <SliderField {...rearTuning} {...FB_SLIDER} />
                             <PortFields duct="rear" />
+                            <VolumeBreakdown chamber="rear" />
                         </fieldset>
                         <fieldset className="flex flex-col gap-2.5">
                             <legend className="mb-1.5 text-xs font-semibold text-muted">
@@ -95,6 +111,7 @@ export function BoxFields() {
                             <SliderField {...front} {...VB_SLIDER} />
                             <SliderField {...tuning} {...FB_SLIDER} />
                             <PortFields duct="front" />
+                            <VolumeBreakdown chamber="front" />
                         </fieldset>
                         <SuggestBox
                             key={activeId}
@@ -152,6 +169,14 @@ export function BoxFields() {
                                 )}
                                 <ParameterField {...losses} layout="compact" />
                             </div>
+                            {boxType === 'bandpass' ? (
+                                <div className="flex flex-col gap-1">
+                                    <VolumeBreakdown chamber="rear" />
+                                    <VolumeBreakdown chamber="front" />
+                                </div>
+                            ) : (
+                                <VolumeBreakdown />
+                            )}
                             <LossFields />
                         </SuggestBox>
                         {boxType !== 'closed' && <PortFields />}
