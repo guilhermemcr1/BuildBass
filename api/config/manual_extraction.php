@@ -16,6 +16,13 @@ return [
     'max_chars' => 60000,
     'min_chars' => 200,
 
+    // Texto colado (alternativa ao PDF): o que o servidor aceita receber, e o que sobra do filtro
+    // (só linhas com parâmetro) para a IA. O front aplica o mesmo `text_max_input`.
+    'text_max_input' => 4000,
+    'text_max_lines' => 60,
+    'text_max_line' => 160,
+    'text_max_chars' => 3000,
+
     'binaries' => [
         'pdftotext' => env('PDFTOTEXT_BIN', 'pdftotext'),
         'pdfinfo' => env('PDFINFO_BIN', 'pdfinfo'),

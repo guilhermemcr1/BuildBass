@@ -30,6 +30,11 @@ Route::middleware([BlockAbusiveSenders::class, 'throttle:submission', RejectAuto
 Route::middleware([BlockAbusiveSenders::class, 'throttle:catalog', RejectAutomation::class])
     ->post('/driver-submissions/extract', [ManualExtractionController::class, 'store']);
 
+// Mesma leitura a partir de texto colado (até 4000 caracteres): o filtro do service manda à IA só as
+// linhas com parâmetro. Mesmas proteções e mesmas cotas do PDF.
+Route::middleware([BlockAbusiveSenders::class, 'throttle:catalog', RejectAutomation::class])
+    ->post('/driver-submissions/extract-text', [ManualExtractionController::class, 'text']);
+
 // Sugestão de caixa por IA: devolve candidatos para o front simular e não grava nada. Mesmas
 // proteções da leitura de manual; as cotas (8/h por IP, 50/dia) contam dentro do service.
 Route::middleware([BlockAbusiveSenders::class, 'throttle:catalog', RejectAutomation::class])

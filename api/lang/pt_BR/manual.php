@@ -10,4 +10,7 @@ return [
     'rate_limited' => 'Você já usou o preenchimento por manual várias vezes. Tente de novo mais tarde.',
     'unavailable' => 'O preenchimento por manual está indisponível agora. Você ainda pode preencher à mão.',
     'provider_failed' => 'Não conseguimos ler o manual agora. Tente de novo ou preencha à mão.',
+    'text_required' => 'Cole o texto com os parâmetros do alto-falante.',
+    'text_too_long' => 'O texto passa de :max caracteres. Cole só a parte com os parâmetros.',
+    'no_parameters' => 'Não encontramos parâmetros nesse texto (por exemplo "Fs 35 Hz"). Confira o texto ou preencha à mão.',
 ];

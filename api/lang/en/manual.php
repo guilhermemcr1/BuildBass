@@ -10,4 +10,7 @@ return [
     'rate_limited' => 'You have used manual filling several times. Try again later.',
     'unavailable' => 'Filling from a manual is unavailable right now. You can still fill the fields by hand.',
     'provider_failed' => 'We could not read the manual right now. Try again or fill the fields by hand.',
+    'text_required' => 'Paste the text with the driver parameters.',
+    'text_too_long' => 'The text is longer than :max characters. Paste only the part with the parameters.',
+    'no_parameters' => 'We found no parameters in this text (for example "Fs 35 Hz"). Check the text or fill in by hand.',
 ];

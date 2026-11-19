@@ -6,6 +6,7 @@ use App\Exceptions\Manual\ManualException;
 use App\Exceptions\Manual\ManualInvalidFileException;
 use App\Exceptions\Manual\ManualRateLimitedException;
 use App\Http\Requests\ExtractManualRequest;
+use App\Http\Requests\ExtractManualTextRequest;
 use App\Http\Resources\ManualSuggestionResource;
 use App\Services\Manual\ManualExtractionService;
 use Illuminate\Http\JsonResponse;
@@ -16,8 +17,21 @@ class ManualExtractionController extends Controller
 
     public function store(ExtractManualRequest $request): JsonResponse
     {
+        return $this->respond(fn () => $this->extraction->extract($request->manualFile(), (string) $request->ip()));
+    }
+
+    public function text(ExtractManualTextRequest $request): JsonResponse
+    {
+        return $this->respond(fn () => $this->extraction->extractText($request->manualText(), (string) $request->ip()));
+    }
+
+    /**
+     * @param  callable(): array{suggestion: array<string, string|float|null>, suspect: list<string>, discarded: list<string>, warnings: list<string>}  $extract
+     */
+    private function respond(callable $extract): JsonResponse
+    {
         try {
-            $result = $this->extraction->extract($request->manualFile(), (string) $request->ip());
+            $result = $extract();
         } catch (ManualRateLimitedException $exception) {
             return response()->json(
                 ['message' => $exception->getMessage(), 'code' => $exception->reason],

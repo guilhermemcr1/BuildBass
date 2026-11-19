@@ -22,6 +22,7 @@ class ManualExtractionService
         private readonly PdfTextExtractor $pdf,
         private readonly ManualAiClient $ai,
         private readonly ManualSuggestionBuilder $builder,
+        private readonly ManualTextFilter $filter,
         private readonly ExtractionQuota $quota,
         private readonly AuditLogger $audit,
     ) {}
@@ -33,6 +34,41 @@ class ManualExtractionService
      */
     public function extract(UploadedFile $file, string $ip): array
     {
+        $path = (string) $file->getRealPath();
+
+        // Páginas antes de contar a tentativa; o texto sai do PDF depois dela.
+        return $this->run($ip, function () use ($path): callable {
+            $this->pdf->assertWithinPageLimit($path);
+
+            return fn (): string => $this->pdf->extract($path);
+        });
+    }
+
+    /**
+     * Texto colado pelo visitante: o filtro corta tudo o que não é linha de parâmetro antes de
+     * contar a tentativa, então um texto sem parâmetro algum não gasta cota nem chama a IA.
+     *
+     * @return array{suggestion: array<string, string|float|null>, suspect: list<string>, discarded: list<string>, warnings: list<string>}
+     *
+     * @throws ManualException
+     */
+    public function extractText(string $raw, string $ip): array
+    {
+        return $this->run($ip, function () use ($raw): callable {
+            $text = $this->filter->filter($raw);
+
+            return fn (): string => $text;
+        });
+    }
+
+    /**
+     * @param  callable(): (callable(): string)  $prepare  checagem sem cota; devolve quem lê o texto
+     * @return array{suggestion: array<string, string|float|null>, suspect: list<string>, discarded: list<string>, warnings: list<string>}
+     *
+     * @throws ManualException
+     */
+    private function run(string $ip, callable $prepare): array
+    {
         $started = microtime(true);
         $outcome = 'ok';
         // Em qual cota a tentativa está sendo checada; vira o motivo do bloqueio se ela barrar.
@@ -43,18 +79,17 @@ class ManualExtractionService
             $gate = 'unavailable';
             $this->assertEnabled();
 
-            // Cotas antes do pdfinfo: quem já estourou o limite não faz o servidor abrir o PDF.
+            // Cotas antes de abrir o PDF ou filtrar o texto: quem já estourou o limite não gasta servidor.
             $gate = 'hourly';
             $this->quota->assertVisitorAllowed($ip);
             $gate = 'daily';
             $this->quota->assertDailyAvailable();
             $gate = null;
 
-            $path = (string) $file->getRealPath();
-            $this->pdf->assertWithinPageLimit($path);
+            $read = $prepare();
             $this->quota->hitVisitor($ip);
 
-            $text = $this->pdf->extract($path);
+            $text = $read();
 
             try {
                 $drivers = $this->ai->read($text);
