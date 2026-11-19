@@ -23,11 +23,14 @@ type PreferencesState = {
     mode: Mode;
     // Lateral da bancada (≥ 1280 px) recolhida num trilho estreito, deixando espaço ao conteúdo.
     sidebarCollapsed: boolean;
+    // O assistente já abriu sozinho uma vez (primeira visita); depois só pelo botão da barra.
+    assistantSeen: boolean;
     setTheme: (theme: ThemeChoice) => void;
     setLocale: (locale: Locale) => void;
     setUnitSystem: (unitSystem: UnitSystem) => void;
     setMode: (mode: Mode) => void;
     setSidebarCollapsed: (sidebarCollapsed: boolean) => void;
+    setAssistantSeen: () => void;
 };
 
 // Janela privada ou cookies bloqueados fazem o localStorage lançar erro; nesse caso as escolhas
@@ -74,16 +77,18 @@ export const usePreferences = create<PreferencesState>()(
             unitSystem: 'metric',
             mode: 'normal',
             sidebarCollapsed: false,
+            assistantSeen: false,
             setTheme: (theme) => set({ theme }),
             setLocale: (locale) => set({ locale }),
             setUnitSystem: (unitSystem) => set({ unitSystem }),
             setMode: (mode) => set({ mode }),
             setSidebarCollapsed: (sidebarCollapsed) =>
                 set({ sidebarCollapsed }),
+            setAssistantSeen: () => set({ assistantSeen: true }),
         }),
         {
             name: PREFERENCES_KEY,
-            version: 2,
+            version: 3,
             storage: createJSONStorage(() => createSafeStorage()),
             partialize: ({
                 theme,
@@ -91,18 +96,22 @@ export const usePreferences = create<PreferencesState>()(
                 unitSystem,
                 mode,
                 sidebarCollapsed,
+                assistantSeen,
             }) => ({
                 theme,
                 locale,
                 unitSystem,
                 mode,
                 sidebarCollapsed,
+                assistantSeen,
             }),
-            // v1 não tinha modo: quem já tinha preferências entra no Normal.
-            migrate: (persisted, version) =>
-                version < 2
-                    ? { ...(persisted as object), mode: 'normal' }
-                    : persisted,
+            // v1 não tinha modo: quem já tinha preferências entra no Normal. Até a v2 não havia
+            // assistente: quem já usava a bancada não o vê abrir sozinho.
+            migrate: (persisted, version) => ({
+                ...(persisted as object),
+                ...(version < 2 ? { mode: 'normal' } : {}),
+                ...(version < 3 ? { assistantSeen: true } : {}),
+            }),
             // Valor de modo inválido (arquivo adulterado) volta ao padrão em vez de quebrar a tela.
             merge: (persisted, current) => {
                 const saved = (persisted ?? {}) as Partial<PreferencesState>;
@@ -115,6 +124,10 @@ export const usePreferences = create<PreferencesState>()(
                         typeof saved.sidebarCollapsed === 'boolean'
                             ? saved.sidebarCollapsed
                             : current.sidebarCollapsed,
+                    assistantSeen:
+                        typeof saved.assistantSeen === 'boolean'
+                            ? saved.assistantSeen
+                            : current.assistantSeen,
                 };
             },
         },

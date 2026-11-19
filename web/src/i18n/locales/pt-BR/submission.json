@@ -107,7 +107,9 @@
             "providerFailed": "Não conseguimos ler o manual agora. Tente de novo ou preencha à mão.",
             "verification": "Não foi possível confirmar que você não é um robô. Tente de novo.",
             "network": "Sem conexão com o servidor. O que você digitou foi mantido; tente de novo.",
-            "server": "O servidor não conseguiu ler o manual. O que você digitou foi mantido; tente de novo."
+            "server": "O servidor não conseguiu ler o manual. O que você digitou foi mantido; tente de novo.",
+            "invalidText": "Cole entre 10 e 4000 caracteres com os parâmetros do alto-falante.",
+            "noParameters": "Não encontramos parâmetros nesse texto (por exemplo \"Fs 35 Hz\"). Confira o texto ou preencha à mão."
         },
         "offline": "Sem conexão: a leitura do manual precisa do servidor.",
         "badge": "IA",

@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, test, vi } from 'vite-plus/test';
-import { extractManual } from './manual-client';
+import {
+    MANUAL_TEXT_MAX_CHARS,
+    extractManual,
+    extractManualText,
+} from './manual-client';
 
 const REQUEST = { locale: 'pt-BR' as const, trap: '' };
 
@@ -122,6 +126,55 @@ describe('extractManual', () => {
         expect(await extractManual(pdf(), REQUEST)).toEqual({
             ok: false,
             aborted: true,
+        });
+    });
+});
+
+describe('extractManualText', () => {
+    test('envia o texto (cortado no limite) para a rota de texto', async () => {
+        const fetchMock = vi.fn().mockReturnValue(
+            respond(200, {
+                data: { suggestion: { fs_hz: 40 }, warnings: ['review'] },
+            }),
+        );
+        vi.stubGlobal('fetch', fetchMock);
+
+        const result = await extractManualText(
+            'Fs 40 Hz'.repeat(1000),
+            REQUEST,
+        );
+        const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+        const body = init.body as FormData;
+
+        expect(url).toContain('/api/driver-submissions/extract-text');
+        expect((body.get('text') as string).length).toBe(MANUAL_TEXT_MAX_CHARS);
+        expect(body.get('website')).toBe('');
+        expect(result.ok).toBe(true);
+    });
+
+    test('texto sem parâmetro e texto inválido viram motivos próprios', async () => {
+        vi.stubGlobal(
+            'fetch',
+            vi
+                .fn()
+                .mockReturnValueOnce(respond(422, { code: 'no_parameters' })),
+        );
+        expect(await extractManualText('Olá', REQUEST)).toEqual({
+            ok: false,
+            error: 'noParameters',
+        });
+
+        vi.stubGlobal(
+            'fetch',
+            vi
+                .fn()
+                .mockReturnValueOnce(
+                    respond(422, { errors: { text: ['grande demais'] } }),
+                ),
+        );
+        expect(await extractManualText('Olá', REQUEST)).toEqual({
+            ok: false,
+            error: 'invalidText',
         });
     });
 });

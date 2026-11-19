@@ -469,6 +469,24 @@ function writeDimensionFree(
     return { ...shaped, box: { ...box, vb_m3: total } };
 }
 
+// Assistente: a pessoa diz as três medidas internas de uma vez (já sem a espessura). A proporção
+// passa a ser a delas e o volume interno, menos os reforços, vira o Vb, como no volume solto.
+// Só para caixa de uma câmara; medida fora da faixa de proporção não entra.
+export function writeInternalSize(
+    data: ProjectData,
+    size: { h_m: number; w_m: number; d_m: number },
+): ProjectData {
+    const braces = resolveCutPlan(data.cutPlan).braces_m3;
+    const total = size.h_m * size.w_m * size.d_m - braces;
+    const shaped = withRatio(data, { h: size.h_m, w: size.w_m, d: size.d_m });
+
+    if (shaped === data || !(total > 0) || twoChambers(data.box.type)) {
+        return data;
+    }
+
+    return { ...shaped, box: { ...shaped.box, vb_m3: total } };
+}
+
 export function writeLockVolume(data: ProjectData, lock: boolean): ProjectData {
     const { lockVolume: _old, ...rest } = data.cutPlan ?? {};
 

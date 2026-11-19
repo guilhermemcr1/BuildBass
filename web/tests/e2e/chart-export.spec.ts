@@ -186,8 +186,17 @@ test('baixa o PDF de uma página com o mesmo conteúdo', async ({ page }) => {
 
 test('em inglês a imagem sai em inglês, em Letter', async ({ page }) => {
     await setup(page);
+    await page.getByRole('button', { name: 'Preferências' }).click();
     await page.getByRole('button', { name: /Idioma/ }).click();
     await page.getByRole('menuitemradio', { name: 'English' }).click();
+    // Fecha o popover de preferências (agora em inglês) antes de seguir: espera o menu de idioma
+    // sair e devolve o Esc ao popover.
+    await expect(page.getByRole('menu')).toHaveCount(0);
+    await page.getByRole('button', { name: /Language/ }).focus();
+    await page.keyboard.press('Escape');
+    await expect(
+        page.getByRole('dialog', { name: 'Preferences' }),
+    ).toBeHidden();
     await openDialog(page, 'Export chart');
 
     const svg = await previewSvg(page);

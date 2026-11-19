@@ -13,7 +13,9 @@
         "redo": "Refazer",
         "tutorial": "Tutorial",
         "help": "Atalhos de teclado",
-        "about": "Sobre o BuildBass"
+        "about": "Sobre o BuildBass",
+        "assistant": "Assistente",
+        "helpMenu": "Ajuda"
     },
     "about": {
         "title": "Sobre o BuildBass",

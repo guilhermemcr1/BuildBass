@@ -1,0 +1,165 @@
+{
+    "exit": "Fechar assistente",
+    "progress": "Etapas do assistente",
+    "back": "Voltar",
+    "next": "Avançar",
+    "finish": "Concluir",
+    "steps": {
+        "driver": "Alto-falante",
+        "box": "Caixa",
+        "review": "Conferência",
+        "driverTitle": "Qual alto-falante você vai usar?",
+        "boxTitle": "Como vai ser a caixa?",
+        "reviewTitle": "Confira o projeto",
+        "driverIntro": "Procure o seu alto-falante no catálogo. Se não estiver lá, traga os dados do manual com IA ou digite. Para seguir, só precisamos de Fs, Qts e Vas.",
+        "boxIntro": "Responda algumas perguntas. A caixa é desenhada ao lado e os números mudam na hora.",
+        "reviewIntro": "Aqui está tudo o que foi preenchido. Confira com o manual antes de cortar a madeira; ao concluir, o projeto continua na bancada."
+    },
+    "blocked": {
+        "driver": "Falta Fs, Qts ou Vas para seguir.",
+        "box": "Informe o tamanho da caixa (e a sintonia, na dutada) para seguir.",
+        "find": "Escolha um alto-falante do catálogo ou outra forma de preencher."
+    },
+    "driver": {
+        "sources": {
+            "catalog": "Catálogo",
+            "pdf": "Manual (PDF)",
+            "text": "Colar texto",
+            "typing": "Digitar"
+        },
+        "typingHint": "Digite os valores abaixo. Fs, Qts e Vas já bastam para simular; Re, Sd, Xmax e Pe completam a impedância, a excursão e a potência.",
+        "dataTitle": "Confira os dados do alto-falante",
+        "clear": "Começar do zero",
+        "ready": "Tudo certo: já dá para simular. Confira os valores e complete o que tiver.",
+        "missing": "Falta informar: {{fields}}.",
+        "more": "Mostrar mais parâmetros",
+        "fewer": "Mostrar menos parâmetros",
+        "minimumNote": "Valores calculados a partir dos outros aparecem em cinza e podem ser substituídos.",
+        "catalog": {
+            "offline": "Sem conexão: o catálogo precisa do servidor. Você ainda pode digitar os dados.",
+            "search": "Buscar no catálogo",
+            "placeholder": "Marca, modelo ou tamanho",
+            "applyError": "Não foi possível copiar esse alto-falante. Tente de novo.",
+            "error": "Não foi possível carregar o catálogo.",
+            "retry": "Tentar de novo",
+            "loading": "Carregando o catálogo…",
+            "empty": "Nada encontrado. Tente outro termo ou use uma das outras opções para trazer os dados.",
+            "results": "Alto-falantes do catálogo",
+            "more": "Carregar mais"
+        },
+        "ai": {
+            "diameter": "Diâmetro",
+            "filledNone": "Nenhum campo vazio foi preenchido.",
+            "filled_one": "{{count}} campo preenchido pela IA.",
+            "filled_other": "{{count}} campos preenchidos pela IA.",
+            "suspect": "Confira: {{fields}} não batem com os demais.",
+            "discarded": "Valores fora da faixa ficaram em branco: {{fields}}.",
+            "multiple": "O texto parece ter mais de um alto-falante; usamos o primeiro.",
+            "review": "A IA só preenche os campos vazios. Confira cada valor com a ficha técnica.",
+            "offline": "Sem conexão: a leitura por IA precisa do servidor.",
+            "unavailable": "A leitura por IA está indisponível agora. Você ainda pode digitar os dados.",
+            "reading": "Lendo…"
+        },
+        "pdf": {
+            "intro": "Anexe o manual ou a ficha técnica em PDF. A IA procura os parâmetros e preenche os campos vazios.",
+            "notPdf": "O arquivo precisa ser um PDF.",
+            "tooLarge": "O PDF passa de 10 MB.",
+            "drop": "Arraste o PDF até aqui",
+            "choose": "Escolher PDF…",
+            "hint": "PDF de até 10 MB e 30 páginas",
+            "read": "Ler com IA",
+            "privacy": "Só o texto do PDF vai para um serviço de IA externo. O arquivo não é guardado."
+        },
+        "text": {
+            "intro": "Cole o texto com os parâmetros (da loja, do manual, de uma mensagem). Só as linhas com valores, como \"Fs 35 Hz\", são enviadas à IA.",
+            "label": "Texto com os parâmetros",
+            "placeholder": "Marca Modelo 12\"\nFs 35 Hz\nQts 0,45\nVas 60 L\nRe 3,4 Ω",
+            "filterEmpty": "Cole o texto acima.",
+            "filterNone": "Nenhuma linha com parâmetro encontrada (ex.: \"Fs 35 Hz\").",
+            "filter_one": "{{count}} linha com parâmetro será enviada; {{dropped}} ignorada(s).",
+            "filter_other": "{{count}} linhas com parâmetros serão enviadas; {{dropped}} ignorada(s).",
+            "count": "{{used}}/{{max}} caracteres",
+            "read": "Preencher com IA",
+            "privacy": "Só as linhas com parâmetros vão para um serviço de IA externo. Nada é guardado."
+        },
+        "sourceHints": {
+            "pdf": "Anexe o manual ou a ficha técnica. A IA lê os parâmetros para você.",
+            "text": "Cole o texto da loja ou do manual. A IA separa os valores.",
+            "typing": "Digite Fs, Qts e Vas (e o que mais tiver) direto nos campos."
+        },
+        "sourceLocked": "Precisa de conexão com o servidor.",
+        "aiBadge": "IA",
+        "cameFrom": "Dados vindos de: {{source}}. Confira e complete o que faltar.",
+        "values": "Parâmetros",
+        "findTitle": "Encontre no catálogo",
+        "findHint": "Busque pela marca, modelo ou tamanho. Os parâmetros já vêm preenchidos.",
+        "otherTitle": "Não está no catálogo?",
+        "otherHint": "Traga os dados de outro jeito.",
+        "backToCatalog": "Voltar ao catálogo"
+    },
+    "box": {
+        "bandpass": "O assistente trabalha com caixa selada ou dutada. A bandpass continua disponível na bancada.",
+        "useVented": "Usar dutada",
+        "type": {
+            "title": "Que tipo de caixa?",
+            "closed": "Selada",
+            "vented": "Dutada",
+            "closedHint": "Fechada, mais compacta e com grave seco e controlado. Boa para quem está começando.",
+            "ventedHint": "Com duto: mais grave e mais volume para a mesma potência, numa caixa maior."
+        },
+        "count": {
+            "title": "Quantos alto-falantes vão na caixa?"
+        },
+        "size": {
+            "title": "Qual o tamanho da caixa?",
+            "volume": "Sei o volume",
+            "measures": "Sei as medidas",
+            "needed": "Informe o volume ou as medidas para ver a resposta.",
+            "external": "Medida externa",
+            "externalHint": "Medidas por fora, com a madeira. O volume interno sai delas descontando a espessura.",
+            "invalid": "Essas medidas não formam uma caixa válida. Confira os valores e a espessura."
+        },
+        "classic": "Usar sugestão clássica",
+        "classicApplied": "Volume e sintonia do alinhamento clássico para este alto-falante. Ajuste à vontade.",
+        "classicFail": {
+            "useClosed": "Este alto-falante pede caixa selada: o Qts dele é alto para dutada.",
+            "qtsTooHigh": "O Qts deste alto-falante é alto demais para uma sugestão clássica.",
+            "qtsTooLow": "O Qts deste alto-falante é baixo demais para uma sugestão clássica.",
+            "missing": "Faltam Fs, Qts ou Vas para sugerir.",
+            "portTooLarge": "O duto é grande demais para a caixa sugerida. Diminua o diâmetro do duto."
+        },
+        "tuning": {
+            "title": "Em que frequência sintonizar?",
+            "hint": "A sintonia (Fb) define até onde vai o grave. O comprimento do duto é calculado a partir dela.",
+            "otherShape": "O duto deste projeto não é redondo: ajuste as medidas dele na bancada."
+        },
+        "power": {
+            "title": "Qual a potência do amplificador?",
+            "hint": "Potência RMS por alto-falante. Serve para ver a excursão e a velocidade do ar no duto."
+        },
+        "previewTitle": "Prévia da caixa",
+        "externalSize": "Externa (L × A × P): {{size}} {{unit}}",
+        "results": {
+            "net": "Volume líquido",
+            "portLength": "Comprimento do duto",
+            "velocity": "Velocidade do ar"
+        }
+    },
+    "review": {
+        "check": "Confira cada valor com o manual do alto-falante antes de cortar. O assistente calcula a partir do que foi informado.",
+        "name": "Modelo",
+        "type": "Tipo",
+        "count": "Alto-falantes",
+        "external": "Medidas externas",
+        "thickness": "Espessura da chapa",
+        "port": "Duto",
+        "portValue": "{{count}} × Ø {{diameter}}, {{length}}",
+        "power": "Potência",
+        "aiTitle": "Quer uma segunda opinião?",
+        "aiButton": "Pedir sugestão de caixa à IA",
+        "aiHint": "A IA propõe até três caixas para o seu uso, e cada uma é conferida pelo simulador antes de aparecer.",
+        "edit": "Editar",
+        "empty": "não informado"
+    },
+    "counter": "{{current}}/{{total}}"
+}

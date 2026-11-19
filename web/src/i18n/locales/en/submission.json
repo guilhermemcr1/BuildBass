@@ -107,7 +107,9 @@
             "providerFailed": "We could not read the manual right now. Try again or fill the fields by hand.",
             "verification": "We could not confirm you are not a robot. Try again.",
             "network": "No connection to the server. What you typed was kept; try again.",
-            "server": "The server could not read the manual. What you typed was kept; try again."
+            "server": "The server could not read the manual. What you typed was kept; try again.",
+            "invalidText": "Paste between 10 and 4000 characters with the driver parameters.",
+            "noParameters": "We found no parameters in this text (for example \"Fs 35 Hz\"). Check the text or fill in by hand."
         },
         "offline": "Offline: reading the manual needs the server.",
         "badge": "AI",

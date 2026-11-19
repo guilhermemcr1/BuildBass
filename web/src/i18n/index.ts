@@ -1,5 +1,6 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import enAssistant from './locales/en/assistant.json';
 import enCommon from './locales/en/common.json';
 import enCutplan from './locales/en/cutplan.json';
 import enEngine from './locales/en/engine.json';
@@ -8,6 +9,7 @@ import enProject from './locales/en/project.json';
 import enSubmission from './locales/en/submission.json';
 import enTutorial from './locales/en/tutorial.json';
 import enWorkbench from './locales/en/workbench.json';
+import ptAssistant from './locales/pt-BR/assistant.json';
 import ptCommon from './locales/pt-BR/common.json';
 import ptCutplan from './locales/pt-BR/cutplan.json';
 import ptEngine from './locales/pt-BR/engine.json';
@@ -31,6 +33,7 @@ export const resources = {
         cutplan: ptCutplan,
         submission: ptSubmission,
         tutorial: ptTutorial,
+        assistant: ptAssistant,
     },
     en: {
         common: enCommon,
@@ -41,6 +44,7 @@ export const resources = {
         cutplan: enCutplan,
         submission: enSubmission,
         tutorial: enTutorial,
+        assistant: enAssistant,
     },
 } as const;
 
@@ -62,6 +66,7 @@ export function initI18n(locale: Locale): typeof i18n {
             'cutplan',
             'submission',
             'tutorial',
+            'assistant',
         ],
         defaultNS: 'common',
         interpolation: { escapeValue: false },

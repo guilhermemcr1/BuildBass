@@ -13,6 +13,7 @@ import {
     writeLockVolume,
     writeDriverChoice,
     writeField,
+    writeInternalSize,
     writeProportion,
 } from './fields';
 import { createProjectData } from './types';
@@ -381,4 +382,28 @@ test('posição dos recortes: grava, troca, limita às faixas e volta ao automá
 
     expect(front.cutPlan?.positions).toEqual([{ ...rear, x_m: 0.1, y_m: 0.1 }]);
     expect(clearCutoutPosition(front, rear).cutPlan).toBeUndefined();
+});
+
+test('writeInternalSize: as três medidas internas viram a proporção e o Vb', () => {
+    const data = createProjectData('Caixa');
+    const next = writeInternalSize(data, { h_m: 0.3, w_m: 0.4, d_m: 0.3 });
+
+    expect(next.cutPlan?.proportion).toBe('custom');
+    expect(next.cutPlan?.custom).toEqual({ h: 1, w: 0.4 / 0.3, d: 1 });
+    expect(next.box.vb_m3).toBeCloseTo(0.036, 9);
+});
+
+test('writeInternalSize: bandpass ou proporção fora da faixa não mudam nada', () => {
+    const data = createProjectData('Caixa');
+    const bandpass = {
+        ...data,
+        box: { ...data.box, type: 'bandpass' as const },
+    };
+
+    expect(writeInternalSize(bandpass, { h_m: 0.3, w_m: 0.3, d_m: 0.3 })).toBe(
+        bandpass,
+    );
+    expect(writeInternalSize(data, { h_m: 3, w_m: 0.05, d_m: 0.05 })).toBe(
+        data,
+    );
 });

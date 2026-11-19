@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
+import { PREVIEW_ORIGIN, normalMode } from './storage';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -19,6 +20,7 @@ test('o tema escolhido continua depois de recarregar', async ({ browser }) => {
     const page = await context.newPage();
     await page.goto('/');
 
+    await page.getByRole('button', { name: 'Preferências' }).click();
     await page
         .getByRole('radiogroup', { name: 'Tema' })
         .getByRole('radio', { name: 'Claro' })
@@ -41,6 +43,7 @@ test('trocar para inglês mantém o valor em edição e muda textos e lang', asy
     await fs.fill('28,5');
     await fs.press('Tab');
 
+    await page.getByRole('button', { name: 'Preferências' }).click();
     await page.getByRole('button', { name: /Idioma/ }).click();
     await page.getByRole('menuitemradio', { name: 'English' }).click();
 
@@ -73,6 +76,7 @@ test('com localStorage bloqueado as trocas funcionam sem erro', async ({
     });
 
     await page.goto('/');
+    await page.getByRole('button', { name: 'Preferências' }).click();
     await page
         .getByRole('radiogroup', { name: 'Tema' })
         .getByRole('radio', { name: 'Escuro' })
@@ -86,7 +90,7 @@ test('com localStorage bloqueado as trocas funcionam sem erro', async ({
 // Modo Normal/Pro: os cenários partem do Normal, sem o Pro que a configuração
 // dos testes liga por padrão.
 test.describe('modo Normal e Pro', () => {
-    test.use({ storageState: { cookies: [], origins: [] } });
+    test.use({ storageState: normalMode(PREVIEW_ORIGIN) });
 
     const advanced = (page: Page) =>
         page.getByRole('textbox', { name: /^Qes/ });
@@ -212,6 +216,7 @@ test.describe('idioma com bandeiras', () => {
         page,
     }) => {
         await page.goto('/');
+        await page.getByRole('button', { name: 'Preferências' }).click();
         const trigger = page.getByRole('button', { name: 'BR — Idioma' });
 
         await expect(trigger).toHaveText('BR');

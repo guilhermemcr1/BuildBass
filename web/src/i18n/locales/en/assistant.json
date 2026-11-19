@@ -1,0 +1,165 @@
+{
+    "exit": "Close assistant",
+    "progress": "Assistant steps",
+    "back": "Back",
+    "next": "Next",
+    "finish": "Done",
+    "steps": {
+        "driver": "Driver",
+        "box": "Box",
+        "review": "Review",
+        "driverTitle": "Which driver will you use?",
+        "boxTitle": "What will the box be like?",
+        "reviewTitle": "Review the project",
+        "driverIntro": "Look for your driver in the catalog. If it is not there, bring the data from the manual with AI or type it in. To continue we only need Fs, Qts and Vas.",
+        "boxIntro": "Answer a few questions. The box is drawn alongside and the numbers update right away.",
+        "reviewIntro": "Here is everything that was filled in. Check it against the manual before cutting wood; when you finish, the project stays in the workbench."
+    },
+    "blocked": {
+        "driver": "Fs, Qts or Vas is missing.",
+        "box": "Enter the box size (and the tuning, for a vented box) to continue.",
+        "find": "Pick a driver from the catalog or another way to fill in."
+    },
+    "driver": {
+        "sources": {
+            "catalog": "Catalog",
+            "pdf": "Manual (PDF)",
+            "text": "Paste text",
+            "typing": "Type in"
+        },
+        "typingHint": "Type the values below. Fs, Qts and Vas are enough to simulate; Re, Sd, Xmax and Pe complete impedance, excursion and power.",
+        "dataTitle": "Check the driver data",
+        "clear": "Start over",
+        "ready": "All set: it can be simulated. Check the values and fill in what you have.",
+        "missing": "Still missing: {{fields}}.",
+        "more": "Show more parameters",
+        "fewer": "Show fewer parameters",
+        "minimumNote": "Values calculated from the others appear in grey and can be replaced.",
+        "catalog": {
+            "offline": "Offline: the catalog needs the server. You can still type the data in.",
+            "search": "Search the catalog",
+            "placeholder": "Brand, model or size",
+            "applyError": "Could not copy this driver. Try again.",
+            "error": "Could not load the catalog.",
+            "retry": "Try again",
+            "loading": "Loading the catalog…",
+            "empty": "Nothing found. Try another term or use one of the other options to bring the data.",
+            "results": "Catalog drivers",
+            "more": "Load more"
+        },
+        "ai": {
+            "diameter": "Diameter",
+            "filledNone": "No empty field was filled.",
+            "filled_one": "{{count}} field filled by AI.",
+            "filled_other": "{{count}} fields filled by AI.",
+            "suspect": "Check: {{fields}} do not match the others.",
+            "discarded": "Out-of-range values were left blank: {{fields}}.",
+            "multiple": "The text seems to describe more than one driver; we used the first.",
+            "review": "AI only fills empty fields. Check each value against the datasheet.",
+            "offline": "Offline: AI reading needs the server.",
+            "unavailable": "AI reading is unavailable right now. You can still type the data in.",
+            "reading": "Reading…"
+        },
+        "pdf": {
+            "intro": "Attach the manual or datasheet as a PDF. AI looks for the parameters and fills the empty fields.",
+            "notPdf": "The file must be a PDF.",
+            "tooLarge": "The PDF is larger than 10 MB.",
+            "drop": "Drag the PDF here",
+            "choose": "Choose PDF…",
+            "hint": "PDF up to 10 MB and 30 pages",
+            "read": "Read with AI",
+            "privacy": "Only the PDF text goes to an external AI service. The file is not stored."
+        },
+        "text": {
+            "intro": "Paste the text with the parameters (from a store, the manual, a message). Only lines with values, like \"Fs 35 Hz\", are sent to AI.",
+            "label": "Text with the parameters",
+            "placeholder": "Brand Model 12\"\nFs 35 Hz\nQts 0.45\nVas 60 L\nRe 3.4 Ω",
+            "filterEmpty": "Paste the text above.",
+            "filterNone": "No line with a parameter found (e.g. \"Fs 35 Hz\").",
+            "filter_one": "{{count}} line with a parameter will be sent; {{dropped}} ignored.",
+            "filter_other": "{{count}} lines with parameters will be sent; {{dropped}} ignored.",
+            "count": "{{used}}/{{max}} characters",
+            "read": "Fill with AI",
+            "privacy": "Only the lines with parameters go to an external AI service. Nothing is stored."
+        },
+        "sourceHints": {
+            "pdf": "Attach the manual or datasheet. AI reads the parameters for you.",
+            "text": "Paste the text from a store or the manual. AI picks out the values.",
+            "typing": "Type Fs, Qts and Vas (and anything else you have) straight into the fields."
+        },
+        "sourceLocked": "Needs a connection to the server.",
+        "aiBadge": "AI",
+        "cameFrom": "Data from: {{source}}. Check it and fill in what is missing.",
+        "values": "Parameters",
+        "findTitle": "Find it in the catalog",
+        "findHint": "Search by brand, model or size. The parameters come filled in.",
+        "otherTitle": "Not in the catalog?",
+        "otherHint": "Bring the data another way.",
+        "backToCatalog": "Back to the catalog"
+    },
+    "box": {
+        "bandpass": "The assistant works with sealed or vented boxes. Bandpass is still available in the workbench.",
+        "useVented": "Use vented",
+        "type": {
+            "title": "What type of box?",
+            "closed": "Sealed",
+            "vented": "Vented",
+            "closedHint": "Closed, more compact, with tight and controlled bass. Good for beginners.",
+            "ventedHint": "With a port: deeper bass and more output for the same power, in a bigger box."
+        },
+        "count": {
+            "title": "How many drivers go in the box?"
+        },
+        "size": {
+            "title": "How big is the box?",
+            "volume": "I know the volume",
+            "measures": "I know the size",
+            "needed": "Enter the volume or the size to see the response.",
+            "external": "External size",
+            "externalHint": "Outside measurements, including the wood. The internal volume comes from them minus the thickness.",
+            "invalid": "These measurements don't make a valid box. Check the values and the thickness."
+        },
+        "classic": "Use classic suggestion",
+        "classicApplied": "Volume and tuning from the classic alignment for this driver. Adjust as you like.",
+        "classicFail": {
+            "useClosed": "This driver calls for a sealed box: its Qts is high for a vented one.",
+            "qtsTooHigh": "This driver's Qts is too high for a classic suggestion.",
+            "qtsTooLow": "This driver's Qts is too low for a classic suggestion.",
+            "missing": "Fs, Qts or Vas is missing to suggest.",
+            "portTooLarge": "The port is too large for the suggested box. Reduce the port diameter."
+        },
+        "tuning": {
+            "title": "What frequency to tune to?",
+            "hint": "The tuning (Fb) sets how deep the bass goes. The port length is calculated from it.",
+            "otherShape": "This project's port is not round: adjust its size in the workbench."
+        },
+        "power": {
+            "title": "How powerful is the amplifier?",
+            "hint": "RMS power per driver. Used to check excursion and port air speed."
+        },
+        "previewTitle": "Box preview",
+        "externalSize": "External (W × H × D): {{size}} {{unit}}",
+        "results": {
+            "net": "Net volume",
+            "portLength": "Port length",
+            "velocity": "Air speed"
+        }
+    },
+    "review": {
+        "check": "Check each value against the driver manual before cutting. The assistant calculates from what was entered.",
+        "name": "Model",
+        "type": "Type",
+        "count": "Drivers",
+        "external": "External size",
+        "thickness": "Sheet thickness",
+        "port": "Port",
+        "portValue": "{{count}} × Ø {{diameter}}, {{length}}",
+        "power": "Power",
+        "aiTitle": "Want a second opinion?",
+        "aiButton": "Ask AI for a box suggestion",
+        "aiHint": "AI proposes up to three boxes for your use, and each one is checked by the simulator before it shows up.",
+        "edit": "Edit",
+        "empty": "not set"
+    },
+    "counter": "{{current}}/{{total}}"
+}

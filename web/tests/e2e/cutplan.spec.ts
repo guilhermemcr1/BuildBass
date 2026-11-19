@@ -381,8 +381,17 @@ test('exportar CSV: ; e vírgula decimal em pt-BR, vírgula e ponto em en', asyn
     );
     expect(ptText).toContain('Lateral;Lados esquerdo e direito;2;');
 
+    await page.getByRole('button', { name: 'Preferências' }).click();
     await page.getByRole('button', { name: /Idioma/ }).click();
     await page.getByRole('menuitemradio', { name: 'English' }).click();
+    // Fecha o popover de preferências (agora em inglês) antes de seguir: espera o menu de idioma
+    // sair e devolve o Esc ao popover.
+    await expect(page.getByRole('menu')).toHaveCount(0);
+    await page.getByRole('button', { name: /Language/ }).focus();
+    await page.keyboard.press('Escape');
+    await expect(
+        page.getByRole('dialog', { name: 'Preferences' }),
+    ).toBeHidden();
 
     const en = await downloadCsv(page, 'Export CSV');
     const enText = en.bytes.toString('utf8');

@@ -8,6 +8,7 @@ import {
     ok,
     openPicker,
 } from './catalog-mock';
+import { DEV_ORIGIN, normalMode } from './storage';
 
 // Roda no projeto "dev" (servidor de desenvolvimento), único lugar onde /dev/ui existe.
 for (const theme of ['light', 'dark'] as const) {
@@ -804,7 +805,7 @@ for (const theme of ['light', 'dark'] as const) {
         const context = await browser.newContext({
             colorScheme: theme,
             viewport: { width: 1440, height: 900 },
-            storageState: { cookies: [], origins: [] },
+            storageState: normalMode(DEV_ORIGIN),
         });
         const page = await context.newPage();
         await page.goto('/');
@@ -856,7 +857,7 @@ for (const theme of ['light', 'dark'] as const) {
         const context = await browser.newContext({
             colorScheme: theme,
             viewport: { width: 360, height: 800 },
-            storageState: { cookies: [], origins: [] },
+            storageState: normalMode(DEV_ORIGIN),
         });
         const page = await context.newPage();
         await page.goto('/');

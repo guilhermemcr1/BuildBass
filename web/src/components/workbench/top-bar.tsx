@@ -1,4 +1,5 @@
 import {
+    CircleHelp,
     Download,
     FilePlus,
     FolderOpen,
@@ -7,13 +8,17 @@ import {
     Keyboard,
     Redo2,
     Undo2,
+    WandSparkles,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BrandMark } from '@/components/ui/brand-mark';
 import { Button } from '@/components/ui/button';
+import { Menu } from '@/components/ui/menu';
 
 export type ProjectAction = 'new' | 'open' | 'export' | 'undo' | 'redo';
+
+type HelpAction = 'tutorial' | 'shortcuts' | 'about';
 
 type TopBarProps = {
     onAction: (action: ProjectAction) => void;
@@ -23,6 +28,8 @@ type TopBarProps = {
     onHelp: () => void;
     onAbout: () => void;
     onTutorial: () => void;
+    // Abre o assistente passo a passo (alto-falante → caixa → conferência).
+    onAssistant?: () => void;
     preferences?: ReactNode;
 };
 
@@ -33,6 +40,7 @@ export function TopBar({
     onHelp,
     onAbout,
     onTutorial,
+    onAssistant,
     preferences,
 }: TopBarProps) {
     const { t } = useTranslation(['common', 'workbench']);
@@ -104,42 +112,78 @@ export function TopBar({
                 </div>
             )}
             {/* No celular: marca e utilitários na 1ª linha; as ações do projeto ocupam a 2ª inteira. */}
-            <div className="ml-auto flex items-center gap-1 sm:flex-wrap sm:gap-2">
+            <div className="ml-auto flex items-center gap-1">
+                {onAssistant !== undefined && (
+                    <Button
+                        variant="quiet"
+                        onPress={onAssistant}
+                        className="max-sm:px-2.5"
+                    >
+                        <WandSparkles aria-hidden="true" className="size-4" />
+                        <span className="hidden sm:inline">
+                            {t('workbench:actions.assistant')}
+                        </span>
+                        <span className="sr-only sm:hidden">
+                            {t('workbench:actions.assistant')}
+                        </span>
+                    </Button>
+                )}
                 <div
                     data-tour="preferences"
-                    className="flex flex-wrap items-center gap-2"
+                    className="flex items-center gap-1 md:gap-2"
                 >
                     {preferences}
                 </div>
-                <Button
-                    variant="quiet"
-                    onPress={onTutorial}
-                    className="max-sm:px-2.5"
-                >
-                    <GraduationCap aria-hidden="true" className="size-4" />
-                    <span className="hidden sm:inline">
-                        {t('workbench:actions.tutorial')}
-                    </span>
-                    <span className="sr-only sm:hidden">
-                        {t('workbench:actions.tutorial')}
-                    </span>
-                </Button>
-                <Button
-                    variant="quiet"
-                    onPress={onHelp}
-                    aria-label={t('workbench:actions.help')}
-                    className="px-2.5 max-sm:hidden"
-                >
-                    <Keyboard aria-hidden="true" className="size-4" />
-                </Button>
-                <Button
-                    variant="quiet"
-                    onPress={onAbout}
-                    aria-label={t('workbench:actions.about')}
-                    className="px-2.5"
-                >
-                    <Info aria-hidden="true" className="size-4" />
-                </Button>
+                <Menu<HelpAction>
+                    label={t('workbench:actions.helpMenu')}
+                    trigger={
+                        <span className="flex h-8 items-center gap-1.5 rounded-md px-2.5 text-[13px] text-foreground">
+                            <CircleHelp aria-hidden="true" className="size-4" />
+                            <span className="hidden lg:inline">
+                                {t('workbench:actions.helpMenu')}
+                            </span>
+                        </span>
+                    }
+                    triggerClassName="rounded-md data-[hovered]:bg-raised data-[pressed]:bg-raised"
+                    items={[
+                        {
+                            id: 'tutorial',
+                            label: t('workbench:actions.tutorial'),
+                            icon: (
+                                <GraduationCap
+                                    aria-hidden="true"
+                                    className="size-4"
+                                />
+                            ),
+                        },
+                        {
+                            id: 'shortcuts',
+                            label: t('workbench:actions.help'),
+                            icon: (
+                                <Keyboard
+                                    aria-hidden="true"
+                                    className="size-4"
+                                />
+                            ),
+                        },
+                        {
+                            id: 'about',
+                            label: t('workbench:actions.about'),
+                            icon: (
+                                <Info aria-hidden="true" className="size-4" />
+                            ),
+                        },
+                    ]}
+                    onAction={(action) => {
+                        if (action === 'tutorial') {
+                            onTutorial();
+                        } else if (action === 'shortcuts') {
+                            onHelp();
+                        } else {
+                            onAbout();
+                        }
+                    }}
+                />
             </div>
         </header>
     );

@@ -18,7 +18,10 @@ export type ManualError =
     | 'rateLimited'
     | 'unavailable'
     | 'providerFailed'
-    | 'verification';
+    | 'verification'
+    // Texto colado: vazio, longo demais ou sem nenhuma linha com parâmetro.
+    | 'invalidText'
+    | 'noParameters';
 
 export type ManualFillResult =
     | { ok: true; result: ManualResult }
@@ -50,6 +53,33 @@ export async function extractManual(
 ): Promise<ManualFillResult> {
     const body = new FormData();
     body.append('manual', file);
+
+    return post('/api/driver-submissions/extract', body, request, signal);
+}
+
+// Mesmos limites do servidor (config/manual_extraction.php → text_max_input).
+export const MANUAL_TEXT_MAX_CHARS = 4000;
+export const MANUAL_TEXT_MIN_CHARS = 10;
+
+// Texto colado com os parâmetros: o chamador já manda só as linhas filtradas
+// (lib/assistant/text-filter.ts); o servidor filtra de novo antes da IA.
+export async function extractManualText(
+    text: string,
+    request: ManualRequest,
+    signal?: AbortSignal,
+): Promise<ManualFillResult> {
+    const body = new FormData();
+    body.append('text', text.slice(0, MANUAL_TEXT_MAX_CHARS));
+
+    return post('/api/driver-submissions/extract-text', body, request, signal);
+}
+
+async function post(
+    path: string,
+    body: FormData,
+    request: ManualRequest,
+    signal?: AbortSignal,
+): Promise<ManualFillResult> {
     body.append('locale', request.locale);
     body.append('website', request.trap);
 
@@ -60,7 +90,7 @@ export async function extractManual(
     let response: Response;
 
     try {
-        response = await fetch(apiUrl('/api/driver-submissions/extract'), {
+        response = await fetch(apiUrl(path), {
             method: 'POST',
             headers: { Accept: 'application/json' },
             body,
@@ -107,8 +137,19 @@ export async function extractManual(
             return { ok: false, error: 'unreadable' };
         }
 
+        if (content.code === 'no_parameters') {
+            return { ok: false, error: 'noParameters' };
+        }
+
         if (content.code === 'invalid_file') {
             return { ok: false, error: invalidFileError(content) };
+        }
+
+        if (
+            (content.errors as { text?: unknown } | undefined)?.text !==
+            undefined
+        ) {
+            return { ok: false, error: 'invalidText' };
         }
     }
 

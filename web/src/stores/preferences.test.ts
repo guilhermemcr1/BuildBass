@@ -13,6 +13,7 @@ describe('preferências', () => {
             locale: 'pt-BR',
             unitSystem: 'metric',
             mode: 'normal',
+            assistantSeen: false,
         });
     });
 
@@ -32,8 +33,9 @@ describe('preferências', () => {
             unitSystem: 'imperial',
             mode: 'pro',
             sidebarCollapsed: false,
+            assistantSeen: false,
         });
-        expect(saved.version).toBe(2);
+        expect(saved.version).toBe(3);
     });
 
     test('a lateral começa aberta e lembra quando foi recolhida', () => {
@@ -63,7 +65,15 @@ describe('preferências', () => {
             locale: 'en',
             unitSystem: 'imperial',
             mode: 'normal',
+            // Quem já usava a bancada não vê o assistente abrir sozinho.
+            assistantSeen: true,
         });
+    });
+
+    test('o assistente abre sozinho só até ser fechado uma vez', () => {
+        expect(usePreferences.getState().assistantSeen).toBe(false);
+        usePreferences.getState().setAssistantSeen();
+        expect(usePreferences.getState().assistantSeen).toBe(true);
     });
 
     test('modo inválido no armazenamento volta ao padrão', async () => {

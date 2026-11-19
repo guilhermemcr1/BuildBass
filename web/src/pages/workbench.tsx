@@ -42,6 +42,8 @@ const SubmitDriverDialog = lazy(
 
 const Tutorial = lazy(() => import('@/components/tutorial/tutorial'));
 
+const Assistant = lazy(() => import('@/components/assistant/assistant'));
+
 const PrintSheet = lazy(() => import('@/components/workbench/print-sheet'));
 
 const PlanPanel = lazy(() =>
@@ -78,6 +80,20 @@ export default function Workbench() {
     const setSidebarCollapsed = usePreferences(
         (state) => state.setSidebarCollapsed,
     );
+    // Assistente passo a passo num modal sobre a bancada. Abre sozinho só na primeira visita, com o projeto
+    // ainda sem alto-falante; depois, pelo botão da barra.
+    const [assistantOpen, setAssistantOpen] = useState(() => {
+        const { assistantSeen } = usePreferences.getState();
+        const empty =
+            Object.keys(activeProjectStore().getState().data.driver).length ===
+            0;
+
+        return !assistantSeen && empty;
+    });
+    const closeAssistant = () => {
+        setAssistantOpen(false);
+        usePreferences.getState().setAssistantSeen();
+    };
     const collapseButton = useRef<HTMLButtonElement>(null);
     const expandButton = useRef<HTMLButtonElement>(null);
 
@@ -188,9 +204,11 @@ export default function Workbench() {
                     onAbout={() => setAboutOpen(true)}
                     onTutorial={() => {
                         // O tutorial aponta para itens da lateral: ela precisa estar aberta.
+                        setAssistantOpen(false);
                         setSidebarCollapsed(false);
                         setTutorialOpen(true);
                     }}
+                    onAssistant={() => setAssistantOpen(true)}
                     preferences={<PreferencesBar />}
                 />
                 <OfflineBanner />
@@ -341,6 +359,11 @@ export default function Workbench() {
                     error={openError}
                     onClose={() => setOpenError(null)}
                 />
+                {assistantOpen && (
+                    <Suspense fallback={null}>
+                        <Assistant onClose={closeAssistant} />
+                    </Suspense>
+                )}
                 {tutorialOpen && (
                     <Suspense fallback={null}>
                         <Tutorial onClose={() => setTutorialOpen(false)} />

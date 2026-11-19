@@ -13,7 +13,9 @@
         "redo": "Redo",
         "tutorial": "Tutorial",
         "help": "Keyboard shortcuts",
-        "about": "About BuildBass"
+        "about": "About BuildBass",
+        "assistant": "Assistant",
+        "helpMenu": "Help"
     },
     "about": {
         "title": "About BuildBass",

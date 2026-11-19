@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { PREVIEW_ORIGIN, normalMode } from './storage';
 
 const REGIONS = ['driver', 'box', 'results', 'charts'] as const;
 
@@ -140,7 +141,7 @@ test('a 360 px o plano de corte não rola na horizontal', async ({ page }) => {
 const DRIVER_HEIGHT_BEFORE = 928;
 
 test.describe('modo Normal enxuga o painel do Driver (SC-003)', () => {
-    test.use({ storageState: { cookies: [], origins: [] } });
+    test.use({ storageState: normalMode(PREVIEW_ORIGIN) });
 
     test('altura do Driver cai 20 % ou mais', async ({ page }) => {
         await page.setViewportSize({ width: 1440, height: 900 });
