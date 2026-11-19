@@ -16,7 +16,11 @@ return [
     // Teto de tokens da resposta (os candidatos são curtos; o resto é folga para raciocínio).
     'max_output_tokens' => (int) env('BOX_SUGGESTION_MAX_OUTPUT_TOKENS', 6000),
 
-    // Segundos.
-    'provider_timeout' => 45,
+    // Esforço de raciocínio pedido ao modelo (low/medium/high). O raciocínio não volta na resposta;
+    // "low" mantém a resposta bem abaixo do tempo limite com modelos que pensam antes de responder.
+    'reasoning_effort' => env('BOX_SUGGESTION_REASONING_EFFORT', 'low'),
+
+    // Segundos. Fica abaixo dos 60 s do proxy e dos 100 s do Cloudflare.
+    'provider_timeout' => (int) env('BOX_SUGGESTION_TIMEOUT', 50),
 
 ];

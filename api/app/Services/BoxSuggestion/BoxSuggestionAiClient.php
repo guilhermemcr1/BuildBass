@@ -102,6 +102,7 @@ class BoxSuggestionAiClient
             'model' => self::model(),
             'temperature' => 0.3,
             'max_tokens' => (int) config('box_suggestion.max_output_tokens'),
+            'reasoning' => ['effort' => (string) config('box_suggestion.reasoning_effort'), 'exclude' => true],
             'messages' => [
                 ['role' => 'system', 'content' => self::INSTRUCTIONS],
                 ['role' => 'user', 'content' => "<request>\n".json_encode($request, JSON_UNESCAPED_UNICODE)."\n</request>"],
