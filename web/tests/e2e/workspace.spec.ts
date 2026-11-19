@@ -89,7 +89,7 @@ test('fechar alterado pede confirmação e o quarto projeto avisa o limite', asy
     await tabs(page)
         .getByRole('button', { name: 'Fechar Projeto sem nome' })
         .click();
-    const confirm = page.getByRole('dialog', { name: 'Fechar projeto?' });
+    const confirm = page.getByRole('alertdialog', { name: 'Fechar projeto?' });
     await expect(confirm).toBeVisible();
     await confirm.getByRole('button', { name: 'Cancelar' }).click();
     await expect(page.getByRole('textbox', { name: /^Vb/ })).toHaveValue(

@@ -9,6 +9,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Banner } from '@/components/ui/banner';
 import { Button } from '@/components/ui/button';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Dialog } from '@/components/ui/dialog';
 import { FIELD_BOX } from '@/components/ui/field-box';
 import { useActiveProject } from '@/hooks/use-active-project';
@@ -258,55 +259,43 @@ export default function SavedDriversDialog({
                     ))}
                 </ul>
             )}
-            {deleting !== undefined && (
-                <div
-                    role="alertdialog"
-                    aria-labelledby="delete-saved-title"
-                    className="flex flex-col gap-2 rounded-md border border-status-warn p-3"
-                >
-                    <p
-                        id="delete-saved-title"
-                        className="text-sm font-semibold"
-                    >
-                        {t('saved.deleteConfirm.title')}
-                    </p>
-                    <p className="text-sm text-muted">
-                        {t('saved.deleteConfirm.body', {
-                            name: nameOf(deleting),
-                        })}
-                    </p>
-                    <div className="flex justify-end gap-2">
+            <ConfirmDialog
+                open={deleting !== undefined}
+                title={t('saved.deleteConfirm.title')}
+                tone="danger"
+                onCancel={() => setDeleting(undefined)}
+                actions={
+                    <>
                         <Button
-                            variant="quiet"
+                            variant="secondary"
+                            autoFocus
                             onPress={() => setDeleting(undefined)}
                         >
                             {t('saved.deleteConfirm.cancel')}
                         </Button>
                         <Button
                             variant="primary"
-                            autoFocus
                             onPress={() => {
-                                remove(deleting.id);
+                                if (deleting !== undefined) {
+                                    remove(deleting.id);
+                                }
                                 setDeleting(undefined);
                             }}
                         >
                             {t('saved.deleteConfirm.confirm')}
                         </Button>
-                    </div>
-                </div>
-            )}
-            {pending !== undefined && (
-                <div
-                    role="alertdialog"
-                    aria-labelledby="import-duplicates"
-                    className="flex flex-col gap-2 rounded-md border border-status-warn p-3"
-                >
-                    <p id="import-duplicates" className="text-sm">
-                        {t('saved.file.duplicates', {
-                            count: pending.duplicates,
-                        })}
-                    </p>
-                    <div className="flex flex-wrap justify-end gap-2">
+                    </>
+                }
+            >
+                {deleting !== undefined &&
+                    t('saved.deleteConfirm.body', { name: nameOf(deleting) })}
+            </ConfirmDialog>
+            <ConfirmDialog
+                open={pending !== undefined}
+                title={t('saved.file.duplicatesTitle')}
+                onCancel={() => setPending(undefined)}
+                actions={
+                    <>
                         <Button
                             variant="quiet"
                             onPress={() => setPending(undefined)}
@@ -314,7 +303,10 @@ export default function SavedDriversDialog({
                             {t('saved.actions.cancel')}
                         </Button>
                         <Button
-                            onPress={() => finishImport(pending.drafts, 'keep')}
+                            onPress={() =>
+                                pending !== undefined &&
+                                finishImport(pending.drafts, 'keep')
+                            }
                         >
                             {t('saved.file.keep')}
                         </Button>
@@ -322,14 +314,18 @@ export default function SavedDriversDialog({
                             variant="primary"
                             autoFocus
                             onPress={() =>
+                                pending !== undefined &&
                                 finishImport(pending.drafts, 'replace')
                             }
                         >
                             {t('saved.file.replace')}
                         </Button>
-                    </div>
-                </div>
-            )}
+                    </>
+                }
+            >
+                {pending !== undefined &&
+                    t('saved.file.duplicates', { count: pending.duplicates })}
+            </ConfirmDialog>
             <p className="text-[11px] text-muted">{t('saved.localOnly')}</p>
             <div role="status" aria-live="polite" className="empty:hidden">
                 {notice !== undefined && (

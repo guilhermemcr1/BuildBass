@@ -162,7 +162,9 @@ describe('diálogos de projeto', () => {
                 onCancel={() => undefined}
             />,
         );
-        const dialog = screen.getByRole('dialog', { name: 'Fechar projeto?' });
+        const dialog = screen.getByRole('alertdialog', {
+            name: 'Fechar projeto?',
+        });
 
         expect(dialog).toHaveTextContent('“Sub” tem alterações');
         await userEvent.click(

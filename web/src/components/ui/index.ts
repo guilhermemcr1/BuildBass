@@ -13,3 +13,4 @@ export { Switch } from './switch';
 export { ShowMore } from './show-more';
 export { Flag } from './flag';
 export type { FlagCountry } from './flag';
+export { ConfirmDialog } from './confirm-dialog';

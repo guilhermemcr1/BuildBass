@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Dialog } from '@/components/ui/dialog';
 import { useSubmitDriver } from '@/hooks/use-submit-driver';
 import { emptyForm } from '@/lib/submission/from-project';
@@ -78,45 +79,36 @@ export default function SubmitDriverDialog({
                         onCancel={requestClose}
                         onRetry={() => void submission.submit()}
                     />
-                    {confirmingDiscard && (
-                        <div
-                            role="alertdialog"
-                            aria-labelledby="discard-title"
-                            // Fica preso na base do diálogo, por cima do rodapé: com o formulário longo ele
-                            // ficava fora da vista e o diálogo parecia travado.
-                            className="sticky bottom-0 z-20 -mx-5 -mb-5 flex pop flex-col gap-2 rounded-b-lg border-t-2 border-status-warn bg-surface px-5 py-4 shadow-[0_-8px_24px_rgb(0_0_0/0.25)]"
-                        >
-                            <p
-                                id="discard-title"
-                                className="text-sm font-semibold"
-                            >
-                                {t('discard.title')}
-                            </p>
-                            <p className="text-sm text-muted">
-                                {t('discard.body')}
-                            </p>
-                            <div className="flex justify-end gap-2">
-                                <Button
-                                    variant="secondary"
-                                    autoFocus
-                                    onPress={() => setConfirmingDiscard(false)}
-                                >
-                                    {t('discard.keep')}
-                                </Button>
-                                <Button
-                                    variant="primary"
-                                    onPress={() => {
-                                        submission.abort();
-                                        onClose();
-                                    }}
-                                >
-                                    {t('discard.discard')}
-                                </Button>
-                            </div>
-                        </div>
-                    )}
                 </>
             )}
+            <ConfirmDialog
+                open={confirmingDiscard}
+                title={t('discard.title')}
+                tone="danger"
+                onCancel={() => setConfirmingDiscard(false)}
+                actions={
+                    <>
+                        <Button
+                            variant="secondary"
+                            autoFocus
+                            onPress={() => setConfirmingDiscard(false)}
+                        >
+                            {t('discard.keep')}
+                        </Button>
+                        <Button
+                            variant="primary"
+                            onPress={() => {
+                                submission.abort();
+                                onClose();
+                            }}
+                        >
+                            {t('discard.discard')}
+                        </Button>
+                    </>
+                }
+            >
+                {t('discard.body')}
+            </ConfirmDialog>
         </Dialog>
     );
 }
