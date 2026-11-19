@@ -4,6 +4,7 @@ namespace App\Services\Manual;
 
 use App\Exceptions\Manual\ManualRateLimitedException;
 use App\Exceptions\Manual\ManualUnavailableException;
+use App\Support\LocalDay;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 
@@ -42,7 +43,7 @@ class ExtractionQuota
     {
         $key = $this->dayKey();
 
-        Cache::add($key, 0, now()->endOfDay());
+        Cache::add($key, 0, LocalDay::end());
         Cache::increment($key);
     }
 
@@ -53,6 +54,6 @@ class ExtractionQuota
 
     private function dayKey(): string
     {
-        return 'manual-extraction:day:'.now()->format('Y-m-d');
+        return 'manual-extraction:day:'.LocalDay::key();
     }
 }

@@ -15,9 +15,11 @@
 # Variáveis obrigatórias: APP_KEY, APP_URL, DB_HOST, DB_PASSWORD (as demais têm padrão).
 # Do banco, opcionais: DB_PORT, DB_DATABASE, DB_USERNAME, DB_NETWORK.
 #
-# Fuso: os containers rodam em TZ (padrão America/Sao_Paulo), então logs do nginx, do PHP e do
-# banco geral saem na hora local. O banco continua gravando em UTC (sessão forçada em +00:00) e o
-# painel converte para APP_DISPLAY_TIMEZONE na hora de mostrar.
+# Fuso: os containers rodam em TZ (padrão America/Sao_Paulo), então logs do nginx e do PHP-FPM saem
+# na hora local; os do Laravel seguem APP_DISPLAY_TIMEZONE (mesmo padrão). O banco continua gravando
+# em UTC (sessão forçada em +00:00); o painel mostra em APP_DISPLAY_TIMEZONE, e o "dia" das cotas
+# diárias da IA e dos gráficos do painel vira à meia-noite desse fuso. Mantenha TZ e
+# APP_DISPLAY_TIMEZONE iguais.
 #
 # DNS: resolvedores fixos (DNS_PRIMARY/DNS_SECONDARY) para as chamadas externas da API
 # (Turnstile, OpenRouter, SMTP) não dependerem do DNS do host. Nomes internos (buildbass-api e o

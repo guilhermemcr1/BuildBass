@@ -50,7 +50,7 @@ class OperationOverview extends StatsOverviewWidget
             Stat::make('Leituras de manual hoje', $usage['today']['reads'])
                 ->description("{$usage['today']['failures']} falha(s) · {$usage['today']['blocked']} bloqueio(s)"),
             Stat::make('Cota diária da IA', $quota)
-                ->description('Consumida hoje (UTC)'),
+                ->description('Consumida hoje (zera à meia-noite local)'),
             Stat::make('Leituras em 30 dias', $usage['days30']['reads'])
                 ->description("{$usage['days30']['failures']} falha(s) · {$usage['days30']['blocked']} bloqueio(s)"),
         ];

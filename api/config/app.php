@@ -67,7 +67,9 @@ return [
 
     'timezone' => 'UTC',
 
-    // Fuso em que o painel mostra datas e horas. O banco e as cotas diárias seguem em UTC.
+    // Fuso de quem usa e modera: o painel mostra datas e horas nele, os logs saem nele e o "dia" das
+    // cotas diárias e dos gráficos vira à meia-noite dele (App\Support\LocalDay). O app e o banco
+    // continuam gravando em UTC.
     'display_timezone' => env('APP_DISPLAY_TIMEZONE', 'America/Sao_Paulo'),
 
     /*

@@ -3,6 +3,7 @@
 namespace App\Services\BoxSuggestion;
 
 use App\Exceptions\BoxSuggestionException;
+use App\Support\LocalDay;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 
@@ -38,7 +39,7 @@ class BoxSuggestionQuota
     {
         $key = $this->dayKey();
 
-        Cache::add($key, 0, now()->endOfDay());
+        Cache::add($key, 0, LocalDay::end());
         Cache::increment($key);
     }
 
@@ -49,6 +50,6 @@ class BoxSuggestionQuota
 
     private function dayKey(): string
     {
-        return 'box-suggestion:day:'.now()->format('Y-m-d');
+        return 'box-suggestion:day:'.LocalDay::key();
     }
 }

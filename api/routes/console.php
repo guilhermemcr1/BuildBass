@@ -9,4 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 // Retenção da trilha de auditoria: exige o cron do scheduler em produção.
-Schedule::command('audit:prune')->daily();
+Schedule::command('audit:prune')->daily()->timezone((string) config('app.display_timezone'));

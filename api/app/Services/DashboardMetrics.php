@@ -9,6 +9,7 @@ use App\Models\Driver;
 use App\Models\DriverSubmission;
 use App\Services\Manual\ManualExtractionService;
 use App\Services\Security\SubmissionAttempts;
+use App\Support\LocalDay;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -16,7 +17,8 @@ use stdClass;
 
 /**
  * Números do painel inicial da moderação. Só consultas agregadas, sem cache: cada
- * abertura do painel lê o estado de agora. Dias são UTC (fuso do app), como a cota diária da IA.
+ * abertura do painel lê o estado de agora. Dias são os do fuso de exibição (LocalDay), como a cota
+ * diária da IA: o banco grava em UTC e o agrupamento converte.
  */
 class DashboardMetrics
 {
@@ -36,7 +38,7 @@ class DashboardMetrics
     {
         $counts = DriverSubmission::query()
             ->where('created_at', '>=', $this->windowStart($days))
-            ->selectRaw('DATE(created_at) as day, COUNT(*) as total')
+            ->selectRaw(LocalDay::createdDateSql()[0].' as day, COUNT(*) as total', LocalDay::createdDateSql()[1])
             ->groupBy('day')
             ->pluck('total', 'day');
 
@@ -79,7 +81,7 @@ class DashboardMetrics
 
     /**
      * Uso da leitura de manual por IA, hoje e nos últimos 30 dias. A cota consumida vem dos eventos
-     * `manual_read` que contaram para o teto (`quota_counted`) no dia UTC corrente.
+     * `manual_read` que contaram para o teto (`quota_counted`) no dia local corrente (LocalDay).
      *
      * @return array{
      *     enabled: bool,
@@ -92,7 +94,7 @@ class DashboardMetrics
      */
     public function manualUsage(): array
     {
-        $today = now()->format('Y-m-d');
+        $today = LocalDay::key();
         $todayTotals = ['reads' => 0, 'failures' => 0, 'blocked' => 0];
         $windowTotals = ['reads' => 0, 'failures' => 0, 'blocked' => 0];
 
@@ -110,7 +112,7 @@ class DashboardMetrics
         $used = AuditEvent::query()
             ->where('type', AuditType::ManualRead)
             ->where('quota_counted', true)
-            ->where('created_at', '>=', now()->startOfDay())
+            ->where('created_at', '>=', LocalDay::startUtc())
             ->count();
         $cap = (int) config('manual_extraction.daily_cap');
 
@@ -169,7 +171,7 @@ class DashboardMetrics
             // O início de um bloqueio por abuso não é uma tentativa, só a consequência delas.
             ->where(fn ($query) => $query->whereNull('reason')->orWhere('reason', '!=', SubmissionAttempts::REASON_ABUSE))
             ->where('created_at', '>=', $this->windowStart($days))
-            ->selectRaw('DATE(created_at) as day, type, COUNT(*) as total')
+            ->selectRaw(LocalDay::createdDateSql()[0].' as day, type, COUNT(*) as total', LocalDay::createdDateSql()[1])
             ->groupBy('day', 'type')
             ->toBase()
             ->get();
@@ -270,7 +272,7 @@ class DashboardMetrics
         return AuditEvent::query()
             ->whereIn('type', [AuditType::ManualRead->value, AuditType::ManualBlocked->value])
             ->where('created_at', '>=', $this->windowStart($days))
-            ->selectRaw('DATE(created_at) as day, type, outcome, COUNT(*) as total')
+            ->selectRaw(LocalDay::createdDateSql()[0].' as day, type, outcome, COUNT(*) as total', LocalDay::createdDateSql()[1])
             ->groupBy('day', 'type', 'outcome')
             ->toBase()
             ->get();
@@ -292,7 +294,7 @@ class DashboardMetrics
 
     private function windowStart(int $days): DateTimeInterface
     {
-        return now()->subDays($days - 1)->startOfDay();
+        return LocalDay::startUtc($days - 1);
     }
 
     /**
@@ -303,7 +305,7 @@ class DashboardMetrics
     {
         $filled = [];
         for ($i = $days - 1; $i >= 0; $i--) {
-            $day = now()->subDays($i)->format('Y-m-d');
+            $day = LocalDay::key($i);
             $filled[$day] = (int) ($counts[$day] ?? 0);
         }
 

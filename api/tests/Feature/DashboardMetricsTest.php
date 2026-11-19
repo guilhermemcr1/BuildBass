@@ -66,9 +66,10 @@ it('resume o uso da IA hoje e em 30 dias, com a cota do dia', function () {
         ->and($usage['quota_percent'])->toBe(30.0);
 });
 
-it('lê a cota só dos eventos do dia UTC', function () {
-    AuditEvent::factory()->manualRead(true)->create(['created_at' => '2026-10-21 23:59:59']);
-    AuditEvent::factory()->manualRead(true)->create(['created_at' => '2026-10-22 00:00:00']);
+it('lê a cota só dos eventos do dia local (meia-noite de Brasília = 03:00 UTC)', function () {
+    config(['app.display_timezone' => 'America/Sao_Paulo']);
+    AuditEvent::factory()->manualRead(true)->create(['created_at' => '2026-10-22 02:59:59']);
+    AuditEvent::factory()->manualRead(true)->create(['created_at' => '2026-10-22 03:00:00']);
 
     expect(app(DashboardMetrics::class)->manualUsage()['quota_used'])->toBe(1);
 });
@@ -106,4 +107,33 @@ it('total de drivers e base vazia sem erro', function () {
 
     Driver::factory()->count(4)->create();
     expect($metrics->driversTotal())->toBe(4);
+});
+
+it('o dia do painel é o local: envio às 22h de Brasília conta no mesmo dia, não no seguinte', function () {
+    config(['app.display_timezone' => 'America/Sao_Paulo']);
+    $this->travelTo('2026-10-23 02:30:00'); // 23:30 do dia 22 em Brasília
+    // 01:00 UTC do dia 23 = 22:00 do dia 22 em Brasília.
+    DriverSubmission::factory()->create(['created_at' => '2026-10-23 01:00:00']);
+    // 02:00 UTC do dia 22 = 23:00 do dia 21 em Brasília.
+    DriverSubmission::factory()->create(['created_at' => '2026-10-22 02:00:00']);
+
+    $days = app(DashboardMetrics::class)->submissionsPerDay();
+
+    expect(array_key_last($days))->toBe('2026-10-22')
+        ->and($days['2026-10-22'])->toBe(1)
+        ->and($days['2026-10-21'])->toBe(1);
+});
+
+it('a cota de hoje do painel vira à meia-noite local', function () {
+    config(['app.display_timezone' => 'America/Sao_Paulo']);
+    $this->travelTo('2026-10-23 02:30:00'); // 23:30 do dia 22 em Brasília
+    // 22:00 de Brasília, ainda hoje no horário local.
+    AuditEvent::factory()->manualRead(true)->create(['created_at' => '2026-10-23 01:00:00']);
+    // 20:00 de Brasília do dia 21: ontem.
+    AuditEvent::factory()->manualRead(true)->create(['created_at' => '2026-10-21 23:00:00']);
+
+    $usage = app(DashboardMetrics::class)->manualUsage();
+
+    expect($usage['quota_used'])->toBe(1)
+        ->and($usage['today']['reads'])->toBe(1);
 });
