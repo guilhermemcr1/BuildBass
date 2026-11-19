@@ -20,9 +20,9 @@ import { deriveDriver } from '@/engine';
 import type { DriverKey } from '@/engine';
 import { useActiveProject } from '@/hooks/use-active-project';
 import { useDriverAiFill } from '@/hooks/use-driver-ai-fill';
-import { clearDriverSpecifics, withIdentity } from '@/lib/project/fields';
 import { PARAMETERS } from '@/lib/parameters';
 import { cn } from '@/lib/utils';
+import { withoutDriver } from '@/lib/assistant/apply-manual';
 import { AiOutcome, PdfSource, TextSource } from './ai-sources';
 import { CatalogList } from './catalog-list';
 import { DRIVER_MINIMUM } from './readiness';
@@ -310,22 +310,7 @@ function DriverData() {
                 {hasData && (
                     <Button
                         variant="quiet"
-                        onPress={() =>
-                            apply((data) =>
-                                withIdentity(
-                                    clearDriverSpecifics({
-                                        ...data,
-                                        driver: {},
-                                    }),
-                                    {
-                                        brand: undefined,
-                                        model: undefined,
-                                        variant: undefined,
-                                        type: undefined,
-                                    },
-                                ),
-                            )
-                        }
+                        onPress={() => apply(withoutDriver)}
                     >
                         <Eraser aria-hidden="true" className="size-4" />
                         {t('driver.clear')}

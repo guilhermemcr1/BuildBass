@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { activeProjectStore } from '@/hooks/use-active-project';
 import { useOnlineStatus } from '@/hooks/use-online-status';
-import { applyManualToProject } from '@/lib/assistant/apply-manual';
+import {
+    applyManualToProject,
+    withoutDriver,
+} from '@/lib/assistant/apply-manual';
 import { filterParameterText } from '@/lib/assistant/text-filter';
 import {
     extractManual,
@@ -94,8 +97,10 @@ export function useDriverAiFill(): DriverAiFill {
         activeProjectStore()
             .getState()
             .apply((data) => {
+                // O manual lido é de outro alto-falante (ou do mesmo, revisado): substitui o
+                // anterior por inteiro. Desfazer (Ctrl+Z) traz os dados antigos de volta.
                 const applied = applyManualToProject(
-                    data,
+                    withoutDriver(data),
                     result.result.suggestion,
                 );
                 filled = applied.filled;

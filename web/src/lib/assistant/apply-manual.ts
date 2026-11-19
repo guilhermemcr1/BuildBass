@@ -2,7 +2,22 @@ import type { DriverKey } from '@/engine';
 import type { ManualSuggestion } from '@/lib/submission/manual-schema';
 import type { NumericKey } from '@/lib/submission/schema';
 import type { ProjectData } from '@/lib/project/types';
-import { withDriverDims, withIdentity } from '@/lib/project/fields';
+import {
+    clearDriverSpecifics,
+    withDriverDims,
+    withIdentity,
+} from '@/lib/project/fields';
+
+// Tira do projeto tudo o que é do alto-falante: parâmetros, identidade, medidas físicas, recorte e
+// ligação das bobinas. Ler um manual novo no assistente é trocar de alto-falante, como escolher
+// outro no catálogo: nada do anterior pode sobrar misturado aos valores lidos.
+export function withoutDriver(data: ProjectData): ProjectData {
+    return clearDriverSpecifics({
+        ...data,
+        driver: {},
+        driverSource: undefined,
+    });
+}
 
 // Aplica a leitura por IA (manual ou texto) ao projeto: só campos vazios recebem valor, como no
 // formulário de envio. O diâmetro nominal vira a cota A das dimensões, quando ela está vazia.

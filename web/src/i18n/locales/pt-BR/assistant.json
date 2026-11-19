@@ -49,19 +49,19 @@
         },
         "ai": {
             "diameter": "Diâmetro",
-            "filledNone": "Nenhum campo vazio foi preenchido.",
+            "filledNone": "A IA não encontrou nenhum parâmetro válido.",
             "filled_one": "{{count}} campo preenchido pela IA.",
             "filled_other": "{{count}} campos preenchidos pela IA.",
             "suspect": "Confira: {{fields}} não batem com os demais.",
             "discarded": "Valores fora da faixa ficaram em branco: {{fields}}.",
             "multiple": "O texto parece ter mais de um alto-falante; usamos o primeiro.",
-            "review": "A IA só preenche os campos vazios. Confira cada valor com a ficha técnica.",
+            "review": "Os dados lidos substituem os do alto-falante anterior. Confira cada valor com a ficha técnica.",
             "offline": "Sem conexão: a leitura por IA precisa do servidor.",
             "unavailable": "A leitura por IA está indisponível agora. Você ainda pode digitar os dados.",
             "reading": "Lendo…"
         },
         "pdf": {
-            "intro": "Anexe o manual ou a ficha técnica em PDF. A IA procura os parâmetros e preenche os campos vazios.",
+            "intro": "Anexe o manual ou a ficha técnica em PDF. A IA procura os parâmetros e preenche os campos.",
             "notPdf": "O arquivo precisa ser um PDF.",
             "tooLarge": "O PDF passa de 10 MB.",
             "drop": "Arraste o PDF até aqui",

@@ -150,4 +150,73 @@ describe('Assistente', () => {
         );
         expect(onClose).toHaveBeenCalled();
     });
+
+    test('ler um manual novo troca o alto-falante que já estava no projeto', async () => {
+        const user = userEvent.setup();
+        act(() => {
+            const { setDriverValue } = activeProjectStore().getState();
+            setDriverValue('fs_hz', 76.9);
+            setDriverValue('qts', 0.72);
+            setDriverValue('vas_m3', 0.026);
+            setDriverValue('re_ohm', 3);
+        });
+        vi.stubGlobal(
+            'fetch',
+            vi.fn((input: RequestInfo | URL) =>
+                Promise.resolve(
+                    String(input).includes('/extract-text')
+                        ? new Response(
+                              JSON.stringify({
+                                  data: {
+                                      suggestion: {
+                                          brand: 'Marca',
+                                          model: 'SW12',
+                                          fs_hz: 32,
+                                          qts: 0.4,
+                                          vas_m3: 0.06,
+                                      },
+                                      suspect: [],
+                                      discarded: [],
+                                      warnings: ['review'],
+                                  },
+                              }),
+                              {
+                                  status: 200,
+                                  headers: {
+                                      'Content-Type': 'application/json',
+                                  },
+                              },
+                          )
+                        : new Response(JSON.stringify({ data: [], meta: {} }), {
+                              status: 200,
+                              headers: {
+                                  'Content-Type': 'application/json',
+                              },
+                          }),
+                ),
+            ),
+        );
+        renderWithProviders(<Assistant onClose={() => undefined} />);
+
+        // Com dados no projeto, o passo abre na conferência; volta ao catálogo e cola o texto.
+        await user.click(screen.getByRole('button', { name: /^Alto-falante/ }));
+        await user.click(
+            screen.getByRole('button', { name: 'Voltar ao catálogo' }),
+        );
+        await user.click(screen.getByRole('button', { name: /^Colar texto/ }));
+        await user.type(
+            screen.getByRole('textbox', { name: 'Texto com os parâmetros' }),
+            'Fs 32 Hz{enter}Qts 0,4{enter}Vas 60 L',
+        );
+        await user.click(
+            screen.getByRole('button', { name: /Preencher com IA/ }),
+        );
+
+        expect(
+            await screen.findByText(/3 campos preenchidos pela IA/),
+        ).toBeInTheDocument();
+        const { data } = activeProjectStore().getState();
+        expect(data.driver).toEqual({ fs_hz: 32, qts: 0.4, vas_m3: 0.06 });
+        expect(data.driverSource).toEqual({ brand: 'Marca', model: 'SW12' });
+    });
 });

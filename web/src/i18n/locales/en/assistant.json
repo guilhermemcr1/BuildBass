@@ -49,19 +49,19 @@
         },
         "ai": {
             "diameter": "Diameter",
-            "filledNone": "No empty field was filled.",
+            "filledNone": "The AI found no valid parameter.",
             "filled_one": "{{count}} field filled by AI.",
             "filled_other": "{{count}} fields filled by AI.",
             "suspect": "Check: {{fields}} do not match the others.",
             "discarded": "Out-of-range values were left blank: {{fields}}.",
             "multiple": "The text seems to describe more than one driver; we used the first.",
-            "review": "AI only fills empty fields. Check each value against the datasheet.",
+            "review": "The data read replaces the previous driver's. Check every value against the datasheet.",
             "offline": "Offline: AI reading needs the server.",
             "unavailable": "AI reading is unavailable right now. You can still type the data in.",
             "reading": "Reading…"
         },
         "pdf": {
-            "intro": "Attach the manual or datasheet as a PDF. AI looks for the parameters and fills the empty fields.",
+            "intro": "Attach the manual or datasheet as a PDF. The AI finds the parameters and fills in the fields.",
             "notPdf": "The file must be a PDF.",
             "tooLarge": "The PDF is larger than 10 MB.",
             "drop": "Drag the PDF here",
