@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BoxSuggestionController;
 use App\Http\Controllers\DriverController;
 use App\Http\Controllers\DriverSubmissionController;
 use App\Http\Controllers\ManualExtractionController;
@@ -28,3 +29,8 @@ Route::middleware([BlockAbusiveSenders::class, 'throttle:submission', RejectAuto
 // validação, para que anti-robô e arquivo inválido não consumam cota.
 Route::middleware([BlockAbusiveSenders::class, 'throttle:catalog', RejectAutomation::class])
     ->post('/driver-submissions/extract', [ManualExtractionController::class, 'store']);
+
+// Sugestão de caixa por IA: devolve candidatos para o front simular e não grava nada. Mesmas
+// proteções da leitura de manual; as cotas (8/h por IP, 50/dia) contam dentro do service.
+Route::middleware([BlockAbusiveSenders::class, 'throttle:catalog', RejectAutomation::class])
+    ->post('/box-suggestions', [BoxSuggestionController::class, 'store']);

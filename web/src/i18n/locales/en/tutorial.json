@@ -26,7 +26,7 @@
         },
         "box": {
             "title": "2. Build the enclosure",
-            "body": "Choose the type (sealed, vented or bandpass), the volume and, if any, the port. “Suggest box” fills volume and tuning from the classic alignments. The thumbnail opens the box in 3D."
+            "body": "Choose the type (sealed, vented or bandpass), the volume and, if any, the port. “Suggest with AI” proposes volume, tuning and port, checked by the simulator. The thumbnail opens the box in 3D."
         },
         "results": {
             "title": "3. Read the results",

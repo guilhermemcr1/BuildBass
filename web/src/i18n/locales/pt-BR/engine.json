@@ -36,17 +36,5 @@
         "fs": "Fs difere {{deviation}} do valor calculado por Mms, Vas e Sd (Fs = 1 / 2π√(Mms·Cms)).",
         "qes": "Qes difere {{deviation}} do valor calculado por Fs, Mms, Re e Bl (Qes = 2π·Fs·Mms·Re / Bl²).",
         "derived": "calculado"
-    },
-    "alignments": {
-        "butterworth2": "Selada Butterworth (Qtc 0,707): Vb {{vb}}.",
-        "grossNote": "O volume já inclui o ocupado pelos alto-falantes e pelos dutos.",
-        "closedQtsTooHigh": "Com Qts {{qts}}, a caixa selada Butterworth pediria mais de 3,3 vezes o volume equivalente (Vas). Use um Qtc mais alto ou um baffle infinito (sem caixa fechada).",
-        "ventedQtsTooHigh": "Qts {{qts}} é alto para caixa dutada: a resposta ganharia um pico de mais de 1 dB. Prefira a caixa selada.",
-        "qtsTooLow": "Qts {{qts}} é baixo (menor que 0,2) para os alinhamentos dutados: a caixa ficaria pequena e a resposta sairia diferente do esperado para um subwoofer.",
-        "portTooLarge": "O duto informado (área total {{area}}) é grande demais para esta caixa: para sintonizar em {{fb}} ele ocuparia mais volume que o ar que sobra dentro dela. Use dutos com área total de até {{max}}, com diâmetro menor ou menos dutos.",
-        "vented": "Dutada {{name}} para Ql {{ql}}: Vb {{vb}} e Fb {{fb}}. A aproximação de Keele, usada por algumas calculadoras, daria {{keeleVb}} e {{keeleFb}}.",
-        "name_qb3": "QB3",
-        "name_b4": "B4 (Butterworth)",
-        "name_c4": "C4 (Chebyshev)"
     }
 }

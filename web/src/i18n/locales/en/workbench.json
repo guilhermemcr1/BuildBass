@@ -41,7 +41,6 @@
         "bandpass6": "6th-order bandpass"
     },
     "suggest": {
-        "button": "Suggest box",
         "needs": "Fill in {{missing}} to get a suggestion.",
         "bandpassUnavailable": "Suggestion is available for sealed and ported boxes only."
     },
@@ -81,7 +80,12 @@
         "depth_tuning": "From tuning (Fb)",
         "depth_length": "Entered",
         "more": "Port ends",
-        "fbFromDepth": "from depth"
+        "fbFromDepth": "from depth",
+        "lock": "Lock",
+        "lockTuning": "Lock the tuning (Fb)",
+        "lockLength": "Lock the port length",
+        "lockLengthShort": "Length",
+        "lengthFromTuning": "from tuning"
     },
     "drivers": {
         "title": "Drivers",
@@ -197,7 +201,10 @@
         "portVolumeRear": "Rear port volume",
         "portPipe": "Port pipe resonance",
         "portPipeFront": "Front port pipe resonance",
-        "portPipeRear": "Rear port pipe resonance"
+        "portPipeRear": "Rear port pipe resonance",
+        "net": "Net volume",
+        "netRear": "Net rear",
+        "netFront": "Net front"
     },
     "catalog": {
         "label": "Driver catalog",
@@ -417,5 +424,51 @@
     },
     "dvc": {
         "badge": "Dual voice coil"
+    },
+    "volume": {
+        "net": "Net volume",
+        "driver": "− driver {{value}}",
+        "port": "− port {{value}}",
+        "rear": "rear",
+        "front": "front"
+    },
+    "ai": {
+        "button": "Suggest with AI",
+        "title": "AI box suggestion",
+        "intro": "The AI proposes up to three boxes for this driver, based on usage and priority. Each option is simulated by BuildBass before it shows: the numbers are the simulator's, not the AI's.",
+        "usage": "Usage",
+        "usages": {
+            "car": "Car",
+            "home": "Home",
+            "pro": "Pro audio"
+        },
+        "priority": "Priority",
+        "priorities": {
+            "deep": "Deep bass",
+            "tight": "Tight bass",
+            "loud": "Maximum output"
+        },
+        "maxVolume": "Maximum box volume ({{unit}})",
+        "maxVolumeHint": "Optional. The space you have available.",
+        "maxVolumePlaceholder": "No limit",
+        "maxVolumeInvalid": "Enter a number above zero.",
+        "limits": "Up to 8 requests per hour.",
+        "ask": "Ask for suggestions",
+        "asking": "Asking the AI…",
+        "apply": "Apply",
+        "port_one": "{{count}} port {{size}}",
+        "port_other": "{{count}} ports {{size}}",
+        "unusable": "Does not fit: the port takes too much volume or no net volume is left. It cannot be applied.",
+        "loud": "High port air speed at the project's power: there may be port noise.",
+        "disclaimer": "AI suggestions can be wrong. Check the curves after applying; one undo brings everything back.",
+        "applied": "AI suggestion applied: {{title}} (Vb {{vb}}). One undo restores the previous box.",
+        "errors": {
+            "network": "No connection to the server. Check the internet and try again.",
+            "server": "The server replied with something unexpected. Try again.",
+            "rateLimited": "You have made several requests. Try again in about {{minutes}} min.",
+            "unavailable": "The AI suggestion is unavailable right now. The classic suggestion still works.",
+            "providerFailed": "The AI did not answer properly this time. Try again in a moment.",
+            "verification": "We could not confirm you are not a robot. Reload the page and try again."
+        }
     }
 }

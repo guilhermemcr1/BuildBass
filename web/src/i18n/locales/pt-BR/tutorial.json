@@ -26,7 +26,7 @@
         },
         "box": {
             "title": "2. Monte a caixa",
-            "body": "Escolha o tipo (selada, dutada ou bandpass), o volume e, se houver, o duto. “Sugerir caixa” preenche volume e sintonia pelos alinhamentos clássicos. A miniatura abre a caixa em 3D."
+            "body": "Escolha o tipo (selada, dutada ou bandpass), o volume e, se houver, o duto. “Sugerir com IA” propõe volume, sintonia e duto, conferidos no simulador. A miniatura abre a caixa em 3D."
         },
         "results": {
             "title": "3. Veja os resultados",

@@ -204,12 +204,12 @@ describe('BoxPanel — bandpass de 6ª ordem', () => {
         expect(screen.queryByRole('textbox', { name: /^Vb/ })).toBeNull();
     });
 
-    test('Sugerir caixa fica desativado com o motivo da bandpass', () => {
+    test('Sugerir com IA fica desativado com o motivo da bandpass', () => {
         boxType('bandpass6');
         renderWithProviders(<BoxPanel />);
 
         expect(
-            screen.getByRole('button', { name: 'Sugerir caixa' }),
+            screen.getByRole('button', { name: 'Sugerir com IA' }),
         ).toBeDisabled();
         expect(
             screen.getByText(/Sugestão disponível só para caixa selada/),

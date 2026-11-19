@@ -41,7 +41,6 @@
         "bandpass6": "Bandpass 6ª ordem"
     },
     "suggest": {
-        "button": "Sugerir caixa",
         "needs": "Preencha {{missing}} para sugerir.",
         "bandpassUnavailable": "Sugestão disponível só para caixa selada e dutada."
     },
@@ -81,7 +80,12 @@
         "depth_tuning": "Pela sintonia (Fb)",
         "depth_length": "Informada",
         "more": "Acabamento das pontas",
-        "fbFromDepth": "pela profundidade"
+        "fbFromDepth": "pela profundidade",
+        "lock": "Travar",
+        "lockTuning": "Travar a sintonia (Fb)",
+        "lockLength": "Travar o comprimento do duto",
+        "lockLengthShort": "Comprimento",
+        "lengthFromTuning": "pela sintonia"
     },
     "drivers": {
         "title": "Alto-falantes",
@@ -197,7 +201,10 @@
         "portVolumeRear": "Volume do duto traseiro",
         "portPipe": "Ressonância do duto",
         "portPipeFront": "Ressonância do duto frontal",
-        "portPipeRear": "Ressonância do duto traseiro"
+        "portPipeRear": "Ressonância do duto traseiro",
+        "net": "Volume líquido",
+        "netRear": "Líquido traseira",
+        "netFront": "Líquido frontal"
     },
     "catalog": {
         "label": "Catálogo de alto-falantes",
@@ -417,5 +424,51 @@
     },
     "dvc": {
         "badge": "Bobina dupla"
+    },
+    "volume": {
+        "net": "Volume líquido",
+        "driver": "− alto-falante {{value}}",
+        "port": "− duto {{value}}",
+        "rear": "traseira",
+        "front": "frontal"
+    },
+    "ai": {
+        "button": "Sugerir com IA",
+        "title": "Sugestão de caixa com IA",
+        "intro": "A IA propõe até três caixas para este alto-falante, de acordo com o uso e a prioridade. Cada opção é simulada pelo BuildBass antes de aparecer: os números mostrados são os do simulador, não os da IA.",
+        "usage": "Uso",
+        "usages": {
+            "car": "Carro",
+            "home": "Casa",
+            "pro": "Som profissional"
+        },
+        "priority": "Prioridade",
+        "priorities": {
+            "deep": "Grave profundo",
+            "tight": "Grave seco",
+            "loud": "Volume máximo"
+        },
+        "maxVolume": "Volume máximo da caixa ({{unit}})",
+        "maxVolumeHint": "Opcional. O espaço que você tem disponível.",
+        "maxVolumePlaceholder": "Sem limite",
+        "maxVolumeInvalid": "Informe um número maior que zero.",
+        "limits": "Até 8 pedidos por hora.",
+        "ask": "Pedir sugestões",
+        "asking": "Consultando a IA…",
+        "apply": "Aplicar",
+        "port_one": "{{count}} duto {{size}}",
+        "port_other": "{{count}} dutos {{size}}",
+        "unusable": "Não cabe: o duto ocupa volume demais ou não sobra volume líquido. Não dá para aplicar.",
+        "loud": "Velocidade alta no duto com a potência do projeto: pode haver ruído de ar.",
+        "disclaimer": "Sugestões geradas por IA podem errar. Confira as curvas depois de aplicar; um \"desfazer\" volta tudo.",
+        "applied": "Sugestão da IA aplicada: {{title}} (Vb {{vb}}). Um \"desfazer\" volta a caixa anterior.",
+        "errors": {
+            "network": "Sem conexão com o servidor. Verifique a internet e tente de novo.",
+            "server": "O servidor respondeu algo inesperado. Tente de novo.",
+            "rateLimited": "Você já fez vários pedidos. Tente de novo em cerca de {{minutes}} min.",
+            "unavailable": "A sugestão por IA está indisponível agora. A sugestão clássica continua funcionando.",
+            "providerFailed": "A IA não respondeu direito desta vez. Tente de novo em instantes.",
+            "verification": "Não foi possível confirmar que você não é um robô. Recarregue a página e tente de novo."
+        }
     }
 }

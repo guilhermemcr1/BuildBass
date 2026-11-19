@@ -36,17 +36,5 @@
         "fs": "Fs is {{deviation}} off the value calculated from Mms, Vas and Sd (Fs = 1 / 2π√(Mms·Cms)).",
         "qes": "Qes is {{deviation}} off the value calculated from Fs, Mms, Re and Bl (Qes = 2π·Fs·Mms·Re / Bl²).",
         "derived": "calculated"
-    },
-    "alignments": {
-        "butterworth2": "Sealed Butterworth (Qtc 0.707): Vb {{vb}}.",
-        "grossNote": "The volume already includes what the drivers and ports take up.",
-        "closedQtsTooHigh": "With Qts {{qts}}, a sealed Butterworth box would need more than 3.3 times the equivalent volume (Vas). Use a higher Qtc or an infinite baffle (no closed box).",
-        "ventedQtsTooHigh": "Qts {{qts}} is high for a vented box: the response would get a peak of more than 1 dB. Prefer a sealed box.",
-        "qtsTooLow": "Qts {{qts}} is low (below 0.2) for the vented alignments: the box would be small and the response would depart from what is expected of a subwoofer.",
-        "portTooLarge": "The port you entered (total area {{area}}) is too large for this box: to tune to {{fb}} it would take up more volume than the air left inside. Use ports with a total area of up to {{max}}, with a smaller diameter or fewer ports.",
-        "vented": "Vented {{name}} for Ql {{ql}}: Vb {{vb}} and Fb {{fb}}. The Keele approximation, used by some calculators, would give {{keeleVb}} and {{keeleFb}}.",
-        "name_qb3": "QB3",
-        "name_b4": "B4 (Butterworth)",
-        "name_c4": "C4 (Chebyshev)"
     }
 }
