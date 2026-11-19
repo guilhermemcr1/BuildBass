@@ -11,6 +11,9 @@ function form(numbers: SubmissionForm['numbers']): SubmissionForm {
         source: '',
         contact_email: '',
         numbers,
+        shape: '',
+        piston: '',
+        dims: {},
     };
 }
 

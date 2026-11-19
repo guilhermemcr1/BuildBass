@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\DriverSubmissions\Schemas;
 
 use App\Enums\SubmissionStatus;
+use App\Filament\Schemas\DriverDimensionFields;
 use App\Filament\Schemas\DriverParameterFields;
 use App\Filament\Schemas\IdentityFields;
 use App\Models\Driver;
@@ -40,6 +41,12 @@ class DriverSubmissionForm
                 ->description('Unidades do SI, ponto nos decimais. Confira com a fonte informada.')
                 ->icon(Heroicon::OutlinedAdjustmentsHorizontal)
                 ->schema($parameters),
+            Section::make('Dimensões')
+                ->description('Opcionais. Seguem para o catálogo ao aprovar.')
+                ->icon(Heroicon::OutlinedViewfinderCircle)
+                ->collapsible()
+                ->schema(DriverDimensionFields::make())
+                ->disabled($locked),
             Section::make('Origem dos dados')
                 ->icon(Heroicon::OutlinedDocumentText)
                 ->schema([

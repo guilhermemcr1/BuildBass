@@ -131,3 +131,19 @@ it('o driver criado pela aprovação tem origem de envio aprovado e gera driver_
         ->and($event->actor_id)->toBe($moderator->id)
         ->and($event->subject_id)->toBe($driver->id);
 });
+
+it('leva as medidas físicas do envio para o driver aprovado', function () {
+    $submission = DriverSubmission::factory()->create([
+        'drv_shape' => 'square',
+        'drv_piston' => 'flat',
+        'drv_a_m' => 0.25,
+        'drv_e_m' => 0.07,
+    ]);
+
+    $driver = service()->approve($submission, Moderator::factory()->create());
+
+    expect($driver->drv_shape)->toBe('square')
+        ->and($driver->drv_piston)->toBe('flat')
+        ->and($driver->drv_a_m)->toBe(0.25)
+        ->and($driver->drv_e_m)->toBe(0.07);
+});

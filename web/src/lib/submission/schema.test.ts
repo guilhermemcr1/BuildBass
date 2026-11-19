@@ -25,6 +25,9 @@ function form(overrides: Partial<SubmissionForm> = {}): SubmissionForm {
         source: 'Ficha técnica',
         contact_email: 'pessoa@exemplo.com',
         numbers: { fs_hz: 40, qts: 0.4, vas_m3: 0.05 },
+        shape: '',
+        piston: '',
+        dims: {},
         ...overrides,
     };
 }
@@ -214,5 +217,35 @@ describe('toPayload', () => {
             contact_email: 'a@b.com',
             turnstile_token: 'tok',
         });
+    });
+});
+
+describe('dimensões físicas no envio', () => {
+    test('medida fora da faixa aponta o campo', () => {
+        const result = validateSubmission(form({ dims: { drv_a_m: 5 } }));
+
+        expect(result.ok).toBe(false);
+        expect(!result.ok && result.errors.drv_a_m).toBe('range');
+    });
+
+    test('formato, pistão e medidas vão no corpo; vazios ficam fora', () => {
+        const payload = toPayload(
+            form({
+                shape: 'rect',
+                piston: 'flat',
+                dims: { drv_a_m: 0.3, drv_d_m: 0.2 },
+            }),
+            { locale: 'pt-BR' },
+        );
+
+        expect(payload).toMatchObject({
+            drv_shape: 'rect',
+            drv_piston: 'flat',
+            drv_a_m: 0.3,
+            drv_d_m: 0.2,
+        });
+        expect(toPayload(form(), { locale: 'pt-BR' })).not.toHaveProperty(
+            'drv_shape',
+        );
     });
 });

@@ -3,8 +3,17 @@ import { DRIVER_KEYS } from '@/engine';
 import type { DriverKey } from '@/engine';
 import { isImpedance } from '@/lib/impedance';
 import { PARAMETERS } from '@/lib/parameters';
-import { DRIVER_TYPES } from '@/lib/project/types';
-import type { DriverType } from '@/lib/project/types';
+import type { ParameterKey } from '@/lib/parameters';
+import {
+    DRIVER_PISTONS,
+    DRIVER_SHAPES,
+    DRIVER_TYPES,
+} from '@/lib/project/types';
+import type {
+    DriverPiston,
+    DriverShape,
+    DriverType,
+} from '@/lib/project/types';
 
 // Regras do envio de driver. Espelham o Form Request do servidor
 // (api/app/Http/Requests/StoreDriverSubmissionRequest.php); as faixas vêm de PARAMETERS e o
@@ -43,6 +52,19 @@ export function rangeOf(key: NumericKey): { min: number; max: number } {
         : PARAMETERS[key];
 }
 
+// Medidas físicas opcionais (as mesmas da bancada e do catálogo), em metros.
+export const DIMENSION_KEYS = [
+    'drv_a_m',
+    'drv_b_m',
+    'cutout_m',
+    'drv_d_m',
+    'drv_e_m',
+    'drv_f_m',
+    'drv_g_m',
+] as const satisfies readonly ParameterKey[];
+
+export type DimensionKey = (typeof DIMENSION_KEYS)[number];
+
 export type SubmissionForm = {
     brand: string;
     model: string;
@@ -52,6 +74,10 @@ export type SubmissionForm = {
     source: string;
     contact_email: string;
     numbers: Partial<Record<NumericKey, number>>;
+    // Vazio = não informado.
+    shape: DriverShape | '';
+    piston: DriverPiston | '';
+    dims: Partial<Record<DimensionKey, number>>;
 };
 
 export type SubmissionFieldId =
@@ -60,7 +86,8 @@ export type SubmissionFieldId =
     | 'variant'
     | 'source'
     | 'contact_email'
-    | NumericKey;
+    | NumericKey
+    | DimensionKey;
 
 export type SubmissionErrorCode =
     | 'required'
@@ -124,6 +151,20 @@ export const submissionSchema = z.object({
             message: 'email',
         }),
     numbers: numberShape(),
+    shape: z.union([z.literal(''), z.enum(DRIVER_SHAPES)]),
+    piston: z.union([z.literal(''), z.enum(DRIVER_PISTONS)]),
+    dims: z.object(
+        Object.fromEntries(
+            DIMENSION_KEYS.map((key) => [
+                key,
+                z
+                    .number()
+                    .min(PARAMETERS[key].min)
+                    .max(PARAMETERS[key].max)
+                    .optional(),
+            ]),
+        ),
+    ),
 });
 
 function codeFor(issue: z.core.$ZodIssue): SubmissionErrorCode {
@@ -163,9 +204,9 @@ export function validateSubmission(form: SubmissionForm): Validation {
 
     for (const issue of result.error.issues) {
         const [first, second] = issue.path;
-        const field = (first === 'numbers' ? second : first) as
-            | SubmissionFieldId
-            | undefined;
+        const field = (
+            first === 'numbers' || first === 'dims' ? second : first
+        ) as SubmissionFieldId | undefined;
 
         if (field !== undefined && errors[field] === undefined) {
             errors[field] = codeFor(issue);
@@ -180,7 +221,11 @@ export const submissionResponseSchema = z.object({
     data: z.object({ protocol: z.uuid(), status: z.literal('pending') }),
 });
 
-export type SubmissionPayload = Partial<Record<NumericKey, number>> & {
+export type SubmissionPayload = Partial<
+    Record<NumericKey | DimensionKey, number>
+> & {
+    drv_shape?: DriverShape;
+    drv_piston?: DriverPiston;
     brand: string;
     model: string;
     variant?: string;
@@ -218,6 +263,22 @@ export function toPayload(
 
     for (const key of NUMERIC_KEYS) {
         const value = form.numbers[key];
+
+        if (value !== undefined) {
+            payload[key] = value;
+        }
+    }
+
+    if (form.shape !== '') {
+        payload.drv_shape = form.shape;
+    }
+
+    if (form.piston !== '') {
+        payload.drv_piston = form.piston;
+    }
+
+    for (const key of DIMENSION_KEYS) {
+        const value = form.dims[key];
 
         if (value !== undefined) {
             payload[key] = value;

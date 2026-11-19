@@ -61,8 +61,12 @@ class DriverSubmission extends Model
         'source',
     ];
 
+    /** Medidas físicas opcionais (as mesmas de `drivers`); seguem para o catálogo ao aprovar. */
+    public const DIMENSION_FIELDS = Driver::DIMENSION_FIELDS;
+
     protected $fillable = [
         ...self::DRIVER_FIELDS,
+        ...self::DIMENSION_FIELDS,
         'contact_email',
         'locale',
     ];
@@ -90,6 +94,7 @@ class DriverSubmission extends Model
             'bl_tm' => 'float',
             'mms_kg' => 'float',
             'vd_m3' => 'float',
+            ...array_fill_keys(Driver::DIMENSION_KEYS, 'float'),
             'decided_at' => 'datetime',
         ];
     }

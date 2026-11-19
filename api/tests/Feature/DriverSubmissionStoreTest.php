@@ -147,3 +147,28 @@ it('a variante é a impedância em ohms: normaliza para "N Ω" e recusa texto li
     'texto livre' => ['Dual voice coil', null],
     'fora da faixa' => ['900', null],
 ]);
+
+it('grava as medidas físicas opcionais do envio', function () {
+    $this->postJson('/api/driver-submissions', validSubmission([
+        'drv_shape' => 'round',
+        'drv_piston' => 'cone',
+        'drv_a_m' => 0.31,
+        'cutout_m' => 0.28,
+        'drv_g_m' => 0.15,
+    ]))->assertCreated();
+
+    expect(DriverSubmission::first())
+        ->drv_shape->toBe('round')
+        ->drv_piston->toBe('cone')
+        ->drv_a_m->toBe(0.31)
+        ->cutout_m->toBe(0.28)
+        ->drv_g_m->toBe(0.15)
+        ->drv_b_m->toBeNull();
+});
+
+it('recusa medidas físicas fora da faixa ou formato desconhecido', function () {
+    $this->postJson('/api/driver-submissions', validSubmission([
+        'drv_shape' => 'triangle',
+        'drv_a_m' => 5,
+    ]))->assertUnprocessable()->assertJsonValidationErrors(['drv_shape', 'drv_a_m']);
+});

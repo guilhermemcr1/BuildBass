@@ -104,6 +104,14 @@ class StoreDriverSubmissionRequest extends FormRequest
             $rules[$key] = [$presence, 'numeric', "between:{$min},{$max}"];
         }
 
+        // Medidas físicas: todas opcionais, mesmas faixas do catálogo.
+        $rules['drv_shape'] = ['nullable', 'string', Rule::in(Driver::SHAPES)];
+        $rules['drv_piston'] = ['nullable', 'string', Rule::in(Driver::PISTONS)];
+
+        foreach (Driver::DIMENSION_RANGES as $key => [$min, $max]) {
+            $rules[$key] = ['nullable', 'numeric', "between:{$min},{$max}"];
+        }
+
         return $rules;
     }
 
@@ -133,7 +141,7 @@ class StoreDriverSubmissionRequest extends FormRequest
 
         return array_intersect_key(
             $validated,
-            array_flip([...DriverSubmission::DRIVER_FIELDS, 'contact_email', 'locale']),
+            array_flip([...DriverSubmission::DRIVER_FIELDS, ...DriverSubmission::DIMENSION_FIELDS, 'contact_email', 'locale']),
         );
     }
 }

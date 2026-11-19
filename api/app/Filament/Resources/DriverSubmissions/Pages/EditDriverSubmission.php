@@ -59,11 +59,12 @@ class EditDriverSubmission extends EditRecord
     protected function handleRecordUpdate(Model $record, array $data): Model
     {
         return DB::transaction(function () use ($record, $data): Model {
-            $before = $record->only(DriverSubmission::DRIVER_FIELDS);
+            $fields = [...DriverSubmission::DRIVER_FIELDS, ...DriverSubmission::DIMENSION_FIELDS];
+            $before = $record->only($fields);
 
             $record->update($data);
 
-            $changes = AuditDiff::between($before, $record->only(DriverSubmission::DRIVER_FIELDS), DriverSubmission::DRIVER_FIELDS);
+            $changes = AuditDiff::between($before, $record->only($fields), $fields);
 
             if ($changes !== []) {
                 app(AuditLogger::class)->record(AuditType::SubmissionEdited, [

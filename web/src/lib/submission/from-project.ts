@@ -9,6 +9,9 @@ export function emptyForm(): SubmissionForm {
         source: '',
         contact_email: '',
         numbers: {},
+        shape: '',
+        piston: '',
+        dims: {},
     };
 }
 

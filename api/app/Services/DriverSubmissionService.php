@@ -80,7 +80,7 @@ class DriverSubmissionService
                 }
 
                 $driver = Driver::create([
-                    ...$locked->only(DriverSubmission::DRIVER_FIELDS),
+                    ...$locked->only([...DriverSubmission::DRIVER_FIELDS, ...DriverSubmission::DIMENSION_FIELDS]),
                     'origin' => DriverOrigin::ApprovedSubmission,
                 ]);
 
