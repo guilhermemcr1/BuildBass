@@ -26,8 +26,11 @@
             "totalsHelp": "Quanto de madeira o projeto gasta: área e comprimento de corte, com e sem a espessura do MDF.",
             "partsHelp": "Cada peça com as medidas finais e os recortes. É a lista para levar à marcenaria.",
             "volumeHelp": "Confere se o volume líquido da caixa no plano bate com o da simulação; se não bater, o som muda.",
-            "shape": "Altura : largura : profundidade da caixa. Escolha uma proporção pronta ou edite os três números para modelar: o volume (Vb) continua o mesmo e as medidas se ajustam."
+            "shape": "Altura : largura : profundidade da caixa. Escolha uma proporção pronta ou edite as medidas. Com \"Manter o volume\", o Vb continua o mesmo e as outras medidas se ajustam; sem ela, o Vb acompanha o tamanho da caixa."
         },
+        "lockVolume": "Manter o volume (Vb) ao mudar as medidas",
+        "lockVolumeOn": "Mudar uma medida ajusta as outras duas; o Vb não muda.",
+        "lockVolumeOff": "Mudar uma medida recalcula o Vb; as outras medidas ficam. O Fb é mantido e o duto se ajusta a ele.",
         "axes": "L × A × P",
         "needsVolume": "Informe o volume (Vb) para ver as medidas."
     },
@@ -180,7 +183,15 @@
         "unavailable": "Disponível quando o plano estiver completo: informe os parâmetros que faltam."
     },
     "print": {
-        "title": "Plano de corte: {{name}}"
+        "title": "Plano de corte: {{name}}",
+        "subtitle": "Simulador de caixas acústicas",
+        "exportedAt": "Exportado em",
+        "site": "Site",
+        "driver": "Alto-falante",
+        "unnamedDriver": "Sem identificação",
+        "count_one": "{{count}} alto-falante",
+        "count_other": "{{count}} alto-falantes",
+        "box": "Caixa"
     },
     "totals": {
         "title": "Corte total",

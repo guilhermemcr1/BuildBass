@@ -131,6 +131,7 @@ const cutPlan = z.object({
         .optional(),
     braces_m3: range('braces_m3').optional(),
     cutout_m: range('cutout_m').optional(),
+    lockVolume: z.boolean().optional(),
     // Chapa que o usuário tem (versão 5): largura e altura obrigatórias dentro do objeto. A versão 7
     // acrescenta o estoque (quantidade, demais itens) e o tipo de corte.
     sheet: z

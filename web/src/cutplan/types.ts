@@ -73,6 +73,8 @@ export type CutPlanConfig = {
     custom?: Ratio;
     braces_m3?: number;
     cutout_m?: number;
+    // Editar uma medida mantém o volume (padrão) ou muda o Vb com a caixa.
+    lockVolume?: boolean;
     sheet?: SheetConfig;
     positions?: CutoutPosition[];
 };

@@ -10,6 +10,7 @@ import {
     readField,
     withIdentity,
     writeDimension,
+    writeLockVolume,
     writeDriverChoice,
     writeField,
     writeProportion,
@@ -254,6 +255,51 @@ test('writeDimension recusa medida que leva a razão para fora da faixa', () => 
     const internal = { h_m: 0.6, w_m: 0.4, d_m: 0.25 };
 
     expect(writeDimension(data, internal, 'h', 5)).toBe(data);
+});
+
+test('volume solto: a medida digitada muda o Vb e as outras duas ficam', () => {
+    const internal = { h_m: 0.6, w_m: 0.4, d_m: 0.25 };
+    const base = writeLockVolume(
+        {
+            ...createProjectData(''),
+            box: { ...createProjectData('').box, vb_m3: 0.06 },
+        },
+        false,
+    );
+    const data = writeDimension(base, internal, 'h', 0.75);
+
+    expect(data.box.vb_m3).toBeCloseTo(0.75 * 0.4 * 0.25, 9);
+    expect(data.cutPlan?.custom).toEqual({
+        h: 0.75 / 0.25,
+        w: 0.4 / 0.25,
+        d: 1,
+    });
+    expect(data.cutPlan?.lockVolume).toBe(false);
+});
+
+test('volume solto na bandpass: as duas câmaras mudam na mesma proporção', () => {
+    const internal = { h_m: 0.5, w_m: 0.4, d_m: 0.3 };
+    const empty = createProjectData('');
+    const base = writeLockVolume(
+        {
+            ...empty,
+            box: { ...empty.box, type: 'bandpass', vr_m3: 0.04, vf_m3: 0.02 },
+        },
+        false,
+    );
+    const data = writeDimension(base, internal, 'd', 0.6);
+
+    expect(data.box.vr_m3).toBeCloseTo(0.08, 9);
+    expect(data.box.vf_m3).toBeCloseTo(0.04, 9);
+});
+
+test('manter o volume é o padrão e não fica gravado no projeto', () => {
+    const data = writeLockVolume(
+        writeLockVolume(createProjectData(''), false),
+        true,
+    );
+
+    expect(data.cutPlan).toBeUndefined();
 });
 
 test('formato e medidas do alto-falante somem do projeto quando esvaziados', () => {

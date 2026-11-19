@@ -1,5 +1,6 @@
 import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
+import { Checkbox } from '@/components/ui/checkbox';
 import { InfoTip } from '@/components/ui/help-tip';
 import { ParameterField } from '@/components/ui/parameter-field';
 import { SelectField } from '@/components/ui/select-field';
@@ -8,7 +9,11 @@ import type { CutPlanProportion } from '@/cutplan';
 import { useActiveProject } from '@/hooks/use-active-project';
 import { useCutPlan } from '@/hooks/use-cut-plan';
 import { PARAMETERS } from '@/lib/parameters';
-import { writeDimension, writeProportion } from '@/lib/project/fields';
+import {
+    writeDimension,
+    writeLockVolume,
+    writeProportion,
+} from '@/lib/project/fields';
 import { formatQuantity } from '@/lib/units/format';
 import { defaultUnitFor, findUnit } from '@/lib/units/quantities';
 import type { UnitId } from '@/lib/units/quantities';
@@ -28,8 +33,9 @@ const AXES = [
     ['dim_d_m', 'd'],
 ] as const;
 
-// Formato da caixa: uma proporção pronta ou as três medidas internas, em mm, editáveis. Editar uma
-// medida ajusta as outras duas (o volume do projeto não muda) e passa a proporção para "Própria".
+// Formato da caixa: uma proporção pronta ou as três medidas internas, em mm, editáveis. Com
+// "Manter o volume", editar uma medida ajusta as outras duas e o Vb não muda; sem ela, as outras
+// ficam e o Vb acompanha a caixa. Nos dois casos a proporção passa para "Própria".
 export function BoxShape() {
     const { t } = useTranslation('cutplan');
     const { locale } = useLocale();
@@ -41,6 +47,7 @@ export function BoxShape() {
     const cutPlan = useCutPlan();
     const resolved = resolveCutPlan(config);
     const ready = cutPlan.status === 'ready';
+    const lockVolume = config?.lockVolume !== false;
     const internal = ready ? cutPlan.plan.dimensions.internal : undefined;
     const title = t('config.groups.shape');
     const lengthUnit = defaultUnitFor('length', unitSystem);
@@ -116,6 +123,18 @@ export function BoxShape() {
                     );
                 })}
             </div>
+            <Checkbox
+                selected={lockVolume}
+                onChange={(lock) =>
+                    apply((data) => writeLockVolume(data, lock))
+                }
+                className="text-xs"
+            >
+                {t('config.lockVolume')}
+            </Checkbox>
+            <p className="-mt-1 text-[11px] text-muted">
+                {t(lockVolume ? 'config.lockVolumeOn' : 'config.lockVolumeOff')}
+            </p>
             {internal === undefined ? (
                 <p className="text-[11px] text-muted">
                     {t('config.needsVolume')}

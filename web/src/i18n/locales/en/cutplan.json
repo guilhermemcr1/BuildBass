@@ -26,8 +26,11 @@
             "totalsHelp": "How much wood the project uses: area and cut length, with and without the MDF thickness.",
             "partsHelp": "Each piece with its final measures and cutouts. This is the list to take to the workshop.",
             "volumeHelp": "Checks that the net box volume in the plan matches the simulation; if it does not, the sound changes.",
-            "shape": "Box height : width : depth. Pick a preset or edit the three numbers to shape it: the volume (Vb) stays the same and the measures adjust."
+            "shape": "Box height : width : depth. Pick a preset or edit the sizes. With \"Keep the volume\", Vb stays the same and the other sizes adjust; without it, Vb follows the box size."
         },
+        "lockVolume": "Keep the volume (Vb) when changing sizes",
+        "lockVolumeOn": "Changing one size adjusts the other two; Vb stays the same.",
+        "lockVolumeOff": "Changing one size recalculates Vb; the other sizes stay. Fb is kept and the port adapts to it.",
         "axes": "W × H × D",
         "needsVolume": "Enter the volume (Vb) to see the measures."
     },
@@ -180,7 +183,15 @@
         "unavailable": "Available once the plan is complete: provide the missing parameters."
     },
     "print": {
-        "title": "Cut plan: {{name}}"
+        "title": "Cut plan: {{name}}",
+        "subtitle": "Loudspeaker box simulator",
+        "exportedAt": "Exported on",
+        "site": "Website",
+        "driver": "Driver",
+        "unnamedDriver": "No identification",
+        "count_one": "{{count}} driver",
+        "count_other": "{{count}} drivers",
+        "box": "Box"
     },
     "totals": {
         "title": "Total cut",

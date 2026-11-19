@@ -117,11 +117,19 @@ export function layoutEdge(
 
     restIdx.forEach((index, k) => {
         const c = rest.centers[k];
+        const item = items[index]!;
 
-        if (c !== undefined) {
-            centers[index] = horizontal
-                ? { x_m: c.x_m, y_m: c.y_m + offset }
-                : { x_m: c.x_m + offset, y_m: c.y_m };
+        if (c !== undefined && sized(item)) {
+            // Quando o trecho que sobra é menor que o recorte, o centro dele levaria o furo para fora
+            // da peça: o recorte é trazido de volta para dentro do painel (o aviso continua).
+            centers[index] = insidePanel(
+                panel,
+                item,
+                horizontal
+                    ? { x_m: c.x_m, y_m: c.y_m + offset }
+                    : { x_m: c.x_m + offset, y_m: c.y_m },
+                web_m,
+            );
         }
     });
 
@@ -130,6 +138,29 @@ export function layoutEdge(
         doNotFit: rest.doNotFit,
         tight: rest.tight,
         tooBig: rest.tooBig,
+    };
+}
+
+// Centro que mantém o recorte dentro do painel, a uma espessura da borda quando cabe; maior que o
+// painel, fica centralizado.
+function insidePanel(
+    panel: { w_m: number; h_m: number },
+    item: Required<LayoutItem>,
+    center: Center,
+    web_m: number,
+): Center {
+    const fit = (value: number, extent: number, size: number) => {
+        const half = extent / 2;
+        const margin = Math.min(web_m, Math.max(0, (size - extent) / 2));
+        const low = half + margin;
+        const high = size - half - margin;
+
+        return low > high ? size / 2 : Math.min(Math.max(value, low), high);
+    };
+
+    return {
+        x_m: fit(center.x_m, item.w_m, panel.w_m),
+        y_m: fit(center.y_m, item.h_m, panel.h_m),
     };
 }
 

@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { BrandMark } from '@/components/ui/brand-mark';
 import { Button } from '@/components/ui/button';
 
 export type ProjectAction = 'new' | 'open' | 'export' | 'undo' | 'redo';
@@ -40,31 +41,7 @@ export function TopBar({
         <header className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border bg-surface px-4 py-2.5">
             {/* Marca do README: cone de alto-falante visto de frente; "Bass" na cor de destaque do tema. */}
             <span className="flex items-center gap-2 text-lg font-extrabold tracking-tight">
-                <svg
-                    viewBox="0 0 120 120"
-                    aria-hidden="true"
-                    className="size-7 shrink-0"
-                >
-                    <rect width="120" height="120" rx="26" fill="#121212" />
-                    <circle
-                        cx="60"
-                        cy="60"
-                        r="40"
-                        fill="none"
-                        stroke="#b8f53d"
-                        strokeWidth="8"
-                    />
-                    <circle
-                        cx="60"
-                        cy="60"
-                        r="26"
-                        fill="none"
-                        stroke="#b8f53d"
-                        strokeOpacity=".45"
-                        strokeWidth="3.5"
-                    />
-                    <circle cx="60" cy="60" r="14" fill="#b8f53d" />
-                </svg>
+                <BrandMark className="size-7" />
                 <span>
                     Build<span className="text-accent">Bass</span>
                 </span>

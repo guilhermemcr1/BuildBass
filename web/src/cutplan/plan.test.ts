@@ -1278,3 +1278,46 @@ describe('duto triangular nos cantos', () => {
         ).toBe(false);
     });
 });
+
+describe('recorte automático sempre dentro da peça', () => {
+    test('duto em pé na borda e alto-falante grande: o furo não passa da parede interna', async () => {
+        const { placeCutouts } = await import('./plan');
+        const panel = { w_m: 0.45, h_m: 0.5 };
+        const t = 0.018;
+
+        for (const port of [
+            { w_m: 0.06, h_m: 0.3 },
+            { w_m: 0.3, h_m: 0.06 },
+            { w_m: 0.1, h_m: 0.1 },
+        ]) {
+            const { cutouts } = placeCutouts(
+                panel,
+                [
+                    {
+                        kind: 'driver',
+                        measure: {
+                            shape: 'round',
+                            w_m: 0.355,
+                            h_m: 0.355,
+                            pending: [],
+                        },
+                    },
+                    {
+                        kind: 'port',
+                        measure: { shape: 'rect', ...port, pending: [] },
+                    },
+                ],
+                t,
+            );
+            const driver = cutouts.find((c) => c.kind === 'driver');
+            const r = (driver?.diameter_m ?? 0) / 2;
+            const center = driver?.center;
+
+            expect(center).toBeDefined();
+            expect(center!.x_m - r).toBeGreaterThanOrEqual(t - 1e-9);
+            expect(center!.y_m - r).toBeGreaterThanOrEqual(t - 1e-9);
+            expect(center!.x_m + r).toBeLessThanOrEqual(panel.w_m - t + 1e-9);
+            expect(center!.y_m + r).toBeLessThanOrEqual(panel.h_m - t + 1e-9);
+        }
+    });
+});

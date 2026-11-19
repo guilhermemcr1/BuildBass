@@ -13,7 +13,7 @@ import type {
     SheetConfig,
     StockItem,
 } from '@/cutplan';
-import { DRIVER_KEYS } from '@/engine';
+import { DRIVER_KEYS, twoChambers } from '@/engine';
 import type { CatalogDims } from '@/lib/catalog/to-driver-input';
 import type { ParameterKey } from '@/lib/parameters';
 import type {
@@ -396,6 +396,11 @@ export function writeDimension(
     axis: Axis,
     si: number,
 ): ProjectData {
+    // Com o volume solto, só a medida editada muda e o Vb acompanha a caixa.
+    if (data.cutPlan?.lockVolume === false) {
+        return writeDimensionFree(data, internal, axis, si);
+    }
+
     const old = internal[`${axis}_m` as 'h_m' | 'w_m' | 'd_m'];
     const others = Math.sqrt(old / si);
     const next = {
@@ -403,6 +408,14 @@ export function writeDimension(
         w: axis === 'w' ? si : internal.w_m * others,
         d: axis === 'd' ? si : internal.d_m * others,
     };
+
+    return withRatio(data, next);
+}
+
+function withRatio(
+    data: ProjectData,
+    next: { h: number; w: number; d: number },
+): ProjectData {
     const custom = { h: next.h / next.d, w: next.w / next.d, d: 1 };
     const { min, max } = CUT_PLAN_LIMITS.ratio;
 
@@ -417,6 +430,49 @@ export function writeDimension(
         proportion: 'custom',
         custom,
     });
+}
+
+// Volume solto: as outras duas medidas ficam; o volume interno novo, menos os reforços, vira o Vb
+// (na bandpass, as duas câmaras mudam na mesma proporção).
+function writeDimensionFree(
+    data: ProjectData,
+    internal: { h_m: number; w_m: number; d_m: number },
+    axis: Axis,
+    si: number,
+): ProjectData {
+    const next = {
+        h: axis === 'h' ? si : internal.h_m,
+        w: axis === 'w' ? si : internal.w_m,
+        d: axis === 'd' ? si : internal.d_m,
+    };
+    const braces = resolveCutPlan(data.cutPlan).braces_m3;
+    const total = next.h * next.w * next.d - braces;
+    const shaped = withRatio(data, next);
+
+    if (shaped === data || !(total > 0)) {
+        return data;
+    }
+
+    const { box } = shaped;
+
+    if (twoChambers(box.type)) {
+        const rear = box.vr_m3 ?? 0;
+        const front = box.vf_m3 ?? 0;
+        const factor = total / (rear + front);
+
+        return {
+            ...shaped,
+            box: { ...box, vr_m3: rear * factor, vf_m3: front * factor },
+        };
+    }
+
+    return { ...shaped, box: { ...box, vb_m3: total } };
+}
+
+export function writeLockVolume(data: ProjectData, lock: boolean): ProjectData {
+    const { lockVolume: _old, ...rest } = data.cutPlan ?? {};
+
+    return withCutPlan(data, lock ? rest : { ...rest, lockVolume: false });
 }
 
 // Escolhe a proporção; "própria" parte da razão que estava ativa, para a caixa não pular.

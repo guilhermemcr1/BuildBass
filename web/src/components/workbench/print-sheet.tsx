@@ -9,6 +9,7 @@ import { CutTotals } from './cut-totals';
 import { PartsTable } from './parts-table';
 import { PlanDimensions } from './plan-dimensions';
 import { PlanWarnings } from './plan-warnings';
+import { PrintHeader } from './print-header';
 import { SheetLayout } from './sheet-layout';
 import { VolumeCheck } from './volume-check';
 
@@ -59,9 +60,7 @@ export function PrintSheet({ onReady }: PrintSheetProps) {
             aria-hidden="true"
             className={`hidden flex-col gap-4 bg-white p-6 text-black print:flex ${PAPER}`}
         >
-            <h1 className="text-xl font-bold">
-                {t('cutplan:print.title', { name })}
-            </h1>
+            <PrintHeader name={name} />
             <PlanDimensions plan={plan} />
             <CutTotals plan={plan} />
             <PartsTable plan={plan} name={name} />
