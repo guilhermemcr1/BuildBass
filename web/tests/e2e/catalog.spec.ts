@@ -244,7 +244,7 @@ test('editar um parâmetro ou esvaziar o driver mantém a identificação', asyn
         /^Qms/,
         /^Vas/,
         /^Re/,
-        /^Le/,
+        /^Le —/,
         /^Xmax/,
         /^Sd/,
         /^Pe/,

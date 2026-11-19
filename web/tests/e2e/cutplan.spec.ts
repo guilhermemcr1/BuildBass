@@ -25,7 +25,7 @@ async function referenceDriver(page: Page) {
     await fill(page, /^Qms/, '4,1');
     await fill(page, /^Vas/, '85');
     await fill(page, /^Re/, '3,6');
-    await fill(page, /^Le/, '2,1');
+    await fill(page, /^Le —/, '2,1');
     await fill(page, /^Xmax/, '14');
     await fill(page, /^Sd/, '491');
 }
@@ -278,7 +278,7 @@ test('plano da bandpass de 6ª ordem: recortes dos dois dutos e conferência por
         'Duto',
     );
     await expect(parts.getByRole('row', { name: /Divisória/ })).toContainText(
-        'Driver',
+        'Alto-falante',
     );
 
     const check = page.getByRole('table', { name: /Volume por câmara/ });

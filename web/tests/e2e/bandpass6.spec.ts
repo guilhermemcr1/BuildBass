@@ -39,7 +39,7 @@ async function referenceDriver(page: Page) {
     await fill(byName(page, /^Qms/), '4,1');
     await fill(byName(page, /^Vas/), '85');
     await fill(byName(page, /^Re/), '3,6');
-    await fill(byName(page, /^Le/), '2,1');
+    await fill(byName(page, /^Le —/), '2,1');
     await fill(byName(page, /^Xmax/), '14');
     await fill(byName(page, /^Sd/), '491');
 }

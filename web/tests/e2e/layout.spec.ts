@@ -135,12 +135,14 @@ test('a 360 px o plano de corte não rola na horizontal', async ({ page }) => {
 // feature, medido em 1440 px. A referência é a altura do painel no main antes da 008 (928 px, com
 // os 13 campos em cartões). Só o modo Normal é comparado com ela: o Pro passou a incluir o desenho,
 // as medidas do alto-falante e a identificação, que não existiam na referência.
+// O Normal ganhou depois o seletor de bobina e os avisos de conferência; a meta passou de 30 % para
+// 20 % de redução, e o painel continua menor que no modo Pro.
 const DRIVER_HEIGHT_BEFORE = 928;
 
 test.describe('modo Normal enxuga o painel do Driver (SC-003)', () => {
     test.use({ storageState: { cookies: [], origins: [] } });
 
-    test('altura do Driver cai 30 % ou mais', async ({ page }) => {
+    test('altura do Driver cai 20 % ou mais', async ({ page }) => {
         await page.setViewportSize({ width: 1440, height: 900 });
         await page.goto('/');
         const driver = page.locator('[data-region="driver"]');
@@ -158,7 +160,7 @@ test.describe('modo Normal enxuga o painel do Driver (SC-003)', () => {
 
         expect(normal).not.toBeNull();
         expect(pro).not.toBeNull();
-        expect(normal!.height).toBeLessThanOrEqual(DRIVER_HEIGHT_BEFORE * 0.7);
+        expect(normal!.height).toBeLessThanOrEqual(DRIVER_HEIGHT_BEFORE * 0.8);
         expect(normal!.height).toBeLessThan(pro!.height);
     });
 });

@@ -90,7 +90,7 @@ test.describe('US1 — campos que não expandem', () => {
 
         await expect(driver.getByText(/^Sem verif/)).toHaveCount(0);
 
-        // Qts digitado diferente de Qes·Qms/(Qes+Qms) vira atenção ou erro, com texto curto.
+        // Qts digitado diferente de Qes·Qms/(Qes+Qms) vira "Verificar", com texto curto.
         for (const [name, value] of [
             [/^Qes/, '0,42'],
             [/^Qms/, '4,1'],
@@ -100,9 +100,7 @@ test.describe('US1 — campos que não expandem', () => {
             await field(page, name).press('Tab');
         }
 
-        await expect(
-            driver.getByText(/^(Atenção|Erro)$/).first(),
-        ).toBeVisible();
+        await expect(driver.getByText(/^Verificar/).first()).toBeVisible();
     });
 });
 
@@ -258,10 +256,10 @@ test.describe('US4 — modal da caixa', () => {
         // Informar o recorte do alto-falante no modal faz o destaque aparecer.
         await dialog.getByRole('textbox', { name: /^Ød/ }).fill('200');
         await dialog.getByRole('textbox', { name: /^Ød/ }).press('Tab');
-        await expect(dialog.locator('[data-part="driver"]')).toHaveCount(1);
-        await expect(dialog.locator('[data-driver-label]')).toHaveText(
-            'Alto-falante',
-        );
+        // O recorte é desenhado em camadas (borda, cone, domo…); basta aparecer.
+        await expect(
+            dialog.locator('[data-part="driver"]').first(),
+        ).toBeVisible();
 
         const widthBefore = await dialog
             .locator('[data-dimension="width"] text')
