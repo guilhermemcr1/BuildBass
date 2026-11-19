@@ -10,7 +10,9 @@
         "parameters": "Thiele-Small parameters",
         "optionalFilled_one": "· {{count}} filled",
         "optionalFilled_other": "· {{count}} filled",
-        "originContact": "Source and contact"
+        "originContact": "Source and contact",
+        "dimensions": "Physical dimensions (optional)",
+        "dimensionsNote": "Frame, cone, cutout and depth measurements. With them, the catalog draws the speaker and the cut plan."
     },
     "fields": {
         "brand": "Manufacturer",
@@ -37,7 +39,9 @@
         "close": "Close",
         "retry": "Try again",
         "copy": "Copy protocol",
-        "copied": "Protocol copied"
+        "copied": "Protocol copied",
+        "back": "Back",
+        "typeInstead": "I'd rather type the fields"
     },
     "errors": {
         "summary_one": "Fix {{count}} field before submitting.",
@@ -106,17 +110,25 @@
             "server": "The server could not read the manual. What you typed was kept; try again."
         },
         "offline": "Offline: reading the manual needs the server.",
-        "badge": "Optional",
+        "badge": "AI",
         "subtitle": "AI reads the datasheet and fills the empty fields. You review everything before submitting.",
         "dropTitle": "Drag the manual PDF here",
         "dropOr": "or",
         "dropHint": "PDF up to 10 MB and 30 pages"
     },
     "choice": {
-        "title": "How do you want to submit?",
+        "title": "How do you want to add the speaker?",
+        "subtitle": "Every submission is reviewed by a moderator before it enters the catalog.",
         "manual": "Attach the manual (PDF)",
-        "manualHint": "AI reads the manual and fills in the fields; you review before sending.",
-        "fields": "Fill in the fields manually",
-        "fieldsHint": "The fields start empty for you to type the parameters."
+        "manualHint": "AI reads the spec sheet and fills in the parameters. You review everything before sending.",
+        "manualBadge": "Fastest",
+        "fields": "Type the parameters",
+        "fieldsHint": "Fill in Fs, Qts, Vas and the rest by hand, starting from empty fields.",
+        "fieldsBadge": "Full control",
+        "review": "Your project doesn't change: the submission is a copy."
+    },
+    "dims": {
+        "none": "Not specified",
+        "hint": "Letters follow the drawing. Use the manufacturer's spec sheet."
     }
 }

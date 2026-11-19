@@ -10,7 +10,9 @@
         "parameters": "Parâmetros Thiele-Small",
         "optionalFilled_one": "· {{count}} preenchido",
         "optionalFilled_other": "· {{count}} preenchidos",
-        "originContact": "Origem e contato"
+        "originContact": "Origem e contato",
+        "dimensions": "Dimensões físicas (opcional)",
+        "dimensionsNote": "Medidas do aro, cone, recorte e profundidade. Com elas, o catálogo monta o desenho do alto-falante e o plano de corte."
     },
     "fields": {
         "brand": "Fabricante",
@@ -37,7 +39,9 @@
         "close": "Fechar",
         "retry": "Tentar de novo",
         "copy": "Copiar protocolo",
-        "copied": "Protocolo copiado"
+        "copied": "Protocolo copiado",
+        "back": "Voltar",
+        "typeInstead": "Prefiro digitar os campos"
     },
     "errors": {
         "summary_one": "Corrija {{count}} campo antes de enviar.",
@@ -106,17 +110,25 @@
             "server": "O servidor não conseguiu ler o manual. O que você digitou foi mantido; tente de novo."
         },
         "offline": "Sem conexão: a leitura do manual precisa do servidor.",
-        "badge": "Opcional",
+        "badge": "IA",
         "subtitle": "A IA lê a ficha técnica e preenche os campos vazios. Você revisa tudo antes de enviar.",
         "dropTitle": "Arraste o PDF do manual até aqui",
         "dropOr": "ou",
         "dropHint": "PDF de até 10 MB e 30 páginas"
     },
     "choice": {
-        "title": "Como você quer enviar?",
+        "title": "Como você quer cadastrar o alto-falante?",
+        "subtitle": "Todo envio passa pela revisão de um moderador antes de entrar no catálogo.",
         "manual": "Anexar o manual (PDF)",
-        "manualHint": "A IA lê o manual e preenche os campos; você confere antes de enviar.",
-        "fields": "Preencher os campos manualmente",
-        "fieldsHint": "Os campos começam vazios para você digitar os parâmetros."
+        "manualHint": "A IA lê a ficha técnica e preenche os parâmetros. Você confere tudo antes de enviar.",
+        "manualBadge": "Mais rápido",
+        "fields": "Digitar os parâmetros",
+        "fieldsHint": "Preencha Fs, Qts, Vas e o resto à mão, com os campos vazios.",
+        "fieldsBadge": "Controle total",
+        "review": "Seu projeto não muda: o envio é uma cópia."
+    },
+    "dims": {
+        "none": "Não informado",
+        "hint": "As letras seguem o esquema. Use as medidas da ficha técnica do fabricante."
     }
 }

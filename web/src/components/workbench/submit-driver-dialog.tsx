@@ -57,7 +57,10 @@ export default function SubmitDriverDialog({
             ) : (
                 <>
                     <SubmitDriverForm
+                        key={path}
                         withManual={path === 'manual'}
+                        onBack={() => setPath(undefined)}
+                        onSkipManual={() => setPath('fields')}
                         form={submission.form}
                         onChange={submission.setForm}
                         trap={submission.trap}
@@ -79,7 +82,9 @@ export default function SubmitDriverDialog({
                         <div
                             role="alertdialog"
                             aria-labelledby="discard-title"
-                            className="flex flex-col gap-2 rounded-md border border-status-warn p-3"
+                            // Fica preso na base do diálogo, por cima do rodapé: com o formulário longo ele
+                            // ficava fora da vista e o diálogo parecia travado.
+                            className="sticky bottom-0 z-20 -mx-5 -mb-5 flex pop flex-col gap-2 rounded-b-lg border-t-2 border-status-warn bg-surface px-5 py-4 shadow-[0_-8px_24px_rgb(0_0_0/0.25)]"
                         >
                             <p
                                 id="discard-title"

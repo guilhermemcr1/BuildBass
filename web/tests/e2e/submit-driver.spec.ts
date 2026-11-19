@@ -44,9 +44,7 @@ async function mockSubmission(
 }
 
 async function chooseFields(dialog: Locator) {
-    await dialog
-        .getByRole('button', { name: /Preencher os campos manualmente/ })
-        .click();
+    await dialog.getByRole('button', { name: /Digitar os parâmetros/ }).click();
 }
 
 async function fillDialogDriver(dialog: Locator) {
@@ -81,6 +79,8 @@ test('enviar alto-falante: escolha, campos vazios mesmo com driver no projeto, p
     await expect(dialog.getByRole('textbox', { name: /^Fs/ })).toHaveValue('');
     await expect(dialog.getByRole('textbox', { name: /^Qts/ })).toHaveValue('');
     await fillDialogDriver(dialog);
+    // Medidas físicas opcionais seguem no envio.
+    await dialog.getByRole('textbox', { name: /^A — Diâmetro A/ }).fill('310');
 
     await dialog.getByRole('textbox', { name: /Fabricante/ }).fill('Exemplo');
     await dialog.getByRole('textbox', { name: /Modelo/ }).fill('EX-12');
@@ -103,6 +103,7 @@ test('enviar alto-falante: escolha, campos vazios mesmo com driver no projeto, p
         vas_m3: 0.085,
         locale: 'pt-BR',
         website: '',
+        drv_a_m: 0.31,
     });
 
     await page

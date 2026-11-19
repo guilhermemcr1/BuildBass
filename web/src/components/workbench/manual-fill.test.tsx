@@ -157,18 +157,6 @@ describe('ManualFill — preencher a partir do manual', () => {
         });
     });
 
-    test('mantém o que a pessoa já digitou', async () => {
-        await render();
-        await user.click(field(/Fabricante/));
-        await user.paste('Minha marca');
-
-        await attach(pdf());
-        await user.click(fillButton());
-
-        await waitFor(() => expect(field(/Modelo/)).toHaveValue('TR 620'));
-        expect(field(/Fabricante/)).toHaveValue('Minha marca');
-    });
-
     test('um pedido por vez enquanto lê', async () => {
         let finish: (result: ManualFillResult) => void = () => undefined;
         extract.mockReturnValue(
@@ -270,6 +258,9 @@ describe('ManualFill — revisar com apoio', () => {
     });
 });
 
+const typeInstead = () =>
+    screen.getByRole('button', { name: 'Prefiro digitar os campos' });
+
 describe('ManualFill — falhas nunca bloqueiam o envio', () => {
     test.each([
         ['unreadable', /não tem texto que possa ser lido/],
@@ -279,21 +270,21 @@ describe('ManualFill — falhas nunca bloqueiam o envio', () => {
         ['server', /servidor não conseguiu ler o manual/],
         ['verification', /não é um robô/],
     ] as const)(
-        '%s mostra a mensagem e mantém o formulário',
+        '%s mostra a mensagem e deixa tentar de novo ou digitar',
         async (error, message) => {
             extract.mockResolvedValue({ ok: false, error });
             await render();
-            await user.click(field(/Fabricante/));
-            await user.paste('Minha marca');
             await attach(pdf());
             await user.click(fillButton());
 
             expect(await screen.findByRole('alert')).toHaveTextContent(message);
-            expect(field(/Fabricante/)).toHaveValue('Minha marca');
+            expect(fillButton()).toBeEnabled();
+
+            await user.click(typeInstead());
+            expect(field(/Fabricante/)).toHaveValue('');
             expect(
                 screen.getByRole('button', { name: 'Enviar' }),
             ).toBeEnabled();
-            expect(fillButton()).toBeEnabled();
         },
     );
 
@@ -312,7 +303,7 @@ describe('ManualFill — falhas nunca bloqueiam o envio', () => {
         );
     });
 
-    test('indisponível trava o botão do manual até fechar, sem tocar no resto', async () => {
+    test('indisponível trava o botão do manual até fechar, mas deixa digitar', async () => {
         extract.mockResolvedValue({ ok: false, error: 'unavailable' });
         await render();
         await attach(pdf());
@@ -322,7 +313,6 @@ describe('ManualFill — falhas nunca bloqueiam o envio', () => {
             'O preenchimento por manual está indisponível agora.',
         );
         expect(fillButton()).toBeDisabled();
-        expect(screen.getByRole('button', { name: 'Enviar' })).toBeEnabled();
-        expect(field(/Fabricante/)).toBeEnabled();
+        expect(typeInstead()).toBeEnabled();
     });
 });

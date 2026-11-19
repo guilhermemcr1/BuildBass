@@ -1,4 +1,11 @@
-import { ChevronDown, Loader2, Send, WifiOff } from 'lucide-react';
+import {
+    ArrowLeft,
+    ChevronDown,
+    Loader2,
+    PencilLine,
+    Send,
+    WifiOff,
+} from 'lucide-react';
 import { useId, useState } from 'react';
 import {
     Button as AriaButton,
@@ -42,6 +49,7 @@ import { cn } from '@/lib/utils';
 import { usePreferences } from '@/stores/preferences';
 import { DriverTypeSelect } from './driver-type-select';
 import { ManualFill } from './manual-fill';
+import { SubmitDimensions } from './submit-dimensions';
 
 type SubmitDriverFormProps = {
     form: SubmissionForm;
@@ -51,8 +59,12 @@ type SubmitDriverFormProps = {
     errors: SubmissionErrors;
     failure: SubmitFailure | undefined;
     manual: ManualState;
-    // Mostra o anexo do manual (caminho "anexar manual" da tela de escolha).
+    // Caminho "anexar manual": só o anexo aparece até a IA preencher; depois vêm os campos.
     withManual?: boolean;
+    // Volta para a tela de escolha.
+    onBack?: () => void;
+    // Desiste do manual e vai direto para os campos.
+    onSkipManual?: () => void;
     // Campos com valor calculado dos outros (inserido sozinho, editável).
     auto: AutoKeys;
     onFillManual: (file: File) => void;
@@ -145,6 +157,8 @@ export function SubmitDriverForm({
     failure,
     manual,
     withManual = false,
+    onBack,
+    onSkipManual,
     auto,
     onFillManual,
     sending,
@@ -283,6 +297,45 @@ export function SubmitDriverForm({
     const optionalExpanded =
         optionalOpen ?? (optionalFilled > 0 || optionalIssues);
 
+    const back = onBack !== undefined && (
+        <Button
+            variant="quiet"
+            onPress={onBack}
+            disabled={sending || manual.status === 'reading'}
+            className="mr-auto"
+        >
+            <ArrowLeft aria-hidden="true" className="size-4" />
+            {t('actions.back')}
+        </Button>
+    );
+
+    // Antes da leitura, o caminho do manual mostra só o anexo: os campos aparecem preenchidos depois.
+    if (withManual && manual.status !== 'done') {
+        return (
+            <div className="flex swap flex-col gap-4">
+                <ManualFill
+                    manual={manual}
+                    offline={offline}
+                    sending={sending}
+                    onFill={onFillManual}
+                />
+                <div className="sticky bottom-0 z-10 -mx-5 -mb-5 flex flex-wrap items-center justify-end gap-2 rounded-b-lg border-t border-border bg-surface px-5 py-3">
+                    {back}
+                    {onSkipManual !== undefined && (
+                        <Button
+                            variant="secondary"
+                            onPress={onSkipManual}
+                            disabled={manual.status === 'reading'}
+                        >
+                            <PencilLine aria-hidden="true" className="size-4" />
+                            {t('actions.typeInstead')}
+                        </Button>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
     return (
         <form
             noValidate
@@ -290,7 +343,7 @@ export function SubmitDriverForm({
                 event.preventDefault();
                 onSubmit();
             }}
-            className="flex flex-col gap-4"
+            className="flex swap flex-col gap-4"
         >
             <p className="text-sm text-muted">{t('intro')}</p>
 
@@ -393,6 +446,18 @@ export function SubmitDriverForm({
 
             {section(
                 3,
+                t('sections.dimensions'),
+                <SubmitDimensions
+                    form={form}
+                    onChange={onChange}
+                    errors={errors}
+                    disabled={sending}
+                />,
+                t('sections.dimensionsNote'),
+            )}
+
+            {section(
+                4,
                 t('sections.originContact'),
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     {text('source', {
@@ -464,6 +529,7 @@ export function SubmitDriverForm({
 
             {/* Rodapé fixo na base do diálogo: enviar e cancelar ficam à mão mesmo com o formulário rolado. */}
             <div className="sticky bottom-0 z-10 -mx-5 -mb-5 flex flex-wrap items-center justify-end gap-2 rounded-b-lg border-t border-border bg-surface px-5 py-3">
+                {back}
                 <Button variant="quiet" onPress={onCancel} disabled={sending}>
                     {t('actions.cancel')}
                 </Button>

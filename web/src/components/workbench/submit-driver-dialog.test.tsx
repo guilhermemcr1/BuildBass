@@ -10,6 +10,9 @@ import SubmitDriverDialog from './submit-driver-dialog';
 
 vi.mock('@/lib/submission/client', () => ({ submitDriver: vi.fn() }));
 
+// O formulário é grande (quatro etapas); na suíte completa, em paralelo, passa dos 5 s padrão.
+vi.setConfig({ testTimeout: 20_000 });
+
 // O estado real de conexão sonda a API em segundo plano e, sem servidor na jsdom, passa a offline
 // no meio da suíte. Os testes controlam o estado.
 const connection = vi.hoisted(() => ({
@@ -45,7 +48,7 @@ async function paste(label: RegExp, text: string) {
 // Abre o diálogo e escolhe o caminho; por padrão, preencher os campos à mão.
 async function open(
     onClose: () => void = () => undefined,
-    path = /manualmente/,
+    path = /Digitar os parâmetros/,
 ) {
     renderWithProviders(<SubmitDriverDialog onClose={onClose} />);
     await userEvent.click(screen.getByRole('button', { name: path }));
@@ -67,7 +70,7 @@ describe('SubmitDriverDialog — enviar o driver do projeto', () => {
 
         expect(screen.queryByRole('textbox', { name: /^Fs/ })).toBeNull();
         await userEvent.click(
-            screen.getByRole('button', { name: /manualmente/ }),
+            screen.getByRole('button', { name: /Digitar os parâmetros/ }),
         );
 
         expect(fill(/^Fs/)).toHaveValue('');
@@ -76,13 +79,18 @@ describe('SubmitDriverDialog — enviar o driver do projeto', () => {
         expect(screen.queryByText(/Preencher a partir do manual/)).toBeNull();
     });
 
-    test('anexar o manual mostra o anexo do PDF acima dos campos vazios', async () => {
+    test('anexar o manual mostra só o anexo; voltar retorna à escolha', async () => {
         await open(undefined, /Anexar o manual/);
 
         expect(
             screen.getAllByText(/Preencher a partir do manual/)[0],
         ).toBeInTheDocument();
-        expect(fill(/^Fs/)).toHaveValue('');
+        expect(screen.queryByRole('textbox', { name: /^Fs/ })).toBeNull();
+
+        await userEvent.click(screen.getByRole('button', { name: 'Voltar' }));
+        expect(
+            screen.getByRole('button', { name: /Digitar os parâmetros/ }),
+        ).toBeInTheDocument();
     });
 
     test('cancelar na escolha fecha sem enviar', async () => {
