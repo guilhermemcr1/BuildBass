@@ -1321,3 +1321,53 @@ describe('recorte automático sempre dentro da peça', () => {
         }
     });
 });
+
+describe('recorte automático desvia dos fixos', () => {
+    test('duto automático não cai em cima do alto-falante fixado à mão', async () => {
+        const { placeCutouts } = await import('./plan');
+        const panel = { w_m: 0.5, h_m: 0.4 };
+        const web = 0.018;
+        const measures = [
+            {
+                kind: 'driver' as const,
+                measure: {
+                    shape: 'round' as const,
+                    w_m: 0.28,
+                    h_m: 0.28,
+                    pending: [],
+                },
+            },
+            {
+                kind: 'port' as const,
+                measure: {
+                    shape: 'rect' as const,
+                    w_m: 0.1,
+                    h_m: 0.32,
+                    pending: [],
+                },
+            },
+        ];
+        // O alto-falante foi arrastado para onde o duto automático ficaria (canto direito).
+        const { cutouts } = placeCutouts(panel, measures, web, 'front', [
+            { piece: 'front', kind: 'driver', n: 1, x_m: 0.33, y_m: 0.2 },
+        ]);
+        const driver = cutouts.find((c) => c.kind === 'driver')!;
+        const port = cutouts.find((c) => c.kind === 'port')!;
+
+        expect(driver.manual).toBe(true);
+        expect(port.manual).toBeUndefined();
+        // Sem encostar: a distância entre os centros passa da soma das metades mais a folga.
+        const apartX =
+            Math.abs(port.center!.x_m - driver.center!.x_m) >=
+            (0.1 + 0.28) / 2 + web - 1e-9;
+        const apartY =
+            Math.abs(port.center!.y_m - driver.center!.y_m) >=
+            (0.32 + 0.28) / 2 + web - 1e-9;
+        expect(apartX || apartY).toBe(true);
+        // E dentro da peça.
+        expect(port.center!.x_m - 0.05).toBeGreaterThanOrEqual(web - 1e-9);
+        expect(port.center!.x_m + 0.05).toBeLessThanOrEqual(
+            panel.w_m - web + 1e-9,
+        );
+    });
+});

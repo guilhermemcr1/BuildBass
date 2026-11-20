@@ -7,7 +7,12 @@ import type {
 } from '@/engine';
 import { portArea, twoChambers } from '@/engine';
 import { validateResolved } from './config';
-import { checkCutouts, layoutEdge, trianglePoints } from './layout';
+import {
+    checkCutouts,
+    cutoutExtent,
+    layoutEdge,
+    trianglePoints,
+} from './layout';
 import type { CutoutIssue, EdgeOptions } from './layout';
 import type { LayoutItem } from './layout';
 import type {
@@ -353,6 +358,11 @@ export function placeCutouts(
         };
     });
     const manual = cutouts.some((cutout) => cutout.manual === true);
+
+    if (manual) {
+        avoidManual(panel, cutouts, web_m);
+    }
+
     // Cateto maior que o vão interno: o duto de canto não cabe.
     const cornerTooBig = entries.some(
         ({ measure }) =>
@@ -371,6 +381,82 @@ export function placeCutouts(
             ...cornerClashes(cutouts, web_m),
         ],
     };
+}
+
+const AVOID_STEP_M = 0.005;
+
+// Recortes automáticos não podem cair em cima dos que têm posição manual (a fila automática é
+// montada sem eles). O que encostar num manual vai para o ponto livre mais perto do lugar
+// automático, com `web_m` de folga das bordas e dos outros recortes. Sem ponto livre, fica onde
+// está e a conferência acusa o choque.
+function avoidManual(
+    panel: { w_m: number; h_m: number },
+    cutouts: Cutout[],
+    web_m: number,
+): void {
+    type Box = { x: number; y: number; w: number; h: number };
+    const boxOf = (cutout: Cutout): Box | undefined => {
+        const { w, h } = cutoutExtent(cutout);
+
+        return cutout.center === undefined || w === undefined || h === undefined
+            ? undefined
+            : { x: cutout.center.x_m, y: cutout.center.y_m, w, h };
+    };
+    const clash = (a: Box, b: Box) =>
+        Math.abs(a.x - b.x) < (a.w + b.w) / 2 + web_m &&
+        Math.abs(a.y - b.y) < (a.h + b.h) / 2 + web_m;
+    const fixed: Box[] = cutouts
+        .filter((cutout) => cutout.manual === true)
+        .map(boxOf)
+        .filter((box): box is Box => box !== undefined);
+
+    for (const cutout of cutouts) {
+        if (cutout.manual === true || cutout.corner !== undefined) {
+            continue;
+        }
+
+        const box = boxOf(cutout);
+
+        if (box === undefined) {
+            continue;
+        }
+
+        if (fixed.some((other) => clash(box, other))) {
+            const [minX, maxX] = [
+                web_m + box.w / 2,
+                panel.w_m - web_m - box.w / 2,
+            ];
+            const [minY, maxY] = [
+                web_m + box.h / 2,
+                panel.h_m - web_m - box.h / 2,
+            ];
+            let best: { x: number; y: number; d: number } | undefined;
+
+            for (let x = minX; x <= maxX + 1e-9; x += AVOID_STEP_M) {
+                for (let y = minY; y <= maxY + 1e-9; y += AVOID_STEP_M) {
+                    const candidate = { ...box, x, y };
+                    const d = Math.hypot(x - box.x, y - box.y);
+
+                    if (
+                        (best === undefined || d < best.d) &&
+                        !fixed.some((other) => clash(candidate, other))
+                    ) {
+                        best = { x, y, d };
+                    }
+                }
+            }
+
+            if (best !== undefined) {
+                const round = (m: number) => Math.round(m * 1000) / 1000;
+
+                cutout.center = { x_m: round(best.x), y_m: round(best.y) };
+                box.x = cutout.center.x_m;
+                box.y = cutout.center.y_m;
+            }
+        }
+
+        fixed.push(box);
+    }
 }
 
 // Tábuas diagonais dos dutos de canto: uma por duto, com a largura da hipotenusa (face de dentro;

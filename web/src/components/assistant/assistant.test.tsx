@@ -334,4 +334,36 @@ describe('Assistente', () => {
             /A largura externa precisa passar de 36,0 mm/,
         );
     });
+
+    test('o volume muda a caixa enquanto digita, antes de sair do campo', async () => {
+        const user = userEvent.setup();
+        typeMinimum();
+        renderWithProviders(<Assistant onClose={() => undefined} />);
+
+        const vb = screen.getByRole('textbox', { name: /^Vb/ });
+        await user.clear(vb);
+        await user.type(vb, '42');
+
+        // Ainda com o foco no campo: o projeto (e a caixa desenhada) já está em 42 L.
+        expect(document.activeElement).toBe(vb);
+        await vi.waitFor(() =>
+            expect(activeProjectStore().getState().data.box.vb_m3).toBeCloseTo(
+                0.042,
+                6,
+            ),
+        );
+        // O texto não é reformatado no meio da digitação.
+        expect(vb).toHaveValue('42');
+    });
+
+    test('a dutada mostra a profundidade do duto, com a trava na Fb ou no comprimento', async () => {
+        const user = userEvent.setup();
+        typeMinimum();
+        renderWithProviders(<Assistant onClose={() => undefined} />);
+
+        await user.click(screen.getByRole('radio', { name: 'Dutada' }));
+        expect(
+            screen.getByRole('textbox', { name: /Profundidade do duto/ }),
+        ).toBeInTheDocument();
+    });
 });

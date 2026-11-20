@@ -10,6 +10,7 @@ import { SliderField } from '@/components/ui/slider-field';
 import { ValueTile } from '@/components/ui/value-tile';
 import { AiSuggestDialog } from '@/components/workbench/ai-suggest-dialog';
 import { EngineWarnings } from '@/components/workbench/engine-warnings';
+import { PortDepthField } from '@/components/workbench/port-depth';
 import { reshape } from '@/components/workbench/port-fields';
 import { useParameterField } from '@/components/workbench/use-parameter-field';
 import { resolveCutPlan } from '@/cutplan';
@@ -178,7 +179,11 @@ export function StepBox() {
                         ]}
                     />
                     {mode === 'volume' ? (
-                        <SliderField {...volume} {...VB_SLIDER} />
+                        <SliderField
+                            {...volume}
+                            {...VB_SLIDER}
+                            onLiveChangeSi={volume.onChangeSi}
+                        />
                     ) : (
                         <ExternalSize />
                     )}
@@ -196,7 +201,11 @@ export function StepBox() {
                         <p className="text-xs text-muted">
                             {t('box.tuning.hint')}
                         </p>
-                        <SliderField {...tuning} {...FB_SLIDER} />
+                        <SliderField
+                            {...tuning}
+                            {...FB_SLIDER}
+                            onLiveChangeSi={tuning.onChangeSi}
+                        />
                     </Question>
                 )}
                 {boxType === 'vented' && (
@@ -257,6 +266,9 @@ export function StepBox() {
                             )}
                             <ParameterField {...portCount} layout="stacked" />
                         </div>
+                        {/* Profundidade do duto: sai da sintonia (trava na Fb) ou é digitada
+                            (trava no comprimento, e a Fb sai dela). */}
+                        <PortDepthField port={port} rear={false} />
                         {port.shape === 'triangle' && (
                             <p className="text-xs text-muted">
                                 {t('box.port.triangleHint')}
@@ -399,7 +411,9 @@ function ExternalSize() {
             ? cutPlan.plan.dimensions.external
             : DEFAULT_EXTERNAL;
 
-    const write = (axis: 'w_m' | 'h_m' | 'd_m', si: number) => {
+    // `quiet`: prévia ao vivo, a cada tecla. Medida intermediária ("4" a caminho de "450") não
+    // acusa erro; o aviso só vem ao confirmar o campo.
+    const write = (axis: 'w_m' | 'h_m' | 'd_m', si: number, quiet = false) => {
         const wall = 2 * resolveCutPlan(config).thickness_m;
         const next = { ...external, [axis]: si };
         const internal = {
@@ -412,7 +426,9 @@ function ExternalSize() {
         );
 
         if (small !== undefined) {
-            setError({ kind: 'tooSmall', axis: small, min_m: wall });
+            if (!quiet) {
+                setError({ kind: 'tooSmall', axis: small, min_m: wall });
+            }
             return;
         }
 
@@ -424,7 +440,11 @@ function ExternalSize() {
 
             return result;
         });
-        setError(changed ? undefined : { kind: 'invalid' });
+        if (changed) {
+            setError(undefined);
+        } else if (!quiet) {
+            setError({ kind: 'invalid' });
+        }
     };
     const lengthUnit: UnitId =
         fieldUnits.dim_w_m ?? defaultUnitFor('length', unitSystem);
@@ -446,6 +466,7 @@ function ExternalSize() {
                             valueSi={external[axis]}
                             unit={unit}
                             onUnitChange={(next) => setFieldUnit(key, next)}
+                            onLiveChangeSi={(si) => write(axis, si, true)}
                             onChangeSi={(si) => {
                                 if (si !== undefined) {
                                     write(axis, si);
@@ -455,7 +476,11 @@ function ExternalSize() {
                     );
                 })}
             </div>
-            <ParameterField {...thickness} layout="row" />
+            <ParameterField
+                {...thickness}
+                onLiveChangeSi={thickness.onChangeSi}
+                layout="row"
+            />
             <p className="text-xs text-muted">{t('box.size.externalHint')}</p>
             {error !== undefined && (
                 <div role="alert">

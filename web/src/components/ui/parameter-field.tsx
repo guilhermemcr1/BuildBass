@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { NumberParser } from '@internationalized/number';
+import { useRef, useState } from 'react';
 import {
     FieldError,
     Focusable,
@@ -48,6 +49,9 @@ type ParameterFieldProps = {
     disabled?: boolean;
     // Prefixo só para o leitor de tela, quando o mesmo campo se repete (ex.: "Item 2" do estoque).
     labelContext?: string;
+    // Valor válido a cada tecla, antes de sair do campo (prévia ao vivo, ex.: a caixa em 3D). O
+    // campo continua mostrando o que a pessoa digita; `onChangeSi` segue valendo ao confirmar.
+    onLiveChangeSi?: (si: number) => void;
     className?: string;
 };
 
@@ -74,6 +78,7 @@ export function ParameterField({
     requirement,
     disabled = false,
     labelContext,
+    onLiveChangeSi,
     className,
 }: ParameterFieldProps) {
     const { t } = useTranslation(['parameters', 'common']);
@@ -102,12 +107,51 @@ export function ParameterField({
     const derived = valueSi === undefined && derivedSi !== undefined;
     const shownSi = valueSi ?? derivedSi;
     const displayed = shownSi === undefined ? Number.NaN : fromSi(shownSi, unit);
+    // Com prévia ao vivo, o valor do campo fica parado enquanto ele tem o foco: o projeto muda a
+    // cada tecla, mas o texto não é reformatado no meio da digitação.
+    const [frozen, setFrozen] = useState<number | null>(null);
+    const pending = useRef<number | null>(null);
+    const frame = useRef<number | null>(null);
+
+    const live = (text: string) => {
+        if (onLiveChangeSi === undefined) {
+            return;
+        }
+
+        const value = new NumberParser(locale, formatOptionsFor(unit)).parse(
+            text,
+        );
+
+        if (!Number.isFinite(value)) {
+            return;
+        }
+
+        const si = toSi(value, unit);
+
+        if (!withinRange(parameter, si)) {
+            return;
+        }
+
+        // Uma atualização por quadro, mesmo digitando rápido.
+        pending.current = si;
+
+        if (frame.current === null) {
+            frame.current = requestAnimationFrame(() => {
+                frame.current = null;
+
+                if (pending.current !== null) {
+                    onLiveChangeSi(pending.current);
+                }
+            });
+        }
+    };
 
     // A ajuda abre também pelo campo numérico (hover ou foco); a descrição abaixo continua
     // `sr-only` para o leitor de tela, então o campo nunca muda de tamanho ao receber foco.
     const input = (
         <Input
             ref={entryRef}
+            onChange={(event) => live(event.currentTarget.value)}
             placeholder={
                 // Fora do layout de linha a caixa é estreita (até três por linha) e só comporta o
                 // número; o "Ex." tomaria o lugar dele.
@@ -127,7 +171,12 @@ export function ParameterField({
 
     return (
         <NumberField
-            value={displayed}
+            value={frozen ?? displayed}
+            onFocusChange={(focused) => {
+                if (onLiveChangeSi !== undefined) {
+                    setFrozen(focused ? displayed : null);
+                }
+            }}
             onChange={(value) => {
                 if (!Number.isFinite(value)) {
                     setOutOfRange(false);

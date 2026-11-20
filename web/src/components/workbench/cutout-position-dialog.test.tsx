@@ -136,16 +136,14 @@ describe('CutoutPositionDialog', () => {
         );
     });
 
-    test('"Voltar ao automático" e "Todos automáticos" apagam as posições da peça', async () => {
+    test('voltar ao automático só aparece quando há recorte fixo, e os automáticos desviam do fixo', async () => {
         renderDialog();
 
-        const reset = screen.getByRole('button', {
-            name: 'Voltar ao automático',
-        });
-        const all = screen.getByRole('button', { name: 'Todos automáticos' });
-
-        expect(reset).toBeDisabled();
-        expect(all).toBeDisabled();
+        // Tudo automático: nada para voltar, e a situação está escrita.
+        expect(
+            screen.queryByRole('button', { name: /ao automático/ }),
+        ).not.toBeInTheDocument();
+        expect(screen.getByText('Automático')).toBeInTheDocument();
 
         act(() =>
             screen.getByRole('button', { name: /^Alto-falante 1/ }).focus(),
@@ -155,15 +153,21 @@ describe('CutoutPositionDialog', () => {
         await userEvent.keyboard('{ArrowLeft}');
 
         expect(positions()).toHaveLength(2);
+        expect(screen.getByText('Fixo')).toBeInTheDocument();
 
         await userEvent.click(
-            screen.getByRole('button', { name: 'Voltar ao automático' }),
+            screen.getByRole('button', {
+                name: 'Voltar Duto 1 ao automático',
+            }),
         );
 
         expect(positions()?.map(({ kind }) => kind)).toEqual(['driver']);
 
+        // Com o duto automático e o alto-falante fixo, sobra "voltar o recorte fixo".
         await userEvent.click(
-            screen.getByRole('button', { name: 'Todos automáticos' }),
+            screen.getByRole('button', {
+                name: 'Voltar o recorte fixo ao automático',
+            }),
         );
 
         expect(positions()).toBeUndefined();

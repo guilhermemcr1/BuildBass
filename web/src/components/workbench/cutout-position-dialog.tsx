@@ -1,3 +1,4 @@
+import { Pin, RotateCcw, Wand2 } from 'lucide-react';
 import { useRef, useState } from 'react';
 import type { KeyboardEvent, PointerEvent } from 'react';
 import { useLocale } from 'react-aria-components';
@@ -139,6 +140,12 @@ function Editor({ piece, role }: { piece: Piece; role: CutoutPiece }) {
     const selected =
         movable.find((cutout) => sameRef(cutout.ref, selectedRef)) ??
         movable[0];
+    const manualCount = movable.filter(
+        (cutout) => cutout.manual === true,
+    ).length;
+    // "Voltar todos" só quando faz algo além do botão do recorte escolhido.
+    const showResetAll =
+        manualCount > 1 || (manualCount === 1 && selected?.manual !== true);
     const width = piece.w_m * MM;
     const height = piece.h_m * MM;
     const size = Math.max(width, height) * 0.03;
@@ -385,7 +392,9 @@ function Editor({ piece, role }: { piece: Piece; role: CutoutPiece }) {
                                     fontSize={size}
                                     className="pointer-events-none fill-foreground"
                                 >
-                                    {name}
+                                    {cutout.manual === true
+                                        ? `${name} · ${t('position.fixedShort')}`
+                                        : name}
                                 </text>
                             </g>
                         );
@@ -406,50 +415,72 @@ function Editor({ piece, role }: { piece: Piece; role: CutoutPiece }) {
                 )}
             </div>
             <div className="flex flex-col gap-3 md:w-72">
-                <h3 className="text-section">
-                    {selected === undefined
-                        ? ''
-                        : `${cutoutName(selected.ref, t)} · ${t(
-                              selected.manual === true
-                                  ? 'position.manual'
-                                  : 'position.auto',
-                          )}`}
-                </h3>
+                {selected !== undefined && (
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                        <h3 className="text-sm font-semibold">
+                            {cutoutName(selected.ref, t)}
+                        </h3>
+                        <PositionChip manual={selected.manual === true} />
+                    </div>
+                )}
+                <p className="text-xs text-muted">
+                    {t(
+                        selected?.manual === true
+                            ? 'position.manualHint'
+                            : 'position.autoHint',
+                    )}
+                </p>
                 <ParameterField {...field('x_m')} />
                 <ParameterField {...field('y_m')} />
-                <div className="flex flex-wrap gap-2">
-                    <Button
-                        disabled={selected?.manual !== true}
-                        onPress={() => {
-                            if (selected === undefined) {
-                                return;
-                            }
-
-                            apply((data) =>
-                                clearCutoutPosition(data, selected.ref),
-                            );
-                            setAnnouncement(
-                                t('position.resetDone', {
+                {/* Só aparece o que dá para fazer agora: voltar este recorte (se ele está fixo) e
+                    voltar todos (se há mais de um fixo na peça). */}
+                {(selected?.manual === true || showResetAll) && (
+                    <div className="flex flex-col gap-2 border-t border-border pt-3">
+                        {selected?.manual === true && (
+                            <Button
+                                onPress={() => {
+                                    apply((data) =>
+                                        clearCutoutPosition(data, selected.ref),
+                                    );
+                                    setAnnouncement(
+                                        t('position.resetDone', {
+                                            cutout: cutoutName(selected.ref, t),
+                                        }),
+                                    );
+                                }}
+                                className="justify-start"
+                            >
+                                <Wand2
+                                    aria-hidden="true"
+                                    className="size-4 shrink-0"
+                                />
+                                {t('position.reset', {
                                     cutout: cutoutName(selected.ref, t),
-                                }),
-                            );
-                        }}
-                    >
-                        {t('position.reset')}
-                    </Button>
-                    <Button
-                        variant="quiet"
-                        disabled={
-                            !movable.some((cutout) => cutout.manual === true)
-                        }
-                        onPress={() => {
-                            apply((data) => clearPiecePositions(data, role));
-                            setAnnouncement(t('position.resetAllDone'));
-                        }}
-                    >
-                        {t('position.resetAll')}
-                    </Button>
-                </div>
+                                })}
+                            </Button>
+                        )}
+                        {showResetAll && (
+                            <Button
+                                variant="quiet"
+                                onPress={() => {
+                                    apply((data) =>
+                                        clearPiecePositions(data, role),
+                                    );
+                                    setAnnouncement(t('position.resetAllDone'));
+                                }}
+                                className="justify-start"
+                            >
+                                <RotateCcw
+                                    aria-hidden="true"
+                                    className="size-4 shrink-0"
+                                />
+                                {t('position.resetAll', {
+                                    count: manualCount,
+                                })}
+                            </Button>
+                        )}
+                    </div>
+                )}
                 {warnings.length > 0 && (
                     <ul
                         className="flex flex-col gap-1.5"
@@ -488,6 +519,27 @@ function Editor({ piece, role }: { piece: Piece; role: CutoutPiece }) {
                 </p>
             </div>
         </div>
+    );
+}
+
+// Situação do recorte em palavras e ícone: automático (o plano escolhe e acompanha a caixa) ou
+// fixo (a pessoa posicionou e o lugar não muda sozinho).
+function PositionChip({ manual }: { manual: boolean }) {
+    const { t } = useTranslation('cutplan');
+    const Icon = manual ? Pin : Wand2;
+
+    return (
+        <span
+            className={cn(
+                'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold',
+                manual
+                    ? 'border-accent/50 bg-accent/12 text-accent-soft'
+                    : 'border-border bg-raised text-muted',
+            )}
+        >
+            <Icon aria-hidden="true" className="size-3" />
+            {t(manual ? 'position.manualChip' : 'position.autoChip')}
+        </span>
     );
 }
 
