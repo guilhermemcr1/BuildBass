@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -18,18 +19,30 @@ export function CloseProjectDialog({
     onCancel,
 }: CloseProjectDialogProps) {
     const { t } = useTranslation('project');
+    // O projeto some assim que é fechado, mas o diálogo ainda anima a saída: o texto guarda o
+    // último nome em vez de piscar com um nome vazio.
+    const lastName = useRef('');
+
+    if (name !== null) {
+        lastName.current = name;
+    }
 
     return (
         <ConfirmDialog
             title={t('dialogs.close.title')}
             open={name !== null}
             onCancel={onCancel}
+            wide
             actions={
                 <>
-                    <Button variant="quiet" onPress={onCancel}>
+                    <Button
+                        variant="quiet"
+                        onPress={onCancel}
+                        className="sm:mr-auto"
+                    >
                         {t('dialogs.close.cancel')}
                     </Button>
-                    <Button onPress={onDiscard}>
+                    <Button onPress={onDiscard} className="text-status-error">
                         {t('dialogs.close.discard')}
                     </Button>
                     <Button
@@ -42,7 +55,7 @@ export function CloseProjectDialog({
                 </>
             }
         >
-            {t('dialogs.close.body', { name: name ?? '' })}
+            {t('dialogs.close.body', { name: lastName.current })}
         </ConfirmDialog>
     );
 }

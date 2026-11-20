@@ -19,6 +19,8 @@ type ConfirmDialogProps = {
     // `danger` para apagar ou descartar: ícone de lixeira e destaque de alerta.
     tone?: 'warn' | 'danger';
     icon?: LucideIcon;
+    // Mais largo quando há três ações, para caberem numa linha só.
+    wide?: boolean;
 };
 
 // Confirmação curta, sempre por cima de tudo (inclusive de outro diálogo): ícone, título, texto e
@@ -31,6 +33,7 @@ export function ConfirmDialog({
     onCancel,
     tone = 'warn',
     icon,
+    wide = false,
 }: ConfirmDialogProps) {
     const Icon = icon ?? (tone === 'danger' ? Trash2 : AlertTriangle);
 
@@ -45,7 +48,12 @@ export function ConfirmDialog({
             isDismissable
             className="overlay-motion fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4 backdrop-blur-[2px]"
         >
-            <Modal className="modal-motion w-full max-w-sm rounded-xl border border-border bg-surface text-foreground shadow-2xl">
+            <Modal
+                className={cn(
+                    'modal-motion w-full rounded-xl border border-border bg-surface text-foreground shadow-2xl',
+                    wide ? 'max-w-md' : 'max-w-sm',
+                )}
+            >
                 <AriaDialog
                     role="alertdialog"
                     className="flex flex-col gap-4 p-5 outline-none"
@@ -74,7 +82,9 @@ export function ConfirmDialog({
                             </div>
                         </div>
                     </div>
-                    <div className="flex flex-wrap justify-end gap-2">
+                    {/* No celular, um botão por linha com o principal em cima; do `sm` em diante,
+                        lado a lado à direita (o primeiro pode ir à esquerda com `sm:mr-auto`). */}
+                    <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:items-center sm:justify-end [&>*]:w-full sm:[&>*]:w-auto">
                         {actions}
                     </div>
                 </AriaDialog>

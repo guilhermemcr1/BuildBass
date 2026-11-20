@@ -178,8 +178,23 @@ export function ParameterField({
                 }
             }}
             onChange={(value) => {
+                // Confirmou (Enter ou saída): o valor congelado passa a ser o confirmado. Sem
+                // isso, o Enter devolveria ao campo o valor de antes da digitação, e a saída
+                // seguinte gravaria esse valor antigo por cima do novo.
+                const settle = (shown: number) => {
+                    if (frozen !== null) {
+                        setFrozen(shown);
+                    }
+                };
+
+                if (frame.current !== null) {
+                    cancelAnimationFrame(frame.current);
+                    frame.current = null;
+                }
+
                 if (!Number.isFinite(value)) {
                     setOutOfRange(false);
+                    settle(Number.NaN);
                     onChangeSi(undefined);
                     return;
                 }
@@ -193,6 +208,7 @@ export function ParameterField({
                     Math.abs(value - displayed) <= step / 2
                 ) {
                     setOutOfRange(false);
+                    settle(displayed);
                     return;
                 }
 
@@ -202,10 +218,12 @@ export function ParameterField({
                 // mostra o motivo.
                 if (!withinRange(parameter, si)) {
                     setOutOfRange(true);
+                    settle(displayed);
                     return;
                 }
 
                 setOutOfRange(false);
+                settle(value);
                 onChangeSi(si);
             }}
             formatOptions={formatOptionsFor(unit)}

@@ -356,6 +356,34 @@ describe('Assistente', () => {
         expect(vb).toHaveValue('42');
     });
 
+    test('Enter confirma o valor digitado, e sair depois não volta ao antigo', async () => {
+        const user = userEvent.setup();
+        typeMinimum();
+        renderWithProviders(<Assistant onClose={() => undefined} />);
+
+        const vb = screen.getByRole('textbox', { name: /^Vb/ });
+        await user.clear(vb);
+        await user.type(vb, '42{Enter}');
+
+        expect(vb).toHaveValue('42,0');
+        await user.tab();
+        expect(activeProjectStore().getState().data.box.vb_m3).toBeCloseTo(
+            0.042,
+            6,
+        );
+        expect(vb).toHaveValue('42,0');
+
+        await user.click(screen.getByRole('radio', { name: 'Sei as medidas' }));
+        const height = screen.getAllByRole('textbox', {
+            name: /^Medida externa/,
+        })[1];
+        await user.clear(height);
+        await user.type(height, '555{Enter}');
+        expect(height).toHaveValue('555,0');
+        await user.tab();
+        expect(height).toHaveValue('555,0');
+    });
+
     test('a dutada mostra a profundidade do duto, com a trava na Fb ou no comprimento', async () => {
         const user = userEvent.setup();
         typeMinimum();
