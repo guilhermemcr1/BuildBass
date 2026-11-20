@@ -231,6 +231,27 @@ describe('ParameterField', () => {
         expect(onChangeSi).not.toHaveBeenCalled();
     });
 
+    test('Tab pula a unidade e vai ao próximo campo; Alt+↓ abre a lista de unidades', async () => {
+        renderWithProviders(
+            <>
+                <Harness parameter="vas_m3" initialSi={0.085} initialUnit="L" />
+                <Harness parameter="fs_hz" initialSi={28} initialUnit="Hz" />
+            </>,
+        );
+        const [vas, fs] = screen.getAllByRole('textbox');
+
+        await userEvent.click(vas);
+        await userEvent.tab();
+        expect(fs).toHaveFocus();
+
+        await userEvent.click(vas);
+        await userEvent.keyboard('{Alt>}{ArrowDown}{/Alt}');
+        await userEvent.click(
+            await screen.findByRole('menuitemradio', { name: 'ft³' }),
+        );
+        expect(vas).toHaveValue('3,00');
+    });
+
     test('a explicação do parâmetro é a descrição acessível do campo', () => {
         renderWithProviders(<Harness parameter="fs_hz" initialUnit="Hz" />);
 

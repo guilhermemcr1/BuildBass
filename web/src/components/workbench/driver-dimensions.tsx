@@ -8,7 +8,7 @@ import type { ParameterKey } from '@/lib/parameters';
 import { readField, writeDriverChoice } from '@/lib/project/fields';
 import { DRIVER_PISTONS, DRIVER_SHAPES } from '@/lib/project/types';
 import type { DriverPiston, DriverShape } from '@/lib/project/types';
-import { DriverDrawing } from './driver-drawing';
+import { DriverDrawing, useDrawingFocus } from './driver-drawing';
 import { useParameterField } from './use-parameter-field';
 
 function DimensionField({ parameter }: { parameter: ParameterKey }) {
@@ -28,6 +28,7 @@ export function DriverDimensions({ open = false }: { open?: boolean }) {
             ).length,
     );
     const apply = useActiveProject((state) => state.apply);
+    const focus = useDrawingFocus();
     const shape: DriverShape = dims?.shape ?? 'round';
     const piston: DriverPiston = dims?.piston ?? 'cone';
     // O segundo lado só existe no recorte retangular.
@@ -73,12 +74,16 @@ export function DriverDimensions({ open = false }: { open?: boolean }) {
                     }))}
                 />
             </div>
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1.5" {...focus.handlers}>
                 {keys.map((key) => (
                     <DimensionField key={key} parameter={key} />
                 ))}
             </div>
-            <DriverDrawing shape={shape} piston={piston} />
+            <DriverDrawing
+                shape={shape}
+                piston={piston}
+                active={focus.active}
+            />
             <p className="text-[11px] leading-4 text-muted">{t('dims.hint')}</p>
         </>
     );

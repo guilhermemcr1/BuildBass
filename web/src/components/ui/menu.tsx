@@ -25,6 +25,10 @@ type MenuProps<T extends string> = {
     selected?: T;
     onAction: (id: T) => void;
     triggerClassName?: string;
+    // Fora da ordem do Tab (ex.: a unidade ao lado de um campo, aberta por Alt+↓ no campo).
+    excludeFromTabOrder?: boolean;
+    isOpen?: boolean;
+    onOpenChange?: (open: boolean) => void;
 };
 
 export function Menu<T extends string>({
@@ -35,10 +39,19 @@ export function Menu<T extends string>({
     selected,
     onAction,
     triggerClassName,
+    excludeFromTabOrder = false,
+    isOpen,
+    onOpenChange,
 }: MenuProps<T>) {
+    // O react-aria aceita `excludeFromTabOrder` no botão (useFocusable), só não está nos tipos.
+    const tabOrder = excludeFromTabOrder
+        ? ({ excludeFromTabOrder: true } as object)
+        : {};
+
     return (
-        <MenuTrigger>
+        <MenuTrigger isOpen={isOpen} onOpenChange={onOpenChange}>
             <AriaButton
+                {...tabOrder}
                 // Fora de qualquer slot: dentro de um NumberField o botão herdaria os slots
                 // de incremento/decremento.
                 slot={null}

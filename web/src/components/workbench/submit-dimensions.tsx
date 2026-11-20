@@ -14,7 +14,7 @@ import type {
 import { defaultUnitFor } from '@/lib/units/quantities';
 import type { UnitId } from '@/lib/units/quantities';
 import { usePreferences } from '@/stores/preferences';
-import { DriverDrawing } from './driver-drawing';
+import { DriverDrawing, useDrawingFocus } from './driver-drawing';
 
 type SubmitDimensionsProps = {
     form: SubmissionForm;
@@ -32,6 +32,7 @@ export function SubmitDimensions({
     disabled,
 }: SubmitDimensionsProps) {
     const { t } = useTranslation(['submission', 'workbench']);
+    const focus = useDrawingFocus();
     const unitSystem = usePreferences((state) => state.unitSystem);
     const [units, setUnits] = useState<Partial<Record<DimensionKey, UnitId>>>(
         {},
@@ -96,7 +97,7 @@ export function SubmitDimensions({
                         ]}
                     />
                 </div>
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-1.5" {...focus.handlers}>
                     {keys.map((key) => (
                         <ParameterField
                             key={key}
@@ -130,7 +131,11 @@ export function SubmitDimensions({
                 </div>
             </div>
             <div className="flex flex-col gap-2 self-start rounded-md border border-border bg-surface p-3">
-                <DriverDrawing shape={shape} piston={piston} />
+                <DriverDrawing
+                    shape={shape}
+                    piston={piston}
+                    active={focus.active}
+                />
                 <p className="text-[11px] leading-4 text-muted">
                     {t('dims.hint')}
                 </p>

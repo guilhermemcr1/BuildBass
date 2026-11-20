@@ -110,6 +110,9 @@ export function ParameterField({
     // Com prévia ao vivo, o valor do campo fica parado enquanto ele tem o foco: o projeto muda a
     // cada tecla, mas o texto não é reformatado no meio da digitação.
     const [frozen, setFrozen] = useState<number | null>(null);
+    const unitMenu =
+        units.length > 1 && onUnitChange !== undefined && !disabled;
+    const [unitMenuOpen, setUnitMenuOpen] = useState(false);
     const pending = useRef<number | null>(null);
     const frame = useRef<number | null>(null);
 
@@ -152,6 +155,14 @@ export function ParameterField({
         <Input
             ref={entryRef}
             onChange={(event) => live(event.currentTarget.value)}
+            // A unidade fica fora do Tab (o Tab vai direto ao próximo campo); Alt+↓ abre a lista.
+            aria-keyshortcuts={unitMenu ? 'Alt+ArrowDown' : undefined}
+            onKeyDown={(event) => {
+                if (unitMenu && event.altKey && event.key === 'ArrowDown') {
+                    event.preventDefault();
+                    setUnitMenuOpen(true);
+                }
+            }}
             placeholder={
                 // Fora do layout de linha a caixa é estreita (até três por linha) e só comporta o
                 // número; o "Ex." tomaria o lugar dele.
@@ -306,7 +317,7 @@ export function ParameterField({
                             <Focusable>{input}</Focusable>
                         </Tooltip>
                     )}
-                    {units.length > 1 && onUnitChange !== undefined && !disabled ? (
+                    {unitMenu ? (
                         <div className="flex shrink-0 items-center border-l border-border bg-background/60">
                         <Menu<UnitId>
                             label={t('common:units.change', {
@@ -323,6 +334,9 @@ export function ParameterField({
                             }))}
                             selected={unit}
                             onAction={onUnitChange}
+                            excludeFromTabOrder
+                            isOpen={unitMenuOpen}
+                            onOpenChange={setUnitMenuOpen}
                             triggerClassName={cn(
                                 'flex h-full items-center justify-center text-xs text-muted motion-safe:transition-colors data-[hovered]:bg-raised data-[hovered]:text-foreground',
                                 stacked ? 'min-w-8 px-1.5' : 'min-w-9 px-2',

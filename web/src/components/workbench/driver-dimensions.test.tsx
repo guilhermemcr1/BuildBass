@@ -86,4 +86,18 @@ describe('DriverDimensions', () => {
         expect(data().driverDims).toBeUndefined();
         expect(screen.getByText(/Fora da faixa aceita/)).toBeInTheDocument();
     });
+
+    test('focar uma medida destaca a cota dela no esquema', async () => {
+        const { container } = renderWithProviders(<DriverDimensions />);
+        const active = () =>
+            container
+                .querySelector('[data-dim][data-active]')
+                ?.getAttribute('data-dim');
+
+        expect(active()).toBeUndefined();
+        await userEvent.click(field(/^F —/));
+        expect(active()).toBe('F');
+        await userEvent.tab();
+        expect(active()).toBe('G');
+    });
 });
