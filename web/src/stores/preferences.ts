@@ -25,13 +25,18 @@ type PreferencesState = {
     sidebarCollapsed: boolean;
     // O assistente já abriu sozinho uma vez (primeira visita); depois só pelo botão da barra.
     assistantSeen: boolean;
+    // Medidas da caixa digitadas por dentro ou por fora; ausente = o padrão de cada tela.
+    boxMeasure?: BoxMeasure;
     setTheme: (theme: ThemeChoice) => void;
     setLocale: (locale: Locale) => void;
     setUnitSystem: (unitSystem: UnitSystem) => void;
     setMode: (mode: Mode) => void;
     setSidebarCollapsed: (sidebarCollapsed: boolean) => void;
     setAssistantSeen: () => void;
+    setBoxMeasure: (boxMeasure: BoxMeasure) => void;
 };
+
+export type BoxMeasure = 'internal' | 'external';
 
 // Janela privada ou cookies bloqueados fazem o localStorage lançar erro; nesse caso as escolhas
 // valem só na sessão, em memória, sem mostrar erro ao usuário.
@@ -85,6 +90,7 @@ export const usePreferences = create<PreferencesState>()(
             setSidebarCollapsed: (sidebarCollapsed) =>
                 set({ sidebarCollapsed }),
             setAssistantSeen: () => set({ assistantSeen: true }),
+            setBoxMeasure: (boxMeasure) => set({ boxMeasure }),
         }),
         {
             name: PREFERENCES_KEY,
@@ -97,6 +103,7 @@ export const usePreferences = create<PreferencesState>()(
                 mode,
                 sidebarCollapsed,
                 assistantSeen,
+                boxMeasure,
             }) => ({
                 theme,
                 locale,
@@ -104,6 +111,7 @@ export const usePreferences = create<PreferencesState>()(
                 mode,
                 sidebarCollapsed,
                 assistantSeen,
+                ...(boxMeasure === undefined ? {} : { boxMeasure }),
             }),
             // v1 não tinha modo: quem já tinha preferências entra no Normal. Até a v2 não havia
             // assistente: quem já usava a bancada não o vê abrir sozinho.
@@ -128,6 +136,11 @@ export const usePreferences = create<PreferencesState>()(
                         typeof saved.assistantSeen === 'boolean'
                             ? saved.assistantSeen
                             : current.assistantSeen,
+                    boxMeasure:
+                        saved.boxMeasure === 'internal' ||
+                        saved.boxMeasure === 'external'
+                            ? saved.boxMeasure
+                            : undefined,
                 };
             },
         },

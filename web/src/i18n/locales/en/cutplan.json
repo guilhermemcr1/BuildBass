@@ -35,7 +35,15 @@
         "needsVolume": "Enter the volume (Vb) to see the measures.",
         "internalTitle": "Inner size",
         "internalTag": "inside, without the panels",
-        "externalWithWood": "Outer, with the panels"
+        "externalWithWood": "Outer, with the panels",
+        "measure": "Sizes entered",
+        "measureInternal": "Inner",
+        "measureExternal": "Outer",
+        "externalTitle": "Outer size",
+        "externalTag": "outside, with the panels",
+        "internalWithoutWood": "Inner, without the panels",
+        "externalField": "Outer size",
+        "tooSmall": "The outer size must exceed {{min}} (two panel thicknesses). The value was not applied."
     },
     "proportions": {
         "golden": "Golden",

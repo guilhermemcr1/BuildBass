@@ -131,9 +131,7 @@
                 "w_m": "width",
                 "h_m": "height",
                 "d_m": "depth"
-            },
-            "externalTitle": "Outer size",
-            "externalTag": "outside, with the panels"
+            }
         },
         "classic": "Use classic suggestion",
         "classicApplied": "Volume and tuning from the classic alignment for this driver. Adjust as you like.",

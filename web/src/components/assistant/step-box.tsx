@@ -10,6 +10,10 @@ import { SliderField } from '@/components/ui/slider-field';
 import { ValueTile } from '@/components/ui/value-tile';
 import { AiSuggestDialog } from '@/components/workbench/ai-suggest-dialog';
 import { EngineWarnings } from '@/components/workbench/engine-warnings';
+import {
+    BoxMeasureToggle,
+    useBoxMeasure,
+} from '@/components/workbench/box-measure';
 import { PortDepthField } from '@/components/workbench/port-depth';
 import { reshape } from '@/components/workbench/port-fields';
 import { useParameterField } from '@/components/workbench/use-parameter-field';
@@ -410,17 +414,37 @@ function ExternalSize() {
         cutPlan.status === 'ready'
             ? cutPlan.plan.dimensions.external
             : DEFAULT_EXTERNAL;
+    const internalSize =
+        cutPlan.status === 'ready'
+            ? cutPlan.plan.dimensions.internal
+            : (() => {
+                  const wall = 2 * resolveCutPlan(config).thickness_m;
+
+                  return {
+                      w_m: external.w_m - wall,
+                      h_m: external.h_m - wall,
+                      d_m: external.d_m - wall,
+                  };
+              })();
+    const [measure, setMeasure] = useBoxMeasure('external');
+    const outside = measure === 'external';
 
     // `quiet`: prévia ao vivo, a cada tecla. Medida intermediária ("4" a caminho de "450") não
     // acusa erro; o aviso só vem ao confirmar o campo.
     const write = (axis: 'w_m' | 'h_m' | 'd_m', si: number, quiet = false) => {
         const wall = 2 * resolveCutPlan(config).thickness_m;
-        const next = { ...external, [axis]: si };
-        const internal = {
-            w_m: next.w_m - wall,
-            h_m: next.h_m - wall,
-            d_m: next.d_m - wall,
-        };
+        // Por fora: as três medidas externas menos as duas chapas; por dentro, direto.
+        const internal = outside
+            ? (() => {
+                  const next = { ...external, [axis]: si };
+
+                  return {
+                      w_m: next.w_m - wall,
+                      h_m: next.h_m - wall,
+                      d_m: next.d_m - wall,
+                  };
+              })()
+            : { ...internalSize, [axis]: si };
         const small = (['w_m', 'h_m', 'd_m'] as const).find(
             (key) => internal[key] <= 0,
         );
@@ -451,14 +475,13 @@ function ExternalSize() {
 
     return (
         <div className="flex flex-col gap-2.5">
-            <p className="-mb-1 flex items-baseline gap-1.5 text-xs">
-                <span className="font-medium text-foreground">
-                    {t('box.size.externalTitle')}
-                </span>
-                <span className="text-muted">
-                    · {t('box.size.externalTag')}
-                </span>
-            </p>
+            <BoxMeasureToggle
+                measure={measure}
+                onChange={(next) => {
+                    setMeasure(next);
+                    setError(undefined);
+                }}
+            />
             <div className="grid grid-cols-3 gap-2">
                 {AXES.map(([key, axis]) => {
                     const unit: UnitId =
@@ -470,8 +493,10 @@ function ExternalSize() {
                             key={key}
                             parameter={key}
                             layout="stacked"
-                            labelContext={t('box.size.external')}
-                            valueSi={external[axis]}
+                            labelContext={
+                                outside ? t('box.size.external') : undefined
+                            }
+                            valueSi={(outside ? external : internalSize)[axis]}
                             unit={unit}
                             onUnitChange={(next) => setFieldUnit(key, next)}
                             onLiveChangeSi={(si) => write(axis, si, true)}
@@ -489,7 +514,11 @@ function ExternalSize() {
                 onLiveChangeSi={thickness.onChangeSi}
                 layout="row"
             />
-            <p className="text-xs text-muted">{t('box.size.externalHint')}</p>
+            {outside && (
+                <p className="text-xs text-muted">
+                    {t('box.size.externalHint')}
+                </p>
+            )}
             {error !== undefined && (
                 <div role="alert">
                     <Banner tone="warn">

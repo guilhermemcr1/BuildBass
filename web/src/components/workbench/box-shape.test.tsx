@@ -2,6 +2,7 @@ import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'vite-plus/test';
 import { activeProjectStore } from '@/hooks/use-active-project';
+import { resolveCutPlan } from '@/cutplan';
 import { writeField } from '@/lib/project/fields';
 import { usePreferences } from '@/stores/preferences';
 import { initialWorkspace, useWorkspace } from '@/stores/workspace';
@@ -26,7 +27,32 @@ describe('BoxShape', () => {
     beforeEach(() => {
         localStorage.clear();
         useWorkspace.setState(initialWorkspace());
-        usePreferences.setState({ unitSystem: 'metric' });
+        usePreferences.setState({
+            unitSystem: 'metric',
+            boxMeasure: undefined,
+        });
+    });
+
+    test('externas: mostra as medidas por fora e grava a interna sem as duas chapas', async () => {
+        setVolume(0.06);
+        renderWithProviders(<BoxShape />);
+        const wall = 2 * resolveCutPlan(undefined).thickness_m * 1000;
+
+        expect(screen.getByText('Medidas internas')).toBeVisible();
+        await userEvent.click(screen.getByRole('radio', { name: 'Externas' }));
+
+        expect(usePreferences.getState().boxMeasure).toBe('external');
+        expect(screen.getByText('Medidas externas')).toBeVisible();
+        const outerHeight = () =>
+            screen.getByRole('textbox', { name: /^Medida externa.*Hi/ });
+        expect(mm(outerHeight())).toBeCloseTo(633.4 + wall, 1);
+
+        await userEvent.clear(outerHeight());
+        await userEvent.type(outerHeight(), '700{Enter}');
+        expect(outerHeight()).toHaveValue('700,0');
+
+        await userEvent.click(screen.getByRole('radio', { name: 'Internas' }));
+        expect(mm(height())).toBeCloseTo(700 - wall, 1);
     });
 
     test('mostra as três medidas internas em mm, editáveis, da proporção escolhida', () => {

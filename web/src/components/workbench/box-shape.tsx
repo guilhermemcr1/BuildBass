@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -18,6 +19,7 @@ import { formatQuantity } from '@/lib/units/format';
 import { defaultUnitFor, findUnit } from '@/lib/units/quantities';
 import type { UnitId } from '@/lib/units/quantities';
 import { usePreferences } from '@/stores/preferences';
+import { BoxMeasureToggle, useBoxMeasure } from './box-measure';
 
 const PROPORTION_IDS: CutPlanProportion[] = [
     'golden',
@@ -53,17 +55,20 @@ export function BoxShape() {
     const lengthUnit = defaultUnitFor('length', unitSystem);
     const externalUnit = fieldUnits.dim_h_m ?? lengthUnit;
 
-    const external = () => {
-        if (!ready) {
-            return '—';
-        }
+    const externalSize = ready ? cutPlan.plan.dimensions.external : undefined;
+    const [measure, setMeasure] = useBoxMeasure('internal');
+    const outside = measure === 'external';
+    const wall = 2 * resolved.thickness_m;
+    const [tooSmall, setTooSmall] = useState(false);
 
-        const { w_m, h_m, d_m } = cutPlan.plan.dimensions.external;
-
-        return [w_m, h_m, d_m]
-            .map((si) => formatQuantity(si, externalUnit, locale))
-            .join(' × ');
-    };
+    const sizeText = (
+        size: { w_m: number; h_m: number; d_m: number } | undefined,
+    ) =>
+        size === undefined
+            ? '—'
+            : [size.w_m, size.h_m, size.d_m]
+                  .map((si) => formatQuantity(si, externalUnit, locale))
+                  .join(' × ');
 
     return (
         <section
@@ -89,47 +94,58 @@ export function BoxShape() {
                     label: t(`proportions.${id}`),
                 }))}
             />
-            {/* Sem isto as três caixas mostram só "Altura/Largura/Profundidade": interna ou externa? */}
-            <p className="-mb-1 flex items-baseline gap-1.5 text-xs">
-                <span className="font-medium text-foreground">
-                    {t('config.internalTitle')}
-                </span>
-                <span className="text-muted">· {t('config.internalTag')}</span>
-            </p>
+            <BoxMeasureToggle measure={measure} onChange={setMeasure} />
             <div className="grid grid-cols-3 gap-2">
                 {AXES.map(([key, axis]) => {
                     const unit: UnitId =
                         fieldUnits[key] ??
                         defaultUnitFor(PARAMETERS[key].quantity, unitSystem);
+                    const shown = outside ? externalSize : internal;
 
                     return (
                         <ParameterField
                             key={key}
                             parameter={key}
                             layout="stacked"
-                            valueSi={internal?.[`${axis}_m`]}
+                            labelContext={
+                                outside ? t('config.externalField') : undefined
+                            }
+                            valueSi={shown?.[`${axis}_m`]}
                             disabled={internal === undefined}
                             unit={unit}
                             onUnitChange={(next) => setFieldUnit(key, next)}
                             onChangeSi={(si) => {
                                 if (
-                                    internal !== undefined &&
-                                    si !== undefined
+                                    internal === undefined ||
+                                    si === undefined
                                 ) {
-                                    apply((data) =>
-                                        writeDimension(
-                                            data,
-                                            internal,
-                                            axis,
-                                            si,
-                                        ),
-                                    );
+                                    return;
                                 }
+
+                                // Por fora: tira as duas chapas para chegar à medida interna.
+                                const inner = outside ? si - wall : si;
+
+                                if (inner <= 0) {
+                                    setTooSmall(true);
+                                    return;
+                                }
+
+                                setTooSmall(false);
+                                apply((data) =>
+                                    writeDimension(data, internal, axis, inner),
+                                );
                             }}
                         />
                     );
                 })}
             </div>
+            {tooSmall && outside && (
+                <p role="alert" className="-mt-1 text-[11px] text-status-warn">
+                    {t('config.tooSmall', {
+                        min: `${formatQuantity(wall, externalUnit, locale)} ${findUnit(externalUnit).symbol}`,
+                    })}
+                </p>
+            )}
             <Checkbox
                 selected={lockVolume}
                 onChange={(lock) =>
@@ -149,10 +165,16 @@ export function BoxShape() {
             ) : (
                 <p className="flex justify-between gap-3 text-xs">
                     <span className="text-muted">
-                        {t('config.externalWithWood')} ({t('config.axes')})
+                        {t(
+                            outside
+                                ? 'config.internalWithoutWood'
+                                : 'config.externalWithWood',
+                        )}{' '}
+                        ({t('config.axes')})
                     </span>
                     <span className="num">
-                        {external()} {findUnit(externalUnit).symbol}
+                        {sizeText(outside ? internal : externalSize)}{' '}
+                        {findUnit(externalUnit).symbol}
                     </span>
                 </p>
             )}

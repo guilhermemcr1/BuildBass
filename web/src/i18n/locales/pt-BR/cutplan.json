@@ -35,7 +35,15 @@
         "needsVolume": "Informe o volume (Vb) para ver as medidas.",
         "internalTitle": "Medidas internas",
         "internalTag": "por dentro, sem a madeira",
-        "externalWithWood": "Externas, com a madeira"
+        "externalWithWood": "Externas, com a madeira",
+        "measure": "Medidas informadas",
+        "measureInternal": "Internas",
+        "measureExternal": "Externas",
+        "externalTitle": "Medidas externas",
+        "externalTag": "por fora, com a madeira",
+        "internalWithoutWood": "Internas, sem a madeira",
+        "externalField": "Medida externa",
+        "tooSmall": "A medida externa precisa passar de {{min}} (duas espessuras de chapa). O valor não foi aplicado."
     },
     "proportions": {
         "golden": "Áurea",

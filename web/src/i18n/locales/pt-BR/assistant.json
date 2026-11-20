@@ -131,9 +131,7 @@
                 "w_m": "largura",
                 "h_m": "altura",
                 "d_m": "profundidade"
-            },
-            "externalTitle": "Medidas externas",
-            "externalTag": "por fora, com a madeira"
+            }
         },
         "classic": "Usar sugestão clássica",
         "classicApplied": "Volume e sintonia do alinhamento clássico para este alto-falante. Ajuste à vontade.",

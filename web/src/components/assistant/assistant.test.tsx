@@ -8,7 +8,9 @@ import {
     test,
     vi,
 } from 'vite-plus/test';
+import { resolveCutPlan } from '@/cutplan';
 import { activeProjectStore } from '@/hooks/use-active-project';
+import { usePreferences } from '@/stores/preferences';
 import { renderWithProviders } from '@/test/render';
 import { initialWorkspace, useWorkspace } from '@/stores/workspace';
 import Assistant from './assistant';
@@ -382,6 +384,34 @@ describe('Assistente', () => {
         expect(height).toHaveValue('555,0');
         await user.tab();
         expect(height).toHaveValue('555,0');
+    });
+
+    test('em "Sei as medidas" dá para digitar por dentro ou por fora', async () => {
+        const user = userEvent.setup();
+        usePreferences.setState({ boxMeasure: undefined });
+        typeMinimum();
+        renderWithProviders(<Assistant onClose={() => undefined} />);
+
+        await user.click(screen.getByRole('radio', { name: 'Sei as medidas' }));
+        // O padrão do assistente é por fora.
+        expect(screen.getByText('Medidas externas')).toBeVisible();
+        await user.click(screen.getByRole('radio', { name: 'Internas' }));
+        expect(screen.getByText('Medidas internas')).toBeVisible();
+        expect(
+            screen.queryAllByRole('textbox', { name: /^Medida externa/ }),
+        ).toHaveLength(0);
+
+        const height = screen.getAllByRole('textbox', { name: /^Hi —/ })[0];
+        await user.clear(height);
+        await user.type(height, '500{Enter}');
+        expect(height).toHaveValue('500,0');
+
+        await user.click(screen.getByRole('radio', { name: 'Externas' }));
+        const wall = 2 * resolveCutPlan(undefined).thickness_m * 1000;
+        expect(
+            screen.getAllByRole('textbox', { name: /^Medida externa/ })[1],
+        ).toHaveValue(`${(500 + wall).toFixed(1).replace('.', ',')}`);
+        usePreferences.setState({ boxMeasure: undefined });
     });
 
     test('a dutada mostra a profundidade do duto, com a trava na Fb ou no comprimento', async () => {
