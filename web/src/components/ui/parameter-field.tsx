@@ -306,7 +306,13 @@ export function ParameterField({
                 <div
                     className={cn(
                         'flex h-8 items-stretch overflow-hidden rounded-md border bg-raised motion-safe:transition-colors group-data-[disabled]:border-dashed group-data-[disabled]:bg-transparent group-focus-within:border-accent group-focus-within:bg-surface',
-                        row ? 'w-32 shrink-0' : stacked ? 'w-full' : 'min-w-0 flex-1',
+                        // Número não precisa de mais que ~11 rem: em colunas largas (assistente,
+                        // modais) a caixa não estica até virar uma faixa.
+                        row
+                            ? 'w-32 shrink-0'
+                            : stacked
+                              ? 'w-full max-w-44'
+                              : 'min-w-0 flex-1 max-w-44',
                         outOfRange ? 'border-status-error' : BORDER[status],
                     )}
                 >

@@ -53,7 +53,8 @@ export function SliderField({
             : toPosition(field.valueSi, minSi, maxSi, scale);
 
     return (
-        <div className="flex flex-col gap-2">
+        // Na largura do campo (símbolo + caixa de até 11 rem): o trilho não atravessa a coluna.
+        <div className="flex w-full max-w-57 flex-col gap-2">
             <ParameterField {...field} />
             <Slider
                 aria-label={t(`${field.parameter}.label`)}

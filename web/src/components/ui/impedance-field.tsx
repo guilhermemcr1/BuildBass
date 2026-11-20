@@ -76,7 +76,7 @@ export function ImpedanceField({
             inputMode="decimal"
             autoComplete="off"
             maxLength={6}
-            className={cn('group flex flex-col gap-1', className)}
+            className={cn('group flex max-w-56 flex-col gap-1', className)}
         >
             <Label className="text-xs font-semibold text-muted">{label}</Label>
             <div
