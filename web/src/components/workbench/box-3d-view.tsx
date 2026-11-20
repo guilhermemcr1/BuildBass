@@ -170,7 +170,13 @@ export function Box3dView({
     const radius =
         (Math.hypot(external.w_m, external.h_m, external.d_m) / 2) * 1.35;
     const polygons = projectBox(plan, view, { translucent: inside });
-    const lines = dimensionLines(plan, view);
+    // Vista de frente (ou de lado) achata a cota da profundidade num ponto: o rótulo dela cairia em
+    // cima de outro. Cota curta demais para ler não é desenhada.
+    const lines = dimensionLines(plan, view).filter(
+        (line) =>
+            Math.hypot(line.to[0] - line.from[0], line.to[1] - line.from[1]) >
+            radius * 0.12,
+    );
     const format = (si: number) => formatWithUnit(si, unit, locale);
     const driverOnFront = projectBox(
         plan,

@@ -1107,7 +1107,18 @@ describe('posição manual dos recortes', () => {
             manual: true,
             center: { x_m: 0.12, y_m: 0.11 },
         });
-        expect(panel?.cutouts[0].center).not.toEqual(auto?.cutouts[0].center);
+        // Os alto-falantes seguem na fila entre eles, sem encostar no duto fixo.
+        for (const driver of panel?.cutouts.slice(0, 2) ?? []) {
+            const gap =
+                Math.hypot(
+                    driver.center!.x_m - 0.12,
+                    driver.center!.y_m - 0.11,
+                ) -
+                (driver.diameter_m ?? 0) / 2 -
+                (port?.diameter_m ?? 0) / 2;
+
+            expect(gap).toBeGreaterThan(0);
+        }
         expect(panel?.w_m).toBe(auto?.w_m);
     });
 
@@ -1434,5 +1445,47 @@ describe('duto no canto e alto-falante grande', () => {
         expect(driver.center!.y_m + r).toBeLessThanOrEqual(
             panel.h_m - t + 1e-9,
         );
+    });
+});
+
+describe('caixa grande com duto no canto', () => {
+    // Projeto real: frente 491,7 × 445,5 mm. Cabe na faixa acima do duto, mas centralizar ali
+    // subia o alto-falante para o topo; com folga, ele fica no centro do painel.
+    test('o alto-falante fica no centro quando não encosta no duto', async () => {
+        const { placeCutouts } = await import('./plan');
+        const panel = { w_m: 0.4917, h_m: 0.4455 };
+        const { cutouts, tooBig, doNotFit } = placeCutouts(
+            panel,
+            [
+                {
+                    kind: 'driver',
+                    measure: {
+                        shape: 'round',
+                        w_m: 0.28,
+                        h_m: 0.28,
+                        outer_m: 0.304,
+                        pending: [],
+                    },
+                },
+                {
+                    kind: 'port',
+                    measure: {
+                        shape: 'round',
+                        w_m: 0.1016,
+                        h_m: 0.1016,
+                        pending: [],
+                    },
+                },
+            ],
+            0.015,
+            'front',
+            [],
+            { placement: 'bottomRight' },
+        );
+        const driver = cutouts.find((c) => c.kind === 'driver')!;
+
+        expect(tooBig || doNotFit).toBe(false);
+        expect(driver.center!.x_m).toBeCloseTo(panel.w_m / 2, 3);
+        expect(driver.center!.y_m).toBeCloseTo(panel.h_m / 2, 3);
     });
 });

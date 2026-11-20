@@ -224,33 +224,10 @@ export function layoutEdge(
         }
     });
 
-    // Num canto, os dutos ocupam só o canto, não a borda inteira: se o alto-falante não cabe na
-    // faixa que sobra, procura o lugar livre mais perto do centro do painel, desviando dos dutos.
-    const covered = restIdx.some((index) => {
-        const item = items[index]!;
-        const center = centers[index];
-
-        return (
-            sized(item) &&
-            center !== undefined &&
-            items.some((other, k) => {
-                const at = centers[k];
-
-                return (
-                    atEdge[k] &&
-                    sized(other) &&
-                    at !== undefined &&
-                    !clears(
-                        footprintOf(item, center),
-                        footprintOf(other, at),
-                        web_m,
-                    )
-                );
-            })
-        );
-    });
-
-    if (!centered && (rest.tooBig || rest.doNotFit || rest.tight || covered)) {
+    // Num canto, os dutos ocupam só o canto, não a borda inteira: o alto-falante parte do centro
+    // do painel e só se afasta o necessário para não encostar nos dutos. Centralizar na faixa que
+    // sobra o empurraria para a borda oposta (o topo, com o duto embaixo) numa caixa grande.
+    if (!centered) {
         const beside = besideCorner(panel, items, atEdge, centers, web_m);
 
         if (beside !== undefined) {
