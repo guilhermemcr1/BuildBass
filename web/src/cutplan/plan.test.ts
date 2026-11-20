@@ -1371,3 +1371,68 @@ describe('recorte automático desvia dos fixos', () => {
         );
     });
 });
+
+describe('duto no canto e alto-falante grande', () => {
+    // Projeto real: frente 430 × 390 mm (15 mm), recorte de 280 mm e duto redondo de 101,6 mm
+    // no canto inferior direito. A faixa acima do duto (≈258 mm) não comporta o recorte, mas o
+    // painel inteiro sim: o duto ocupa só o canto.
+    test('o alto-falante desvia do duto e não acusa "não cabe"', async () => {
+        const { placeCutouts } = await import('./plan');
+        const panel = { w_m: 0.43, h_m: 0.39 };
+        const t = 0.015;
+        const result = placeCutouts(
+            panel,
+            [
+                {
+                    kind: 'driver',
+                    measure: {
+                        shape: 'round',
+                        w_m: 0.28,
+                        h_m: 0.28,
+                        outer_m: 0.304,
+                        pending: [],
+                    },
+                },
+                {
+                    kind: 'port',
+                    measure: {
+                        shape: 'round',
+                        w_m: 0.1016,
+                        h_m: 0.1016,
+                        pending: [],
+                    },
+                },
+            ],
+            t,
+            'front',
+            [],
+            { placement: 'bottomRight' },
+        );
+
+        expect(result.tooBig).toBe(false);
+        expect(result.doNotFit).toBe(false);
+
+        const driver = result.cutouts.find((c) => c.kind === 'driver')!;
+        const port = result.cutouts.find((c) => c.kind === 'port')!;
+        const gap =
+            Math.hypot(
+                driver.center!.x_m - port.center!.x_m,
+                driver.center!.y_m - port.center!.y_m,
+            ) -
+            (driver.diameter_m ?? 0) / 2 -
+            (port.diameter_m ?? 0) / 2;
+
+        expect(gap).toBeGreaterThanOrEqual(t - 1e-9);
+        // O aro (A = 304 mm) apoia na frente e não cobre o furo do duto.
+        expect(gap - (0.304 - 0.28) / 2).toBeGreaterThanOrEqual(-1e-9);
+        // Duto continua no canto inferior direito.
+        expect(port.center!.x_m).toBeGreaterThan(panel.w_m / 2);
+        expect(port.center!.y_m).toBeLessThan(panel.h_m / 2);
+        // Alto-falante dentro da parede interna.
+        const r = (driver.diameter_m ?? 0) / 2;
+        expect(driver.center!.x_m - r).toBeGreaterThanOrEqual(t - 1e-9);
+        expect(driver.center!.y_m + r).toBeLessThanOrEqual(
+            panel.h_m - t + 1e-9,
+        );
+    });
+});

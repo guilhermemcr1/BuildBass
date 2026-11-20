@@ -89,6 +89,13 @@ export function BoxShape() {
                     label: t(`proportions.${id}`),
                 }))}
             />
+            {/* Sem isto as três caixas mostram só "Altura/Largura/Profundidade": interna ou externa? */}
+            <p className="-mb-1 flex items-baseline gap-1.5 text-xs">
+                <span className="font-medium text-foreground">
+                    {t('config.internalTitle')}
+                </span>
+                <span className="text-muted">· {t('config.internalTag')}</span>
+            </p>
             <div className="grid grid-cols-3 gap-2">
                 {AXES.map(([key, axis]) => {
                     const unit: UnitId =
@@ -142,7 +149,7 @@ export function BoxShape() {
             ) : (
                 <p className="flex justify-between gap-3 text-xs">
                     <span className="text-muted">
-                        {t('dimensions.external')} ({t('config.axes')})
+                        {t('config.externalWithWood')} ({t('config.axes')})
                     </span>
                     <span className="num">
                         {external()} {findUnit(externalUnit).symbol}

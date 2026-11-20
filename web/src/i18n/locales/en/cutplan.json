@@ -32,7 +32,10 @@
         "lockVolumeOn": "Changing one size adjusts the other two; Vb stays the same.",
         "lockVolumeOff": "Changing one size recalculates Vb; the other sizes stay. Fb is kept and the port adapts to it.",
         "axes": "W × H × D",
-        "needsVolume": "Enter the volume (Vb) to see the measures."
+        "needsVolume": "Enter the volume (Vb) to see the measures.",
+        "internalTitle": "Inner size",
+        "internalTag": "inside, without the panels",
+        "externalWithWood": "Outer, with the panels"
     },
     "proportions": {
         "golden": "Golden",

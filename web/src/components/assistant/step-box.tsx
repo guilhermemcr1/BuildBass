@@ -451,6 +451,14 @@ function ExternalSize() {
 
     return (
         <div className="flex flex-col gap-2.5">
+            <p className="-mb-1 flex items-baseline gap-1.5 text-xs">
+                <span className="font-medium text-foreground">
+                    {t('box.size.externalTitle')}
+                </span>
+                <span className="text-muted">
+                    · {t('box.size.externalTag')}
+                </span>
+            </p>
             <div className="grid grid-cols-3 gap-2">
                 {AXES.map(([key, axis]) => {
                     const unit: UnitId =

@@ -32,7 +32,10 @@
         "lockVolumeOn": "Mudar uma medida ajusta as outras duas; o Vb não muda.",
         "lockVolumeOff": "Mudar uma medida recalcula o Vb; as outras medidas ficam. O Fb é mantido e o duto se ajusta a ele.",
         "axes": "L × A × P",
-        "needsVolume": "Informe o volume (Vb) para ver as medidas."
+        "needsVolume": "Informe o volume (Vb) para ver as medidas.",
+        "internalTitle": "Medidas internas",
+        "internalTag": "por dentro, sem a madeira",
+        "externalWithWood": "Externas, com a madeira"
     },
     "proportions": {
         "golden": "Áurea",

@@ -11,9 +11,10 @@ import {
     checkCutouts,
     cutoutExtent,
     layoutEdge,
+    nearestFree,
     trianglePoints,
 } from './layout';
-import type { CutoutIssue, EdgeOptions } from './layout';
+import type { CutoutIssue, EdgeOptions, Footprint } from './layout';
 import type { LayoutItem } from './layout';
 import type {
     CornerId,
@@ -360,7 +361,12 @@ export function placeCutouts(
     const manual = cutouts.some((cutout) => cutout.manual === true);
 
     if (manual) {
-        avoidManual(panel, cutouts, web_m);
+        avoidManual(
+            panel,
+            cutouts,
+            web_m,
+            entries.map(({ measure }) => measure.outer_m),
+        );
     }
 
     // Cateto maior que o vão interno: o duto de canto não cabe.
@@ -383,8 +389,6 @@ export function placeCutouts(
     };
 }
 
-const AVOID_STEP_M = 0.005;
-
 // Recortes automáticos não podem cair em cima dos que têm posição manual (a fila automática é
 // montada sem eles). O que encostar num manual vai para o ponto livre mais perto do lugar
 // automático, com `web_m` de folga das bordas e dos outros recortes. Sem ponto livre, fica onde
@@ -393,66 +397,50 @@ function avoidManual(
     panel: { w_m: number; h_m: number },
     cutouts: Cutout[],
     web_m: number,
+    outers: (number | undefined)[],
 ): void {
-    type Box = { x: number; y: number; w: number; h: number };
-    const boxOf = (cutout: Cutout): Box | undefined => {
+    const footprint = (
+        cutout: Cutout,
+        index: number,
+    ): Footprint | undefined => {
         const { w, h } = cutoutExtent(cutout);
 
         return cutout.center === undefined || w === undefined || h === undefined
             ? undefined
-            : { x: cutout.center.x_m, y: cutout.center.y_m, w, h };
+            : {
+                  x: cutout.center.x_m,
+                  y: cutout.center.y_m,
+                  w,
+                  h,
+                  round: cutout.shape === 'round',
+                  ...(outers[index] === undefined
+                      ? {}
+                      : { outer: outers[index] }),
+              };
     };
-    const clash = (a: Box, b: Box) =>
-        Math.abs(a.x - b.x) < (a.w + b.w) / 2 + web_m &&
-        Math.abs(a.y - b.y) < (a.h + b.h) / 2 + web_m;
-    const fixed: Box[] = cutouts
-        .filter((cutout) => cutout.manual === true)
-        .map(boxOf)
-        .filter((box): box is Box => box !== undefined);
+    const fixed: Footprint[] = cutouts
+        .map((cutout, index) =>
+            cutout.manual === true ? footprint(cutout, index) : undefined,
+        )
+        .filter((box): box is Footprint => box !== undefined);
 
-    for (const cutout of cutouts) {
+    for (const [index, cutout] of cutouts.entries()) {
         if (cutout.manual === true || cutout.corner !== undefined) {
             continue;
         }
 
-        const box = boxOf(cutout);
+        const box = footprint(cutout, index);
 
         if (box === undefined) {
             continue;
         }
 
-        if (fixed.some((other) => clash(box, other))) {
-            const [minX, maxX] = [
-                web_m + box.w / 2,
-                panel.w_m - web_m - box.w / 2,
-            ];
-            const [minY, maxY] = [
-                web_m + box.h / 2,
-                panel.h_m - web_m - box.h / 2,
-            ];
-            let best: { x: number; y: number; d: number } | undefined;
+        const spot = nearestFree(panel, box, fixed, web_m);
 
-            for (let x = minX; x <= maxX + 1e-9; x += AVOID_STEP_M) {
-                for (let y = minY; y <= maxY + 1e-9; y += AVOID_STEP_M) {
-                    const candidate = { ...box, x, y };
-                    const d = Math.hypot(x - box.x, y - box.y);
-
-                    if (
-                        (best === undefined || d < best.d) &&
-                        !fixed.some((other) => clash(candidate, other))
-                    ) {
-                        best = { x, y, d };
-                    }
-                }
-            }
-
-            if (best !== undefined) {
-                const round = (m: number) => Math.round(m * 1000) / 1000;
-
-                cutout.center = { x_m: round(best.x), y_m: round(best.y) };
-                box.x = cutout.center.x_m;
-                box.y = cutout.center.y_m;
-            }
+        if (spot !== undefined) {
+            cutout.center = spot;
+            box.x = spot.x_m;
+            box.y = spot.y_m;
         }
 
         fixed.push(box);
@@ -566,6 +554,11 @@ function driverMeasure(config: ResolvedCutPlanConfig, body: DriverBody) {
             shape: 'round' as const,
             w_m: c,
             h_m: c,
+            ...(body.flange_m !== undefined &&
+            c !== undefined &&
+            body.flange_m > c
+                ? { outer_m: body.flange_m }
+                : {}),
             pending: c === undefined ? (['cutout_m'] as PlanKey[]) : [],
         };
     }

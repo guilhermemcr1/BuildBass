@@ -7,7 +7,98 @@ export type LayoutItem = {
     // Extensão do recorte no eixo horizontal e vertical da peça; ausente = sem medida.
     w_m?: number;
     h_m?: number;
+    // Redondo mede a folga como círculo (não como o quadrado que o contém).
+    shape?: string;
+    // Diâmetro do aro do alto-falante, maior que o recorte: nada pode ficar embaixo dele.
+    outer_m?: number;
 };
+
+// Recorte posicionado, para medir folgas: centro, extensão e se é redondo.
+export type Footprint = {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    round: boolean;
+    // Aro (redondo, diâmetro): só não pode cobrir outro recorte nem outro aro.
+    outer?: number;
+};
+
+const withOuter = (f: Footprint): Footprint =>
+    f.outer === undefined ? f : { ...f, w: f.outer, h: f.outer };
+
+// Folga suficiente: `web_m` de madeira entre os furos e nenhum aro por cima de outro recorte.
+export function clears(a: Footprint, b: Footprint, web_m: number): boolean {
+    return (
+        gapBetween(a, b) >= web_m - 1e-9 &&
+        gapBetween(withOuter(a), withOuter(b)) >= -1e-9
+    );
+}
+
+// Madeira entre dois recortes (negativa = se sobrepõem). Redondo conta como círculo: um alto-falante
+// ao lado de um duto de canto não briga pelo quadrado vazio em volta do círculo.
+export function gapBetween(a: Footprint, b: Footprint): number {
+    const dx = Math.abs(a.x - b.x);
+    const dy = Math.abs(a.y - b.y);
+
+    if (a.round && b.round) {
+        return Math.hypot(dx, dy) - a.w / 2 - b.w / 2;
+    }
+
+    if (a.round || b.round) {
+        const [circle, box] = a.round ? [a, b] : [b, a];
+        const sx = Math.max(dx - box.w / 2, 0);
+        const sy = Math.max(dy - box.h / 2, 0);
+
+        return Math.hypot(sx, sy) - circle.w / 2;
+    }
+
+    const sx = dx - (a.w + b.w) / 2;
+    const sy = dy - (a.h + b.h) / 2;
+
+    return sx > 0 && sy > 0 ? Math.hypot(sx, sy) : Math.max(sx, sy);
+}
+
+const FREE_STEP_M = 0.005;
+
+// Centro livre mais perto de `item` (a partir do centro dele), a `web_m` das bordas e dos
+// obstáculos, numa grade de 5 mm. Sem lugar, indefinido.
+export function nearestFree(
+    panel: { w_m: number; h_m: number },
+    item: Footprint,
+    obstacles: Footprint[],
+    web_m: number,
+): Center | undefined {
+    const free = (x: number, y: number) =>
+        obstacles.every((other) => clears({ ...item, x, y }, other, web_m));
+
+    if (free(item.x, item.y)) {
+        return { x_m: item.x, y_m: item.y };
+    }
+
+    // O furo fica a `web_m` da borda; o aro, dentro do painel.
+    const halfW = Math.max(item.w / 2 + web_m, (item.outer ?? 0) / 2);
+    const halfH = Math.max(item.h / 2 + web_m, (item.outer ?? 0) / 2);
+    const [minX, maxX] = [halfW, panel.w_m - halfW];
+    const [minY, maxY] = [halfH, panel.h_m - halfH];
+    let best: { x: number; y: number; d: number } | undefined;
+
+    for (let x = minX; x <= maxX + 1e-9; x += FREE_STEP_M) {
+        for (let y = minY; y <= maxY + 1e-9; y += FREE_STEP_M) {
+            const d = Math.hypot(x - item.x, y - item.y);
+
+            if ((best === undefined || d < best.d) && free(x, y)) {
+                best = { x, y, d };
+            }
+        }
+    }
+
+    const mm = (m: number) => Math.round(m * 1000) / 1000;
+
+    return best === undefined
+        ? undefined
+        : { x_m: mm(best.x), y_m: mm(best.y) };
+}
 
 export type Center = { x_m: number; y_m: number };
 
@@ -133,12 +224,115 @@ export function layoutEdge(
         }
     });
 
+    // Num canto, os dutos ocupam só o canto, não a borda inteira: se o alto-falante não cabe na
+    // faixa que sobra, procura o lugar livre mais perto do centro do painel, desviando dos dutos.
+    const covered = restIdx.some((index) => {
+        const item = items[index]!;
+        const center = centers[index];
+
+        return (
+            sized(item) &&
+            center !== undefined &&
+            items.some((other, k) => {
+                const at = centers[k];
+
+                return (
+                    atEdge[k] &&
+                    sized(other) &&
+                    at !== undefined &&
+                    !clears(
+                        footprintOf(item, center),
+                        footprintOf(other, at),
+                        web_m,
+                    )
+                );
+            })
+        );
+    });
+
+    if (!centered && (rest.tooBig || rest.doNotFit || rest.tight || covered)) {
+        const beside = besideCorner(panel, items, atEdge, centers, web_m);
+
+        if (beside !== undefined) {
+            return {
+                centers: beside,
+                doNotFit: false,
+                tight: false,
+                tooBig: false,
+            };
+        }
+    }
+
     return {
         centers,
         doNotFit: rest.doNotFit,
         tight: rest.tight,
         tooBig: rest.tooBig,
     };
+}
+
+function footprintOf(item: Required<LayoutItem>, center: Center): Footprint {
+    return {
+        x: center.x_m,
+        y: center.y_m,
+        w: item.w_m,
+        h: item.h_m,
+        round: item.shape === 'round',
+        ...(item.outer_m === undefined ? {} : { outer: item.outer_m }),
+    };
+}
+
+// Os demais itens no painel inteiro (fila centralizada), cada um levado ao lugar livre mais perto
+// dali sem encostar nos dutos do canto nem nos já colocados. Algum sem lugar: indefinido.
+function besideCorner(
+    panel: { w_m: number; h_m: number },
+    items: LayoutItem[],
+    atEdge: boolean[],
+    edgeCenters: (Center | undefined)[],
+    web_m: number,
+): (Center | undefined)[] | undefined {
+    const obstacles: Footprint[] = [];
+
+    items.forEach((item, index) => {
+        const center = edgeCenters[index];
+
+        if (atEdge[index] && sized(item) && center !== undefined) {
+            obstacles.push(footprintOf(item, center));
+        }
+    });
+
+    const restIdx = items.flatMap((item, index) =>
+        atEdge[index] || !sized(item) ? [] : [index],
+    );
+    const row = layoutRow(
+        panel,
+        restIdx.map((index) => items[index]!),
+        web_m,
+    );
+    const centers = [...edgeCenters];
+
+    for (const [k, index] of restIdx.entries()) {
+        const item = items[index] as Required<LayoutItem>;
+        const start = row.centers[k] ?? {
+            x_m: panel.w_m / 2,
+            y_m: panel.h_m / 2,
+        };
+        const spot = nearestFree(
+            panel,
+            footprintOf(item, start),
+            obstacles,
+            web_m,
+        );
+
+        if (spot === undefined) {
+            return undefined;
+        }
+
+        centers[index] = spot;
+        obstacles.push(footprintOf(item, spot));
+    }
+
+    return centers;
 }
 
 // Centro que mantém o recorte dentro do painel, a uma espessura da borda quando cabe; maior que o

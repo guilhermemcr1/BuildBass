@@ -5,13 +5,14 @@ import { useWorkspace } from '@/stores/workspace';
 import { simulationOf } from './use-simulation';
 
 // O que o plano usa das medidas do alto-falante: formato, segundo lado e profundidade atrás do
-// painel (G − F, o aro fica na frente).
+// painel (G − F, o aro fica na frente) e o aro (A), que apoia na frente e não pode cobrir um duto.
 export function driverBodyOf(data: ProjectData): DriverBody {
     const dims = data.driverDims;
 
     return {
         ...(dims?.shape === undefined ? {} : { shape: dims.shape }),
         ...(dims?.d_m === undefined ? {} : { d_m: dims.d_m }),
+        ...(dims?.a_m === undefined ? {} : { flange_m: dims.a_m }),
         ...(dims?.g_m === undefined
             ? {}
             : { depth_m: Math.max(0, dims.g_m - (dims.f_m ?? 0)) }),

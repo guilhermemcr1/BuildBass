@@ -86,6 +86,8 @@ export type DriverBody = {
     // Segundo lado do recorte retangular (D).
     d_m?: number;
     depth_m?: number;
+    // Aro (A): apoia na frente por fora; os outros recortes não podem ficar embaixo dele.
+    flange_m?: number;
 };
 
 export type ResolvedCutPlanConfig = {
