@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
-import { Bot, Wand2 } from 'lucide-react';
+import { Bot, Box, Wand2 } from 'lucide-react';
 import { useLocale } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { Banner } from '@/components/ui/banner';
@@ -31,7 +31,7 @@ import { defaultUnitFor, findUnit } from '@/lib/units/quantities';
 import type { UnitId } from '@/lib/units/quantities';
 import { usePreferences } from '@/stores/preferences';
 
-const BoxThumbnail = lazy(() => import('@/components/workbench/box-thumbnail'));
+const Box3dView = lazy(() => import('@/components/workbench/box-3d-view'));
 
 type SimpleType = 'closed' | 'vented';
 type SizeMode = 'volume' | 'size';
@@ -518,9 +518,22 @@ function BoxPreview() {
             aria-label={t('assistant:box.previewTitle')}
             className="flex min-w-0 flex-col gap-3"
         >
-            <Suspense fallback={<div className="h-48" aria-hidden="true" />}>
-                <BoxThumbnail onPress={() => {}} className="h-48" />
-            </Suspense>
+            {cutPlan.status === 'ready' ? (
+                <Suspense
+                    fallback={<div className="h-72" aria-hidden="true" />}
+                >
+                    <div className="rounded-md border border-border bg-raised p-2">
+                        <Box3dView plan={cutPlan.plan} compact />
+                    </div>
+                </Suspense>
+            ) : (
+                <div
+                    aria-hidden="true"
+                    className="flex h-48 items-center justify-center rounded-md border border-dashed border-border text-muted"
+                >
+                    <Box className="size-8" />
+                </div>
+            )}
             {external !== undefined && (
                 <p className="text-center text-xs text-muted tabular-nums">
                     {t('assistant:box.externalSize', {

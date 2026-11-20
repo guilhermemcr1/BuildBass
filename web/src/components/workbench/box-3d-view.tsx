@@ -17,6 +17,7 @@ import { DEFAULT_VIEW, dimensionLines, projectBox } from '@/cutplan';
 import type { Plan, Polygon, View } from '@/cutplan';
 import { formatWithUnit } from '@/lib/units/format';
 import { defaultUnitFor } from '@/lib/units/quantities';
+import { cn } from '@/lib/utils';
 import { usePreferences } from '@/stores/preferences';
 
 const STEP_RAD = Math.PI / 12;
@@ -147,7 +148,15 @@ function ViewButton({
 
 // Caixa montada em projeção ortográfica desenhada em SVG. A lista de
 // peças continua sendo a fonte; aqui só se vê como as peças se juntam.
-export function Box3dView({ plan }: { plan: Plan }) {
+// `compact`: versão do assistente, mais baixa e sem a dica de teclado (a caixa muda enquanto se
+// digita, e as cotas mostram as medidas externas na hora).
+export function Box3dView({
+    plan,
+    compact = false,
+}: {
+    plan: Plan;
+    compact?: boolean;
+}) {
     const { t } = useTranslation('cutplan');
     const { locale } = useLocale();
     const unitSystem = usePreferences((state) => state.unitSystem);
@@ -168,7 +177,7 @@ export function Box3dView({ plan }: { plan: Plan }) {
         { yaw_rad: 0, pitch_rad: 0, zoom: 1 },
         { translucent: false },
     ).some((polygon) => polygon.part === 'driver');
-    const fontSize = radius * 0.07;
+    const fontSize = radius * (compact ? 0.09 : 0.07);
 
     const onKeyDown = (event: KeyboardEvent) => {
         const handlers: Record<string, () => void> = {
@@ -216,7 +225,10 @@ export function Box3dView({ plan }: { plan: Plan }) {
                 data-zoom={view.zoom.toFixed(3)}
                 tabIndex={0}
                 viewBox={`${-radius} ${-radius} ${2 * radius} ${2 * radius}`}
-                className="h-auto max-h-[420px] w-full cursor-grab touch-none rounded-md outline-none focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-solid"
+                className={cn(
+                    'h-auto w-full cursor-grab touch-none rounded-md outline-none focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-solid',
+                    compact ? 'max-h-[300px]' : 'max-h-[420px]',
+                )}
                 onKeyDown={onKeyDown}
                 onPointerDown={(event) => {
                     event.currentTarget.setPointerCapture?.(event.pointerId);
@@ -335,7 +347,9 @@ export function Box3dView({ plan }: { plan: Plan }) {
                     );
                 })}
             </svg>
-            <p className="text-[11px] text-muted">{t('view3d.hint')}</p>
+            {!compact && (
+                <p className="text-[11px] text-muted">{t('view3d.hint')}</p>
+            )}
             <div
                 role="group"
                 aria-label={t('view3d.controls')}
